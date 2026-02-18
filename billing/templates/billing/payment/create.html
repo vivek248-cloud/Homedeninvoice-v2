@@ -1,0 +1,129 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Record Payment | HomeDen{% endblock %}
+{% block page_title %}Financial Collection{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-4">
+                    <li class="breadcrumb-item"><a href="{% url 'payment_list' %}" class="text-decoration-none text-success">Payments</a></li>
+                    <li class="breadcrumb-item active">New Record</li>
+                </ol>
+            </nav>
+
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="card-header bg-success text-white py-3 px-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-cash-coin fs-3 me-3"></i>
+                        <div>
+                            <h5 class="fw-bold mb-0">Record New Payment</h5>
+                            <small class="opacity-75">Update client ledger and project balance</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="POST" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold small text-uppercase">Project Reference <span class="text-danger">*</span></label>
+                            <select name="project" class="form-select form-select-lg border-success-subtle" required>
+                                <option value="" selected disabled>Select Project...</option>
+                                {% for project in projects %}
+                                <option value="{{ project.id }}">{{ project.name }} ({{ project.client.name }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Please select the project being paid for.</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-7 mb-4">
+                                <label class="form-label fw-semibold small text-uppercase">Amount Received <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-lg has-validation">
+                                    <span class="input-group-text bg-success-subtle text-success fw-bold">₹</span>
+                                    <input type="number" step="0.01" name="amount" class="form-control" placeholder="0.00" required min="1">
+                                    <div class="invalid-feedback">Enter a valid payment amount.</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5 mb-4">
+                                <label class="form-label fw-semibold small text-uppercase">Date <span class="text-danger">*</span></label>
+                                <input type="date" name="date" class="form-control form-control-lg" required value="{% now 'Y-m-d' %}">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold small text-uppercase">Payment Mode</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <input type="radio" class="btn-check" name="payment_mode" id="mode_cash" value="cash" checked>
+                                <label class="btn btn-outline-success px-3" for="mode_cash"><i class="bi bi-wallet2 me-1"></i> Cash</label>
+
+                                <input type="radio" class="btn-check" name="payment_mode" id="mode_upi" value="upi">
+                                <label class="btn btn-outline-success px-3" for="mode_upi"><i class="bi bi-qr-code me-1"></i> UPI</label>
+
+                                <input type="radio" class="btn-check" name="payment_mode" id="mode_bank" value="bank">
+                                <label class="btn btn-outline-success px-3" for="mode_bank"><i class="bi bi-bank me-1"></i> Bank</label>
+
+                                <input type="radio" class="btn-check" name="payment_mode" id="mode_cheque" value="cheque">
+                                <label class="btn btn-outline-success px-3" for="mode_cheque"><i class="bi bi-card-checklist me-1"></i> Cheque</label>
+                            </div>
+                        </div>
+
+                        <hr class="my-4 opacity-50">
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'payment_list' %}" class="btn btn-danger text-white text-decoration-none">
+                                <i class="bi bi-x-circle me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success px-5 py-2 fw-bold shadow-sm">
+                                <i class="bi bi-check-circle me-2"></i>Save Collection
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="alert bg-success bg-opacity-10 border-0 mt-4 p-3 shadow-sm">
+                <div class="d-flex">
+                    <i class="bi bi-info-circle-fill text-success fs-4 me-3"></i>
+                    <div class="small text-dark">
+                        <strong>Ledger Update:</strong> Saving this payment will automatically deduct the amount from the project's "Yet to Receive" balance and generate a printable receipt.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Standard Bootstrap Form Validation
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
+
+<style>
+    .bg-success-subtle { background-color: #e1fcef !important; }
+    .form-control-lg, .form-select-lg { font-size: 1rem; }
+    .btn-check:checked + .btn-outline-success { background-color: #198754; color: white; }
+    .form-control:focus, .form-select:focus {
+        border-color: #198754;
+        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.1);
+    }
+</style>
+{% endblock %}

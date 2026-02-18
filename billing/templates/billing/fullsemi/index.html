@@ -1,0 +1,122 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Full/Semi Management | HomeDen{% endblock %}
+{% block page_title %}Service Type Rates{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Full / Semi Types</h4>
+            <p class="text-muted small mb-0">Manage service classifications and their base rates</p>
+        </div>
+        <a href="{% url 'fullsemi_create' %}" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-circle-fill me-1"></i> Add New Type
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-9 col-xl-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive"  style="border-radius:19px;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4 py-3 text-muted small fw-bold text-uppercase">Classification Name</th>
+                                    <th class="py-3 text-muted small fw-bold text-uppercase text-center">Base Rate</th>
+                                    <th class="py-3 text-muted small fw-bold text-uppercase text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fullsemi in fullsemis %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 38px; height: 38px;">
+                                                <i class="bi bi-tag-fill"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark">{{ fullsemi.name }}</div>
+                                                <div class="text-muted small">Standard Service Type</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-dark px-3 py-2 fs-6 fw-medium">
+                                            ₹ {{ fullsemi.rate }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group">
+                                            <a href="{% url 'fullsemi_update' fullsemi.id %}" class="btn btn-sm btn-outline-light text-dark border shadow-sm me-2">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-light text-danger border shadow-sm" 
+                                                    data-bs-toggle="modal" data-bs-target="#deleteFullSemi{{ fullsemi.id }}">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <div class="modal fade" id="deleteFullSemi{{ fullsemi.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                                        <div class="modal-content border-0 shadow-lg">
+                                            <div class="modal-body text-center p-4">
+                                                <div class="text-danger mb-3">
+                                                    <i class="bi bi-exclamation-circle fs-1"></i>
+                                                </div>
+                                                <h6 class="fw-bold">Delete Rate Type?</h6>
+                                                <p class="small text-muted mb-4">Removing <strong>{{ fullsemi.name }}</strong> might affect your auto-calculation for pending projects.</p>
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <button type="button" class="btn btn-light btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
+                                                    <a href="{% url 'fullsemi_delete' fullsemi.id %}" class="btn btn-danger btn-sm px-3">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-5">
+                                        <div class="opacity-50 mb-3">
+                                            <i class="bi bi-clipboard2-x fs-1"></i>
+                                        </div>
+                                        <p class="text-muted">No Full/Semi types found.</p>
+                                        <a href="{% url 'fullsemi_create' %}" class="btn btn-sm btn-outline-primary">Define first type</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 p-3 bg-light rounded border-start border-primary border-4 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-info-circle text-primary me-3 fs-4"></i>
+                    <p class="small text-muted mb-0">
+                        <strong>Billing Tip:</strong> "Full" and "Semi" types represent different levels of finishing or service. Rates defined here are used as the multiplier for area calculations in your invoices.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(67, 97, 238, 0.03);
+    }
+    .btn-outline-light:hover {
+        background-color: #f8f9fa;
+        border-color: #dee2e6 !important;
+    }
+    .badge.bg-dark {
+        letter-spacing: 0.5px;
+    }
+</style>
+{% endblock %}

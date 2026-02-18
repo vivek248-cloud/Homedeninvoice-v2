@@ -1,0 +1,114 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Update {{ fullsemi.name }} | HomeDen{% endblock %}
+{% block page_title %}Edit Service Rate{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-4">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'fullsemi_list' %}" class="text-decoration-none">Full/Semi Types</a></li>
+                    <li class="breadcrumb-item active">Update</li>
+                </ol>
+            </nav>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                            <i class="bi bi-pencil-square fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">Update Service Type</h5>
+                            <small class="text-muted">Modifying base rate for <strong>{{ fullsemi.name }}</strong></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="POST" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold small">Classification Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" value="{{ fullsemi.name }}" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="e.g. Full Interior" 
+                                   required>
+                            <div class="invalid-feedback">
+                                Please provide a name for this classification.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold small">Standard Rate (per sq.ft) <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-lg has-validation">
+                                <span class="input-group-text bg-light text-muted">₹</span>
+                                <input type="number" step="0.01" name="rate" value="{{ fullsemi.rate }}" 
+                                       class="form-control" 
+                                       placeholder="0.00" 
+                                       required 
+                                       min="0">
+                                <div class="invalid-feedback">
+                                    A valid rate is required.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning border-0 p-3 mb-4 shadow-sm">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-exclamation-triangle-fill text-warning me-3 fs-5"></i>
+                                <div class="small">
+                                    <strong>Rate Modification Warning:</strong><br>
+                                    Updating this rate will affect all <strong>new</strong> project items. Existing finalized invoices will typically remain unchanged, but active drafts may recalculate based on this new value.
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4 opacity-50">
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary px-4 py-2 fw-bold shadow-sm">
+                                <i class="bi bi-arrow-repeat me-1"></i> Update Rate Type
+                            </button>
+                            <a href="{% url 'fullsemi_list' %}" class="btn btn-light px-4 py-2 border">
+                                Discard Changes
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Bootstrap validation
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
+
+<style>
+    .form-control-lg, .input-group-text {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+    }
+    .breadcrumb-item { font-size: 0.85rem; }
+    .btn-light:hover { background-color: #f8f9fa; border-color: #dee2e6 !important; }
+</style>
+{% endblock %}

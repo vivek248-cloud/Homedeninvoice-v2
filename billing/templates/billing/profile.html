@@ -1,0 +1,201 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Admin Profile & System | HomeDen{% endblock %}
+{% block page_title %}Settings & System{% endblock %}
+
+{% block content %}
+<div class="container-fluid pb-5">
+    
+    <div class="row g-4">
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm overflow-hidden h-100" style="border-radius: 24px;">
+                <div class="bg-primary" style="height: 120px; background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);"></div>
+                
+                <div class="card-body pt-0 px-4 pb-4">
+                    <div class="text-center" style="margin-top: -60px;">
+                        <div class="position-relative d-inline-block">
+                            <img src="https://ui-avatars.com/api/?name={{ user_obj.username }}&background=fff&color=4361ee&size=120" 
+                                 class="rounded-circle border border-4 border-white shadow-lg" 
+                                 alt="Profile Avatar">
+                            <span class="position-absolute bottom-0 end-0 bg-success border border-4 border-white rounded-circle p-2 shadow-sm" title="Active Session"></span>
+                        </div>
+                        <h4 class="fw-bold text-dark mt-3 mb-1">{{ user_obj.username|title }}</h4>
+                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-1 small fw-bold">System Administrator</span>
+                    </div>
+
+                    <div class="mt-4">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{% if 'error' in message.tags %}danger{% else %}success{% endif %} border-0 rounded-4 py-3 shadow-sm mb-3">
+                                    <i class="bi {% if 'error' in message.tags %}bi-exclamation-octagon{% else %}bi-check-circle{% endif %}-fill me-2"></i>
+                                    <small class="fw-bold">{{ message }}</small>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <ul class="list-group list-group-flush mt-3">
+                        <li class="list-group-item px-0 py-3 bg-transparent d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-3 p-2 me-3"><i class="bi bi-calendar-event text-primary"></i></div>
+                                <span class="text-muted small">Joined On</span>
+                            </div>
+                            <span class="fw-bold text-dark">{{ user_obj.date_joined|date:"M d, Y" }}</span>
+                        </li>
+                        <li class="list-group-item px-0 py-3 bg-transparent d-flex justify-content-between align-items-center border-bottom-0">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-3 p-2 me-3"><i class="bi bi-shield-check text-primary"></i></div>
+                                <span class="text-muted small">Account Type</span>
+                            </div>
+                            <span class="fw-bold text-dark">Superuser</span>
+                        </li>
+                    </ul>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{% url 'password_change' %}" class="btn btn-primary rounded-pill py-2 fw-bold shadow-sm">
+                            <i class="bi bi-lock-fill me-2"></i>Update Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-8">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100 p-4" style="border-radius: 20px;">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="bg-danger bg-opacity-10 text-danger rounded-4 p-3 me-3">
+                                <i class="bi bi-database-fill-gear fs-3"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-0">System Backup</h5>
+                                <p class="text-muted small mb-0">Secure your billing archives</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-light bg-opacity-50 rounded-4 p-3 mb-4">
+                            <p class="small text-muted mb-0">
+                                Regular backups are recommended before major system changes. Downloads are packaged as encrypted .zip files.
+                            </p>
+                        </div>
+
+                        <div class="mt-auto">
+                            <a href="{% url 'download_backup' %}" class="btn btn-danger w-100 rounded-pill fw-bold py-2 mb-2 shadow-sm">
+                                <i class="bi bi-cloud-arrow-down-fill me-2"></i>Download Snapshot
+                            </a>
+                            <a href="{% url 'backup_history' %}" class="btn btn-outline-dark w-100 rounded-pill fw-bold py-2 border-2">
+                                <i class="bi bi-clock-history me-2"></i>Backup Logs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100 p-4" style="border-radius: 20px;">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-warning bg-opacity-10 text-warning rounded-4 p-3 me-3">
+                                <i class="bi bi-arrow-counterclockwise fs-3"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-0">Data Restore</h5>
+                                <p class="text-muted small mb-0">Rollback or recover data</p>
+                            </div>
+                        </div>
+
+                        <form method="POST" enctype="multipart/form-data" action="{% url 'restore_backup' %}">
+                            {% csrf_token %}
+                            <label class="restore-dropzone w-100 text-center p-4 mb-3" id="dropzone">
+                                <input type="file" name="backup_file" id="fileInput" hidden required accept=".zip">
+                                <div id="dropzone-content">
+                                    <i class="bi bi-file-earmark-zip-fill fs-1 text-warning opacity-75"></i>
+                                    <p class="fw-bold mt-2 mb-0 small">Drag backup file here</p>
+                                    <small class="text-muted" style="font-size: 0.65rem;">Max Size: 50MB (.ZIP)</small>
+                                </div>
+                                <div id="file-name-display" class="d-none fw-bold text-success small pt-2"></div>
+                            </label>
+
+                            <div class="alert alert-warning border-0 small py-2 mb-3 rounded-3" style="font-size: 0.75rem;">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> Warning: Current data will be replaced.
+                            </div>
+
+                            <button type="submit" class="btn btn-warning w-100 rounded-pill fw-bold py-2 text-white shadow-sm">
+                                <i class="bi bi-arrow-repeat me-2"></i>Perform Restore
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm p-4" style="border-radius: 20px; background: #2d3436;">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="text-white fw-bold mb-1">Last System Snapshot</h5>
+                                <p class="text-light opacity-50 small mb-md-0">Auto-backup status and system health report.</p>
+                            </div>
+                            <div class="col-md-4 text-md-end">
+                                <div class="d-inline-flex align-items-center bg-success bg-opacity-25 rounded-pill px-3 py-1">
+                                    <span class="status-pulse me-2"></span>
+                                    <small class="text-success fw-bold">Database Healthy</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ls-1 { letter-spacing: 0.5px; }
+    
+    .restore-dropzone {
+        border: 2px dashed #ffc107;
+        border-radius: 16px;
+        background: #fffcf0;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .restore-dropzone:hover {
+        background: #fff9e6;
+        border-color: #e0a800;
+        transform: translateY(-2px);
+    }
+
+    .status-pulse {
+        width: 8px;
+        height: 8px;
+        background: #00b894;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 rgba(0, 184, 148, 0.4);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(0, 184, 148, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(0, 184, 148, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 184, 148, 0); }
+    }
+
+    .list-group-item {
+        border-color: rgba(0,0,0,0.05);
+    }
+</style>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const dropzoneContent = document.getElementById('dropzone-content');
+
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+            dropzoneContent.classList.add('d-none');
+            fileNameDisplay.classList.remove('d-none');
+            fileNameDisplay.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Selected: ${this.files[0].name}`;
+        }
+    });
+</script>
+{% endblock %}

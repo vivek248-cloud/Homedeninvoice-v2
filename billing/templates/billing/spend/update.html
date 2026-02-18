@@ -1,0 +1,191 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Update Entry | {{ spend.elements }}{% endblock %}
+{% block page_title %}Edit Spend Record{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <form method="POST" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                <div class="card border-0 shadow-sm mb-4 bg-light bg-opacity-50">
+                    <div class="card-header bg-white py-3 border-bottom-0">
+                        <h6 class="fw-bold mb-0 text-muted text-uppercase small"><i class="bi bi-geo-alt me-2"></i>Location Context</h6>
+                    </div>
+                    <div class="card-body px-4 pb-4 pt-0">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Project</label>
+                                <select name="project" class="form-select border-0 shadow-sm">
+                                    {% for project in projects %}
+                                    <option value="{{ project.id }}" {% if spend.project.id == project.id %}selected{% endif %}>
+                                        {{ project.name }} ({{ project.client.name }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Floor</label>
+                                <select name="floor" class="form-select border-0 shadow-sm">
+                                    <option value="">N/A</option>
+                                    {% for floor in floors %}
+                                    <option value="{{ floor.id }}" {% if spend.floor.id == floor.id %}selected{% endif %}>
+                                        {{ floor.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Room</label>
+                                <select name="room" class="form-select border-0 shadow-sm">
+                                    <option value="">N/A</option>
+                                    {% for room in rooms %}
+                                    <option value="{{ room.id }}" {% if spend.room.id == room.id %}selected{% endif %}>
+                                        {{ room.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold mb-0 text-primary text-uppercase small"><i class="bi bi-pencil-square me-2"></i>Edit Specifications</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Type (Full/Semi)</label>
+                                <select name="fullsemi" id="fullsemi" class="form-select border-primary-subtle" required>
+                                    <option value="" disabled>Select Type...</option>
+                                    {% for fs in fullsemis %}
+                                    <option value="{{ fs.id }}" data-rate="{{ fs.rate }}" {% if spend.fullsemi.id == fs.id %}selected{% endif %}>
+                                        {{ fs.name }} (₹{{ fs.rate }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Work Element Name</label>
+                                <input type="text" name="elements" class="form-control" value="{{ spend.elements }}" required>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Length</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" name="length" id="length" value="{{ spend.length }}" class="form-control form-control-lg bg-light bg-opacity-50">
+                                    <span class="input-group-text bg-light"><small>ft</small></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Width</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" name="width" id="width" value="{{ spend.width }}" class="form-control form-control-lg bg-light bg-opacity-50">
+                                    <span class="input-group-text bg-light"><small>ft</small></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Quantity</label>
+                                <input type="number" step="0.01" name="qty" id="qty" value="{{ spend.qty }}" class="form-control form-control-lg bg-light bg-opacity-50">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Display Unit</label>
+                                <input type="text" name="unit" value="{{ spend.unit }}" class="form-control form-control-lg" required>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Updated Description/Notes</label>
+                                <textarea name="description" class="form-control" rows="2">{{ spend.description }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm bg-primary text-white mb-4 shadow-lg">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center text-center text-md-start">
+                            <div class="col-md-3 mb-3 mb-md-0 border-end border-white border-opacity-25">
+                                <small class="text-uppercase opacity-75 d-block mb-1">Total Area</small>
+                                <div class="h4 mb-0 fw-bold"><span id="area_display">0.00</span> <small class="fs-6 fw-normal">sqft</small></div>
+                                <input type="hidden" name="area" id="area" value="{{ spend.area }}">
+                            </div>
+                            <div class="col-md-3 mb-3 mb-md-0 border-end border-white border-opacity-25">
+                                <small class="text-uppercase opacity-75 d-block mb-1">Standard Rate</small>
+                                <div class="h4 mb-0 fw-bold">₹ <span id="rate_display">0.00</span></div>
+                                <input type="hidden" name="rate" id="rate" value="{{ spend.rate }}">
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <small class="text-uppercase opacity-75 d-block mb-1">Revised Billable Amount</small>
+                                <div class="display-6 mb-0 fw-bold">₹ <span id="total_display">0.00</span></div>
+                                <input type="hidden" name="total_amount" id="total" value="{{ spend.total_amount }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <a href="{% url 'spend_list' %}" class="btn btn-secondary text-white text-decoration-none">
+                        <i class="bi bi-x-circle me-1"></i> Cancel Changes
+                    </a>
+                    <button type="submit" class="btn btn-primary px-5 py-2 fw-bold shadow-sm rounded-pill">
+                        <i class="bi bi-arrow-repeat me-2"></i>Update Entry
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const lengthInput = document.getElementById('length');
+    const widthInput = document.getElementById('width');
+    const qtyInput = document.getElementById('qty');
+    const areaHidden = document.getElementById('area');
+    const areaDisplay = document.getElementById('area_display');
+    const rateHidden = document.getElementById('rate');
+    const rateDisplay = document.getElementById('rate_display');
+    const totalHidden = document.getElementById('total');
+    const totalDisplay = document.getElementById('total_display');
+    const fullsemiSelect = document.getElementById('fullsemi');
+
+    function calculate() {
+        let length = parseFloat(lengthInput.value) || 0;
+        let width = parseFloat(widthInput.value) || 0;
+        let qty = parseFloat(qtyInput.value) || 0;
+
+        let areaVal = (length * width);
+        let multiplierArea = areaVal > 0 ? areaVal : 1;
+        
+        areaDisplay.innerText = areaVal.toFixed(2);
+        areaHidden.value = areaVal.toFixed(2);
+
+        let selectedOption = fullsemiSelect.options[fullsemiSelect.selectedIndex];
+        let rate = selectedOption ? parseFloat(selectedOption.getAttribute('data-rate')) || 0 : 0;
+
+        rateDisplay.innerText = rate.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        rateHidden.value = rate.toFixed(2);
+
+        let total = multiplierArea * rate * (qty > 0 ? qty : 1);
+        totalDisplay.innerText = total.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        totalHidden.value = total.toFixed(2);
+    }
+
+    // Attach listeners
+    [lengthInput, widthInput, qtyInput].forEach(el => el.addEventListener('input', calculate));
+    fullsemiSelect.addEventListener('change', calculate);
+
+    // 🔥 Run once on load to populate the blue banner immediately
+    calculate();
+});
+</script>
+
+<style>
+    .border-primary-subtle { border-color: #cfe2ff !important; }
+    .bg-light { background-color: #f8f9fa !important; }
+</style>
+{% endblock %}

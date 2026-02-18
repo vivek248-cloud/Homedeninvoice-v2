@@ -1,0 +1,83 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Delete Payment | HomeDen{% endblock %}
+{% block page_title %}Security Confirmation{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            
+            <div class="card border-0 shadow-lg overflow-hidden">
+                <div class="bg-danger py-2"></div>
+                
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-shield-exclamation fs-1"></i>
+                        </div>
+                    </div>
+
+                    <h4 class="fw-bold text-dark mb-2">Void This Payment?</h4>
+                    <p class="text-muted small px-3">You are about to remove a recorded transaction. This will affect the project ledger.</p>
+                    
+                    <div class="bg-light rounded p-4 mb-4 border border-danger border-opacity-10 text-start">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-uppercase small fw-bold text-muted">Amount to Void</span>
+                            <span class="badge bg-danger">Removal</span>
+                        </div>
+                        <h3 class="fw-bold text-danger mb-3">₹ {{ payment.amount }}</h3>
+                        
+                        <div class="small">
+                            <div class="mb-1 text-dark">
+                                <i class="bi bi-briefcase me-2 text-muted"></i>Project: <strong>{{ payment.project.name }}</strong>
+                            </div>
+                            <div class="mb-1 text-dark">
+                                <i class="bi bi-calendar3 me-2 text-muted"></i>Date: {{ payment.date|date:"d M, Y" }}
+                            </div>
+                            <div class="text-dark">
+                                <i class="bi bi-credit-card me-2 text-muted"></i>Method: {{ payment.get_payment_mode_display }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-danger border-0 small text-start mb-4 py-3">
+                        <div class="d-flex">
+                            <i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i>
+                            <div>
+                                <strong>Important Impact:</strong> The <em>"Yet to Receive"</em> balance for this project will increase by <strong>₹ {{ payment.amount }}</strong>. Any receipt issued for this ID will become invalid.
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger py-3 fw-bold shadow-sm">
+                                <i class="bi bi-trash3-fill me-2"></i>Permanently Delete
+                            </button>
+                            <a href="{% url 'payment_list' %}" class="btn btn-light py-2 border text-secondary">
+                                Keep Record
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    Mistake in the amount? 
+                    <a href="{% url 'payment_update' payment.id %}" class="text-decoration-none fw-bold text-primary">Edit entry instead</a>
+                </p>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { border-radius: 1.25rem; }
+    .btn-danger { transition: all 0.2s ease-in-out; }
+    .btn-danger:hover { background-color: #bb2d3b; transform: scale(1.01); }
+    .ls-1 { letter-spacing: 0.5px; }
+</style>
+{% endblock %}

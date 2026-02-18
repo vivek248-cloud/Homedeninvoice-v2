@@ -1,0 +1,94 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Delete Project | HomeDen{% endblock %}
+{% block page_title %}Security Verification{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            
+            <div class="card border-0 shadow-lg overflow-hidden">
+                <div class="bg-danger py-2"></div>
+                
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-exclamation-octagon-fill fs-1"></i>
+                        </div>
+                    </div>
+
+                    <h4 class="fw-bold text-dark mb-2">Delete Project?</h4>
+                    <p class="text-muted">You are about to permanently remove:</p>
+                    
+                    <div class="bg-light rounded p-4 mb-4 border border-danger border-opacity-10 text-start">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-danger text-white px-2 py-1 small">Final Warning</span>
+                            <span class="text-muted small">ID: #PROJ-{{ project.id }}</span>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1">{{ project.name }}</h5>
+                        <div class="small text-muted mb-2">
+                            <i class="bi bi-person me-1"></i> Client: <strong>{{ project.client.name }}</strong>
+                        </div>
+                        <div class="d-flex gap-3 mt-3 pt-3 border-top">
+                            <div>
+                                <small class="d-block text-uppercase fw-bold text-muted" style="font-size: 0.65rem;">Budget</small>
+                                <span class="fw-bold text-dark">₹ {{ project.budget }}</span>
+                            </div>
+                            <div>
+                                <small class="d-block text-uppercase fw-bold text-muted" style="font-size: 0.65rem;">Status</small>
+                                <span class="fw-bold text-primary">{{ project.status|title }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning border-0 small text-start mb-4 py-3">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-info-circle-fill me-2"></i>What happens next?</h6>
+                        <ul class="mb-0 ps-3">
+                            <li>All room measurements will be erased.</li>
+                            <li>Payment history and pending receivables will be lost.</li>
+                            <li>This action <strong>cannot be undone</strong>.</li>
+                        </ul>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger py-3 fw-bold shadow-sm">
+                                <i class="bi bi-trash3 me-2"></i>Delete Project & Data
+                            </button>
+                            <a href="{% url 'project_list' %}" class="btn btn-light py-2 border text-secondary">
+                                Keep Project
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    Just want to stop work? <a href="{% url 'project_update' project.id %}" class="text-decoration-none">Change status to 'On Hold'</a>
+                </a>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling for the high-impact modal appearance */
+    .card {
+        border-radius: 1rem;
+    }
+    .btn-danger {
+        transition: all 0.3s;
+    }
+    .btn-danger:hover {
+        background-color: #bb2d3b;
+        transform: scale(1.02);
+    }
+    .alert-warning {
+        background-color: #fff9e6;
+        color: #856404;
+    }
+</style>
+{% endblock %}

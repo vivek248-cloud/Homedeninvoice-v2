@@ -1,0 +1,166 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Projects Overview | HomeDen{% endblock %}
+{% block page_title %}Project Portfolio{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-3">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-6">
+                        <form method="GET">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+                                <input type="text"
+                                    name="q"
+                                    value="{{ query|default:'' }}"
+                                    class="form-control border-start-0 ps-0"
+                                    placeholder="Search clients by name, email or mobile...">
+                                <button type="submit" class="btn btn-primary">
+                                    Search
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <a href="{% url 'project_create' %}" class="btn btn-primary">
+                            <i class="bi bi-person-plus-fill me-1"></i> Add New Project
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">Active Projects</small>
+                <h3 class="fw-bold mb-0 text-primary">{{ projects.count }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">
+                    Total Receivables
+                </small>
+
+                <h3 class="fw-bold mb-0 text-danger">
+                    <span class="fs-6">₹</span>
+                    {% if total_receivable %}
+                        {{ total_receivable|floatformat:2 }}
+                    {% else %}
+                        0.00
+                    {% endif %}
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold text-dark mb-0">Project Directory</h4>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive" style="border-radius:19px;">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3 text-muted small fw-bold text-uppercase">Project & Client</th>
+                            <th class="py-3 text-muted small fw-bold text-uppercase">Budget</th>
+                            <th class="py-3 text-muted small fw-bold text-uppercase">Spent</th>
+                            <th class="py-3 text-muted small fw-bold text-uppercase">Paid</th>
+                            <th class="py-3 text-muted small fw-bold text-uppercase">Balance</th>
+                            <th class="py-3 text-muted small fw-bold text-uppercase text-center">Status</th>
+                            <th class="py-3 text-muted small fw-bold text-uppercase text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects %}
+                        <tr>
+                            <td class="ps-4">
+                                <a href="{% url 'project_detail' project.id %}" class="text-decoration-none d-block">
+                                    <span class="fw-bold text-dark d-block mb-0">{{ project.name }}</span>
+                                    <span class="text-muted small"><i class="bi bi-person me-1"></i>{{ project.client.name }}</span>
+                                </a>
+                            </td>
+
+                            <td><span class="text-muted">₹</span>{{ project.budget }}</td>
+                            <td><span class="text-muted">₹</span>{{ project.total_spent }}</td>
+                            <td><span class="text-muted text-success">₹</span>{{ project.total_paid }}</td>
+                            
+                            <td>
+                                <span class="fw-bold {% if project.yet_to_receive > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                    ₹{{ project.yet_to_receive }}
+                                </span>
+                            </td>
+
+                            <td class="text-center">
+                                {% if project.status == "ongoing" %}
+                                    <span class="badge rounded-pill bg-primary-subtle text-primary px-3 border border-primary-subtle">Ongoing</span>
+                                {% elif project.status == "completed" %}
+                                    <span class="badge rounded-pill bg-success-subtle text-success px-3 border border-success-subtle">Completed</span>
+                                {% else %}
+                                    <span class="badge rounded-pill bg-warning-subtle text-warning px-3 border border-warning-subtle">On Hold</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end pe-4">
+                                <div class="dropdown">
+                                    <button class="btn btn-light btn-sm border" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                        <li><a class="dropdown-item py-2" href="{% url 'project_detail' project.id %}"><i class="bi bi-eye me-2 text-primary"></i> View Detail</a></li>
+                                        <li><a class="dropdown-item py-2" href="{% url 'project_update' project.id %}"><i class="bi bi-pencil me-2 text-warning"></i> Edit Project</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item py-2 text-danger" href="{% url 'project_delete' project.id %}">
+                                                <i class="bi bi-trash3 me-2"></i> Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="opacity-25 mb-3">
+                                    <i class="bi bi-building-add fs-1"></i>
+                                </div>
+                                <h5 class="text-muted">No Projects Found</h5>
+                                <p class="small text-muted mb-3">Start by creating your first client project.</p>
+                                <a href="{% url 'project_create' %}" class="btn btn-sm btn-primary px-4">Add Project</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling for the Receivables/Balance Column */
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,0.01);
+    }
+    
+    .bg-primary-subtle { background-color: #e7f1ff !important; }
+    .bg-success-subtle { background-color: #e1fcef !important; }
+    .bg-warning-subtle { background-color: #fff3cd !important; }
+    
+    .dropdown-item:active {
+        background-color: #f8f9fa;
+        color: #000;
+    }
+</style>
+{% endblock %}

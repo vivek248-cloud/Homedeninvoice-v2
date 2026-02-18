@@ -1,0 +1,221 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Project Detail | {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'project_update' project.id %}" 
+            class="btn btn-danger border-0 shadow-sm px-3 rounded-3 text-white fw-semibold d-flex align-items-center"
+            style="height: 44px; ">
+                <i class="bi bi-pencil-square me-2"></i> Edit
+            </a>
+
+            <div class="btn-group">
+
+                <!-- Main Button -->
+                <a href="{% url 'spend_create' %}?project={{ project.id }}"
+                class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i> New Entry
+                </a>
+
+                <!-- Split Toggle -->
+                <button type="button"
+                        class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                        data-bs-toggle="dropdown"
+                        data-bs-auto-close="true"
+                        aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item"
+                        href="{% url 'spend_create' %}?project={{ project.id }}">
+                            Add Spend
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item"
+                        href="{% url 'payment_create' %}?project={{ project.id }}">
+                            Add Payment
+                        </a>
+                    </li>
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row g-3 mb-5">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-start border-primary border-4">
+                <div class="card-body">
+                    <small class="text-muted fw-bold text-uppercase ls-1">Total Budget</small>
+                    <h3 class="fw-bold mt-1 mb-0">₹ {{ project.budget }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted fw-bold text-uppercase ls-1">Total Spend</small>
+                    <h3 class="fw-bold mt-1 mb-0 text-dark">₹ {{ total_spent }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted fw-bold text-uppercase ls-1">Collection (Paid)</small>
+                    <h3 class="fw-bold mt-1 mb-0 text-success">₹ {{ total_paid }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-end border-danger border-4">
+                <div class="card-body">
+                    <small class="text-muted fw-bold text-uppercase ls-1">Outstanding Balance</small>
+                    <h3 class="fw-bold mt-1 mb-0 {% if balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                        ₹ {{ balance }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-hammer me-2"></i>Work Breakdown & Spend</h5>
+            <span class="badge bg-light text-dark border">{{ spends|length }} Items</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Location (Floor/Room)</th>
+                            <th>Type</th>
+                            <th class="text-center">Qty</th>
+                            <th>Area/Size</th>
+                            <th>Rate</th>
+                            <th class="text-end pe-4">Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for spend in spends %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="fw-bold text-dark">{{ spend.room.name|default:"General" }}</span>
+                                <div class="small text-muted">{{ spend.floor.name|default:"-" }}</div>
+                            </td>
+                            <td><span class="badge bg-info-subtle text-info border border-info-subtle">{{ spend.fullsemi.name|default:"-" }}</span></td>
+                            <td class="text-center">{{ spend.qty }}</td>
+                            <td>{{ spend.area|default:"-" }} <small class="text-muted">{{ spend.unit }}</small></td>
+                            <td>₹ {{ spend.rate }}</td>
+                            <td class="text-end pe-4 fw-bold text-dark">₹ {{ spend.total_amount }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">No spend records linked to this project.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="bi bi-cash-stack me-2 text-success"></i>Payment History (Ledger)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Date</th>
+                            <th>Previous Paid</th>
+                            <th>Transaction</th>
+                            <th>Accumulated</th>
+                            <th>Balance After</th>
+                            <th>Mode</th>
+                            <th class="text-end pe-4">Whatsapp</th>
+                            <th class="text-end pe-4">Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in payment_rows %}
+                        <tr>
+                            <td class="ps-4 text-muted">{{ row.date }}</td>
+                            <td>₹ {{ row.previous_paid }}</td>
+                            <td class="fw-bold text-success">+ ₹ {{ row.now_paid }}</td>
+                            <td class="fw-bold text-dark">₹ {{ row.total_paid }}</td>
+                            <td>
+                                <span class="fw-bold 
+                                    {% if row.balance_after == 0 %}text-success
+                                    {% elif row.balance_after < 0 %}text-danger
+                                    {% else %}text-primary{% endif %}">
+                                    ₹ {{ row.balance_after }}
+                                </span>
+                            </td>
+                            <td><span class="small border px-2 py-1 rounded bg-light">{{ row.mode }}</span></td>
+
+                            <td class="text-end pe-4">
+                                {% url 'public_invoice' row.token as invoice_path %}
+
+                                <a href="https://wa.me/91{{ project.client.mobile_1 }}?text=Hello%20{{ project.client.name }}%2C%20Your%20invoice%20is%20ready.%20Click%20to%20view%3A%20{{ request.scheme }}://{{ request.get_host }}{{ invoice_path }}"
+                                target="_blank"
+                                class="btn btn-success btn-sm">
+                                    <i class="bi bi-whatsapp"></i>
+                                </a>
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="{% url 'payment_invoice' row.id %}" class="btn btn-sm btn-danger" target="_blank">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">No payments recorded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-5">
+        <a href="{% url 'project_list' %}" class="btn btn-secondary border">
+            <i class="bi bi-arrow-left me-1"></i> Back to Projects
+        </a>
+    </div>
+</div>
+
+<style>
+    .ls-1 { letter-spacing: 0.5px; }
+    .bg-info-subtle { background-color: #e0f7fa !important; }
+    .table thead th { font-size: 0.75rem; text-uppercase; color: #6c757d; }
+    .breadcrumb-item { font-size: 0.85rem; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+    dropdownElementList.map(function (dropdownToggleEl) {
+        return new bootstrap.Dropdown(dropdownToggleEl)
+    })
+})
+</script>
+
+
+{% endblock %}

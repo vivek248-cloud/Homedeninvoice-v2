@@ -1,0 +1,75 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Delete Rate Type | HomeDen{% endblock %}
+{% block page_title %}Security Confirmation{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            
+            <div class="card border-0 shadow-lg overflow-hidden">
+                <div class="bg-danger py-2"></div>
+                
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-exclamation-octagon-fill fs-1"></i>
+                        </div>
+                    </div>
+
+                    <h4 class="fw-bold text-dark mb-2">Delete Rate Type?</h4>
+                    <p class="text-muted">You are about to remove the following service classification:</p>
+                    
+                    <div class="bg-light rounded p-3 mb-4 border border-danger border-opacity-10">
+                        <div class="h5 fw-bold text-danger mb-1">{{ fullsemi.name }}</div>
+                        <div class="small text-muted">Standard Rate: ₹ {{ fullsemi.rate }}</div>
+                    </div>
+
+                    <div class="alert alert-danger border-0 small text-start mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-info-circle-fill me-3 mt-1 fs-5"></i>
+                            <div>
+                                <strong>Warning:</strong> Deleting this master entry will stop all automatic area-based calculations for projects assigned to this type. This action <strong>cannot be undone</strong>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger py-2 fw-bold shadow-sm">
+                                <i class="bi bi-trash3-fill me-2"></i>Permanently Delete
+                            </button>
+                            <a href="{% url 'fullsemi_list' %}" class="btn btn-light py-2 border text-secondary">
+                                <i class="bi bi-x-circle me-1"></i> No, Keep This Type
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    <i class="bi bi-question-circle me-1"></i> 
+                    If you just want to change the price, use the <a href="{% url 'fullsemi_update' fullsemi.id %}" class="text-decoration-none">Edit</a> option instead.
+                </p>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Focus attention on the card */
+    .card {
+        transition: transform 0.2s ease-in-out;
+    }
+    .btn-danger {
+        transition: all 0.3s;
+    }
+    .btn-danger:hover {
+        background-color: #bb2d3b;
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+    }
+</style>
+{% endblock %}

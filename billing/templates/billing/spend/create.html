@@ -1,0 +1,185 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Add Work Entry | HomeDen{% endblock %}
+{% block page_title %}Itemize Project Spend{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <form method="POST" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-geo-alt me-2"></i>Project & Location</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-uppercase">Target Project</label>
+                                <select name="project" class="form-select" required>
+                                    <option value="" selected disabled>Select Project...</option>
+                                    {% for project in projects %}
+                                    <option value="{{ project.id }}">{{ project.name }} ({{ project.client.name }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-uppercase">Floor</label>
+                                <select name="floor" class="form-select">
+                                    <option value="">N/A</option>
+                                    {% for floor in floors %}
+                                    <option value="{{ floor.id }}">{{ floor.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-uppercase">Room</label>
+                                <select name="room" class="form-select">
+                                    <option value="">N/A</option>
+                                    {% for room in rooms %}
+                                    <option value="{{ room.id }}">{{ room.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-rulers me-2"></i>Measurements & Elements</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-uppercase">Type (Full/Semi)</label>
+                                <select name="fullsemi" id="fullsemi" class="form-select border-primary-subtle" required>
+                                    <option value="" selected disabled>Choose pricing model...</option>
+                                    {% for fs in fullsemis %}
+                                    <option value="{{ fs.id }}" data-rate="{{ fs.rate }}">
+                                        {{ fs.name }} (₹{{ fs.rate }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold text-uppercase">Work Element Name</label>
+                                <input type="text" name="elements" class="form-control" placeholder="e.g. Wardrobe, Cabinet">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-uppercase">Length</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" name="length" id="length" class="form-control form-control-lg">
+                                    <span class="input-group-text bg-light"><small>ft</small></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-uppercase">Width</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" name="width" id="width" class="form-control form-control-lg">
+                                    <span class="input-group-text bg-light"><small>ft</small></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-uppercase">Quantity</label>
+                                <input type="number" step="0.01" name="qty" id="qty" value="1" class="form-control form-control-lg">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-uppercase">Display Unit</label>
+                                <input type="text" name="unit" value="sqft" class="form-control form-control-lg" required>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-uppercase">Item Description/Notes</label>
+                                <textarea name="description" class="form-control" rows="2" placeholder="Specific material details or color codes..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm bg-primary text-white mb-4">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center text-center text-md-start">
+                            <div class="col-md-3 mb-3 mb-md-0 border-end border-white border-opacity-25">
+                                <small class="text-uppercase opacity-75 d-block mb-1">Calculated Area</small>
+                                <div class="h4 mb-0 fw-bold"><span id="area_display">0.00</span> <small class="fs-6 fw-normal">sqft</small></div>
+                                <input type="hidden" name="area" id="area">
+                            </div>
+                            <div class="col-md-3 mb-3 mb-md-0 border-end border-white border-opacity-25">
+                                <small class="text-uppercase opacity-75 d-block mb-1">Standard Rate</small>
+                                <div class="h4 mb-0 fw-bold">₹ <span id="rate_display">0.00</span></div>
+                                <input type="hidden" name="rate" id="rate">
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <small class="text-uppercase opacity-75 d-block mb-1">Total Billable Amount</small>
+                                <div class="display-6 mb-0 fw-bold">₹ <span id="total_display">0.00</span></div>
+                                <input type="hidden" name="total_amount" id="total">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <a href="{% url 'spend_list' %}" class="btn btn-secondary text-white text-decoration-none">
+                        <i class="bi bi-arrow-left me-1"></i> Back to List
+                    </a>
+                    <button type="submit" class="btn btn-primary px-5 py-2 fw-bold shadow-sm rounded-pill">
+                        <i class="bi bi-cloud-check me-2"></i>Save Work Entry
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const lengthInput = document.getElementById('length');
+    const widthInput = document.getElementById('width');
+    const qtyInput = document.getElementById('qty');
+    const areaHidden = document.getElementById('area');
+    const areaDisplay = document.getElementById('area_display');
+    const rateHidden = document.getElementById('rate');
+    const rateDisplay = document.getElementById('rate_display');
+    const totalHidden = document.getElementById('total');
+    const totalDisplay = document.getElementById('total_display');
+    const fullsemiSelect = document.getElementById('fullsemi');
+
+    function calculate() {
+        let length = parseFloat(lengthInput.value) || 0;
+        let width = parseFloat(widthInput.value) || 0;
+        let qty = parseFloat(qtyInput.value) || 0;
+
+        // Area Calculation (If length/width are 0, it might be a fixed qty item)
+        let area = (length > 0 && width > 0) ? (length * width) : 1;
+        
+        // Visual Area Display (only show actual area if dimensions exist)
+        areaDisplay.innerText = (length * width).toFixed(2);
+        areaHidden.value = (length * width).toFixed(2);
+
+        let selectedOption = fullsemiSelect.options[fullsemiSelect.selectedIndex];
+        let rate = selectedOption ? parseFloat(selectedOption.getAttribute('data-rate')) || 0 : 0;
+
+        rateDisplay.innerText = rate.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        rateHidden.value = rate.toFixed(2);
+
+        // Final Calculation
+        let total = area * rate * qty;
+        totalDisplay.innerText = total.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        totalHidden.value = total.toFixed(2);
+    }
+
+    [lengthInput, widthInput, qtyInput].forEach(el => el.addEventListener('input', calculate));
+    fullsemiSelect.addEventListener('change', calculate);
+});
+</script>
+
+<style>
+    .border-primary-subtle { border-color: #cfe2ff !important; }
+    .input-group-text { border-color: #dee2e6; }
+    .form-control-lg { font-weight: 600; }
+</style>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Delete Room Type | HomeDen{% endblock %}
+{% block page_title %}System Warning{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            
+            <div class="card border-0 shadow-lg overflow-hidden">
+                <div class="bg-danger py-2"></div>
+                
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-trash3-fill fs-2"></i>
+                        </div>
+                    </div>
+
+                    <h4 class="fw-bold text-dark mb-2">Delete Room Type?</h4>
+                    <p class="text-muted">You are removing the following master entry:</p>
+                    
+                    <div class="rounded p-3 mb-4 border" style="background-color: #f8f7ff; border-color: rgba(102, 16, 242, 0.1) !important;">
+                        <span class="h5 fw-bold" style="color: #6610f2;">
+                            <i class="bi bi-door-closed-fill me-2"></i>{{ room.name }}
+                        </span>
+                    </div>
+
+                    <div class="alert alert-danger border-0 small text-start mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i>
+                            <div>
+                                <strong>Critical Note:</strong> This room will no longer be available for new projects. Past projects that used this room type may display an empty or "Unknown" room label.
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger py-2 fw-bold shadow-sm">
+                                <i class="bi bi-check-lg me-1"></i> Confirm & Delete
+                            </button>
+                            <a href="{% url 'room_list' %}" class="btn btn-light py-2 border text-secondary">
+                                Keep This Room
+                            </a>
+                        </div>
+                    </form>
+                    
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    Changed your mind? <a href="{% url 'room_update' room.id %}" class="text-decoration-none" style="color: #6610f2;">Edit the name instead</a>
+                </p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Add a subtle hover effect to the card for focus */
+    .card:hover {
+        transform: translateY(-2px);
+        transition: transform 0.3s ease;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        border: none;
+    }
+    .btn-danger:hover {
+        background-color: #bb2d3b;
+        box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+    }
+</style>
+{% endblock %}

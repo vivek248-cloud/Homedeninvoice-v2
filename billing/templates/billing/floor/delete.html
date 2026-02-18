@@ -1,0 +1,83 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Delete Floor | HomeDen{% endblock %}
+{% block page_title %}Security Check{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            
+            <div class="card border-0 shadow-lg overflow-hidden">
+                <div class="bg-danger py-2"></div>
+                
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                            <i class="bi bi-trash3-fill fs-2"></i>
+                        </div>
+                    </div>
+
+                    <h4 class="fw-bold text-dark mb-2">Delete Floor Type?</h4>
+                    <p class="text-muted">You are removing the master entry for:</p>
+                    
+                    <div class="bg-light rounded p-3 mb-4 border">
+                        <span class="h5 fw-bold text-primary mb-0">
+                            <i class="bi bi-layers me-2"></i>{{ floor.name }}
+                        </span>
+                    </div>
+
+                    <div class="alert alert-warning border-0 small text-start mb-4">
+                        <div class="d-flex">
+                            <i class="bi bi-exclamation-triangle-fill me-3 fs-4 text-danger"></i>
+                            <div>
+                                <strong>System Impact:</strong> Deleting this will remove it from all future dropdown menus. Existing projects using this floor may show "Unknown" or missing labels.
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger py-2 fw-bold shadow-sm">
+                                <i class="bi bi-check-circle-fill me-2"></i>Confirm Deletion
+                            </button>
+                            <a href="{% url 'floor_list' %}" class="btn btn-light py-2 border">
+                                <i class="bi bi-x-lg me-1"></i> No, Go Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    <i class="bi bi-shield-lock me-1"></i> 
+                    Administrative action recorded at {% now "H:i" %}
+                </small>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Visual emphasis on the destructive action */
+    .btn-danger:hover {
+        background-color: #dc3545;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+    .card {
+        transition: transform 0.3s ease;
+    }
+    /* Simple attention-getter */
+    @keyframes pulse-red {
+        0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
+    .bg-danger-pulse {
+        animation: pulse-red 2s infinite;
+    }
+</style>
+{% endblock %}

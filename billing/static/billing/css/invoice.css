@@ -1,0 +1,7 @@
+.clickable-row:hover {
+    background-color: #f1f5f9;
+    transition: 0.2s ease;
+}
+
+.ls-1 { letter-spacing: 1px; }
+    .bg-light { background-color: #f8fafc !important; }
