@@ -301,21 +301,35 @@ def project_delete(request, pk):
 
 
 
-from django.shortcuts import get_object_or_404
-from django.db.models import Sum
+from django.shortcuts import get_object_or_404, render
+from django.db.models import Sum, F, DecimalField, ExpressionWrapper
+from django.urls import reverse
 from decimal import Decimal
+import urllib.parse
+
 
 def project_detail(request, pk):
 
-    project = get_object_or_404(Project.objects.select_related('client'), pk=pk)
+    project = get_object_or_404(
+        Project.objects.select_related('client'),
+        pk=pk
+    )
 
     spends = project.spends.select_related(
         'floor', 'room', 'fullsemi'
-    ).all()
+    )
 
     payments = project.payments.order_by('date', 'id')
 
-    total_spent = sum(spend.total_amount for spend in spends)
+    # ✅ FAST database total (qty × rate)
+    total_spent = spends.aggregate(
+        total=Sum(
+            ExpressionWrapper(
+                F('qty') * F('rate'),
+                output_field=DecimalField()
+            )
+        )
+    )['total'] or Decimal("0.00")
 
     running_total = Decimal("0.00")
     payment_rows = []
@@ -325,6 +339,19 @@ def project_detail(request, pk):
         running_total += payment.amount
         balance_after = project.budget - running_total
 
+        # ✅ build public invoice link
+        invoice_path = reverse('public_invoice', args=[payment.invoice_token])
+        invoice_url = request.build_absolute_uri(invoice_path)
+
+        # ✅ proper URL-encoded WhatsApp message
+        message = (
+            f"Hello {project.client.name}, "
+            f"Your invoice is ready. Click to view: {invoice_url}"
+        )
+        encoded_message = urllib.parse.quote(message)
+
+        whatsapp_url = f"https://wa.me/91{project.client.mobile_1}?text={encoded_message}"
+
         payment_rows.append({
             'id': payment.id,
             'date': payment.date,
@@ -333,8 +360,8 @@ def project_detail(request, pk):
             'total_paid': running_total,
             'balance_after': balance_after,
             'mode': payment.get_payment_mode_display(),
+            'whatsapp_url': whatsapp_url,  # ✅ IMPORTANT
         })
-
 
     balance = project.budget - running_total
 
@@ -348,6 +375,8 @@ def project_detail(request, pk):
     }
 
     return render(request, 'billing/project/detail.html', context)
+
+
 
 
 
@@ -754,6 +783,9 @@ from django.shortcuts import get_object_or_404, render
 from datetime import datetime
 import re
 from django.urls import reverse
+import urllib.parse
+
+
 
 def build_invoice_context(request, payment):
 
@@ -799,6 +831,19 @@ def build_invoice_context(request, payment):
         date__lte=payment.date
     ).order_by('date', 'id')
 
+
+    phone = f"91{client.mobile_1}"
+
+    message = (
+        f"Hello {client.name}, "
+        f"Your invoice is ready. Click to view: {invoice_url}"
+    )
+
+    whatsapp_url = (
+        f"https://wa.me/{phone}?text={urllib.parse.quote(message)}"
+    )
+
+
     payment_rows = []
     running_total = Decimal("0.00")
 
@@ -836,6 +881,7 @@ def build_invoice_context(request, payment):
         'invoice_number': invoice_number,
         'invoice_filename': invoice_filename,
         'invoice_url': invoice_url,
+        'whatsapp_url': whatsapp_url,
     }
 
 

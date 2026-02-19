@@ -166,14 +166,14 @@
                             <td><span class="small border px-2 py-1 rounded bg-light">{{ row.mode }}</span></td>
 
                             <td class="text-end pe-4">
-                                {% url 'public_invoice' row.token as invoice_path %}
-
-                                <a href="https://wa.me/91{{ project.client.mobile_1 }}?text=Hello%20{{ project.client.name }}%2C%20Your%20invoice%20is%20ready.%20Click%20to%20view%3A%20{{ request.scheme }}://{{ request.get_host }}{{ invoice_path }}"
+                                <a href="{{ row.whatsapp_url }}"
                                 target="_blank"
                                 class="btn btn-success btn-sm">
                                     <i class="bi bi-whatsapp"></i>
                                 </a>
                             </td>
+
+
                             <td class="text-end pe-4">
                                 <a href="{% url 'payment_invoice' row.id %}" class="btn btn-sm btn-danger" target="_blank">
                                     <i class="bi bi-file-earmark-pdf"></i>
