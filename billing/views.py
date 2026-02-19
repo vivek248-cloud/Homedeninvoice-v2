@@ -850,17 +850,20 @@ import zipfile
 import subprocess
 from datetime import datetime
 from django.conf import settings
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
+
 
 @login_required
 def download_backup(request):
 
-    # 🔥 Database credentials (from settings)
-    DB_NAME = settings.DATABASES['default']['NAME']
-    DB_USER = settings.DATABASES['default']['USER']
-    DB_PASSWORD = settings.DATABASES['default']['PASSWORD']
-    DB_HOST = settings.DATABASES['default']['HOST']
+    db = settings.DATABASES['default']
+
+    DB_NAME = db['NAME']
+    DB_USER = db['USER']
+    DB_PASSWORD = db['PASSWORD']
+    DB_HOST = db.get('HOST') or 'localhost'
+    DB_PORT = db.get('PORT') or '3306'
 
     backup_dir = os.path.join(settings.BASE_DIR, 'backups')
     os.makedirs(backup_dir, exist_ok=True)
@@ -872,19 +875,52 @@ def download_backup(request):
     sql_path = os.path.join(backup_dir, sql_filename)
     zip_path = os.path.join(backup_dir, zip_filename)
 
-    # 🔥 mysqldump command
-    command = f'mysqldump -u {DB_USER} -p{DB_PASSWORD} {DB_NAME} > "{sql_path}"'
-    subprocess.call(command, shell=True)
+    try:
+        # ✅ SAFE mysqldump (NO shell=True)
+        with open(sql_path, 'w') as outfile:
+            subprocess.run(
+                [
+                    "mysqldump",
+                    f"-h{DB_HOST}",
+                    f"-P{DB_PORT}",
+                    f"-u{DB_USER}",
+                    f"-p{DB_PASSWORD}",
+                    DB_NAME,
+                ],
+                stdout=outfile,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
 
-    # 🔥 Create ZIP
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        zipf.write(sql_path, sql_filename)
+        # ✅ Create ZIP
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipf.write(sql_path, sql_filename)
 
-    os.remove(sql_path)
+        os.remove(sql_path)
 
-    return FileResponse(open(zip_path, 'rb'), as_attachment=True, filename=zip_filename)
+        return FileResponse(
+            open(zip_path, 'rb'),
+            as_attachment=True,
+            filename=zip_filename
+        )
+
+    except subprocess.CalledProcessError as e:
+        return HttpResponse(
+            f"Backup failed: {e.stderr.decode()}",
+            status=500
+        )
 
 
+
+
+
+import os
+import zipfile
+import subprocess
+from django.conf import settings
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 
 
 @login_required
@@ -892,74 +928,117 @@ def restore_backup(request):
 
     if request.method == 'POST' and request.FILES.get('backup_file'):
 
+        db = settings.DATABASES['default']
+
+        DB_NAME = db['NAME']
+        DB_USER = db['USER']
+        DB_PASSWORD = db['PASSWORD']
+        DB_HOST = db.get('HOST') or 'localhost'
+        DB_PORT = db.get('PORT') or '3306'
+
         backup_file = request.FILES['backup_file']
+
+        # ✅ validate file type
+        if not backup_file.name.endswith('.zip'):
+            return HttpResponse("Invalid file. Please upload ZIP backup.", status=400)
 
         backup_dir = os.path.join(settings.BASE_DIR, 'backups')
         os.makedirs(backup_dir, exist_ok=True)
 
         zip_path = os.path.join(backup_dir, backup_file.name)
 
+        # ✅ save uploaded file
         with open(zip_path, 'wb+') as destination:
             for chunk in backup_file.chunks():
                 destination.write(chunk)
 
-        # 🔥 Extract zip
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(backup_dir)
+        try:
+            # ✅ extract zip safely
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(backup_dir)
 
-        # 🔥 Find extracted .sql
-        for file in os.listdir(backup_dir):
-            if file.endswith('.sql'):
-                sql_path = os.path.join(backup_dir, file)
+            # ✅ find latest SQL file from this zip only
+            sql_file = None
+            for name in zip_ref.namelist():
+                if name.endswith('.sql'):
+                    sql_file = os.path.join(backup_dir, name)
+                    break
 
-                DB_NAME = settings.DATABASES['default']['NAME']
-                DB_USER = settings.DATABASES['default']['USER']
-                DB_PASSWORD = settings.DATABASES['default']['PASSWORD']
+            if not sql_file or not os.path.exists(sql_file):
+                return HttpResponse("No SQL file found in backup.", status=400)
 
-                command = f'mysql -u {DB_USER} -p{DB_PASSWORD} {DB_NAME} < "{sql_path}"'
-                subprocess.call(command, shell=True)
+            # ✅ restore database (SAFE — no shell=True)
+            with open(sql_file, 'rb') as infile:
+                result = subprocess.run(
+                    [
+                        "mysql",
+                        f"-h{DB_HOST}",
+                        f"-P{DB_PORT}",
+                        f"-u{DB_USER}",
+                        f"-p{DB_PASSWORD}",
+                        DB_NAME,
+                    ],
+                    stdin=infile,
+                    stderr=subprocess.PIPE,
+                )
 
-                break
+            if result.returncode != 0:
+                return HttpResponse(
+                    f"Restore failed: {result.stderr.decode()}",
+                    status=500
+                )
 
-        return redirect('dashboard')
+            return redirect('dashboard')
+
+        except zipfile.BadZipFile:
+            return HttpResponse("Invalid ZIP file.", status=400)
 
     return render(request, 'billing/backup/restore.html')
 
 
 
-
 import os
+from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from datetime import datetime
 
 
 @login_required
 def backup_history(request):
 
     backup_dir = os.path.join(settings.BASE_DIR, "backups")
-
-    # Create folder if not exists
     os.makedirs(backup_dir, exist_ok=True)
 
     backup_files = []
 
-    for filename in os.listdir(backup_dir):
-        if filename.endswith(".zip"):
+    try:
+        for filename in os.listdir(backup_dir):
+
+            # ✅ only allow zip backups
+            if not filename.lower().endswith(".zip"):
+                continue
 
             file_path = os.path.join(backup_dir, filename)
 
-            size = os.path.getsize(file_path) / (1024 * 1024)  # MB
+            # skip if not file
+            if not os.path.isfile(file_path):
+                continue
+
+            size_mb = os.path.getsize(file_path) / (1024 * 1024)
             created_time = os.path.getctime(file_path)
 
             backup_files.append({
                 "name": filename,
-                "size": round(size, 2),
+                "size": round(size_mb, 2),
                 "created": datetime.fromtimestamp(created_time),
+                "created_human": datetime.fromtimestamp(created_time).strftime("%d %b %Y, %I:%M %p"),
             })
 
-    # Sort latest first
+    except FileNotFoundError:
+        backup_files = []
+
+    # ✅ latest first
     backup_files.sort(key=lambda x: x["created"], reverse=True)
 
     return render(request, "billing/backup/history.html", {
@@ -972,16 +1051,39 @@ def backup_history(request):
 from django.http import FileResponse, Http404
 
 
+import os
+from django.conf import settings
+from django.http import FileResponse, Http404
+from django.contrib.auth.decorators import login_required
+from django.utils.text import get_valid_filename
+
+
 @login_required
 def download_backup_file(request, filename):
+
+    # ✅ sanitize filename
+    filename = get_valid_filename(filename)
+
+    # ✅ only allow zip downloads
+    if not filename.lower().endswith(".zip"):
+        raise Http404("Invalid backup file")
 
     backup_dir = os.path.join(settings.BASE_DIR, "backups")
     file_path = os.path.join(backup_dir, filename)
 
+    # ✅ prevent path traversal attack
+    if not os.path.abspath(file_path).startswith(os.path.abspath(backup_dir)):
+        raise Http404("Invalid file path")
+
     if not os.path.exists(file_path):
         raise Http404("Backup file not found")
 
-    return FileResponse(open(file_path, "rb"), as_attachment=True)
+    return FileResponse(
+        open(file_path, "rb"),
+        as_attachment=True,
+        filename=filename
+    )
+
 
 
 from django.contrib.auth.decorators import login_required
