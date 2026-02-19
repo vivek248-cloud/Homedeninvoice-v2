@@ -442,6 +442,11 @@ th {
 }
 
 
+
+body.public-invoice .no-print {
+    display: none !important;
+}
+
     </style>
 </head>
 
@@ -548,19 +553,27 @@ th {
         <tr class="total-row highlight">
             <td colspan="6" class="left">
                 GST
-                <input type="number"
-                    id="gstRate"
-                    class="no-print"
-                    step="0.01"
-                    min="0"
-                    value="{{ gst_rate }}"
-                    style="width:70px; margin-left:10px;">
-                <span class="print-only" id="gstPrint">{{ gst_rate }}%</span>
+
+                {% if not is_public %}
+                    <input type="number"
+                        id="gstRate"
+                        class="no-print"
+                        step="0.01"
+                        min="0"
+                        value="{{ gst_rate }}"
+                        style="width:70px; margin-left:10px;">
+                {% endif %}
+
+                <span class="{% if not is_public %}print-only{% endif %}" id="gstPrint">
+                    {{ gst_rate }}%
+                </span>
             </td>
+
             <td class="right" id="gstAmount">
                 ₹ {{ gst_amount }}
             </td>
         </tr>
+
 
         <!-- Subtotal -->
         <tr class="total-row">
@@ -575,28 +588,36 @@ th {
             <td colspan="6" class="left">
                 Discount
 
-                <!-- 🔘 Radio Buttons -->
-                <label class="no-print" style="margin-left:15px;">
-                    <input type="radio" name="discountType" value="percent" checked>
-                    %
-                </label>
+                {% if not is_public %}
+                    <!-- 🔘 Radio Buttons -->
+                    <label class="no-print" style="margin-left:15px;">
+                        <input type="radio" name="discountType" value="percent" checked>
+                        %
+                    </label>
 
-                <label class="no-print" style="margin-left:10px;">
-                    <input type="radio" name="discountType" value="rupee">
-                    ₹
-                </label>
+                    <label class="no-print" style="margin-left:10px;">
+                        <input type="radio" name="discountType" value="rupee">
+                        ₹
+                    </label>
 
-                <!-- 🔢 Input -->
-                <input type="number"
-                    id="discountInput"
-                    class="no-print"
-                    step="0.01"
-                    min="0"
-                    value="0"
-                    style="width:90px; margin-left:10px;">
+                    <!-- 🔢 Input -->
+                    <input type="number"
+                        id="discountInput"
+                        class="no-print"
+                        step="0.01"
+                        min="0"
+                        value="0"
+                        style="width:90px; margin-left:10px;">
+                {% endif %}
 
-                <span class="print-only" id="discountPrint"></span>
+                <span id="discountPrint"></span>
             </td>
+
+            <td class="right" id="discountAmount">
+                ₹ {{ discount }}
+            </td>
+        </tr>
+
 
             <td class="right" id="discountAmount">
                 ₹ 0.00

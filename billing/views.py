@@ -887,14 +887,15 @@ def build_invoice_context(request, payment):
 
 @login_required
 def payment_invoice(request, pk):
-
     payment = get_object_or_404(
         Payment.objects.select_related('project__client'),
         pk=pk
     )
 
     context = build_invoice_context(request, payment)
+    context['is_public'] = False   # ✅ IMPORTANT
     return render(request, 'billing/payment/invoice.html', context)
+
 
 
 def public_invoice(request, token):
@@ -905,7 +906,9 @@ def public_invoice(request, token):
     )
 
     context = build_invoice_context(request, payment)
+    context['is_public'] = True   # ✅ IMPORTANT
     return render(request, 'billing/payment/invoice.html', context)
+
 
 
 from django.contrib.auth.decorators import login_required
