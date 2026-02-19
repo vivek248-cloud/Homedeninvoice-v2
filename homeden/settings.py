@@ -16,7 +16,13 @@ SECRET_KEY = 'django-insecure-y0$(kn9$*k=*+g!0g-*0$o4&%gev(5mz*uhg=^&3^!@)=)c2-f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['homedeninvoice.com','www.homedeninvoice.com','31.97.62.126']
+# ALLOWED_HOSTS = ['homedeninvoice.com','www.homedeninvoice.com','31.97.62.126','*']
+
+ALLOWED_HOSTS = [
+    "homedeninvoice.com",
+    "www.homedeninvoice.com",
+    "31.97.62.126",
+]
 
 
 # Application definition
