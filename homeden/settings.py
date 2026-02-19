@@ -14,15 +14,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-y0$(kn9$*k=*+g!0g-*0$o4&%gev(5mz*uhg=^&3^!@)=)c2-f'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
+DEBUG = False
 
-# ALLOWED_HOSTS = ['homedeninvoice.com','www.homedeninvoice.com','31.97.62.126','*']
 
-ALLOWED_HOSTS = [
-    "homedeninvoice.com",
-    "www.homedeninvoice.com",
-    "31.97.62.126",
-]
+
+ALLOWED_HOSTS = ['homedeninvoice.com','www.homedeninvoice.com','31.97.62.126','*']
+
+# ALLOWED_HOSTS = [
+#     "homedeninvoice.com",
+#     "www.homedeninvoice.com",
+#     "31.97.62.126",
+# ]
 
 
 # Application definition
@@ -80,29 +83,29 @@ WSGI_APPLICATION = 'homeden.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'homedeninvoice',
-#         'USER': 'root',              
-#         'PASSWORD': 'Admin123',  
-#         'HOST': '127.0.0.1',         
-#         'PORT': '3306',
-#     }
-# }
-
-
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'homedeninvoice_db',
-        'USER': 'homeden_user',
-        'PASSWORD': 'Admin@123',
-        'HOST': 'localhost',
+        'NAME': 'homedeninvoice',
+        'USER': 'root',              
+        'PASSWORD': 'Admin123',  
+        'HOST': '127.0.0.1',         
         'PORT': '3306',
     }
 }
+
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'homedeninvoice_db',
+#         'USER': 'homeden_user',
+#         'PASSWORD': 'Admin@123',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#     }
+# }
 
 
 # Password validation
@@ -141,14 +144,15 @@ USE_TZ = True
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'   # ✅ VERY IMPORTANT (leading slash)
 
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# OPTIONAL — keep only if you really have a local static folder
 STATICFILES_DIRS = [
-    BASE_DIR / "static",   # 🔥 this is important
+    BASE_DIR / "static",
 ]
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
