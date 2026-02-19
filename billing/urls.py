@@ -83,5 +83,11 @@ urlpatterns = [
         name="delete_backup_file",
     ),
 
+    path(
+        "payments/<int:pk>/save-adjustments/",
+        views.save_invoice_adjustments,
+        name="save_invoice_adjustments",
+    ),
+
 
 ]

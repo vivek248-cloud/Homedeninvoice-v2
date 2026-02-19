@@ -814,16 +814,14 @@ def build_invoice_context(request, payment):
     total_spent = project.total_spent
     # GST based on client GST registration
 
-    if client.gst_number:
-        gst_rate = Decimal("18.00")
-    else:
-        gst_rate = Decimal("0.00")
+    # ✅ Use saved values if exist, else defaults
+    gst_rate = payment.gst_rate or (
+        Decimal("18.00") if client.gst_number else Decimal("0.00")
+    )
 
     gst_amount = (total_spent * gst_rate) / Decimal("100")
 
-    # Discount from client
-    discount = client.discount or Decimal("0.00")
-
+    discount = payment.discount_value or client.discount or Decimal("0.00")
 
     grand_total = total_spent + gst_amount - discount
 
@@ -911,6 +909,31 @@ def public_invoice(request, token):
 
 
 
+
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from decimal import Decimal
+
+@login_required
+@require_POST
+def save_invoice_adjustments(request, pk):
+    payment = get_object_or_404(Payment, pk=pk)
+
+    try:
+        gst_rate = Decimal(request.POST.get("gst_rate", "0"))
+        discount = Decimal(request.POST.get("discount", "0"))
+
+        payment.gst_rate = gst_rate
+        payment.discount_value = discount
+        payment.save(update_fields=["gst_rate", "discount_value"])
+
+        return JsonResponse({"status": "success"})
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
+
+
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
@@ -930,6 +953,12 @@ def profile(request):
     return render(request, "billing/profile.html", {
         "user_obj": user
     })
+
+
+
+
+
+
 
 
 

@@ -610,7 +610,7 @@ body.public-invoice .no-print {
                         style="width:90px; margin-left:10px;">
                 {% endif %}
 
-                <span id="discountPrint"></span>
+                
             </td>
 
             <td class="right" id="discountAmount">
@@ -619,9 +619,6 @@ body.public-invoice .no-print {
         </tr>
 
 
-            <td class="right" id="discountAmount">
-                ₹ 0.00
-            </td>
         </tr>
 
         <!-- Grand Total -->
@@ -718,9 +715,11 @@ body.public-invoice .no-print {
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 
-    let totalSpent = parseFloat("{{ total_spent }}");
+    const isPublic = {{ is_public|yesno:"true,false" }};
+
+    let totalSpent = parseFloat("{{ total_spent }}") || 0;
 
     const gstInput = document.getElementById('gstRate');
     const discountInput = document.getElementById('discountInput');
@@ -732,6 +731,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const grandTotalEl = document.getElementById('grandTotal');
     const discountPrintEl = document.getElementById('discountPrint');
 
+    // ✅ helper
     function getSelectedDiscountType() {
         for (let radio of discountRadios) {
             if (radio.checked) return radio.value;
@@ -739,10 +739,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return "percent";
     }
 
+    // ✅ calculation
     function calculate() {
 
-        let gstRate = parseFloat(gstInput.value) || 0;
-        let discountValue = parseFloat(discountInput.value) || 0;
+        let gstRate = parseFloat(gstInput?.value) || 0;
+        let discountValue = parseFloat(discountInput?.value) || 0;
 
         // GST
         let gstAmount = (totalSpent * gstRate) / 100;
@@ -756,29 +757,81 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (discountType === "percent") {
             discountAmount = (subtotal * discountValue) / 100;
-            discountPrintEl.innerHTML = discountValue + "%";
+            if (discountPrintEl) {
+                discountPrintEl.innerHTML = discountValue + "%";
+            }
         } else {
             discountAmount = discountValue;
-            discountPrintEl.innerHTML = "₹ " + discountValue.toFixed(2);
+            if (discountPrintEl) {
+                discountPrintEl.innerHTML = "₹ " + discountValue.toFixed(2);
+            }
         }
 
         // Grand Total
         let grandTotal = subtotal - discountAmount;
 
-        // Update UI
-        gstAmountEl.innerHTML = "₹ " + gstAmount.toFixed(2);
-        subtotalEl.innerHTML = "₹ " + subtotal.toFixed(2);
-        discountAmountEl.innerHTML = "₹ " + discountAmount.toFixed(2);
-        grandTotalEl.innerHTML = "₹ " + grandTotal.toFixed(2);
+        // ✅ update UI safely
+        if (gstAmountEl) gstAmountEl.innerHTML = "₹ " + gstAmount.toFixed(2);
+        if (subtotalEl) subtotalEl.innerHTML = "₹ " + subtotal.toFixed(2);
+        if (discountAmountEl) discountAmountEl.innerHTML = "₹ " + discountAmount.toFixed(2);
+        if (grandTotalEl) grandTotalEl.innerHTML = "₹ " + grandTotal.toFixed(2);
     }
 
-    gstInput.addEventListener('input', calculate);
-    discountInput.addEventListener('input', calculate);
+    // =========================================================
+    // 🔥 DEBOUNCE SAVE (PRO LEVEL)
+    // =========================================================
+    let saveTimer = null;
 
-    discountRadios.forEach(radio => {
-        radio.addEventListener('change', calculate);
+    function saveInvoiceAdjustments() {
+
+        if (isPublic) return; // 🔐 never save on public page
+
+        clearTimeout(saveTimer);
+
+        saveTimer = setTimeout(() => {
+
+            const gst = gstInput?.value || 0;
+            const discount = discountInput?.value || 0;
+            const discountType = getSelectedDiscountType();
+
+            fetch("{% url 'save_invoice_adjustments' payment.id %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: new URLSearchParams({
+                    gst_rate: gst,
+                    discount: discount,
+                    discount_type: discountType
+                })
+            });
+
+        }, 600); // ✅ debounce (no spam)
+    }
+
+    // =========================================================
+    // 🎯 EVENT BINDINGS
+    // =========================================================
+    gstInput?.addEventListener('input', () => {
+        calculate();
+        saveInvoiceAdjustments();
     });
 
+    discountInput?.addEventListener('input', () => {
+        calculate();
+        saveInvoiceAdjustments();
+    });
+
+    discountRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            calculate();
+            saveInvoiceAdjustments();
+        });
+    });
+
+    // ✅ run once on load
+    calculate();
 });
 </script>
 

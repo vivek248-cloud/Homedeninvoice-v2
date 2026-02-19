@@ -166,6 +166,10 @@ class Payment(models.Model):
         ('cheque', 'Cheque'),
     )
 
+    # ✅ ADD THESE
+    gst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODES)
