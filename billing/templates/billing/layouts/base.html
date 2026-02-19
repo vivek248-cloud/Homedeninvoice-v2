@@ -202,6 +202,109 @@
 </head>
 <body>
 
+
+    <!-- 🔐 Session Timeout Warning Modal -->
+<div class="modal fade" id="sessionTimeoutModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title fw-bold">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Session Expiring
+        </h5>
+      </div>
+      <div class="modal-body text-center">
+        <p class="mb-2">
+          You have been inactive.
+        </p>
+        <p class="fw-bold text-danger mb-0">
+          Auto logout in <span id="countdown">60</span> seconds
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button id="stayLoggedInBtn" class="btn btn-success">
+          Stay Logged In
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function () {
+
+    const IDLE_LIMIT = 15 * 60 * 1000;      // 15 minutes
+    const WARNING_TIME = 60 * 1000;         // show warning at last 60 sec
+    const LOGIN_URL = "{% url 'logout' %}";
+
+    let idleTimer = null;
+    let warningTimer = null;
+    let countdownInterval = null;
+    let remaining = 60;
+
+    const modalEl = document.getElementById('sessionTimeoutModal');
+    const countdownEl = document.getElementById('countdown');
+    const stayBtn = document.getElementById('stayLoggedInBtn');
+
+    if (!modalEl) return;
+
+    const modal = new bootstrap.Modal(modalEl);
+
+    function resetTimers() {
+        clearTimeout(idleTimer);
+        clearTimeout(warningTimer);
+        clearInterval(countdownInterval);
+
+        remaining = 60;
+
+        warningTimer = setTimeout(showWarning, IDLE_LIMIT - WARNING_TIME);
+        idleTimer = setTimeout(forceLogout, IDLE_LIMIT);
+    }
+
+    function showWarning() {
+        remaining = 60;
+        countdownEl.textContent = remaining;
+        modal.show();
+
+        countdownInterval = setInterval(() => {
+            remaining--;
+            countdownEl.textContent = remaining;
+
+            if (remaining <= 0) {
+                forceLogout();
+            }
+        }, 1000);
+    }
+
+    function forceLogout() {
+        window.location.href = LOGIN_URL;
+    }
+
+    function stayLoggedIn() {
+        modal.hide();
+
+        // ping server to refresh session
+        fetch(window.location.href, { method: 'GET', credentials: 'same-origin' });
+
+        resetTimers();
+    }
+
+    // user activity events
+    ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+        document.addEventListener(event, resetTimers, true);
+    });
+
+    stayBtn.addEventListener('click', stayLoggedIn);
+
+    // start timer
+    resetTimers();
+
+})();
+</script>
+
+
+
 <nav class="navbar navbar-expand-lg d-lg-none bg-white border-bottom p-3 sticky-top">
     <div class="container-fluid">
         <span class="navbar-brand fw-bold text-primary">HomeDen</span>

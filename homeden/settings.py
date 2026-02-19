@@ -165,3 +165,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+
+# Auto logout after 15 minutes (in seconds)
+SESSION_IDLE_TIMEOUT = 900  # 15 * 60
+SESSION_COOKIE_AGE = 900
+SESSION_SAVE_EVERY_REQUEST = True
