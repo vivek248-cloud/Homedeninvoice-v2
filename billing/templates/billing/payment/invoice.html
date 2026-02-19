@@ -591,12 +591,12 @@ body.public-invoice .no-print {
                 {% if not is_public %}
                     <!-- 🔘 Radio Buttons -->
                     <label class="no-print" style="margin-left:15px;">
-                        <input type="radio" name="discountType" value="percent" checked>
-                        %
+                        {% comment %} <input type="radio" name="discountType" value="percent" checked>
+                        % {% endcomment %}
                     </label>
 
                     <label class="no-print" style="margin-left:10px;">
-                        <input type="radio" name="discountType" value="rupee">
+                        <input type="radio" name="discountType" value="rupee" checked>
                         ₹
                     </label>
 
@@ -607,7 +607,7 @@ body.public-invoice .no-print {
                         step="0.01"
                         min="0"
                         value="0"
-                        style="width:90px; margin-left:10px;">
+                        style="width:90px; margin-left:10px;" >
                 {% endif %}
 
                 
