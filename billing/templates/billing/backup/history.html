@@ -20,7 +20,7 @@
                         <th>File Name</th>
                         <th>Size (MB)</th>
                         <th>Created</th>
-                        <th class="text-center">Download</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -30,10 +30,18 @@
                         <td>{{ file.size }}</td>
                         <td>{{ file.created }}</td>
                         <td class="text-center">
+
                             <a href="{% url 'download_backup_file' file.name %}"
-                               class="btn btn-sm btn-primary">
+                            class="btn btn-sm btn-primary">
                                 <i class="bi bi-download"></i>
                             </a>
+
+                            <a href="{% url 'delete_backup_file' file.name %}"
+                            class="btn btn-sm btn-danger"
+                            onclick="return confirm('Delete this backup?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+
                         </td>
                     </tr>
                     {% endfor %}

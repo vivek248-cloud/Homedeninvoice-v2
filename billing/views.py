@@ -31,6 +31,45 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
+
+
+import os
+from datetime import datetime
+from django.conf import settings
+
+def cleanup_old_backups(days=30):
+    """
+    Auto delete backup files older than given days.
+    Safe for production.
+    """
+    backup_dir = os.path.join(settings.BASE_DIR, "backups")
+
+    if not os.path.exists(backup_dir):
+        return
+
+    now_ts = datetime.now().timestamp()
+
+    for filename in os.listdir(backup_dir):
+        if not filename.lower().endswith(".zip"):
+            continue
+
+        file_path = os.path.join(backup_dir, filename)
+
+        if not os.path.isfile(file_path):
+            continue
+
+        try:
+            file_age_days = (now_ts - os.path.getctime(file_path)) / 86400
+
+            if file_age_days > days:
+                os.remove(file_path)
+        except Exception:
+            # don't crash backup if delete fails
+            pass
+
+
+
+
 def login_view(request):
 
     if request.user.is_authenticated:
@@ -854,8 +893,37 @@ from django.http import FileResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
 
 
+# ✅ helper — auto delete old backups
+def cleanup_old_backups(days=30):
+    backup_dir = os.path.join(settings.BASE_DIR, "backups")
+
+    if not os.path.exists(backup_dir):
+        return
+
+    now_ts = datetime.now().timestamp()
+
+    for filename in os.listdir(backup_dir):
+        if not filename.lower().endswith(".zip"):
+            continue
+
+        file_path = os.path.join(backup_dir, filename)
+
+        if not os.path.isfile(file_path):
+            continue
+
+        try:
+            file_age_days = (now_ts - os.path.getctime(file_path)) / 86400
+            if file_age_days > days:
+                os.remove(file_path)
+        except Exception:
+            pass
+
+
 @login_required
 def download_backup(request):
+
+    # 🔥 AUTO CLEANUP (before creating new backup)
+    cleanup_old_backups(days=30)
 
     db = settings.DATABASES['default']
 
@@ -876,9 +944,9 @@ def download_backup(request):
     zip_path = os.path.join(backup_dir, zip_filename)
 
     try:
-        # ✅ SAFE mysqldump (NO shell=True)
+        # ✅ SAFE mysqldump (no shell)
         with open(sql_path, 'w') as outfile:
-            subprocess.run(
+            result = subprocess.run(
                 [
                     "mysqldump",
                     f"-h{DB_HOST}",
@@ -889,14 +957,22 @@ def download_backup(request):
                 ],
                 stdout=outfile,
                 stderr=subprocess.PIPE,
-                check=True,
+                text=True,
+            )
+
+        if result.returncode != 0:
+            return HttpResponse(
+                f"Backup failed: {result.stderr}",
+                status=500
             )
 
         # ✅ Create ZIP
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             zipf.write(sql_path, sql_filename)
 
-        os.remove(sql_path)
+        # ✅ remove sql after zip
+        if os.path.exists(sql_path):
+            os.remove(sql_path)
 
         return FileResponse(
             open(zip_path, 'rb'),
@@ -904,9 +980,15 @@ def download_backup(request):
             filename=zip_filename
         )
 
-    except subprocess.CalledProcessError as e:
+    except FileNotFoundError:
         return HttpResponse(
-            f"Backup failed: {e.stderr.decode()}",
+            "mysqldump not found on server. Please install mysql-client.",
+            status=500
+        )
+
+    except Exception as e:
+        return HttpResponse(
+            f"Backup failed: {str(e)}",
             status=500
         )
 
@@ -1083,6 +1165,45 @@ def download_backup_file(request, filename):
         as_attachment=True,
         filename=filename
     )
+
+
+
+
+import os
+from django.conf import settings
+from django.http import Http404
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.utils.text import get_valid_filename
+
+
+@login_required
+def delete_backup_file(request, filename):
+
+    # ✅ sanitize filename
+    filename = get_valid_filename(filename)
+
+    if not filename.lower().endswith(".zip"):
+        raise Http404("Invalid file")
+
+    backup_dir = os.path.join(settings.BASE_DIR, "backups")
+    file_path = os.path.join(backup_dir, filename)
+
+    # ✅ prevent path traversal
+    if not os.path.abspath(file_path).startswith(os.path.abspath(backup_dir)):
+        raise Http404("Invalid path")
+
+    if not os.path.exists(file_path):
+        raise Http404("File not found")
+
+    # ✅ delete file
+    os.remove(file_path)
+
+    messages.success(request, "Backup deleted successfully.")
+
+    return redirect("backup_history")
+
 
 
 
