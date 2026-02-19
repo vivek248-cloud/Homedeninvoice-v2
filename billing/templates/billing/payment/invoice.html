@@ -731,7 +731,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const grandTotalEl = document.getElementById('grandTotal');
     const discountPrintEl = document.getElementById('discountPrint');
 
-    // ✅ helper
     function getSelectedDiscountType() {
         for (let radio of discountRadios) {
             if (radio.checked) return radio.value;
@@ -739,100 +738,85 @@ document.addEventListener('DOMContentLoaded', function () {
         return "percent";
     }
 
-    // ✅ calculation
     function calculate() {
+
+        // 🚨 CRITICAL: do nothing on public page
+        if (isPublic) return;
 
         let gstRate = parseFloat(gstInput?.value) || 0;
         let discountValue = parseFloat(discountInput?.value) || 0;
 
-        // GST
         let gstAmount = (totalSpent * gstRate) / 100;
-
-        // Subtotal
         let subtotal = totalSpent + gstAmount;
 
-        // Discount
         let discountAmount = 0;
         let discountType = getSelectedDiscountType();
 
         if (discountType === "percent") {
             discountAmount = (subtotal * discountValue) / 100;
-            if (discountPrintEl) {
-                discountPrintEl.innerHTML = discountValue + "%";
-            }
+            if (discountPrintEl) discountPrintEl.innerHTML = discountValue + "%";
         } else {
             discountAmount = discountValue;
-            if (discountPrintEl) {
-                discountPrintEl.innerHTML = "₹ " + discountValue.toFixed(2);
-            }
+            if (discountPrintEl) discountPrintEl.innerHTML = "₹ " + discountValue.toFixed(2);
         }
 
-        // Grand Total
         let grandTotal = subtotal - discountAmount;
 
-        // ✅ update UI safely
         if (gstAmountEl) gstAmountEl.innerHTML = "₹ " + gstAmount.toFixed(2);
         if (subtotalEl) subtotalEl.innerHTML = "₹ " + subtotal.toFixed(2);
         if (discountAmountEl) discountAmountEl.innerHTML = "₹ " + discountAmount.toFixed(2);
         if (grandTotalEl) grandTotalEl.innerHTML = "₹ " + grandTotal.toFixed(2);
     }
 
-    // =========================================================
-    // 🔥 DEBOUNCE SAVE (PRO LEVEL)
-    // =========================================================
-    let saveTimer = null;
+    // ✅ bind only when NOT public
+    if (!isPublic) {
 
-    function saveInvoiceAdjustments() {
+        let saveTimer = null;
 
-        if (isPublic) return; // 🔐 never save on public page
+        function saveInvoiceAdjustments() {
+            clearTimeout(saveTimer);
 
-        clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                const gst = gstInput?.value || 0;
+                const discount = discountInput?.value || 0;
+                const discountType = getSelectedDiscountType();
 
-        saveTimer = setTimeout(() => {
+                fetch("{% url 'save_invoice_adjustments' payment.id %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: new URLSearchParams({
+                        gst_rate: gst,
+                        discount: discount,
+                        discount_type: discountType
+                    })
+                });
+            }, 600);
+        }
 
-            const gst = gstInput?.value || 0;
-            const discount = discountInput?.value || 0;
-            const discountType = getSelectedDiscountType();
-
-            fetch("{% url 'save_invoice_adjustments' payment.id %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "X-CSRFToken": "{{ csrf_token }}"
-                },
-                body: new URLSearchParams({
-                    gst_rate: gst,
-                    discount: discount,
-                    discount_type: discountType
-                })
-            });
-
-        }, 600); // ✅ debounce (no spam)
-    }
-
-    // =========================================================
-    // 🎯 EVENT BINDINGS
-    // =========================================================
-    gstInput?.addEventListener('input', () => {
-        calculate();
-        saveInvoiceAdjustments();
-    });
-
-    discountInput?.addEventListener('input', () => {
-        calculate();
-        saveInvoiceAdjustments();
-    });
-
-    discountRadios.forEach(radio => {
-        radio.addEventListener('change', () => {
+        gstInput?.addEventListener('input', () => {
             calculate();
             saveInvoiceAdjustments();
         });
-    });
 
-    // ✅ run once on load
-    calculate();
+        discountInput?.addEventListener('input', () => {
+            calculate();
+            saveInvoiceAdjustments();
+        });
+
+        discountRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                calculate();
+                saveInvoiceAdjustments();
+            });
+        });
+
+        calculate(); // only for private view
+    }
 });
+
 </script>
 
 
