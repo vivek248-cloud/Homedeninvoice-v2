@@ -19,13 +19,13 @@ DEBUG = False
 
 
 
-ALLOWED_HOSTS = ['homedeninvoice.com','www.homedeninvoice.com','31.97.62.126','*']
+# ALLOWED_HOSTS = ['homedeninvoice.com','www.homedeninvoice.com','31.97.62.126','*']
 
-# ALLOWED_HOSTS = [
-#     "homedeninvoice.com",
-#     "www.homedeninvoice.com",
-#     "31.97.62.126",
-# ]
+ALLOWED_HOSTS = [
+    "homedeninvoice.com",
+    "www.homedeninvoice.com",
+    "31.97.62.126",
+]
 
 
 # Application definition
@@ -83,29 +83,29 @@ WSGI_APPLICATION = 'homeden.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'homedeninvoice',
-        'USER': 'root',              
-        'PASSWORD': 'Admin123',  
-        'HOST': '127.0.0.1',         
-        'PORT': '3306',
-    }
-}
-
-
-
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'homedeninvoice_db',
-#         'USER': 'homeden_user',
-#         'PASSWORD': 'Admin@123',
-#         'HOST': 'localhost',
+#         'NAME': 'homedeninvoice',
+#         'USER': 'root',              
+#         'PASSWORD': 'Admin123',  
+#         'HOST': '127.0.0.1',         
 #         'PORT': '3306',
 #     }
 # }
+
+
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'homedeninvoice_db',
+        'USER': 'homeden_user',
+        'PASSWORD': 'Admin@123',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    }
+}
 
 
 # Password validation
