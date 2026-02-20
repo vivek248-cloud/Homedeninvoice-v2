@@ -1,0 +1,697 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice - {{ project.name }}</title>
+
+    <style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        margin: 0;
+        background: #f4f4f4;
+    }
+
+    /* ========================= */
+    /* MAIN CONTAINER STRUCTURE  */
+    /* ========================= */
+
+    .invoice-container {
+        max-width: 900px;
+        margin: auto;
+        background: #ffffff;
+        padding: 30px;
+
+        /* 🔥 Makes footer stick to bottom */
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .invoice-content {
+        flex: 1;
+    }
+
+    /* ========================= */
+    /* TOP WAVE + BRAND */
+    /* ========================= */
+
+    .wave {
+        width: 100%;
+        position: relative;
+        line-height: 0;
+    }
+
+    .top-wave {
+        width: 100%;
+        display: block;
+    }
+
+    .brand {
+        position: absolute;
+        top: 160px;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+    }
+
+    .brand-logo {
+        width: 180px;
+    }
+
+    .brand small {
+        display: block;
+        margin-top: 5px;
+        color: #2ba58b;
+        font-style: italic;
+    }
+
+    h3 {
+        text-align: center;
+        margin-top: 120px;
+        letter-spacing: 3px;
+    }
+
+    /* ========================= */
+    /* META SECTION */
+    /* ========================= */
+
+    .meta {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    /* ========================= */
+    /* TABLE STYLE */
+    /* ========================= */
+
+
+/* ========================= */
+/* TABLE STRUCTURE FIX */
+/* ========================= */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 13.5px;
+    table-layout: auto;   /* 🔥 REMOVE fixed */
+}
+
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 13.5px;
+}
+
+.summary-table th,
+.summary-table td {
+    border: 1.5px solid #000;
+    padding: 6px 8px;
+    vertical-align: top;
+}
+
+/* Column widths only for summary table */
+.summary-table th:nth-child(1),
+.summary-table td:nth-child(1) { width: 5%; }
+
+.summary-table th:nth-child(2),
+.summary-table td:nth-child(2) { width: 15%; }
+
+.summary-table th:nth-child(3),
+.summary-table td:nth-child(3) { width: 35%; }
+
+.summary-table th:nth-child(4),
+.summary-table td:nth-child(4) { width: 8%; text-align: right; }
+
+.summary-table th:nth-child(5),
+.summary-table td:nth-child(5) { width: 7%; text-align: center; }
+
+.summary-table th:nth-child(6),
+.summary-table td:nth-child(6) { width: 10%; text-align: right; }
+
+.summary-table th:nth-child(7),
+.summary-table td:nth-child(7) { width: 15%; text-align: right; }
+
+.summary-table th {
+    background: #e1ffe8;
+    text-align: center;
+}
+
+.summary-table td:nth-child(3) {
+    word-break: break-word;
+    white-space: normal;
+    line-height: 1.4;
+}
+
+
+.payment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 13.5px;
+}
+
+.payment-table th,
+.payment-table td {
+    border: 1.5px solid #000;
+    padding: 8px;
+    text-align: center;
+}
+
+/* Column control ONLY for payment table */
+.payment-table th:nth-child(1),
+.payment-table td:nth-child(1) { width: 15%; }
+
+.payment-table th:nth-child(2),
+.payment-table td:nth-child(2) { width: 20%; }
+
+.payment-table th:nth-child(3),
+.payment-table td:nth-child(3) { width: 20%; }
+
+.payment-table th:nth-child(4),
+.payment-table td:nth-child(4) { width: 15%; }
+
+.payment-table th:nth-child(5),
+.payment-table td:nth-child(5) { width: 15%; }
+
+.payment-table th:nth-child(6),
+.payment-table td:nth-child(6) { width: 15%; }
+
+.payment-table th {
+    background: #e1ffe8;
+}
+
+
+/* Header style */
+th {
+    background: #e1ffe8;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Floor + Room rows */
+.floor-row {
+    background: #e1ffe8;
+    font-weight: bold;
+    text-align: center;
+}
+
+.room-row {
+    background: #f2fff6;
+    font-weight: bold;
+    text-align: center;
+}
+
+
+    .right { text-align: right; }
+    .left { text-align: left; }
+
+    .total-row { font-weight: bold; }
+
+    /* ========================= */
+    /* COLORS */
+    /* ========================= */
+
+    .success { color: #1e7e34; font-weight: bold; }
+    .danger { color: #c82333; font-weight: bold; }
+    .primary { color: #0056b3; font-weight: bold; }
+
+    /* ========================= */
+    /* THANK YOU + QR + SIGNATURE */
+    /* ========================= */
+
+    .thank-section {
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    .bottom-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-top: 40px;
+        gap: 40px;
+        page-break-inside: avoid;
+    }
+
+    .qr-section,
+    .signature-section {
+        width: 45%;
+        text-align: center;
+    }
+
+    .qr-img {
+        width: 140px;
+        border: 2px solid #000;
+        padding: 5px;
+        border-radius: 8px;
+    }
+
+    .sign-img {
+        width: 140px;
+        margin-top: 10px;
+    }
+
+    /* ========================= */
+    /* FOOTER */
+    /* ========================= */
+
+    .footer {
+        margin-top: auto;   /* 🔥 PUSH TO BOTTOM */
+        text-align: center;
+        font-size: 12px;
+        padding-top: 10px;
+        border-top:1px solid black;
+    }
+
+    /* ========================= */
+    /* BUTTONS */
+    /* ========================= */
+
+    .print-btn {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .btn-print {
+        background: #2ba58b;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .btn-back {
+        display: inline-block;
+        background: #6c757d;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+    }
+
+    /* ========================= */
+    /* PRINT SETTINGS */
+    /* ========================= */
+
+
+    /* Bottom section pushed to end */
+    .invoice-bottom {
+        margin-top: auto;
+    }
+
+
+
+
+    /* ========================= */
+/* TOTAL TABLE */
+/* ========================= */
+
+.total-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.total-table td {
+    border: 1.5px solid #000;
+    padding: 8px 10px;
+}
+
+/* Left label column */
+.total-table td.left {
+    text-align: left;
+    font-weight: 600;
+}
+
+/* Right amount column */
+.total-table td.right {
+    text-align: right;
+    width: 25%;
+    font-weight: 600;
+}
+
+/* Highlight rows (GST + Grand Total) */
+.total-table .highlight {
+    background: #e1ffe8;
+}
+
+/* Grand Total stronger */
+.total-table tr:last-child td {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+    @media print {
+
+        body {
+            background: white;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .invoice-container {
+            max-width: 100%;
+            padding: 10mm;
+            min-height: auto;
+        }
+
+        table, th, td {
+            border: 1.5px solid #000 !important;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        .thank-section,
+        .bottom-row,
+        .footer {
+            page-break-inside: avoid;
+        }
+        .invoice-bottom {
+            page-break-inside: avoid;
+        }
+
+        .print-btn {
+            display: none !important;
+        }
+
+
+        .total-table {
+            page-break-inside: avoid;
+        }
+
+        .total-table tr {
+            page-break-inside: avoid;
+        }
+
+        @page {
+            size: A4;
+            margin: 3mm;
+        }
+    }
+
+
+    @media print {
+
+    /* 🔥 Prevent entire table from breaking */
+    {% comment %} table {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    } {% endcomment %}
+
+    /* 🔥 Prevent rows from splitting */
+    tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* 🔥 If not enough space, move entire section */
+    .totals-section,
+    .payment-section {
+        page-break-before: auto;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+}
+
+
+    .print-only {
+    display: none;
+}
+
+@media print {
+
+    .no-print {
+        display: none !important;
+    }
+
+    .print-only {
+        display: inline !important;
+    }
+}
+
+
+
+body.public-invoice .no-print {
+    display: none !important;
+}
+
+    </style>
+</head>
+
+<body>
+
+<div class="invoice-container">
+
+    <!-- WAVE -->
+    <div class="wave">
+        <img src="{% static 'billing/images/wave-top.png' %}" class="top-wave">
+
+    </div>
+
+    <!-- BRAND -->
+    <div class="brand">
+        <img src="{% static 'billing/images/full-logo.webp' %}" class="brand-logo">
+        <small>We don’t just design spaces — we create experiences.</small>
+    </div>
+
+    <h3>INVOICE</h3>
+
+    <!-- META -->
+    <div class="meta">
+        <div>
+            <strong>Invoice No:</strong> {{ invoice_number }}<br>
+            <strong>Date:</strong> {{ payment.date }}
+        </div>
+
+        <div style="text-align:right;">
+            <strong>CLIENT INFORMATION</strong><br>
+            Name: {{ project.client.name|upper }}<br>
+            Mobile: {{ project.client.mobile_1 }}
+        </div>
+    </div>
+
+    <!-- PROJECT SUMMARY -->
+    <div class="section-title">PROJECT SUMMARY</div>
+
+    <table class="summary-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Entity</th>
+                <th>Specification</th>
+                <th>Area</th>
+                <th>Unit</th>
+                <th>Rate</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+        {% regroup spends by floor as floor_list %}
+
+        {% for floor in floor_list %}
+            <tr class="floor-row">
+                <td colspan="7">
+                    {{ floor.grouper.name|default:"General" }}
+                </td>
+            </tr>
+
+            {% regroup floor.list by room as room_list %}
+
+            {% for room in room_list %}
+                <tr class="room-row">
+                    <td colspan="7">
+                        {{ room.grouper.name|default:"Room" }}
+                    </td>
+                </tr>
+
+                {% for spend in room.list %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td><b>{{ spend.elements|upper }}</b></td>
+                    <td style="text-align:left;">
+                        {{ spend.description }}
+                    </td>
+                    <td>{{ spend.area|floatformat:2 }}</td>
+                    <td>{{ spend.unit|upper }}</td>
+                    <td>₹{{ spend.rate|floatformat:2 }}</td>
+                    <td class="right">₹{{ spend.total_amount }}</td>
+                </tr>
+                {% endfor %}
+
+            {% endfor %}
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    <!-- TOTAL SECTION -->
+    <table class="total-table">
+
+        <!-- Base Total -->
+        <tr class="total-row">
+            <td colspan="6" class="left">Total Amount</td>
+            <td class="right">₹ {{ total_spent }}</td>
+        </tr>
+
+        <!-- GST -->
+        <tr class="total-row highlight">
+            <td colspan="6" class="left">
+                GST
+                <span  id="gstPrint">
+                    {{ gst_rate }}%
+                </span>
+            </td>
+
+            <td class="right" id="gstAmount">
+                ₹ {{ gst_amount }}
+            </td>
+        </tr>
+
+
+        <!-- Subtotal -->
+        <tr class="total-row">
+            <td colspan="6" class="left">Subtotal (Including GST)</td>
+            <td class="right" id="subtotalAmount">
+                ₹ {{ total_spent|add:gst_amount }}
+            </td>
+        </tr>
+
+        <!-- Discount -->
+        <tr class="total-row">
+            <td colspan="6" class="left">
+                Discount
+            </td>
+
+            <td class="right" id="discountAmount">
+                ₹ {{ discount }}
+            </td>
+        </tr>
+
+
+        </tr>
+
+        <!-- Grand Total -->
+        <tr class="total-row highlight">
+            <td colspan="6" class="left"><strong>Grand Total</strong></td>
+            <td class="right" id="grandTotal">
+                ₹ {{ grand_total }}
+            </td>
+        </tr>
+
+    </table>
+
+
+    <!-- PAYMENT DETAILS -->
+    <div class="section-title">PAYMENT DETAILS</div>
+
+    <table class="payment-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Total Amount</th>
+                <th>Previously Received</th>
+                <th>Now Received</th>
+                <th>Balance</th>
+                <th>Mode</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% for row in payment_rows %}
+        <tr>
+            <td>{{ row.date }}</td>
+            <td>₹ {{ grand_total }}</td>
+            <td>₹ {{ row.previous_paid }}</td>
+            <td class="success">₹ {{ row.now_paid }}</td>
+            <td class="{% if row.balance_after == 0 %}success{% elif row.balance_after < 0 %}danger{% else %}primary{% endif %}">
+                ₹ {{ row.balance_after }}
+            </td>
+            <td>{{ row.mode }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="invoice-bottom">
+
+        <!-- THANK YOU -->
+        <div class="thank-section">
+            <h3 class="thank-title">✨ Thank You for Your Business ✨</h3>
+            <p>We truly appreciate your trust in</p>
+            <strong>HOME DEN INTERIORS.</strong>
+        </div>
+
+        <!-- QR + SIGNATURE -->
+        <div class="bottom-row">
+            <div class="qr-section">
+                <img src="{% static 'billing/images/QR2.png' %}" class="qr-img">
+                <p>Scan to View</p>
+            </div>
+
+            <div class="signature-section">
+                <p><strong>For: HOME DEN INTERIORS</strong></p>
+                <img src="{% static 'billing/images/xxx.png' %}" class="sign-img">
+                <p>Authorized Signatory</p>
+            </div>
+        </div>
+
+
+        <!-- BUTTONS -->
+        <div class="print-btn">
+            <button onclick="downloadInvoice()" class="btn-print">
+                Print / Download
+            </button>
+
+
+            <br><br>
+
+            <a href="{% url 'project_detail' project.id %}" class="btn-back">
+                ⬅ Back to Project
+            </a>
+        </div>
+
+
+
+        <div class="footer">
+            FACTORY ADDRESS : Soosai Nagar, Ponmalai Patti Road,
+            Ponneripuram, Trichy - 07<br>
+            GSTIN: 33AKTPH2053F1ZC | www.homedeninterior.com
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+
+<script>
+function downloadInvoice() {
+
+    document.title = "{{ invoice_filename }}";
+
+    window.print();
+}
+</script>
+
+
+
+</body>
+</html>

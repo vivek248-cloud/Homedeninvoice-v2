@@ -1,0 +1,322 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Client Portal | HomeDen Interior</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --primary: #4361ee;
+            --accent: #7209b7;
+            --dark: #0f172a;
+            --secondary: #64748b;
+            --soft-bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--soft-bg);
+            /* Soft, welcoming radial gradient */
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(67, 97, 238, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(114, 9, 183, 0.03) 0%, transparent 40%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 24px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .login-card {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            border-radius: 32px;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .brand-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-box {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 12px 24px -6px rgba(67, 97, 238, 0.3);
+        }
+
+        .logo-img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+
+        .brand-section h2 {
+            font-weight: 800;
+            color: var(--dark);
+            letter-spacing: -1.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .portal-badge {
+            display: inline-block;
+            background: rgba(67, 97, 238, 0.08);
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 100px;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.6rem;
+            margin-left: 4px;
+        }
+
+        .input-group-custom {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group-custom i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            font-size: 1.1rem;
+            z-index: 10;
+        }
+
+        .form-control {
+            height: 56px;
+            padding-left: 52px;
+            border-radius: 16px;
+            border: 2px solid #f1f5f9;
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--dark);
+            transition: all 0.25s ease;
+        }
+
+        .form-control:focus {
+            background: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+        }
+
+        .btn-login {
+            height: 56px;
+            background: var(--dark);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-login:hover {
+            background: #000000cc;
+            transform: translateY(-2px);
+            color:white;
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .security-note {
+            background: #fffbeb;
+            border: 1px solid #fef3c7;
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-top: 8px;
+            font-size: 0.75rem;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .divider {
+            height: 1px;
+            background: #f1f5f9;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .divider::after {
+            content: "Portal Support";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 0 15px;
+            color: #cbd5e1;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .alert-custom {
+            border-radius: 16px;
+            background: #fff1f2;
+            border: 1px solid #ffe4e6;
+            color: #e11d48;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .switch-login {
+            display: block;
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--secondary);
+            font-size: 0.85rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .switch-login:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="login-card">
+        
+        <div class="brand-section">
+            <div class="logo-box">
+                <img src="{% static 'billing/images/logo.png' %}" alt="HomeDen" class="logo-img">
+            </div>
+            <h2>HomeDen</h2>
+            <div class="portal-badge">Client Portal</div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert-custom animate__animated animate__fadeIn">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="mb-4">
+                <label class="form-label">Registered Mobile</label>
+                <div class="input-group-custom">
+                    <i class="bi bi-phone"></i>
+                    <input type="text" name="username" class="form-control" placeholder="Enter mobile number" required autofocus>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Secure Password</label>
+                <div class="input-group-custom">
+                    <i class="bi bi-shield-lock"></i>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <div class="security-note">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>Default access: 
+                        <strong id="defaultPassword" 
+                                style="cursor: pointer; text-decoration: underline dotted;" 
+                                onclick="copyToClipboard('homeden@2025')">homeden@2025</strong>
+                    </span>
+                    <button type="button" class="btn p-0 border-0 ms-auto" onclick="copyToClipboard('homeden@2025')">
+                        <i class="bi bi-clipboard-check-fill" id="copyIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-login">
+                Enter My HomeDen <i class="bi bi-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="text-center">
+            <p class="small text-secondary mb-0">Need help? <a href="#" class="text-primary fw-bold text-decoration-none">Contact Support</a></p>
+        </div>
+    </div>
+    
+    <a href="{% url 'login' %}" class="switch-login">
+        <i class="bi bi-person-workspace me-1"></i> Staff? Switch to Pro Workspace
+    </a>
+
+    <div class="text-center mt-4">
+        <p class="text-secondary" style="font-size: 0.75rem; opacity: 0.6;">
+            © 2026 HomeDen Interior Design Studios. <br>
+            Your dream project, managed professionally.
+        </p>
+    </div>
+</div>
+
+
+
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        const icon = document.getElementById('copyIcon');
+        
+        // Visual feedback
+        icon.classList.replace('bi-clipboard-plus', 'bi-check-lg');
+        icon.classList.replace('text-primary', 'text-success');
+        
+        // Reset after 2 seconds
+        setTimeout(() => {
+            icon.classList.replace('bi-check-lg', 'bi-clipboard-plus');
+            icon.classList.replace('text-success', 'text-primary');
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
+}
+</script>
+</body>
+</html>

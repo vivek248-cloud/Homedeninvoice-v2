@@ -145,6 +145,145 @@ def dashboard(request):
 
 
 
+
+
+###########################################
+
+# client login
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.views.decorators.http import require_http_methods
+from .models import Client, Project
+
+
+
+from django.contrib import messages
+from django.views.decorators.http import require_http_methods
+from django.shortcuts import render, redirect
+from .models import Client
+
+CLIENT_FIXED_PASSWORD = "homeden@2025"
+
+
+@require_http_methods(["GET", "POST"])
+def client_login(request):
+
+    if request.session.get("client_id"):
+        return redirect("client_dashboard")
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        # 🔥 use filter instead of get
+        client = Client.objects.filter(mobile_1=username).first()
+
+        if not client:
+            messages.error(request, "Mobile number not registered")
+            return render(request, "billing/client_auth/login.html")
+
+        if password == "homeden@2025":
+            request.session["client_id"] = client.id
+            return redirect("client_dashboard")
+        else:
+            messages.error(request, "Invalid password")
+
+    return render(request, "billing/client_auth/login.html")
+
+
+
+def client_logout(request):
+    request.session.pop("client_id", None)
+    return redirect("login")
+
+
+from django.shortcuts import get_object_or_404, render, redirect
+from django.db.models import Sum
+from decimal import Decimal
+
+def client_dashboard(request):
+
+    client_id = request.session.get("client_id")
+
+    if not client_id:
+        return redirect("client_login")
+
+    client = get_object_or_404(Client, id=client_id)
+
+    projects = Project.objects.filter(client=client)
+
+
+    # ✅ latest project status
+    latest_project = projects.order_by('-id').first()
+    project_status = latest_project.status if latest_project else None
+
+    payments = (
+        Payment.objects
+        .filter(project__client=client)
+        .select_related("project")
+        .order_by("-date")
+    )
+
+    # ✅ TOTAL PAID
+    total_paid = payments.aggregate(
+        total=Sum("amount")
+    )["total"] or Decimal("0.00")
+
+    # ✅ TOTAL PROJECT BUDGET (optional but useful)
+    total_budget = projects.aggregate(
+        total=Sum("budget")
+    )["total"] or Decimal("0.00")
+
+    # ✅ TOTAL RECEIVABLE (optional premium metric)
+    total_receivable = total_budget - total_paid
+
+    context = {
+        "client": client,
+        "projects": projects,
+        "payments": payments,
+        "total_paid": total_paid,                 # ⭐ IMPORTANT
+        "total_budget": total_budget,
+        "total_receivable": total_receivable,
+        "project_status": project_status,
+    }
+
+    return render(request, "billing/client_auth/dashboard.html", context)
+
+
+
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+
+def client_invoice_view(request, token):
+
+    client_id = request.session.get("client_id")
+
+    if not client_id:
+        return redirect("client_login")
+
+    payment = get_object_or_404(
+        Payment.objects.select_related("project__client"),
+        invoice_token=token
+    )
+
+    # 🔒 SECURITY — client can only see their invoice
+    if payment.project.client_id != client_id:
+        messages.error(request, "Unauthorized access")
+        return redirect("client_dashboard")
+
+    context = build_invoice_context(request, payment)
+    context["is_public"] = True  # important
+
+    return render(
+        request,
+        "billing/client_auth/invoice_view.html",
+        context
+    )
+
+
+
 from django.db.models import Q
 
 # 📌 List
@@ -1291,3 +1430,6 @@ from django.shortcuts import redirect
 @login_required
 def admin_password_change(request):
     return redirect('/admin/password_change/')
+
+
+
