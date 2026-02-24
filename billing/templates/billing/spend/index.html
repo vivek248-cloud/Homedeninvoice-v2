@@ -63,7 +63,7 @@
                         {% for spend in spends %}
                         <tr>
                             <td class="ps-4">
-                                <div class="fw-bold text-dark">{{ spend.project.name }}</div>
+                                <div class="fw-bold text-dark">{{ spend.project.name }}<span class="small text-muted">({{spend.project.client.name}})</span></div>
                                 <div class="small text-muted">{{ spend.floor.name|default:"" }} • {{ spend.room.name|default:"" }}</div>
                             </td>
 

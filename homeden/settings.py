@@ -21,11 +21,7 @@ DEBUG = True
 
 # ALLOWED_HOSTS = ['homedeninvoice.com','www.homedeninvoice.com','31.97.62.126','*']
 
-ALLOWED_HOSTS = [
-    "homedeninvoice.com",
-    "www.homedeninvoice.com",
-    "31.97.62.126",
-]
+ALLOWED_HOSTS = ["homedeninvoice.com","www.homedeninvoice.com","31.97.62.126",]
 
 
 # Application definition
