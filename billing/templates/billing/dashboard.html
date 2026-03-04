@@ -3,186 +3,219 @@
 {% block page_title %}Overview{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
+<div class="container-fluid px-4 py-4">
 
+    <!-- Top Metrics Row -->
     <div class="row g-4 mb-4">
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card h-100 border-0 shadow-sm bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="bg-white bg-opacity-20 text-success rounded-circle p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-people-fill fs-4"></i>
+            <div class="card metric-card border-0 shadow-sm glass-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="icon-box bg-primary-soft text-primary">
+                            <i class="bi bi-people-fill"></i>
                         </div>
-                        <span class="badge bg-success-subtle text-success rounded-pill">+{{ total_clients }}</span>
+                        <span class="badge-status status-blue">+{{ total_clients }} Total</span>
                     </div>
-                    <h6 class="text-white mb-1 fw-medium">Total Clients</h6>
-                    <h2 class="fw-bold mb-0">{{ total_clients }}</h2>
+                    <p class="metric-label">Total Clients</p>
+                    <h2 class="metric-value">{{ total_clients }}</h2>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card h-100 border-0 shadow-sm bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="bg-white bg-opacity-20 text-info rounded-circle p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-stack fs-4"></i>
+            <div class="card metric-card border-0 shadow-sm glass-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="icon-box bg-warning-soft text-warning">
+                            <i class="bi bi-stack"></i>
                         </div>
+                        <span class="badge-status status-orange">Live</span>
                     </div>
-                    <h6 class="text-white mb-1 fw-medium">Active Projects</h6>
-                    <h2 class="fw-bold mb-0">{{ total_projects }}</h2>
+                    <p class="metric-label">Active Projects</p>
+                    <h2 class="metric-value">{{ total_projects }}</h2>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card h-100 border-0 shadow-sm bg-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="bg-white bg-opacity-20 rounded-circle p-2 text-primary" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-wallet2 fs-4"></i>
+            <div class="card metric-card border-0 shadow-sm glass-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="icon-box bg-success-soft text-success">
+                            <i class="bi bi-wallet2"></i>
                         </div>
+                        <span class="badge-status status-green">Inflow</span>
                     </div>
-                    <h6 class="text-white-50 mb-1 fw-medium">Revenue Received</h6>
-                    <h2 class="fw-bold mb-0">₹ {{ total_payments }}</h2>
+                    <p class="metric-label">Revenue Received</p>
+                    <h2 class="metric-value">₹{{ total_payments }}</h2>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card h-100 border-0 shadow-sm bg-danger text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="bg-white bg-opacity-20 text-danger rounded-circle p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-arrow-down-right-circle fs-4"></i>
+            <div class="card metric-card border-0 shadow-sm glass-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="icon-box bg-danger-soft text-danger">
+                            <i class="bi bi-arrow-down-right-circle"></i>
                         </div>
+                        <span class="badge-status status-red">Outflow</span>
                     </div>
-                    <h6 class="text-white mb-1 fw-medium">Total Expenditures</h6>
-                    <h2 class="fw-bold mb-0 text-white">₹ {{ total_spend }}</h2>
+                    <p class="metric-label">Expenditures</p>
+                    <h2 class="metric-value">₹{{ total_spend }}</h2>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Project Performance</h5>
-                    <a href="{% url 'project_list' %}" class="btn btn-sm btn-primary border">View All</a>
+    <div class="row g-4 mb-4 d-flex align-items-stretch"> 
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden"> 
+            <div class="card-header bg-white border-0 py-4 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-800 mb-0">Recent Activity</h5>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light rounded-pill px-3 border" type="button">
+                        Last 30 Days <i class="bi bi-chevron-down ms-1 small"></i>
+                    </button>
                 </div>
-                <div class="card-body px-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle custom-table">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4 text-muted small fw-bold text-uppercase">Project Name</th>
-                                    <th class="text-muted small fw-bold text-uppercase">Budget Status</th>
-                                    <th class="text-muted small fw-bold text-uppercase">Paid</th>
-                                    <th class="text-muted small fw-bold text-uppercase">Remaining</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for project in projects %}
-                                <tr onclick="window.location='{% url 'project_detail' project.id %}'" style="cursor: pointer;">
-                                    <td class="ps-4">
-                                        <div class="fw-bold text-dark">{{ project.name }}</div>
-                                        <div class="small text-muted">{{ project.client.name }}</div>
-                                    </td>
-                                    <td style="min-width: 150px;">
-                                        <div class="d-flex align-items-center">
-                                            <span class="small me-2 fw-medium">₹{{ project.budget }}</span>
-                                        </div>
-                                        <div class="progress mt-1" style="height: 6px; width: 100px;">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
-                                        </div>
-                                    </td>
-                                    <td class="text-success fw-semibold">₹ {{ project.total_paid }}</td>
-                                    <td class="text-danger fw-semibold">₹ {{ project.yet_to_receive }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+            </div>
+            <div class="card-body px-4 pt-0 overflow-auto" style="max-height: 480px;"> 
+                <div class="custom-timeline">
+                    {% for activity in activities %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot dot-{{ activity.color }}"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold text-dark">{{ activity.title }}</span>
+                                <span class="timeline-time">{{ activity.date|date:"d M Y" }}</span>
+                            </div>
+                            <p class="mb-0 text-muted">{{ activity.description }}</p>
+                            <div class="mt-2">
+                                <span class="amount-pill {% if activity.type == 'payment' %}bg-success-soft text-success{% else %}bg-danger-soft text-danger{% endif %}">
+                                    {% if activity.type == 'payment' %}+{% else %}-{% endif %} ₹{{ activity.amount }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold mb-0">Quick Actions</h5>
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <a href="{% url 'project_create' %}" class="btn btn-primary w-100 border py-3 ">
-                                <i class="bi bi-plus-circle-dotted text-white d-block mb-1 fs-4"></i>
-                                <span class="small fw-bold">Project</span>
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <a href="{% url 'client_create' %}" class="btn btn-primary w-100 border py-3 text-white">
-                                <i class="bi bi-person-plus text-white d-block mb-1 fs-4"></i>
-                                <span class="small fw-bold">Client</span>
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <a href="{% url 'payment_create' %}" class="btn btn-primary w-100 border py-3 ">
-                                <i class="bi bi-currency-dollar text-white  d-block mb-1 fs-4"></i>
-                                <span class="small fw-bold">Payment</span>
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <a href="{% url 'spend_create' %}" class="btn btn-primary w-100 border py-3 ">
-                                <i class="bi bi-receipt text-white d-block mb-1 fs-4"></i>
-                                <span class="small fw-bold">Spend</span>
-                            </a>
-                        </div>
-                    </div>
+    <div class="col-lg-4 d-flex flex-column"> 
+        <div class="card border-0 shadow-sm rounded-4 mb-4 flex-grow-1"> 
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-800 mb-0">Quick Launch</h5>
+            </div>
+            <div class="card-body p-4 d-flex align-items-center"> 
+                <div class="action-grid-modern w-100">
+                    <a href="{% url 'project_create' %}" class="q-action gradient-blue">
+                        <i class="bi bi-folder-plus"></i>
+                        <span>Project</span>
+                    </a>
+                    <a href="{% url 'client_create' %}" class="q-action gradient-cyan">
+                        <i class="bi bi-person-plus-fill"></i>
+                        <span>Client</span>
+                    </a>
+                    <a href="{% url 'payment_create' %}" class="q-action gradient-green">
+                        <i class="bi bi-currency-dollar"></i>
+                        <span>Payment</span>
+                    </a>
+                    <a href="{% url 'spend_create' %}" class="q-action gradient-red">
+                        <i class="bi bi-receipt"></i>
+                        <span>Expense</span>
+                    </a>
                 </div>
             </div>
+        </div>
+        
+        <div class="card border-0 rounded-4 insight-card p-4">
+            <div class="d-flex align-items-center mb-3">
+                <div class="insight-icon">✨</div>
+                <h6 class="fw-800 mb-0 text-white">Pro Insight</h6>
+            </div>
+            <p class="small text-white-50 lh-base mb-0">
+                Revenue is up <span class="text-white fw-bold">12%</span> this month. 
+                Your project <strong>{{ projects.0.name }}</strong> has the highest collection efficiency.
+            </p>
+        </div>
+    </div>
+</div>
+</div>
 
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold mb-0">Recent Activity</h5>
+    <!-- Project Performance -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-800 mb-0">Project Matrix</h5>
+                    <a href="{% url 'project_list' %}" class="btn btn-primary rounded-pill btn-sm px-4">All Projects</a>
                 </div>
-                <div class="card-body">
-                    <div class="timeline-container">
-                        {% for payment in recent_payments %}
-                        <div class="d-flex mb-3">
-                            <div class="flex-shrink-0 me-3">
-                                <div class="bg-success bg-opacity-10 text-success rounded p-2">
-                                    <i class="bi bi-arrow-up-right"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1 border-bottom pb-2">
-                                <div class="d-flex justify-content-between">
-                                    <p class="mb-0 fw-bold small">Payment Received</p>
-                                    <span class="text-muted" style="font-size: 0.7rem;">{{ payment.date|date:"D, d M" }}</span>
-                                </div>
-                                <p class="text-muted small mb-0">{{ payment.project.client.name }} paid ₹{{ payment.amount }}</p>
-                            </div>
-                        </div>
-                        {% endfor %}
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Project Entity</th>
+                                <th>Budget Consumption</th>
+                                <th>Collection Status</th>
+                                <th class="text-end pe-4">Yet to Receive</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in projects %}
+                            <tr onclick="window.location='{% url 'project_detail' project.id %}'">
 
-                        {% for spend in recent_spends %}
-                        <div class="d-flex mb-3">
-                            <div class="flex-shrink-0 me-3">
-                                <div class="bg-danger bg-opacity-10 text-danger rounded p-2">
-                                    <i class="bi bi-cart"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1 border-bottom pb-2">
-                                <div class="d-flex justify-content-between">
-                                    <p class="mb-0 fw-bold small">Expense Logged</p>
-                                    <span class="text-muted" style="font-size: 0.7rem;">Recent</span>
-                                </div>
-                                <p class="text-muted small mb-0">{{ spend.project.name }}: ₹{{ spend.total_amount }}</p>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+                                <!-- PROJECT INFO -->
+                                <td class="ps-4 py-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-box bg-light text-primary fw-bold">
+                                            {{ project.name|slice:":1" }}
+                                        </div>
+                                        <div class="ms-3">
+                                            <div class="fw-bold text-dark fs-6">{{ project.name }}</div>
+                                            <div class="small text-muted">{{ project.client_name }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- BUDGET CONSUMPTION -->
+                                <td style="width: 280px;">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="badge bg-light text-dark fw-bold border">
+                                            ₹{{ project.budget }}
+                                        </span>
+                                        <span class="small fw-bold text-primary">
+                                            {{ project.progress }}%
+                                        </span>
+                                    </div>
+
+                                    <div class="progress rounded-pill shadow-inner" style="height: 8px;">
+                                        <div class="progress-bar bg-primary"
+                                            style="width: {{ project.progress }}%">
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- COLLECTION STATUS -->
+                                <td>
+                                    <div class="received-pill">
+                                        <i class="bi bi-check-circle-fill me-2"></i>
+                                        ₹{{ project.paid }}
+                                    </div>
+                                </td>
+
+                                <!-- YET TO RECEIVE -->
+                                <td class="text-end pe-4">
+                                    <span class="fs-6 fw-800 text-danger">
+                                        ₹{{ project.remaining }}
+                                    </span>
+                                </td>
+
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -190,25 +223,65 @@
 </div>
 
 <style>
-    .transition-hover:hover {
-        background-color: #f8f9fa !important;
-        transform: translateY(-2px);
-        transition: all 0.2s ease;
-        border-color: var(--bs-primary) !important;
+    :root {
+        --primary-soft: rgba(67, 97, 238, 0.1);
+        --warning-soft: rgba(255, 193, 7, 0.1);
+        --success-soft: rgba(25, 135, 84, 0.1);
+        --danger-soft: rgba(220, 53, 69, 0.1);
     }
-    .custom-table thead th {
-        border-top: none;
-        padding: 1rem;
+
+    .fw-800 { font-weight: 800; }
+
+    /* Glass Effect Cards */
+    .glass-card {
+        border: 1px solid rgba(255,255,255,0.4) !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .custom-table tbody td {
-        padding: 1rem;
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.08) !important;
     }
-    .progress {
-        background-color: #e9ecef;
-        border-radius: 10px;
-    }
-    .timeline-container div:last-child .flex-grow-1 {
-        border-bottom: none !important;
-    }
+
+    .metric-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; margin-bottom: 4px;}
+    .metric-value { font-weight: 800; letter-spacing: -1px; color: #1e293b; }
+
+    /* Badge Styles */
+    .badge-status { padding: 4px 10px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+    .status-blue { background: #e0e7ff; color: #4338ca; }
+    .status-green { background: #dcfce7; color: #15803d; }
+    .status-red { background: #fee2e2; color: #b91c1c; }
+    .status-orange { background: #fef3c7; color: #b45309; }
+
+    /* Timeline Styling */
+    .custom-timeline { position: relative; padding: 20px 0; }
+    .timeline-item { position: relative; padding-left: 35px; margin-bottom: 25px; }
+    .timeline-dot { position: absolute; left: 0; top: 5px; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px #f1f5f9; }
+    .dot-success { background: #22c55e; }
+    .dot-danger { background: #ef4444; }
+    .timeline-time { font-size: 0.75rem; color: #94a3b8; font-weight: 600; }
+    .amount-pill { padding: 2px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; display: inline-block; }
+
+    /* Action Grid Modern */
+    .action-grid-modern { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .q-action { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border-radius: 20px; text-decoration: none; transition: 0.3s; color: white; }
+    .q-action i { font-size: 1.5rem; margin-bottom: 8px; }
+    .q-action span { font-weight: 700; font-size: 0.85rem; }
+    .q-action:hover { transform: translateY(-3px); opacity: 0.9; color: white; }
+
+    .gradient-blue { background: linear-gradient(135deg, #4361ee, #4895ef); }
+    .gradient-cyan { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
+    .gradient-green { background: linear-gradient(135deg, #10b981, #34d399); }
+    .gradient-red { background: linear-gradient(135deg, #f43f5e, #fb7185); }
+
+    /* Insight Card */
+    .insight-card { background: #0f172a; position: relative; overflow: hidden; }
+    .insight-icon { font-size: 1.5rem; margin-right: 12px; }
+
+    /* Table Improvements */
+    .table-custom thead th { background: #f8fafc; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; color: #64748b; padding: 15px; border: 0; }
+    .table-custom tbody tr { transition: 0.2s; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+    .table-custom tbody tr:hover { background-color: #fcfdfe; }
+    .avatar-box { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.2rem; }
+    .received-pill { background: #f0fdf4; color: #16a34a; padding: 6px 14px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; }
 </style>
 {% endblock %}

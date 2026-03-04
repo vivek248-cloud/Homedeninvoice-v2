@@ -96,52 +96,131 @@ def logout_view(request):
 
 
 
+
+
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, F, DecimalField, ExpressionWrapper
+from django.db.models.functions import Coalesce
+from django.utils import timezone
+from decimal import Decimal
+from datetime import datetime
+
 
 @login_required(login_url='login')
 def dashboard(request):
 
-
-    # 🔢 Totals
-    spends = Spend.objects.all()
+    # =====================================
+    # TOTALS
+    # =====================================
     total_clients = Client.objects.count()
     total_projects = Project.objects.count()
 
-    total_payments = Payment.objects.aggregate(
-        total=Sum('amount')
-    )['total'] or Decimal("0.00")
-
-    total_spend = sum(
-        (spend.total_amount for spend in spends),
-        Decimal("0.00")
+    total_payments = (
+        Payment.objects.aggregate(total=Sum('amount'))['total']
+        or Decimal("0.00")
     )
 
-    # 🆕 Recent Data
-    recent_clients = Client.objects.order_by('-created_at')[:5]
+    total_spend = (
+        Spend.objects.aggregate(
+            total=Sum(
+                ExpressionWrapper(
+                    F('qty') * F('rate'),
+                    output_field=DecimalField()
+                )
+            )
+        )['total']
+        or Decimal("0.00")
+    )
 
-    recent_payments = Payment.objects.select_related(
+    # =====================================
+    # PROJECT MATRIX
+    # =====================================
+    projects_queryset = (
+        Project.objects
+        .select_related('client')
+        .annotate(
+            paid_amount=Coalesce(Sum('payments__amount'), Decimal("0.00"))
+        )
+    )
+
+    projects = []
+
+    for project in projects_queryset:
+        budget = project.budget or Decimal("0.00")
+        paid = project.paid_amount or Decimal("0.00")
+
+        progress = 0
+        if budget > 0:
+            progress = int((paid / budget) * 100)
+
+        projects.append({
+            "id": project.id,
+            "name": project.name,
+            "client_name": project.client.name,
+            "budget": budget,
+            "paid": paid,
+            "remaining": budget - paid,
+            "progress": min(progress, 100),
+        })
+
+    # =====================================
+    # 🔥 COMBINED RECENT ACTIVITY (FIXED PROPERLY)
+    # =====================================
+
+    payments = Payment.objects.select_related(
         'project__client'
-    ).order_by('-date', '-id')[:5]
+    ).order_by('-date')[:5]
 
-    recent_spends = Spend.objects.select_related(
+    spends = Spend.objects.select_related(
         'project'
-    ).order_by('-id')[:5]
+    ).order_by('-created_at')[:5]
 
-    # 📂 All projects (for table if needed)
-    projects = Project.objects.select_related('client')
+    activities = []
 
+    for p in payments:
+        # Convert DateField → aware datetime
+        dt = datetime.combine(p.date, datetime.min.time())
+        dt = timezone.make_aware(dt)
+
+        activities.append({
+            "type": "payment",
+            "date": dt,
+            "title": "Payment Received",
+            "description": f"{p.project.client.name} paid for {p.project.name}",
+            "amount": p.amount,
+            "color": "success",
+        })
+
+    for s in spends:
+        activities.append({
+            "type": "spend",
+            "date": s.created_at,  # already aware
+            "title": "Expense Logged",
+            "description": f"{s.project.name} expense entry",
+            "amount": s.total_amount,
+            "color": "danger",
+        })
+
+    # Now both are timezone-aware → safe sorting
+    activities = sorted(
+        activities,
+        key=lambda x: x["date"],
+        reverse=True
+    )[:5]
+
+    # =====================================
+    # CONTEXT
+    # =====================================
     context = {
-        'total_clients': total_clients,
-        'total_projects': total_projects,
-        'total_payments': total_payments,
-        'total_spend': total_spend,
-        'recent_clients': recent_clients,
-        'recent_payments': recent_payments,
-        'recent_spends': recent_spends,
-        'projects': projects,
+        "total_clients": total_clients,
+        "total_projects": total_projects,
+        "total_payments": total_payments,
+        "total_spend": total_spend,
+        "projects": projects,
+        "activities": activities,
     }
 
-    return render(request, 'billing/dashboard.html', context)
+    return render(request, "billing/dashboard.html", context)
 
 
 
