@@ -1034,7 +1034,7 @@ def build_invoice_context(request, payment):
 
     # ✅ Use saved values if exist, else defaults
     gst_rate = payment.gst_rate or (
-        Decimal("18.00") if client.gst_number else Decimal("0.00")
+        Decimal("0.00") if client.gst_number else Decimal("0.00")
     )
 
     gst_amount = (total_spent * gst_rate) / Decimal("100")
