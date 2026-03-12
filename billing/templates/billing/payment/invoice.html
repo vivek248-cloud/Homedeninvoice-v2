@@ -609,8 +609,8 @@ body.public-invoice .no-print {
                 {% if not is_public %}
                     <!-- 🔘 Radio Buttons -->
                     <label class="no-print" style="margin-left:15px;">
-                        {% comment %} <input type="radio" name="discountType" value="percent" checked>
-                        % {% endcomment %}
+                        <input type="radio" name="discountType" value="percent">
+                        
                     </label>
 
                     <label class="no-print" style="margin-left:10px;">
@@ -665,12 +665,16 @@ body.public-invoice .no-print {
             </tr>
         </thead>
 
-        <tbody>
+        <tbody id="paymentRows">
+
         {% for row in payment_rows %}
-        <tr>
+        <tr data-paid="{{ row.total_paid }}">
+
             <td>{{ row.date }}</td>
 
-            <td>₹ {{ grand_total|floatformat:2|intcomma }}</td>
+            <td class="grandTotal">
+                ₹ {{ grand_total|floatformat:2|intcomma }}
+            </td>
 
             <td>₹ {{ row.previous_paid|floatformat:2|intcomma }}</td>
 
@@ -678,13 +682,15 @@ body.public-invoice .no-print {
                 ₹ {{ row.now_paid|floatformat:2|intcomma }}
             </td>
 
-            <td class="{% if row.balance_after == 0 %}success{% elif row.balance_after < 0 %}danger{% else %}primary{% endif %}">
+            <td class="balanceCell">
                 ₹ {{ row.balance_after|floatformat:2|intcomma }}
             </td>
 
             <td>{{ row.mode }}</td>
+
         </tr>
         {% endfor %}
+
         </tbody>
     </table>
 
@@ -741,6 +747,8 @@ body.public-invoice .no-print {
 
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -902,7 +910,6 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener('DOMContentLoaded', function () {
 
     const isPublic = {{ is_public|yesno:"true,false" }};
-
     let totalSpent = parseFloat("{{ total_spent }}") || 0;
 
     const gstInput = document.getElementById('gstRate');
@@ -915,6 +922,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const grandTotalEl = document.getElementById('grandTotal');
     const discountPrintEl = document.getElementById('discountPrint');
 
+    const paymentRows = document.querySelectorAll("#paymentRows tr");
+
     function getSelectedDiscountType() {
         for (let radio of discountRadios) {
             if (radio.checked) return radio.value;
@@ -922,10 +931,44 @@ document.addEventListener('DOMContentLoaded', function () {
         return "percent";
     }
 
-    function calculate() {
+    function updatePaymentSummary(grandTotal){
 
-        // 🚨 CRITICAL: do nothing on public page
-        if (isPublic) return;
+        paymentRows.forEach(row => {
+
+            const paid = parseFloat(row.dataset.paid);
+
+            const balance = grandTotal - paid;
+
+            const balanceCell = row.querySelector(".balanceCell");
+            const totalCell = row.querySelector(".grandTotal");
+
+            if(totalCell){
+                totalCell.innerHTML = "₹ " + grandTotal.toFixed(2);
+            }
+
+            if(balanceCell){
+
+                balanceCell.innerHTML = "₹ " + balance.toFixed(2);
+
+                balanceCell.classList.remove("success","danger","primary");
+
+                if(balance === 0){
+                    balanceCell.classList.add("success");
+                }
+                else if(balance < 0){
+                    balanceCell.classList.add("danger");
+                }
+                else{
+                    balanceCell.classList.add("primary");
+                }
+            }
+
+        });
+    }
+
+    function calculate(){
+
+        if(isPublic) return;
 
         let gstRate = parseFloat(gstInput?.value) || 0;
         let discountValue = parseFloat(discountInput?.value) || 0;
@@ -936,69 +979,98 @@ document.addEventListener('DOMContentLoaded', function () {
         let discountAmount = 0;
         let discountType = getSelectedDiscountType();
 
-        if (discountType === "percent") {
+        if(discountType === "percent"){
             discountAmount = (subtotal * discountValue) / 100;
-            if (discountPrintEl) discountPrintEl.innerHTML = discountValue + "%";
-        } else {
+
+            if(discountPrintEl)
+                discountPrintEl.innerHTML = discountValue + "%";
+        }
+        else{
             discountAmount = discountValue;
-            if (discountPrintEl) discountPrintEl.innerHTML = "₹ " + discountValue.toFixed(2);
+
+            if(discountPrintEl)
+                discountPrintEl.innerHTML = "₹ " + discountValue.toFixed(2);
         }
 
         let grandTotal = subtotal - discountAmount;
 
-        if (gstAmountEl) gstAmountEl.innerHTML = "₹ " + gstAmount.toFixed(2);
-        if (subtotalEl) subtotalEl.innerHTML = "₹ " + subtotal.toFixed(2);
-        if (discountAmountEl) discountAmountEl.innerHTML = "₹ " + discountAmount.toFixed(2);
-        if (grandTotalEl) grandTotalEl.innerHTML = "₹ " + grandTotal.toFixed(2);
+        if(gstAmountEl) gstAmountEl.innerHTML = "₹ " + gstAmount.toFixed(2);
+        if(subtotalEl) subtotalEl.innerHTML = "₹ " + subtotal.toFixed(2);
+        if(discountAmountEl) discountAmountEl.innerHTML = "₹ " + discountAmount.toFixed(2);
+        if(grandTotalEl) grandTotalEl.innerHTML = "₹ " + grandTotal.toFixed(2);
+
+        updatePaymentSummary(grandTotal);
     }
 
-    // ✅ bind only when NOT public
-    if (!isPublic) {
+    if(!isPublic){
 
         let saveTimer = null;
 
-        function saveInvoiceAdjustments() {
+        function saveInvoiceAdjustments(){
+
             clearTimeout(saveTimer);
 
             saveTimer = setTimeout(() => {
+
                 const gst = gstInput?.value || 0;
                 const discount = discountInput?.value || 0;
                 const discountType = getSelectedDiscountType();
 
-                fetch("{% url 'save_invoice_adjustments' payment.id %}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                        "X-CSRFToken": "{{ csrf_token }}"
+                fetch("{% url 'save_invoice_adjustments' payment.id %}",{
+                    method:"POST",
+                    headers:{
+                        "Content-Type":"application/x-www-form-urlencoded",
+                        "X-CSRFToken":"{{ csrf_token }}"
                     },
-                    body: new URLSearchParams({
-                        gst_rate: gst,
-                        discount: discount,
-                        discount_type: discountType
+                    body:new URLSearchParams({
+                        gst_rate:gst,
+                        discount:discount,
+                        discount_type:discountType
                     })
+                })
+                .then(res => res.json())
+                .then(data => {
+
+                    if(data.status === "success"){
+
+                        Swal.fire({
+                            toast:true,
+                            position:"top-end",
+                            icon:"success",
+                            title:"Invoice updated",
+                            showConfirmButton:false,
+                            timer:1200
+                        });
+
+                    }
+                })
+                .catch(err=>{
+                    console.error("SAVE ERROR:",err);
                 });
-            }, 600);
+
+            },600);
         }
 
-        gstInput?.addEventListener('input', () => {
+        gstInput?.addEventListener("input",()=>{
             calculate();
             saveInvoiceAdjustments();
         });
 
-        discountInput?.addEventListener('input', () => {
+        discountInput?.addEventListener("input",()=>{
             calculate();
             saveInvoiceAdjustments();
         });
 
-        discountRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
+        discountRadios.forEach(radio=>{
+            radio.addEventListener("change",()=>{
                 calculate();
                 saveInvoiceAdjustments();
             });
         });
 
-        calculate(); // only for private view
+        calculate();
     }
+
 });
 
 </script>

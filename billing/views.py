@@ -1039,7 +1039,13 @@ def build_invoice_context(request, payment):
 
     gst_amount = (total_spent * gst_rate) / Decimal("100")
 
-    discount = payment.discount_value or client.discount or Decimal("0.00")
+    discount_value = payment.discount_value or Decimal("0.00")
+    discount_type = payment.discount_type or "percent"
+
+    if discount_type == "percent":
+        discount = (total_spent + gst_amount) * discount_value / Decimal("100")
+    else:
+        discount = discount_value
 
     grand_total = total_spent + gst_amount - discount
 
@@ -1135,20 +1141,31 @@ from decimal import Decimal
 @login_required
 @require_POST
 def save_invoice_adjustments(request, pk):
+
     payment = get_object_or_404(Payment, pk=pk)
 
     try:
         gst_rate = Decimal(request.POST.get("gst_rate", "0"))
-        discount = Decimal(request.POST.get("discount", "0"))
+        discount_value = Decimal(request.POST.get("discount", "0"))
+        discount_type = request.POST.get("discount_type", "percent")
 
         payment.gst_rate = gst_rate
-        payment.discount_value = discount
-        payment.save(update_fields=["gst_rate", "discount_value"])
+        payment.discount_value = discount_value
+        payment.discount_type = discount_type
+
+        payment.save(update_fields=[
+            "gst_rate",
+            "discount_value",
+            "discount_type"
+        ])
 
         return JsonResponse({"status": "success"})
 
     except Exception as e:
-        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=400)
 
 
 

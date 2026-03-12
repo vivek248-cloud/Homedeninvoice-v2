@@ -78,7 +78,11 @@ urlpatterns = [
     path('backup/history/', views.backup_history, name='backup_history'),
     path('backup/download/<str:filename>/', views.download_backup_file, name='download_backup_file'),
     path("backup/delete/<str:filename>/",views.delete_backup_file,name="delete_backup_file",),
-    path("payments/<int:pk>/save-adjustments/",views.save_invoice_adjustments,name="save_invoice_adjustments",),
+    path(
+        "payments/<int:pk>/save-adjustments/",
+        views.save_invoice_adjustments,
+        name="save_invoice_adjustments"
+    ),
 
 
     # 🔐 Client auth

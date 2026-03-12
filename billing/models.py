@@ -229,12 +229,25 @@ class Payment(models.Model):
         ('cheque', 'Cheque'),
     )
 
-    # ✅ ADD THESE
+    DISCOUNT_TYPES = (
+        ('percent', 'Percent'),
+        ('amount', 'Amount'),
+    )
+
     gst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
     discount_value = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    
+
+    discount_type = models.CharField(
+        max_length=10,
+        choices=DISCOUNT_TYPES,
+        default="percent"
+    )
+
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='payments')
+
     amount = models.DecimalField(max_digits=12, decimal_places=2)
+
     payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODES)
 
     invoice_token = models.UUIDField(
