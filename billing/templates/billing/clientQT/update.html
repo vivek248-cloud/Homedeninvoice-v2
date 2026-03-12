@@ -1,0 +1,140 @@
+{% extends 'billing/layouts/base.html' %}
+{% block content %}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
+            
+            <div class="d-flex align-items-center mb-5">
+                <div class="bg-success rounded-4 p-3 shadow-success-grow me-4">
+                    <i class="bi bi-pencil-square text-white fs-2"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-0">Edit Client Profile</h2>
+                    <p class="text-muted mb-0 small">Modify details for <strong>{{ client.name }}</strong>. Update project parameters below.</p>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="d-flex align-items-center mb-4">
+                            <span class="badge rounded-pill bg-primary-subtle text-primary me-2">1</span>
+                            <h5 class="fw-bold mb-0">Personal Details</h5>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <input type="text" name="name" value="{{ client.name }}" class="form-control border-0 bg-light rounded-3" id="nameInput" placeholder="Name" required>
+                            <label for="nameInput" class="text-muted">Full Client Name</label>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" name="phone1" value="{{ client.phone1 }}" class="form-control border-0 bg-light rounded-3" id="phone1" placeholder="Phone" required>
+                                    <label for="phone1" class="text-muted">Primary Contact</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" name="phone2" value="{{ client.phone2 }}" class="form-control border-0 bg-light rounded-3" id="phone2" placeholder="Secondary Phone">
+                                    <label for="phone2" class="text-muted">Secondary Contact</label>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <input type="email" name="email" value="{{ client.email }}" class="form-control border-0 bg-light rounded-3" id="email" placeholder="Email">
+                                    <label for="email" class="text-muted">Email Address</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="d-flex align-items-center mb-4">
+                            <span class="badge rounded-pill bg-primary-subtle text-primary me-2">2</span>
+                            <h5 class="fw-bold mb-0">Project Metadata & Timeline</h5>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <input type="text" name="location" value="{{ client.location }}" class="form-control border-0 bg-light rounded-3" id="locInput" placeholder="Location" required>
+                            <label for="locInput" class="text-muted">Site Location / Address</label>
+                        </div>
+
+                        
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" name="GST" value="{{ client.GST }}" class="form-control border-0 bg-light rounded-3" id="gstInput" placeholder="GST">
+                                    <label for="gstInput" class="text-muted">GST Number</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="number" name="discount" value="{{ client.discount }}" class="form-control border-0 bg-light rounded-3" id="discInput" placeholder="0">
+                                    <label for="discInput" class="text-muted">Default Discount (%)</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 mb-5">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="d-flex align-items-center mb-4">
+                            <span class="badge rounded-pill bg-primary-subtle text-primary me-2">3</span>
+                            <h5 class="fw-bold mb-0">Additional Context</h5>
+                        </div>
+                        <div class="form-floating">
+                            <textarea name="notes" class="form-control border-0 bg-light rounded-3" placeholder="Notes" id="notesArea" style="height: 120px">{{ client.notes }}</textarea>
+                            <label for="notesArea" class="text-muted">Client Preferences or Notes...</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 mb-5">
+                    <button type="submit" class="btn btn-success px-5 py-3 rounded-4 fw-bold shadow flex-grow-1">
+                        Save Changes <i class="bi bi-check-circle ms-2"></i>
+                    </button>
+                    <a href="{% url 'qtn_client_index' %}" class="btn btn-light px-4 py-3 rounded-4 fw-bold text-muted border">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Success glow for Edit mode */
+    .shadow-success-grow {
+        box-shadow: 0 10px 20px -5px rgba(25, 135, 84, 0.4);
+    }
+
+    .form-floating > .form-control {
+        padding-top: 1.625rem;
+        padding-bottom: 0.625rem;
+    }
+    
+    .form-control:focus, .input-group-text:focus {
+        background-color: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1) !important;
+        border: 1px solid #0d6efd !important;
+        outline: none;
+    }
+
+    .bg-primary-subtle { background-color: #e7f0ff !important; }
+
+    .card { transition: transform 0.3s ease; }
+    .card:hover { transform: translateY(-5px); }
+
+    /* For date visibility in Edit mode */
+    input[type="date"] { color: #444; }
+</style>
+
+{% endblock %}

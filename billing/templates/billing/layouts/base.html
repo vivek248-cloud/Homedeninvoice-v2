@@ -340,37 +340,77 @@
         </div>
 
         <nav class="nav flex-column">
-            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+            href="{% url 'dashboard' %}">
                 <i class="bi bi-grid-1x2-fill"></i> Overview
             </a>
-            
+
             <div class="sidebar-heading">Client Hub</div>
-            <a class="nav-link {% if 'client' in request.path %}active{% endif %}" href="{% url 'client_list' %}">
+
+            <a class="nav-link {% if request.resolver_match.url_name == 'client_list' %}active{% endif %}" 
+            href="{% url 'client_list' %}">
                 <i class="bi bi-people"></i> Clients
             </a>
-            <a class="nav-link {% if 'project' in request.path %}active{% endif %}" href="{% url 'project_list' %}">
+
+            <a class="nav-link {% if request.resolver_match.url_name == 'project_list' %}active{% endif %}" 
+            href="{% url 'project_list' %}">
                 <i class="bi bi-inbox-fill"></i> Projects
             </a>
-            <a class="nav-link " href="https://homedeninterior.com/admin-dashboard/" target="_blank">
+
+
+            <div class="sidebar-heading">Quotation Hub</div>
+
+            <a class="nav-link {% if request.resolver_match.url_name == 'qtn_client_index' %}active{% endif %}" 
+            href="{% url 'qtn_client_index' %}">
+                <i class="bi bi-people"></i> Quotation Clients
+            </a>
+
+            <a class="nav-link {% if request.resolver_match.url_name == 'quotation_index' %}active{% endif %}" 
+            href="{% url 'quotation_index' %}">
                 <i class="bi bi-substack"></i> Quotations
             </a>
+
+
             <div class="sidebar-heading">Finance</div>
-            <a class="nav-link {% if 'spend' in request.path %}active{% endif %}" href="{% url 'spend_list' %}">
+
+            <a class="nav-link {% if request.resolver_match.url_name == 'spend_list' %}active{% endif %}" 
+            href="{% url 'spend_list' %}">
                 <i class="bi bi-receipt-cutoff"></i> Spends
             </a>
-            <a class="nav-link {% if 'payment' in request.path %}active{% endif %}" href="{% url 'payment_list' %}">
+
+            <a class="nav-link {% if request.resolver_match.url_name == 'payment_list' %}active{% endif %}" 
+            href="{% url 'payment_list' %}">
                 <i class="bi bi-wallet2"></i> Payments
             </a>
 
+
             <div class="sidebar-heading">Configuration</div>
-            <a class="nav-link text-dark" data-bs-toggle="collapse" href="#masterSubmenu" role="button">
-                <i class="bi bi-sliders2-vertical"></i> Master Tables <i class="bi bi-chevron-down ms-auto small"></i>
+
+            <a class="nav-link text-dark" data-bs-toggle="collapse" href="#masterSubmenu">
+                <i class="bi bi-sliders2-vertical"></i> Master Tables
+                <i class="bi bi-chevron-down ms-auto small"></i>
             </a>
-            <div class="collapse {% if 'floor' in request.path or 'room' in request.path or 'fullsemi' in request.path %}show{% endif %} ps-4" id="masterSubmenu">
-                <a class="nav-link py-2 {% if 'floor' in request.path %}active{% endif %}" href="{% url 'floor_list' %}">Floor Types</a>
-                <a class="nav-link py-2 {% if 'room' in request.path %}active{% endif %}" href="{% url 'room_list' %}">Room Types</a>
-                <a class="nav-link py-2 {% if 'fullsemi' in request.path %}active{% endif %}" href="{% url 'fullsemi_list' %}">Full / Semi</a>
+
+<div class="collapse {% if request.resolver_match.url_name == 'floor_list' or request.resolver_match.url_name == 'room_list' or request.resolver_match.url_name == 'fullsemi_list' %}show{% endif %}" id="masterSubmenu">
+
+                <a class="nav-link py-2 {% if request.resolver_match.url_name == 'floor_list' %}active{% endif %}" 
+                href="{% url 'floor_list' %}">
+                Floor Types
+                </a>
+
+                <a class="nav-link py-2 {% if request.resolver_match.url_name == 'room_list' %}active{% endif %}" 
+                href="{% url 'room_list' %}">
+                Room Types
+                </a>
+
+                <a class="nav-link py-2 {% if request.resolver_match.url_name == 'fullsemi_list' %}active{% endif %}" 
+                href="{% url 'fullsemi_list' %}">
+                Full / Semi
+                </a>
+
             </div>
+
         </nav>
 
         <div class="mt-auto p-4">

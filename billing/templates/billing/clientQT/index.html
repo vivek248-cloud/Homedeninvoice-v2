@@ -1,0 +1,269 @@
+{% extends 'billing/layouts/base.html' %}
+{% block content %}
+
+<style>
+    :root {
+        --brand-blue: #4318FF;
+        --navy-dark: #1B2559;
+        --muted-grey: #A3AED0;
+        --soft-bg: #F4F7FE;
+        --success-teal: #05CD99;
+    }
+
+    .page-title { color: var(--navy-dark); font-weight: 800; letter-spacing: -0.5px; }
+
+    /* Directory Container */
+    .directory-wrapper {
+        background: #fff;
+        border-radius: 30px;
+        border: 1px solid rgba(224, 229, 242, 0.7);
+        box-shadow: 14px 17px 40px 4px rgba(112, 144, 176, 0.08);
+        overflow: hidden;
+    }
+
+    /* Glass Header & Search */
+    .action-header {
+        background: rgba(250, 251, 255, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--soft-bg);
+    }
+
+    .search-pill {
+        background: #fff;
+        border: 1px solid #E0E5F2;
+        border-radius: 20px;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        max-width: 400px;
+        transition: 0.3s;
+    }
+
+    .search-pill:focus-within {
+        border-color: var(--brand-blue);
+        box-shadow: 0 10px 20px rgba(67, 24, 255, 0.05);
+    }
+
+    .search-pill input {
+        border: none;
+        outline: none;
+        margin-left: 12px;
+        font-weight: 500;
+        width: 100%;
+        color: var(--navy-dark);
+    }
+
+    /* Modern Table UI */
+    .custom-table thead th {
+        background: var(--soft-bg);
+        color: var(--muted-grey);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 1px;
+        padding: 1.5rem 1rem;
+        border: none;
+    }
+
+    .custom-table tbody tr {
+        transition: all 0.3s ease;
+        cursor: default;
+    }
+
+    .custom-table tbody tr:hover {
+        background: #fff !important;
+        transform: translateY(-3px) scale(1.002);
+        box-shadow: 0 10px 30px -10px rgba(112, 144, 176, 0.2);
+        z-index: 2;
+    }
+
+    /* Profile Visuals */
+    .avatar-wrapper { position: relative; }
+    
+    .avatar-main {
+        width: 52px; height: 52px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #707EAE 0%, #1B2559 100%);
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1.3rem;
+        box-shadow: 0 8px 20px rgba(27, 37, 89, 0.15);
+    }
+
+    .status-dot {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        background: var(--success-teal);
+    }
+
+    /* Communication Badges */
+    .phone-link {
+        color: var(--brand-blue);
+        font-weight: 700;
+        text-decoration: none;
+        background: rgba(67, 24, 255, 0.05);
+        padding: 5px 12px;
+        border-radius: 10px;
+        transition: 0.2s;
+    }
+    .phone-link:hover { background: var(--brand-blue); color: #fff; }
+
+    /* Action Circle Buttons */
+    .action-circle {
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: #F4F7FE; color: #707EAE;
+        border: none; transition: 0.3s;
+        margin-left: 5px;
+    }
+    .action-circle:hover { 
+        transform: rotate(15deg); 
+        color: #fff; 
+    }
+    .action-circle.edit:hover { background: var(--brand-blue); }
+    .action-circle.delete:hover { background: #EE5D50; }
+</style>
+
+<div class="row mb-5 align-items-center">
+    <div class="col-md-6">
+        <h3 class="page-title mb-1">Directory</h3>
+        <p class="text-muted small mb-0">You have <span class="text-primary fw-bold">{{ clients|length }}</span> accounts registered.</p>
+    </div>
+    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <a href="{% url 'qtn_client_create' %}" class="btn btn-primary px-4 py-2 rounded-pill fw-bold shadow-sm">
+            <i class="bi bi-plus-lg me-2"></i> New Client
+        </a>
+    </div>
+</div>
+
+<div class="directory-wrapper">
+    <form method="get">
+
+    <div class="action-header d-flex flex-column flex-lg-row justify-content-between align-items-center gap-4">
+
+        <div class="search-pill">
+            <i class="bi bi-search text-muted"></i>
+
+            <input
+                type="text"
+                id="clientSearch"
+                name="search"
+                value="{{ search }}"
+                placeholder="Find by name, phone, or ID...">
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm rounded-3 border px-3 fw-bold text-white rounded-pill">
+                <i class="bi bi-funnel"></i> Filter
+            </button>
+
+            <button type="button" class="btn btn-white border bg-white rounded-pill px-4 text-muted fw-bold small shadow-sm">
+                <i class="bi bi-arrow-up-right-circle me-2"></i>Export
+            </button>
+        </div>
+
+    </div>
+
+    </form>
+
+    <div class="table-responsive">
+        <table class="table custom-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-5">Client Identity</th>
+                    <th>Contact Access</th>
+                    <th>Location </th>
+                    <th class="text-end pe-5">Management</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in clients %}
+                <tr>
+                    <td class="ps-5">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-wrapper">
+                                <div class="avatar-main">
+                                    {{ c.name|slice:":1"|upper }}
+                                </div>
+                                {% if c.email %}
+                                <div class="status-dot" title="Verified Email"></div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark fs-6">{{ c.name }}</div>
+                                <div class="text-muted" style="font-size: 0.7rem;">ID: #CL{{ c.id|stringformat:"03d" }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column gap-2">
+                            <a href="tel:{{ c.phone1 }}" class="phone-link small w-fit">
+                                <i class="bi bi-telephone-fill me-2"></i>{{ c.phone1 }}
+                            </a>
+                            {% if c.email %}
+                            <span class="text-muted small ps-1" style="font-size: 0.75rem;">
+                                <i class="bi bi-envelope me-1"></i> {{ c.email }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="badge rounded-pill bg-light text-dark fw-bold px-3 py-2 border">
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ c.location }}
+                        </div>
+                    </td>
+                    <td class="pe-5 text-end">
+                        <div class="d-flex justify-content-end">
+                            <a href="{% url 'qtn_client_update' c.id %}" class="action-circle edit" title="Edit Profile">
+                                <i class="bi bi-pencil-fill"></i>
+                            </a>
+                            <a href="{% url 'qtn_client_delete' c.id %}" 
+                               class="action-circle delete" 
+                               title="Archive Client"
+                               onclick="return confirm('Archive this client profile?')">
+                                <i class="bi bi-trash3-fill"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-5">
+                        <div class="py-5 opacity-75">
+                            <i class="bi bi-person-x display-1 text-muted"></i>
+                            <h4 class="fw-bold text-dark mt-3">No Clients Found</h4>
+                            <p class="text-muted small">Your directory is currently empty. Ready to add your first partner?</p>
+                            <a href="{% url 'client_create' %}" class="btn btn-primary rounded-pill mt-3 px-5">
+                                Let's Start
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Simple frontend search logic
+    document.getElementById('clientSearch').addEventListener('keyup', function() {
+        let value = this.value.toLowerCase();
+        let rows = document.querySelectorAll('.custom-table tbody tr');
+        
+        rows.forEach(row => {
+            let text = row.innerText.toLowerCase();
+            row.style.display = text.includes(value) ? '' : 'none';
+        });
+    });
+</script>
+
+{% endblock %}

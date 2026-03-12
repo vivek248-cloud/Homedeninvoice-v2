@@ -1,0 +1,328 @@
+{% load extra_filters %}
+{% load pdf_wrap %}
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    font-size:12px;
+    color:#222;
+}
+
+h1,h2,h3{
+    margin:0;
+}
+
+.quote-title{
+    text-align:center;
+    margin-bottom:15px;
+}
+
+.tagline{
+    color:#1aa187;
+    font-style:italic;
+    margin-bottom:4px;
+}
+
+.info-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-bottom:15px;
+}
+
+.info-table td{
+    border:1px solid #ccc;
+    padding:8px;
+    vertical-align:top;
+}
+
+.section-title{
+    font-weight:bold;
+    margin-bottom:6px;
+}
+
+
+.product-table th{
+    background:#0b6b73;
+    color:white;
+    padding:6px;
+    border:1px solid #ccc;
+    font-size:11px;
+}
+
+.product-table td{
+    border:1px solid #ccc;
+    padding:6px;
+    font-size:11px;
+}
+
+.product-table img{
+    width:55px;
+    height:auto;
+}
+
+.totals{
+    width:40%;
+    float:right;
+    margin-top:15px;
+}
+
+.totals td{
+    padding:6px;
+    border:1px solid #ccc;
+}
+
+.grand{
+    font-weight:bold;
+    font-size:14px;
+}
+
+.text-right{
+    text-align:right;
+}
+
+.text-center{
+    text-align:center;
+}
+
+.product-table td{
+    font-size:12px;
+}
+
+
+
+.floor-row{
+    background:#e3f2f2;
+    font-weight:bold;
+    text-align:center;
+}
+
+.location-row{
+    background:#f6f8fa;
+    font-weight:bold;
+    text-align:center;
+}
+
+
+
+.grand{
+    font-weight:bold;
+    background:#e3f2f2;
+}
+
+table {
+    width: 100%;
+    table-layout: fixed;   /* 🔥 this is the key */
+    border-collapse: collapse;
+}
+
+
+td, th {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.total-wrapper{
+    width:100%;
+    margin-top:60px;
+}
+
+.total-box{
+    width:40%;
+    margin-left:auto;
+}
+
+.total-box table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.total-box td{
+    padding:6px;
+    border:1px solid #ddd;
+}
+
+.total-box tr{
+    page-break-inside: avoid;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="quote-title">
+    <div class="tagline">“We don’t just design spaces — we create experiences.”</div>
+    <h2>QUOTATION</h2>
+</div>
+
+<table width="100%" style="margin-bottom:8px;">
+<tr>
+<td>
+<b>Quotation No:</b> {{ quotation_number }}
+</td>
+<td class="text-right">
+<b>Date:</b> {{ today }}
+</td>
+</tr>
+</table>
+
+<table class="info-table">
+<tr>
+<td width="50%">
+<div class="section-title">CLIENT INFORMATION</div>
+<b>Name:</b> {{ client.name }}<br>
+<b>Mobile:</b> {{ client.phone1 }}<br>
+<b>Email:</b> {{ client.email }}<br>
+<b>Address:</b> {{ client.location }}<br>
+<b>Estimate Start:</b> {{ client.estimate_start_date }}<br>
+<b>Estimate End:</b> {{ client.estimate_end_date }}
+</td>
+
+<td width="50%">
+<div class="section-title">COMPANY INFORMATION</div>
+<b>Company:</b> HomeDen Interiors<br>
+<b>GSTIN:</b> 33AKTPH2053F2ZB<br>
+<b>Mobile:</b> +91 77 8003 8004<br>
+<b>Email:</b> homedeninterior@gmail.com<br>
+<b>Address:</b> No.18, Susi Nagar,Ponmalaipattai Road,Ponneripuram, Trichy-04, Tamil Nadu
+</td>
+</tr>
+</table>
+
+<h3>PRODUCT SUMMARY</h3>
+
+<table class="product-table">
+<thead>
+<tr>
+    <th rowspan="2" style="width:35px;">S.No</th>
+    <th rowspan="2" style="width:240px;">Item</th>
+    <th rowspan="2" style="width:90px;">Core Material</th>
+    <th rowspan="2" style="width:80px;">Brand</th>
+    <th colspan="2" style="width:100px;">Size</th>
+    <th rowspan="2" style="width:100px;">Price</th>
+</tr>
+<tr>
+    <th>Length</th>
+    <th>Width / Height</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% regroup rows by floor_lower as floor_list %}
+
+{% for floor in floor_list %}
+
+<!-- FLOOR ROW -->
+<tr class="floor-row">
+    <td colspan="7">
+       {{ floor.list.0.floor|upper }}
+    </td>
+</tr>
+
+{% regroup floor.list by location_lower as location_list %}
+
+{% for location in location_list %}
+
+<!-- LOCATION ROW -->
+<tr class="location-row">
+    <td colspan="7">
+        {{ location.list.0.location|upper }}
+    </td>
+</tr>
+
+{% for r in location.list %}
+<tr>
+
+<td class="text-center">
+    {{ forloop.parentloop.counter }}.{{ forloop.counter }}
+</td>
+
+<td style="
+    width:240px;
+    vertical-align:top;
+    font-size:11px;
+    line-height:1.5;
+">
+
+<b>{{ r.element }} :</b><br>
+
+{{ r.specification|pdf_wrap|safe }}
+
+{% if r.image %}
+<br>
+<img src="{{ r.image.image.url }}"
+     style="width:55px;border:1px solid #ccc;">
+{% endif %}
+
+</td>
+
+<td>{{ r.core_material }}<br>/ {{r.finish_material }}</td>
+<td>{{ r.brand }}</td>
+
+<td class="text-center">{{ r.length }}</td>
+<td class="text-center">{{ r.width }}</td>
+
+<td class="text-right">
+    Rs. {{ r.total|indian_currency }}
+</td>
+
+</tr>
+{% endfor %}
+
+{% endfor %}
+{% endfor %}
+
+</tbody>
+
+</table>
+
+<div class="total-wrapper">
+
+<div class="total-box">
+
+<table>
+<tr>
+<td>Total</td>
+<td class="text-right"><b>Rs. {{ total_amount|indian_currency }}</b></td>
+</tr>
+
+<tr>
+<td>GST ({{ gst_rate }}%)</td>
+<td class="text-right"><b>Rs. {{ gst_amount|indian_currency }}</b></td>
+</tr>
+
+<tr>
+<td><b>Total (Incl. GST)</b></td>
+<td class="text-right"><b>Rs. {{ total_with_gst|indian_currency }}</b></td>
+</tr>
+
+<tr>
+<td>Discount</td>
+<td class="text-right"><b>Rs. {{ discount|indian_currency }}</b></td>
+</tr>
+
+<tr class="grand">
+<td>Grand Total</td>
+<td class="text-right"><b>Rs. {{ grand_total|indian_currency }}</b></td>
+</tr>
+</table>
+
+<div>
+<b>Notes:</b><br>
+{{ client.notes|linebreaksbr }}
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>

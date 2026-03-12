@@ -1,0 +1,348 @@
+{% extends "billing/layouts/base.html" %}
+{% block content %}
+
+<div class="container-fluid py-4" style="background-color: #f8fafc; min-height: 100vh;">
+    <nav aria-label="breadcrumb" class="mb-4 px-3">
+        <ol class="breadcrumb small text-uppercase fw-bold mb-0">
+            <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">Quotations</a></li>
+            <li class="breadcrumb-item active text-primary">Preview & Adjust</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <div class="col-xl-9 col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-list-check me-2 text-primary"></i>Itemized Estimate</h5>
+                </div>
+                
+                <div class="table-responsive custom-scrollbar">
+                    <table class="table align-middle mb-0" id="mainQuoteTable">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Item / Spec</th>
+                                <th class="text-center">Image</th>
+                                <th>Materials</th>
+                                <th class="text-center">Area / Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Line Total</th>
+                                <th class="text-center" style="width: 80px;">Order</th>
+                            </tr>
+                        </thead>
+                        <tbody class="border-top-0">
+                            {% for r in rows %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">{{ r.element }}</div>
+                                    <div class="small text-muted mb-1">{{ r.floor }} | {{ r.location }}</div>
+                                    <div class="small text-muted bg-light p-2 rounded" style="max-width: 300px; font-size: 0.8rem;">
+                                        {{ r.specification|truncatewords:20 }}
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    {% if r.image %}
+                                    <img src="{{ r.image.image.url }}" style="width:50px;height:50px;object-fit:cover" class="rounded shadow-sm border">
+                                    {% else %}
+                                    <div class="bg-light rounded border d-flex align-items-center justify-content-center mx-auto" style="width:50px;height:50px;">
+                                        <i class="bi bi-image text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="small"><strong>Core:</strong> {{ r.core_material }}</div>
+                                    <div class="small"><strong>Finish:</strong> {{ r.finish_material }}</div>
+                                    <div class="small text-primary fw-bold">{{ r.brand }}</div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="fw-bold">{{ r.area }} <span class="small fw-normal text-muted">{{ r.unit }}</span></div>
+                                    <div class="badge bg-secondary-subtle text-secondary rounded-pill">Qty: {{ r.qty }}</div>
+                                </td>
+                                <td class="text-end text-muted">₹ {{ r.price }}</td>
+                                <td class="text-end">
+                                    <div class="fw-bold text-primary line-total-value">₹ {{ r.total }}</div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group-vertical btn-group-sm rounded shadow-sm border overflow-hidden">
+                                        <button type="button" class="btn btn-white py-1 px-2 border-0" onclick="moveUp(this)"><i class="bi bi-chevron-up"></i></button>
+                                        <button type="button" class="btn btn-white py-1 px-2 border-0" onclick="moveDown(this)"><i class="bi bi-chevron-down"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4">
+            <div class="sticky-top" style="top: 100px; z-index: 10;">
+                
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h6 class="text-uppercase small fw-bold text-muted mb-3">Client Overview</h6>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary-subtle rounded-circle p-3 me-3">
+                                <i class="bi bi-person text-primary h4 mb-0"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ client.name }}</h6>
+                                <small class="text-muted">{{ client.phone1 }}</small>
+                            </div>
+                        </div>
+                        <div class="small text-muted">
+                            <i class="bi bi-calendar-event me-2"></i>{{ client.estimate_start_date }} — {{ client.estimate_end_date }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-lg border-0 rounded-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4">Pricing Summary</h5>
+                        
+                        <div class="mb-3 d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Subtotal</span>
+                            <span class="fw-bold text-dark" id="subtotal">₹ {{ subtotal }}</span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="small fw-bold text-muted mb-1 text-uppercase">Tax (GST)</label>
+                            <div class="input-group">
+                            <input type="number"
+                                id="gst"
+                                value="{{ client.GST|default:0 }}"
+                                min="0"
+                                max="28"
+                                step="0.1"
+                                class="form-control border-0 bg-light shadow-none text-center fw-bold">
+                                <span class="input-group-text border-0 bg-light">%</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="small fw-bold text-muted mb-1 text-uppercase">Discount Configuration</label>
+
+                            <div class="d-flex bg-light p-1 rounded-pill mb-2">
+
+                            <input type="radio"
+                            class="btn-check"
+                            name="discountType"
+                            id="typePerc"
+                            value="percent"
+                            {% if discount_mode == "percent" %}checked{% endif %}>
+
+                            <label class="btn btn-sm btn-outline-primary border-0 rounded-pill flex-fill"
+                            for="typePerc">
+                            Percentage (%)
+                            </label>
+
+
+                            <input type="radio"
+                            class="btn-check"
+                            name="discountType"
+                            id="typeAmt"
+                            value="amount"
+                            {% if discount_mode == "amount" %}checked{% endif %}>
+
+                            <label class="btn btn-sm btn-outline-primary border-0 rounded-pill flex-fill"
+                            for="typeAmt">
+                            Fixed (₹)
+                            </label>
+
+                            </div>
+
+
+                            <div class="input-group">
+
+                            <span class="input-group-text border-0 bg-light" id="discountSymbol">
+                            {% if discount_mode == "percent" %}%{% else %}₹{% endif %}
+                            </span>
+
+                            <input type="number"
+                            id="discount"
+                            value="{% if discount_mode == 'percent' %}{{ discount_percent }}{% else %}{{ discount_amount }}{% endif %}"
+                            class="form-control border-0 bg-light shadow-none fw-bold">
+
+                            </div>
+
+                            <div class="mt-2 text-center">
+                            <small class="text-muted">
+                            Total Savings:
+                            <span class="text-danger fw-bold" id="discountAmount">₹ 0.00</span>
+                            </small>
+                            </div>
+                        </div>
+
+                        <hr class="opacity-10">
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="h6 fw-bold mb-0">Grand Total</span>
+                            <span class="h4 fw-extrabold text-primary mb-0" id="grandTotal">₹ {{ grand_total }}</span>
+                        </div>
+
+                        <form method="post" action="{% url 'save_quotation_totals' client.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="gst_percent" id="gst_hidden">
+                            <input type="hidden" name="discount_value" id="discount_hidden">
+                            <input type="hidden" name="discount_type" id="discount_type_hidden">
+                            <input type="hidden" name="grand_total" id="grand_total_hidden">
+
+                            <button class="btn btn-primary btn-lg w-100 rounded-pill shadow fw-bold transition-btn">
+                                <i class="bi bi-cloud-check me-2"></i> Save Changes
+                            </button>
+                        </form>
+                        <a href="{% url 'quotation_update' client.id %}" target="_blank" class="btn btn-warning btn-sm rounded-pill px-3 py-4 mt-3 w-50">
+                            <i class="bi bi-pencil-square"></i> Edit
+                        </a>
+                        <a href="{% url 'quotation_pdf' client.id %}" target="_blank" class="btn btn-danger btn-sm rounded-pill px-3 py-4 mt-3">
+                            <i class="bi bi-file-pdf me-1"></i> Download PDF
+                        </a>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fw-extrabold { font-weight: 800; }
+    .custom-scrollbar::-webkit-scrollbar { height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .btn-white { background-color: #fff; color: #64748b; }
+    .btn-white:hover { background-color: #f8fafc; color: #0d6efd; }
+    #mainQuoteTable tr:hover { background-color: rgba(13, 110, 253, 0.02); }
+    .line-total-value { font-size: 1.05rem; letter-spacing: -0.02em; }
+    .sticky-top { top: 2rem; }
+    
+    /* Active Radio styling */
+    .btn-check:checked + .btn-outline-primary {
+        background-color: #0d6efd !important;
+        color: #fff !important;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+</style>
+
+<script>
+
+// Row Reordering
+function moveUp(btn){
+    const row = btn.closest("tr");
+    const prev = row.previousElementSibling;
+
+    if(prev){
+        row.classList.add('bg-primary-subtle');
+        setTimeout(()=>row.classList.remove('bg-primary-subtle'),500);
+        row.parentNode.insertBefore(row, prev);
+    }
+}
+
+function moveDown(btn){
+    const row = btn.closest("tr");
+    const next = row.nextElementSibling;
+
+    if(next){
+        row.classList.add('bg-primary-subtle');
+        setTimeout(()=>row.classList.remove('bg-primary-subtle'),500);
+        row.parentNode.insertBefore(next, row);
+    }
+}
+
+
+// MAIN CALCULATION
+function calculateTotals(){
+
+    let subtotal = 0;
+
+    document.querySelectorAll(".line-total-value").forEach(el=>{
+        subtotal += parseFloat(el.innerText.replace(/[₹, ]/g,"")) || 0;
+    });
+
+    // GST
+    let gstPercent = parseFloat(document.getElementById("gst").value) || 0;
+    gstPercent = Math.min(Math.max(gstPercent,0),28);
+    document.getElementById("gst").value = gstPercent;
+
+    const gstAmount = subtotal * gstPercent / 100;
+
+
+    // Discount
+    let discountValue = parseFloat(document.getElementById("discount").value) || 0;
+    const type = document.querySelector("input[name='discountType']:checked").value;
+
+    if(type === "percent"){
+        discountValue = Math.min(Math.max(discountValue,0),100);
+    }else{
+        discountValue = Math.min(Math.max(discountValue,0),subtotal);
+    }
+
+    document.getElementById("discount").value = discountValue;
+
+
+    // Calculate discount amount
+    let discountAmount =
+        (type === "percent")
+        ? subtotal * discountValue / 100
+        : discountValue;
+
+
+    const grandTotal = Math.max((subtotal + gstAmount) - discountAmount, 0);
+
+
+    // Update UI
+    document.getElementById("subtotal").innerText =
+        "₹ " + subtotal.toLocaleString('en-IN',{minimumFractionDigits:2});
+
+    document.getElementById("grandTotal").innerText =
+        "₹ " + grandTotal.toLocaleString('en-IN',{minimumFractionDigits:2});
+
+    document.getElementById("discountAmount").innerText =
+        "₹ " + discountAmount.toLocaleString('en-IN',{minimumFractionDigits:2});
+
+
+    // Hidden form values
+    document.getElementById("gst_hidden").value = gstPercent;
+    document.getElementById("discount_hidden").value = discountValue;
+    document.getElementById("discount_type_hidden").value = type;
+    document.getElementById("grand_total_hidden").value = grandTotal.toFixed(2);
+
+}
+
+
+// Toggle Discount Mode
+document.querySelectorAll("input[name='discountType']").forEach(radio=>{
+    radio.addEventListener("change", ()=>{
+
+        const type = radio.value;
+
+        document.getElementById("discountSymbol").innerText =
+            (type === "percent") ? "%" : "₹";
+
+        calculateTotals();
+
+    });
+});
+
+
+// Input listeners
+["gst","discount"].forEach(id=>{
+    document.getElementById(id).addEventListener("input", calculateTotals);
+});
+
+
+// Initial Load
+window.addEventListener("load", ()=>{
+
+    const type =
+        document.querySelector("input[name='discountType']:checked").value;
+
+    document.getElementById("discountSymbol").innerText =
+        (type === "percent") ? "%" : "₹";
+
+    calculateTotals();
+
+});
+
+</script>
+
+{% endblock %}

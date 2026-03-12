@@ -23,6 +23,69 @@ class Client(models.Model):
         return self.name
 
 
+class QtnClient(models.Model):
+    name = models.CharField(max_length=200)
+    phone1 = models.CharField(max_length=20)
+    phone2 = models.CharField(max_length=20, blank=True, null=True)
+
+    email = models.EmailField(blank=True, null=True)
+    location = models.CharField(max_length=200)
+
+    gst = models.CharField(max_length=50, blank=True, null=True)
+
+    discount_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    discount_mode = models.CharField(
+        max_length=10,
+        choices=[
+            ("percent", "Percent"),
+            ("amount", "Amount")
+        ],
+        default="percent"
+    )
+
+    notes = models.TextField(blank=True, null=True)
+
+    estimate_start_date = models.DateField(blank=True, null=True)
+    estimate_end_date = models.DateField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class Quotation(models.Model):
+
+    client = models.ForeignKey(
+        QtnClient,
+        on_delete=models.CASCADE,
+        related_name="quotations"
+    )
+
+    quotation_number = models.CharField(max_length=50)
+
+    total_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.quotation_number
+
+
+
+
+class Image(models.Model):
+    name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to="quotation_images/")
+
+    def __str__(self):
+        return self.name
+
 
 
 
@@ -189,3 +252,80 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.project.name} - {self.amount}"
+
+
+
+
+from django.db import models
+from decimal import Decimal
+
+
+class QuotationItem(models.Model):
+
+    client = models.ForeignKey(QtnClient, on_delete=models.CASCADE, related_name="quotation_items")
+
+    floor = models.CharField(max_length=50)
+    location = models.CharField(max_length=200)
+    element = models.CharField(max_length=100)
+
+    image = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    full_semi = models.ForeignKey(
+        FullSemi,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    core_material = models.CharField(max_length=100)
+    finish_material = models.CharField(max_length=100)
+    brand = models.CharField(max_length=100)
+    specification = models.TextField(blank=True)
+
+    unit = models.CharField(max_length=50)
+
+    length = models.DecimalField(max_digits=10, decimal_places=2)
+    width = models.DecimalField(max_digits=10, decimal_places=2)
+
+    area = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        editable=False
+    )
+
+    price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2
+    )
+
+    qty = models.IntegerField(default=1)
+
+    total = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        editable=False
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+
+        # Calculate area
+        self.area = Decimal(self.length) * Decimal(self.width)
+
+        # Auto price from FullSemi
+        if self.full_semi:
+            self.price = self.full_semi.rate
+
+        # Calculate total
+        self.total = self.area * self.price * self.qty
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.client.name} - {self.element}"

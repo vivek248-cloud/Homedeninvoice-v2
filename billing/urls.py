@@ -88,4 +88,27 @@ urlpatterns = [
     path("client/invoice/<uuid:token>/",views.client_invoice_view,name="client_invoice_view"),
 
 
+    
+    path("quotation/index/", views.quotation_index, name="quotation_index"),
+    path("quotation/create/", views.quotation_create, name="quotation_create"),
+    path("quotation/client/<int:id>/edit/", views.quotation_update, name="quotation_update"),
+    path("quotation/<int:id>/delete/", views.quotation_delete, name="quotation_delete"),
+    path("quotation/<int:client_id>/pdf/", views.quotation_pdf, name="quotation_pdf"),
+
+    path("quotation/<int:client_id>/save-totals/", views.save_quotation_totals, name="save_quotation_totals"),
+
+    path("quotation/<int:client_id>/view/", views.quotation_detail, name="quotation_detail"),
+
+
+    path("quotation/clients/", views.qtn_client_index, name="qtn_client_index"),
+    path("quotation/clients/create/", views.qtn_client_create, name="qtn_client_create"),
+    path("quotation/clients/<int:id>/edit/", views.qtn_client_update, name="qtn_client_update"),
+    path("quotation/clients/<int:id>/delete/", views.qtn_client_delete, name="qtn_client_delete"),
+
+    # image
+    path("image/", views.image_index, name="image_index"),
+    path("image/create/", views.image_create, name="image_create"),
+    path("image/<int:id>/edit/", views.image_update, name="image_update"),
+    path("image/<int:id>/delete/", views.image_delete, name="image_delete"),
+
 ]

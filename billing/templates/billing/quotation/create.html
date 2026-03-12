@@ -1,0 +1,984 @@
+{% extends "billing/layouts/base.html" %}
+{% block content %}
+
+<datalist id="elementList">
+<option value="Wardrobe">
+<option value="Kitchen">
+<option value="TV Unit">
+<option value="Loft">
+<option value="Bed Back Panel">
+<option value="Study Table">
+</datalist>
+
+<datalist id="locationList">
+<option value="Living Room">
+<option value="Master Bedroom">
+<option value="Guest Bedroom">
+<option value="Kitchen">
+<option value="Dining">
+</datalist>
+
+<datalist id="brandList">
+<option value="Greenply">
+<option value="Century">
+<option value="Merino">
+<option value="Hettich">
+<option value="Hafele">
+<option value="Home Den">
+</datalist>
+
+<datalist id="finishList">
+<option value="Laminate">
+<option value="Acrylic">
+<option value="PU Paint">
+<option value="Veneer">
+</datalist>
+
+
+
+
+<div class="container-fluid py-4" style="background-color: #f8fafc; min-height: 100vh;">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb small text-uppercase fw-bold mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'quotation_index' %}" class="text-decoration-none text-muted opacity-75">Quotations</a></li>
+            <li class="breadcrumb-item active text-primary" aria-current="page">Create New</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-4 border-bottom d-flex align-items-center justify-content-between px-4">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary-subtle p-3 rounded-3 me-3">
+                    <i class="bi bi-file-earmark-plus text-primary h4 mb-0"></i>
+                </div>
+                <div>
+                    <h2 class="h4 mb-1 fw-bold text-dark">Create Quotation</h2>
+                    <p class="text-muted small mb-0">Generate a high-precision estimate for your client.</p>
+                </div>
+            </div>
+            <div class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-bold border border-primary-subtle">
+                <span class="spinner-grow spinner-grow-sm me-1" role="status"></span> Draft Mode
+            </div>
+        </div>
+        
+        <div class="card-body p-4">
+            <form method="post" id="quotationForm">
+                {% csrf_token %}
+
+                <div class="row g-4 mb-5 p-4 bg-white rounded-4 border shadow-sm mx-0">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-dark small tracking-wider">CLIENT NAME</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-person text-muted"></i></span>
+                            <select name="client" class="form-select form-select-lg border-0 bg-light shadow-none" required>
+                                {% for c in clients %}
+                                <option value="{{ c.id }}">{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-dark small tracking-wider">ESTIMATE START DATE</label>
+                        <input type="date" name="estimate_start_date" class="form-control form-control-lg border-0 bg-light shadow-none" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-dark small tracking-wider">ESTIMATE END DATE</label>
+                        <input type="date" name="estimate_end_date" class="form-control form-control-lg border-0 bg-light shadow-none" required>
+                    </div>
+                </div>
+
+                <div class="table-responsive rounded-4 border shadow-sm custom-scrollbar" style="max-height: 600px;">
+                    <table class="table table-hover align-middle mb-0" id="quoteTable">
+                        <thead class="text-white sticky-top shadow-sm" style="background: #1e293b; z-index: 10;">
+                            <tr class="small text-uppercase fw-bold">
+                                <th class="ps-4 py-3" style="min-width: 160px;">Floor / Location</th>
+                                <th style="min-width: 180px;">Element Details</th>
+                                <th class="text-center" style="min-width: 100px;">Image</th>
+                                <th style="min-width: 200px;">Series & Core</th>
+                                <th style="min-width: 200px;">Finish & Brand</th>
+                                <th style="min-width: 150px;">Spec</th>
+                                <th class="text-center" style="min-width: 140px;">Dimensions</th>
+                                <th class="text-center" style="min-width: 70px;">Qty</th>
+                                <th class="text-center bg-primary" style="min-width: 130px;">Line Total</th>
+                                <th class="text-center sticky-end bg-white text-dark shadow-sm" style="min-width: 90px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="border-top-0">
+                            <tr class="transition-row">
+                                <td class="ps-4">
+                                    <input name="floor[]" class="form-control form-control-sm mb-1 fw-bold border-0 bg-light-hover" placeholder="Floor (e.g. 1st)" required>
+                                    <input name="location[]" list="locationList" class="form-control form-control-sm border-0 bg-light-hover text-muted" placeholder="Location" required>
+                                </td>
+
+                                <td>
+                                    <input name="element[]" list="elementList" class="form-control form-control-sm border-0 bg-light-hover fw-bold text-primary" placeholder="e.g. Wardrobe" required>
+                                    <input name="unit[]" class="form-control form-control-sm border-0 bg-light-hover mt-1 small opacity-75" placeholder="Unit (sqft)" required>
+                                </td>
+
+                                <td class="text-center">
+                                    <input type="hidden" name="image[]" class="selected-image-id">
+
+                                    <div class="image-box d-inline-block position-relative">
+
+                                    <img class="selected-image-preview rounded-3 border mb-1 shadow-sm"
+                                            onclick="openPreviewModal(this)">
+
+                                    <div class="btn-group btn-group-sm w-100 shadow-sm rounded-2 overflow-hidden">
+                                    <button type="button" class="btn btn-white py-1 px-2 border" onclick="openImageModal(this)">
+                                    <i class="bi bi-image"></i>
+                                    </button>
+
+                                    <button type="button" class="btn btn-white py-1 px-2 border text-danger" onclick="clearSelectedImage(this)">
+                                    <i class="bi bi-trash3"></i>
+                                    </button>
+                                    </div>
+
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <select class="form-select form-select-sm border-0 bg-light-hover fullsemi text-primary fw-bold mb-1 shadow-none" name="full_semi[]" required>
+                                        <option value="">Select Series</option>
+                                        {% for f in fullsemis %}
+                                        <option value="{{ f.id }}" data-rate="{{ f.rate }}">{{ f.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input name="core_material[]" class="form-control form-control-sm border-0 bg-light-hover opacity-75" placeholder="Core Material" required>
+                                </td>
+
+                                <td>
+                                    <input name="finish_material[]" list="finishList" class="form-control form-control-sm border-0 bg-light-hover mb-1" placeholder="Finish" required>
+                                    <input name="brand[]" list="brandList" class="form-control form-control-sm border-0 bg-light-hover opacity-75" placeholder="Brand" required>
+                                </td>
+
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="openSpecModal(this)">
+                                        <i class="bi bi-card-text me-1"></i> Specs
+                                    </button>
+                                    <textarea name="specification[]" class="d-none spec-text"></textarea>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex align-items-center justify-content-center bg-light rounded-pill p-1 border">
+                                        <input class="form-control form-control-sm border-0 bg-transparent length text-center fw-bold" name="length[]" placeholder="L" style="width: 45px;" required>
+                                        <span class="text-muted small mx-1">×</span>
+                                        <input class="form-control form-control-sm border-0 bg-transparent width text-center fw-bold" name="width[]" placeholder="W" style="width: 45px;">
+                                    </div>
+                                    <div class="text-center mt-1">
+                                        <small class="text-muted fw-bold">Area: <span class="area">0.00</span></small>
+                                        <span class="d-none price">0</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <input class="form-control form-control-sm border bg-white qty text-center fw-bold text-dark mx-auto shadow-sm rounded-3" name="qty[]" value="1" style="width: 50px;" required>
+                                </td>
+
+                                <td class="text-center bg-primary-subtle">
+                                    <div class="fw-bold text-primary mb-0 total">0.00</div>
+                                </td>
+
+                                <td class="text-center sticky-end bg-white shadow-sm">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button type="button" class="btn btn-light btn-sm text-info border shadow-sm" onclick="duplicateRow(this)" title="Duplicate">
+                                            <i class="bi bi-files"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-light btn-sm text-danger border shadow-sm" onclick="removeRow(this)" title="Delete">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row mt-5 align-items-center">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <button type="button" class="btn btn-dark fw-bold rounded-pill px-5 py-2 shadow-sm transition-btn" onclick="addRow()">
+                            <i class="bi bi-plus-circle-dotted me-2"></i>Add New Item
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-primary text-white shadow-lg rounded-4 overflow-hidden position-relative">
+                            <div class="card-body p-4 d-flex justify-content-between align-items-center position-relative" style="z-index: 2;">
+                                <div>
+                                    <p class="text-uppercase small mb-0 opacity-75 tracking-widest fw-bold">Estimated Grand Total</p>
+                                    <h2 class="h1 mb-0 fw-extrabold" id="grandTotalDisplay">₹ 0.00</h2>
+                                </div>
+                                <i class="bi bi-wallet2 display-4 opacity-25"></i>
+                                <input type="hidden" id="grandTotal" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-5 opacity-5">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="text-muted d-none d-md-block">
+                        <span class="badge bg-light text-dark border me-2">Quick Tip</span>
+                        <small>Use Tab to navigate between fields quickly.</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <a href="{% url 'quotation_index' %}" class="btn btn-danger text-white text-decoration-none fw-bold me-4">Discard Draft</a>
+                        <button class="btn btn-success px-5 py-3 shadow rounded-pill fw-bold border-0 transition-btn" style="background: linear-gradient(135deg, #198754 0%, #146c43 100%); min-width: 250px;">
+                            <i class="bi bi-check2-all me-2"></i>SAVE QUOTATION
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{% comment %} // Duplicate Row Function + keyboard shortcuts for add, duplicate, save Ctrl + N, Ctrl + D, Ctrl + S {% endcomment %}
+<script>
+
+function duplicateRow(btn){
+
+    const row = btn.closest("tr");
+    const clone = row.cloneNode(true);
+
+    document.querySelector("#quoteTable tbody").appendChild(clone);
+
+    calcAll();
+}
+
+
+
+document.addEventListener("keydown", function(e){
+
+    // Add Row
+    if(e.ctrlKey && e.key === "n"){
+        e.preventDefault();
+        addRow();
+    }
+
+    // Duplicate Row
+    if(e.ctrlKey && e.key === "d"){
+        e.preventDefault();
+
+        const active = document.activeElement.closest("tr");
+
+        if(active){
+            const clone = active.cloneNode(true);
+            document.querySelector("#quoteTable tbody").appendChild(clone);
+        }
+    }
+
+    // Save quotation
+    if(e.ctrlKey && e.key === "s"){
+        e.preventDefault();
+        document.getElementById("quotationForm").submit();
+    }
+
+});
+</script>
+
+
+
+
+
+
+
+{% comment %} spec modal {% endcomment %}
+<div class="modal fade" id="specModal" tabindex="-1">
+<div class="modal-dialog modal-lg modal-dialog-centered">
+<div class="modal-content p-4">
+
+<h5 class="mb-3">Create / Edit Specification</h5>
+
+<textarea id="specModalText"
+          class="form-control mb-3"
+          rows="8"
+          placeholder="Enter product specification..."></textarea>
+
+<div class="d-flex justify-content-end gap-2">
+
+<button class="btn btn-outline-secondary" onclick="copySpecModal()">
+Copy
+</button>
+
+<button class="btn btn-warning" onclick="pasteSpecModal()">
+Paste
+</button>
+
+<button class="btn btn-success" onclick="saveSpecModal()">
+Save
+</button>
+
+<button class="btn btn-primary" data-bs-dismiss="modal">
+Close
+</button>
+
+<button class="btn ai-generate-btn" onclick="generateSpecs(this)">
+    <div class="ai-btn-content">
+        <span class="ai-icon">
+            <i class="bi bi-stars"></i> </span>
+        <span class="ai-text">Generate Specs</span>
+    </div>
+    <span class="ai-shimmer"></span>
+</button>
+
+</div>
+
+</div>
+</div>
+</div>
+
+{% comment %} previous specs for autocomplete {% endcomment %}
+<script>
+const previousSpecs = {{ previous_specs|safe }};
+</script>
+
+
+
+<script>
+
+let activeSpecBox = null;
+
+
+/* OPEN SPEC MODAL */
+function openSpecModal(btn){
+
+    activeSpecBox = btn.closest("td").querySelector("textarea");
+
+    document.getElementById("specModalText").value = activeSpecBox.value;
+
+    const modal = new bootstrap.Modal(document.getElementById("specModal"));
+    modal.show();
+}
+
+
+/* COPY TEXT */
+function copySpecModal(){
+
+    const txt = document.getElementById("specModalText");
+
+    txt.select();
+    navigator.clipboard.writeText(txt.value);
+}
+
+
+/* PASTE TEXT */
+async function pasteSpecModal(){
+
+    try{
+        const text = await navigator.clipboard.readText();
+        document.getElementById("specModalText").value = text;
+    }
+    catch(err){
+        alert("Clipboard access denied");
+    }
+
+}
+
+
+/* SAVE TEXT BACK TO TABLE */
+function saveSpecModal(){
+
+    const text = document.getElementById("specModalText").value;
+
+    if(activeSpecBox){
+        activeSpecBox.value = text;
+    }
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById("specModal"));
+    modal.hide();
+
+}
+
+
+/* AI SPEC GENERATOR */
+function generateSpecs(btn){
+
+    const textarea = document.getElementById("specModalText");
+
+    let text = textarea.value.toLowerCase().trim();
+
+    if(!text){
+        alert("Type something like: wardrobe laminate soft close");
+        return;
+    }
+
+
+    /* -------------------------
+       AI BUTTON ANIMATION
+    ------------------------- */
+
+    if(btn){
+        btn.classList.add("loading");
+        btn.innerText = "Generating...";
+    }
+
+
+    setTimeout(()=>{
+
+
+    /* -------------------------
+       STEP 1: SEARCH PREVIOUS SPECS
+    ------------------------- */
+
+    let bestMatch = null;
+    let score = 0;
+
+    previousSpecs.forEach(spec => {
+
+        let s = spec.toLowerCase();
+
+        let words = text.split(" ");
+        let matchScore = 0;
+
+        words.forEach(w=>{
+            if(s.includes(w)){
+                matchScore++;
+            }
+        });
+
+        if(matchScore > score){
+            score = matchScore;
+            bestMatch = spec;
+        }
+
+    });
+
+    if(bestMatch && score >= 2){
+        typeWriter(bestMatch);
+        resetButton(btn);
+        return;
+    }
+
+
+    /* -------------------------
+       STEP 2: SMART KEYWORD GENERATOR
+    ------------------------- */
+
+    let specs = [];
+
+    if(text.includes("wardrobe")){
+        specs.push(" Wardrobe Unit");
+    }
+
+    if(text.includes("kitchen")){
+        specs.push("Modular Kitchen");
+    }
+
+    if(text.includes("tv")){
+        specs.push("TV Unit Panel");
+    }
+
+    if(text.includes("ply")){
+        specs.push(" BWR Plywood");
+    }
+
+    if(text.includes("mdf")){
+        specs.push(" MDF Board");
+    }
+
+    if(text.includes("laminate")){
+        specs.push(" Laminate");
+    }
+
+    if(text.includes("acrylic")){
+        specs.push(" Acrylic");
+    }
+
+    if(text.includes("veneer")){
+        specs.push(" Veneer");
+    }
+
+    if(text.includes("pu")){
+        specs.push("PU Paint");
+    }
+
+    if(text.includes("soft")){
+        specs.push(" Soft Close");
+    }
+
+    if(text.includes("glass")){
+        specs.push(" Toughened Glass");
+    }
+
+
+    /* -------------------------
+       STEP 3: DEFAULT TEMPLATE
+    ------------------------- */
+
+    if(specs.length === 0){
+
+        specs = [
+            "High-quality materials",
+        ];
+
+    }
+
+
+    /* -------------------------
+       STEP 4: AI TYPING EFFECT
+    ------------------------- */
+
+    typeWriter(specs.join("\n"));
+
+    resetButton(btn);
+
+    },700);
+
+}
+
+
+
+/* TYPEWRITER EFFECT */
+
+function typeWriter(text){
+
+    const textarea = document.getElementById("specModalText");
+
+    textarea.value = "";
+
+    let i = 0;
+
+    const speed = 10;
+
+    function typing(){
+
+        if(i < text.length){
+
+            textarea.value += text.charAt(i);
+
+            i++;
+
+            setTimeout(typing,speed);
+
+        }
+
+    }
+
+    typing();
+
+}
+
+
+
+/* RESET BUTTON */
+
+function resetButton(btn){
+
+    if(!btn) return;
+
+    setTimeout(()=>{
+        btn.classList.remove("loading");
+        btn.innerText = "Generate Specs";
+    },500);
+
+}
+
+</script>
+
+
+
+
+
+<script>
+function clearSelectedImage(button) {
+
+    // Find the parent td
+    let td = button.closest("td");
+
+    // Clear hidden input
+    td.querySelector(".selected-image-id").value = "";
+
+    // Hide image preview
+    let preview = td.querySelector(".selected-image-preview");
+    preview.src = "";
+    preview.style.display = "none";
+
+    // Clear image name
+    td.querySelector(".selected-image-name").innerText = "";
+}
+</script>
+
+{% comment %} image modal {% endcomment %}
+
+<div class="modal fade" id="imageModal" tabindex="-1">
+<div class="modal-dialog modal-lg modal-dialog-centered">
+<div class="modal-content p-3">
+
+<h5 class="mb-3">Select Image</h5>
+
+<div class="row g-3" id="imageGrid">
+{% for i in images %}
+<div class="col-3">
+    <img src="{{ i.image.url }}" 
+         class="img-thumbnail image-pick"
+         data-id="{{ i.id }}"
+         data-name="{{ i.name }}"
+         onclick="selectImage(this)">
+</div>
+{% endfor %}
+</div>
+
+<hr>
+
+<form method="post" enctype="multipart/form-data" action="{% url 'image_create' %}">
+{% csrf_token %}
+<input type="text" name="name" class="form-control mb-2" placeholder="Image name" required>
+<input type="file" name="image" class="form-control mb-2" required>
+<button class="btn btn-primary btn-sm">Upload New Image</button>
+</form>
+
+</div>
+</div>
+</div>
+
+<script>
+let activeRowBtn = null;
+
+function openImageModal(btn){
+    activeRowBtn = btn;
+    new bootstrap.Modal(document.getElementById("imageModal")).show();
+}
+
+function selectImage(img){
+
+    const id = img.dataset.id;
+    const src = img.src;
+
+    const cell = activeRowBtn.closest("td");
+
+    // set hidden input value
+    cell.querySelector(".selected-image-id").value = id;
+
+    // show preview
+    const preview = cell.querySelector(".selected-image-preview");
+
+    preview.src = src;
+    preview.style.display = "block";
+
+    // close modal
+    bootstrap.Modal.getInstance(
+        document.getElementById("imageModal")
+    ).hide();
+}
+
+document.querySelectorAll(".image-pick").forEach(img=>{
+img.style.cursor="pointer";
+});
+
+
+function openPreviewModal(img){
+
+    const modalImg = document.getElementById("previewModalImg");
+
+    modalImg.src = img.src;
+
+    new bootstrap.Modal(
+        document.getElementById("imagePreviewModal")
+    ).show();
+
+}
+</script>
+
+
+<div class="modal fade" id="imagePreviewModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal-content bg-dark border-0">
+
+<div class="modal-body text-center p-2">
+
+<img id="previewModalImg"
+     src=""
+     style="max-width:100%; max-height:80vh; object-fit:contain;">
+
+</div>
+
+</div>
+</div>
+</div>
+
+
+
+
+<script>
+function addRow() {
+    const table = document.querySelector("#quoteTable tbody");
+    const row = table.rows[0].cloneNode(true);
+
+    // Reset values but keep formatting
+    row.querySelectorAll("input, textarea").forEach(el => el.value = "");
+    row.querySelectorAll(".area,.price,.total").forEach(t => t.innerText = "0.00");
+
+    table.appendChild(row);
+    // Smooth scroll to the new row
+    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function removeRow(btn) {
+    const rows = document.querySelectorAll("#quoteTable tbody tr");
+    if (rows.length > 1) {
+        btn.closest("tr").remove();
+    } else {
+        alert("At least one item row is required.");
+    }
+    calcAll();
+}
+
+function calcAll() {
+    let grand = 0;
+
+    document.querySelectorAll("#quoteTable tbody tr").forEach(row => {
+        const length = parseFloat(row.querySelector(".length").value) || 0;
+        const width = parseFloat(row.querySelector(".width").value) || 0;
+        const qty = parseFloat(row.querySelector(".qty").value) || 0;
+
+        const area = length * width;
+        row.querySelector(".area").innerText = area.toFixed(2);
+
+        const select = row.querySelector(".fullsemi");
+        const rate = select.options[select.selectedIndex]?.dataset.rate || 0;
+        row.querySelector(".price").innerText = rate;
+
+        const total = area * rate * qty;
+        row.querySelector(".total").innerText = total.toFixed(2);
+
+        grand += total;
+    });
+
+    // Indian Currency Formatting
+    document.getElementById("grandTotalDisplay").innerText = "₹ " + grand.toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+document.addEventListener("input", calcAll);
+document.addEventListener("change", calcAll);
+</script>
+
+
+
+<script>
+const startInput = document.querySelector('[name="estimate_start_date"]');
+const endInput = document.querySelector('[name="estimate_end_date"]');
+
+startInput.addEventListener("change", () => {
+    if (!startInput.value) return;
+
+    const startDate = new Date(startInput.value);
+
+    // Add one month properly
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 1);
+
+    // Fix overflow (for months with fewer days)
+    if (endDate.getDate() !== startDate.getDate()) {
+        endDate.setDate(0); // last day of previous month
+    }
+
+    // Format YYYY-MM-DD for input[type=date]
+    const yyyy = endDate.getFullYear();
+    const mm = String(endDate.getMonth() + 1).padStart(2, "0");
+    const dd = String(endDate.getDate()).padStart(2, "0");
+
+    endInput.value = `${yyyy}-${mm}-${dd}`;
+});
+</script>
+
+<style>
+/* 1. Add subtle vertical lines to separate columns */
+#quoteTable th, #quoteTable td {
+    border-right: 1px solid #ebedef !important;
+}
+
+/* 2. Give inputs a "field" look so they are visible */
+.bg-light-hover { 
+    background-color: #f8f9fa !important; 
+    border: 1px solid #e9ecef !important; /* Adding a very faint border */
+    transition: all 0.2s;
+}
+
+/* 3. Make the field "pop" when you click it */
+.bg-light-hover:focus { 
+    background-color: #fff !important; 
+    border: 1px solid #0d6efd !important; 
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, .1) !important; 
+    outline: none;
+}
+
+/* 4. Improve the scrollbar visibility */
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+/* 5. Adjust the sticky end column to look better with borders */
+.sticky-end {
+    position: sticky;
+    right: 0;
+    z-index: 2;
+    border-left: 2px solid #dee2e6 !important;
+}
+
+
+
+/* Typography & Spacing */
+    .tracking-wider { letter-spacing: 0.05em; }
+    .fw-extrabold { font-weight: 800; }
+    
+    /* Input Styling */
+    .bg-light-hover { background-color: #f1f5f9; transition: all 0.2s; }
+    .bg-light-hover:focus { background-color: #fff !important; box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15) !important; }
+    
+    /* Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+    /* Table Fixes */
+    .sticky-end { position: sticky; right: 0; z-index: 5; }
+    #quoteTable thead th { border: none; }
+    
+    /* Transitions */
+    .transition-row { transition: background-color 0.3s ease; }
+    .transition-row:hover { background-color: rgba(241, 245, 249, 0.5); }
+    .transition-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important; }
+    .transition-btn:active { transform: translateY(0); }
+
+    /* Row highlight for total column */
+    .bg-primary-subtle { background-color: #e0f2fe !important; }
+    
+    /* Image Preview hover effect */
+/* Image preview */
+.selected-image-preview{
+    width:45px;
+    height:45px;
+    object-fit:cover;
+    display:none;
+    transition:transform .2s ease;
+    cursor:pointer;
+}
+
+.ai-generate-btn {
+    --bg-color: #0f172a;
+    --primary-gradient: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+    background: var(--bg-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    font-weight: 600;
+    padding: 10px 22px;
+    border-radius: 12px; /* More modern than full round */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.ai-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 2;
+}
+
+/* The Animated Gradient Background */
+.ai-generate-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background: var(--primary-gradient);
+    opacity: 0.15; /* Subtle tint in normal state */
+    transition: 0.4s;
+    z-index: 1;
+}
+
+.ai-generate-btn:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+.ai-generate-btn:hover::after {
+    opacity: 0.3; /* Brightens on hover */
+}
+
+/* Moving Shimmer Effect */
+.ai-shimmer {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    transition: 0.5s;
+    z-index: 3;
+}
+
+.ai-generate-btn:hover .ai-shimmer {
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    100% { left: 100%; }
+}
+
+/* Icon Animation */
+.ai-icon {
+    font-size: 1.2rem;
+    display: flex;
+    transition: 0.3s;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.ai-generate-btn:hover .ai-icon {
+    transform: rotate(15deg) scale(1.2);
+    filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.8));
+}
+
+/* Loading State - Pulse and Glow */
+.ai-generate-btn.loading {
+    pointer-events: none;
+    background: #1e1b4b;
+}
+
+.ai-generate-btn.loading .ai-icon {
+    animation: ai-pulse 1.5s ease-in-out infinite;
+    -webkit-text-fill-color: white; /* Show white when pulsing */
+}
+
+.ai-generate-btn.loading .ai-text {
+    opacity: 0.7;
+    content: "Thinking...";
+}
+
+@keyframes ai-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.5; filter: blur(1px); }
+}
+</style>
+
+
+{% endblock %}

@@ -1152,6 +1152,782 @@ def save_invoice_adjustments(request, pk):
 
 
 
+
+
+###################################################
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.forms import modelform_factory
+from .models import Client, Quotation
+
+
+QuotationForm = modelform_factory(
+    Quotation,
+    exclude=("created_at",)
+)
+
+@login_required
+def qtn_client_index(request):
+
+    search = request.GET.get("search", "")
+
+    clients = QtnClient.objects.all()
+
+    if search:
+        clients = clients.filter(
+            Q(name__icontains=search) |
+            Q(phone1__icontains=search) |
+            Q(phone2__icontains=search) |
+            Q(id__icontains=search)
+        )
+
+    return render(request, "billing/clientQT/index.html", {
+        "clients": clients,
+        "search": search
+    })
+
+
+
+
+@login_required
+def qtn_client_create(request):
+
+    if request.method == "POST":
+
+        QtnClient.objects.create(
+            name=request.POST.get("name"),
+            phone1=request.POST.get("phone1"),
+            phone2=request.POST.get("phone2"),
+            email=request.POST.get("email"),
+            location=request.POST.get("location"),
+
+            gst=request.POST.get("gst"),
+
+            discount_percent=request.POST.get("discount_percent") or 0,
+            discount_amount=request.POST.get("discount_amount") or 0,
+            discount_mode=request.POST.get("discount_mode") or "percent",
+
+            notes=request.POST.get("notes"),
+
+            estimate_start_date=request.POST.get("estimate_start_date"),
+            estimate_end_date=request.POST.get("estimate_end_date"),
+        )
+
+        return redirect("quotation_index")
+
+    return render(request, "billing/clientQT/create.html")
+
+@login_required
+def qtn_client_update(request, id):
+
+    client = get_object_or_404(QtnClient, id=id)
+
+    if request.method == "POST":
+
+        client.name = request.POST.get("name")
+        client.phone1 = request.POST.get("phone1")
+        client.phone2 = request.POST.get("phone2")
+        client.email = request.POST.get("email")
+        client.location = request.POST.get("location")
+
+        # FIXED FIELD NAME
+        client.gst = request.POST.get("gst")
+
+        client.discount_percent = request.POST.get("discount_percent") or 0
+        client.discount_amount = request.POST.get("discount_amount") or 0
+        client.discount_mode = request.POST.get("discount_mode") or "percent"
+
+        client.notes = request.POST.get("notes")
+
+        client.estimate_start_date = request.POST.get("estimate_start_date")
+        client.estimate_end_date = request.POST.get("estimate_end_date")
+
+        client.save()
+
+        return redirect("quotation_index")
+
+    return render(
+        request,
+        "billing/clientQT/update.html",
+        {
+            "client": client
+        }
+    )
+
+
+@login_required
+def qtn_client_delete(request, id):
+
+    client = get_object_or_404(QtnClient, id=id)
+
+    if request.method == "POST":
+        client.delete()
+        return redirect("quotation_index")
+
+    return render(
+        request,
+        "billing/clientQT/confirm_delete.html",
+        {"client": client},
+    )
+
+
+
+from django.db.models import Sum, Q
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import QuotationItem
+
+
+@login_required
+def quotation_index(request):
+
+    search = request.GET.get("search", "")
+
+    quotations = (
+        QuotationItem.objects
+        .values(
+            "client__id",
+            "client__name",
+            "client__phone1",
+            "client__email",
+        )
+        .annotate(
+            total_qty=Sum("qty"),
+            grand_total=Sum("total"),
+        )
+    )
+
+    if search:
+        quotations = quotations.filter(
+            Q(client__name__icontains=search) |
+            Q(client__phone1__icontains=search)
+        )
+
+    quotations = quotations.order_by("-client__id")
+
+    return render(
+        request,
+        "billing/quotation/index.html",
+        {
+            "quotations": quotations,
+            "search": search
+        }
+    )
+
+
+from decimal import Decimal
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .models import QtnClient, QuotationItem, Image, FullSemi
+
+
+@login_required
+def quotation_create(request):
+
+    if request.method == "POST":
+
+        client_id = request.POST.get("client")
+
+        start_date = request.POST.get("estimate_start_date")
+        end_date = request.POST.get("estimate_end_date")
+
+        # update quotation client dates
+        QtnClient.objects.filter(id=client_id).update(
+            estimate_start_date=start_date,
+            estimate_end_date=end_date,
+        )
+
+        floors = request.POST.getlist("floor[]")
+        locations = request.POST.getlist("location[]")
+        elements = request.POST.getlist("element[]")
+
+        images = request.POST.getlist("image[]")
+        fullsemis = request.POST.getlist("full_semi[]")
+
+        core_materials = request.POST.getlist("core_material[]")
+        finish_materials = request.POST.getlist("finish_material[]")
+        brands = request.POST.getlist("brand[]")
+        specifications = request.POST.getlist("specification[]")
+
+        units = request.POST.getlist("unit[]")
+        lengths = request.POST.getlist("length[]")
+        widths = request.POST.getlist("width[]")
+        qtys = request.POST.getlist("qty[]")
+
+        quotation_rows = []
+
+        for i in range(len(elements)):
+
+            if not elements[i]:
+                continue
+
+            length = Decimal(lengths[i] or 0)
+            width = Decimal(widths[i] or 0)
+            qty = int(qtys[i] or 1)
+
+            area = length * width
+
+            price = Decimal("0.00")
+            fullsemi_id = fullsemis[i] if i < len(fullsemis) else None
+
+            if fullsemi_id:
+                try:
+                    fullsemi = FullSemi.objects.get(id=fullsemi_id)
+                    price = fullsemi.rate
+                except FullSemi.DoesNotExist:
+                    price = Decimal("0.00")
+
+            total = area * price * qty
+
+            quotation_rows.append(
+                QuotationItem(
+                    client_id=client_id,
+                    floor=floors[i] if i < len(floors) else "",
+                    location=locations[i] if i < len(locations) else "",
+                    element=elements[i],
+
+                    image_id=images[i] if i < len(images) and images[i] else None,
+                    full_semi_id=fullsemi_id,
+
+                    core_material=core_materials[i] if i < len(core_materials) else "",
+                    finish_material=finish_materials[i] if i < len(finish_materials) else "",
+                    brand=brands[i] if i < len(brands) else "",
+                    specification=specifications[i] if i < len(specifications) else "",
+
+                    unit=units[i] if i < len(units) else "",
+
+                    length=length,
+                    width=width,
+                    area=area,
+
+                    price=price,
+                    qty=qty,
+                    total=total,
+                )
+            )
+
+        if quotation_rows:
+            QuotationItem.objects.bulk_create(quotation_rows)
+
+        return redirect("quotation_index")
+
+    return render(request, "billing/quotation/create.html", {
+        "clients": QtnClient.objects.all(),
+        "images": Image.objects.all(),
+        "fullsemis": FullSemi.objects.all(),
+        "previous_specs": list(
+            QuotationItem.objects
+            .exclude(specification="")
+            .values_list("specification", flat=True)
+            .distinct()[:200]
+        )
+    })
+
+
+
+from decimal import Decimal
+from django.db import transaction
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .models import QtnClient, QuotationItem, Image, FullSemi
+
+
+@login_required
+def quotation_update(request, id):
+
+    rows = QuotationItem.objects.filter(client_id=id)
+
+    if not rows.exists():
+        return redirect("quotation_index")
+
+    client_id = id
+
+    if request.method == "POST":
+
+        start_date = request.POST.get("estimate_start_date")
+        end_date = request.POST.get("estimate_end_date")
+
+        # update quotation client dates
+        QtnClient.objects.filter(id=client_id).update(
+            estimate_start_date=start_date,
+            estimate_end_date=end_date,
+        )
+
+        floors = request.POST.getlist("floor[]")
+        locations = request.POST.getlist("location[]")
+        elements = request.POST.getlist("element[]")
+
+        images = request.POST.getlist("image[]")
+        fullsemis = request.POST.getlist("full_semi[]")
+
+        core_materials = request.POST.getlist("core_material[]")
+        finish_materials = request.POST.getlist("finish_material[]")
+        brands = request.POST.getlist("brand[]")
+        specifications = request.POST.getlist("specification[]")
+
+        units = request.POST.getlist("unit[]")
+        lengths = request.POST.getlist("length[]")
+        widths = request.POST.getlist("width[]")
+        qtys = request.POST.getlist("qty[]")
+
+        quotation_rows = []
+
+        # preload rates (fast)
+        fullsemi_rates = {f.id: f.rate for f in FullSemi.objects.all()}
+
+        for i in range(len(elements)):
+
+            if not elements[i]:
+                continue
+
+            length = Decimal(lengths[i] or 0)
+            width = Decimal(widths[i] or 0)
+            qty = int(qtys[i] or 1)
+
+            area = length * width
+
+            fullsemi_id = fullsemis[i] if i < len(fullsemis) else None
+            price = Decimal("0.00")
+
+            if fullsemi_id:
+                price = fullsemi_rates.get(int(fullsemi_id), Decimal("0.00"))
+
+            total = area * price * qty
+
+            quotation_rows.append(
+                QuotationItem(
+                    client_id=client_id,
+
+                    floor=floors[i].strip() if i < len(floors) else "",
+                    location=locations[i].strip() if i < len(locations) else "",
+                    element=elements[i].strip(),
+
+                    image_id=int(images[i]) if i < len(images) and images[i] else None,
+                    full_semi_id=fullsemi_id,
+
+                    core_material=core_materials[i] if i < len(core_materials) else "",
+                    finish_material=finish_materials[i] if i < len(finish_materials) else "",
+                    brand=brands[i] if i < len(brands) else "",
+                    specification=specifications[i] if i < len(specifications) else "",
+
+                    unit=units[i] if i < len(units) else "",
+
+                    length=length,
+                    width=width,
+                    area=area,
+
+                    price=price,
+                    qty=qty,
+                    total=total,
+                )
+            )
+
+        # replace old quotation rows safely
+        with transaction.atomic():
+            rows.delete()
+            if quotation_rows:
+                QuotationItem.objects.bulk_create(quotation_rows)
+
+        return redirect("quotation_index")
+
+    return render(request, "billing/quotation/update.html", {
+        "quotation_rows": rows,
+        "clients": QtnClient.objects.all(),
+        "images": Image.objects.all(),
+        "fullsemis": FullSemi.objects.all(),
+        "previous_specs": list(
+            QuotationItem.objects
+            .exclude(specification="")
+            .values_list("specification", flat=True)
+            .distinct()[:200]
+        )
+    })
+
+
+@login_required
+def quotation_delete(request, id):
+
+    client = get_object_or_404(QtnClient, id=id)
+
+    if request.method == "POST":
+
+        # delete quotation rows
+        client.quotation_items.all().delete()
+
+        # delete quotation records
+        client.quotations.all().delete()
+
+        # optional: delete client itself
+        client.delete()
+
+        return redirect("quotation_index")
+
+    return render(
+        request,
+        "billing/quotation/confirm_delete.html",
+        {"client": client},
+    )
+
+
+from decimal import Decimal
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import QtnClient, QuotationItem
+
+
+@login_required
+def quotation_detail(request, client_id):
+
+    rows = (
+        QuotationItem.objects
+        .select_related("client", "image", "full_semi")
+        .filter(client_id=client_id)
+    )
+
+    if not rows.exists():
+        return redirect("quotation_index")
+
+    client = rows.first().client
+
+    # -------------------------
+    # Subtotal
+    # -------------------------
+    subtotal = sum((r.total for r in rows), Decimal("0.00"))
+
+    # -------------------------
+    # GST
+    # -------------------------
+    gst_rate = Decimal(client.gst or 0)
+    gst_amount = (subtotal * gst_rate) / Decimal("100")
+
+    total_with_gst = subtotal + gst_amount
+
+    # -------------------------
+    # Discount Handling
+    # -------------------------
+    discount_amount = Decimal("0.00")
+    discount_percent = Decimal("0.00")
+    discount_mode = client.discount_mode or "amount"
+
+    if discount_mode == "percent":
+
+        discount_percent = Decimal(client.discount_percent or 0)
+        discount_amount = (subtotal * discount_percent) / Decimal("100")
+
+    else:
+
+        discount_amount = Decimal(client.discount_amount or 0)
+
+        if subtotal > 0:
+            discount_percent = (discount_amount / subtotal) * Decimal("100")
+
+    # -------------------------
+    # Final Total
+    # -------------------------
+    grand_total = max(
+        total_with_gst - discount_amount,
+        Decimal("0.00")
+    )
+
+    return render(
+        request,
+        "billing/quotation/detail.html",
+        {
+            "client": client,
+            "rows": rows,
+
+            "subtotal": round(subtotal, 2),
+            "gst_rate": gst_rate,
+            "gst_amount": round(gst_amount, 2),
+
+            "discount_amount": round(discount_amount, 2),
+            "discount_percent": round(discount_percent, 2),
+            "discount_mode": discount_mode,
+
+            "grand_total": round(grand_total, 2),
+        }
+    )
+
+
+
+
+
+from io import BytesIO
+from datetime import date
+from django.http import HttpResponse
+from django.template.loader import get_template
+from django.conf import settings
+from PyPDF2 import PdfMerger
+from xhtml2pdf import pisa
+import os
+from django.db.models.functions import Lower
+from django.db.models import Case, When, Value, IntegerField
+
+
+
+@login_required
+def quotation_pdf(request, client_id):
+
+    client = QtnClient.objects.get(id=client_id)
+
+    rows = (
+        QuotationItem.objects
+        .filter(client_id=client_id)
+        .annotate(
+            floor_lower=Lower("floor"),
+            location_lower=Lower("location"),
+            end_priority=Case(
+                When(element__iexact="FLASE CEILING - PLAIN", then=Value(1)),
+                When(element__iexact="ELECTRICAL LABOUR", then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+        )
+        .order_by("floor_lower", "location_lower", "end_priority", "id")
+    )
+
+    # -------------------------
+    # Subtotal
+    # -------------------------
+    subtotal = sum((r.total for r in rows), Decimal("0.00"))
+
+    gst_rate = Decimal(client.gst or 0)
+    gst_amount = (subtotal * gst_rate) / Decimal("100")
+
+    total_with_gst = subtotal + gst_amount
+
+    # Discount
+    if client.discount_mode == "percent":
+        percent = Decimal(client.discount_percent or 0)
+        discount_amount = (subtotal * percent) / Decimal("100")
+    else:
+        discount_amount = Decimal(client.discount_amount or 0)
+
+    grand_total = max(
+        total_with_gst - discount_amount,
+        Decimal("0.00")
+    )
+
+    quotation_number = f"QTN-{client.id}-{date.today().strftime('%m%y')}"
+
+    # Render HTML
+    template = get_template("billing/quotation/pdf.html")
+
+    html = template.render({
+        "client": client,
+        "rows": rows,
+
+        "total_amount": subtotal,
+        "gst_rate": gst_rate,
+        "gst_amount": gst_amount,
+
+        "discount": discount_amount,
+        "grand_total": grand_total,
+
+        "quotation_number": quotation_number,
+        "total_with_gst": total_with_gst,
+        "today": date.today(),
+    })
+
+    quotation_buffer = BytesIO()
+
+    pisa_status = pisa.CreatePDF(
+        html,
+        dest=quotation_buffer,
+        link_callback=fetch_resources
+    )
+
+    if pisa_status.err:
+        return HttpResponse("PDF generation error", status=500)
+
+    quotation_buffer.seek(0)
+
+    # Static PDFs
+    front_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "front.pdf")
+    back_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "back.pdf")
+
+    merger = PdfMerger()
+
+    if os.path.exists(front_pdf):
+        merger.append(front_pdf)
+
+    merger.append(quotation_buffer)
+
+    if os.path.exists(back_pdf):
+        merger.append(back_pdf)
+
+    final_buffer = BytesIO()
+
+    merger.write(final_buffer)
+    merger.close()
+
+    final_buffer.seek(0)
+
+    response = HttpResponse(
+        final_buffer.read(),
+        content_type="application/pdf"
+    )
+
+    response["Content-Disposition"] = (
+        f'inline; filename="QTN_{client.name}_{date.today().strftime("%Y%m%d")}.pdf"'
+    )
+
+    return response
+
+
+
+
+
+@login_required
+def save_quotation_totals(request, client_id):
+
+    client = get_object_or_404(QtnClient, id=client_id)
+
+    if request.method == "POST":
+
+        def safe_float(val):
+            try:
+                return float(val)
+            except (TypeError, ValueError):
+                return 0
+
+        gst_percent = safe_float(request.POST.get("gst_percent"))
+        discount_value = safe_float(request.POST.get("discount_value"))
+        discount_type = request.POST.get("discount_type") or "amount"
+
+        # Save GST
+        client.GST = gst_percent
+
+        subtotal = sum(
+            r.total for r in Quotation.objects.filter(client_id=client_id)
+        )
+
+        # Save discount correctly
+        if discount_type == "percent":
+
+            client.discount_percent = discount_value
+            client.discount_amount = round(subtotal * discount_value / 100, 2)
+
+            client.discount_mode = "percent"
+
+        else:
+
+            client.discount_amount = discount_value
+            client.discount_percent = 0
+
+            client.discount_mode = "amount"
+
+        client.save()
+
+    return redirect("quotation_detail", client_id=client_id)
+
+
+
+
+
+
+import os
+from django.conf import settings
+from urllib.parse import urlparse
+
+
+def fetch_resources(uri, rel):
+    path = urlparse(uri).path
+
+    if path.startswith(settings.MEDIA_URL):
+        return os.path.join(settings.MEDIA_ROOT, path.replace(settings.MEDIA_URL, ""))
+
+    if path.startswith(settings.STATIC_URL):
+        return os.path.join(settings.STATIC_ROOT, path.replace(settings.STATIC_URL, ""))
+
+    return uri
+
+
+##delete all quotations of a client (with confirmation)
+@login_required
+def quotation_delete(request, id):
+
+    # id is CLIENT ID
+    rows = Quotation.objects.filter(client_id=id)
+
+    if not rows.exists():
+        return redirect("quotation_index")
+
+    if request.method == "POST":
+        rows.delete()
+        return redirect("quotation_index")
+
+    return render(request, "quotation/confirm_delete.html", {
+        "client": rows.first().client
+    })
+
+
+###################################################
+
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.forms import modelform_factory
+from .models import Image
+from django.contrib.auth.decorators import login_required
+
+ImageForm = modelform_factory(Image, fields="__all__")
+
+
+@login_required
+def image_index(request):
+    data = Image.objects.all()
+    return render(request, "image/index.html", {"data": data})
+
+
+@login_required
+def image_create(request):
+    if request.method == "POST":
+        Image.objects.create(
+            name=request.POST["name"],
+            image=request.FILES["image"]
+        )
+        return redirect("image_index")
+
+    return render(request, "image/create.html")
+
+
+@login_required
+def image_update(request, id):
+    image = get_object_or_404(Image, id=id)
+
+    if request.method == "POST":
+
+        image.name = request.POST["name"]
+
+        if "image" in request.FILES:
+            image.image = request.FILES["image"]
+
+        image.save()
+        return redirect("image_index")
+
+    return render(request, "image/update.html", {
+        "image": image
+    })
+
+
+
+
+@login_required
+def image_delete(request, id):
+    obj = get_object_or_404(Image, id=id)
+
+    if request.method == "POST":
+        obj.delete()
+        return redirect("image_index")
+
+    return render(request, "image/confirm_delete.html", {
+        "image": obj
+    })
+
+
+
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
