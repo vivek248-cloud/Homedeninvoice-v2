@@ -447,6 +447,24 @@ body.public-invoice .no-print {
     display: none !important;
 }
 
+.dragging {
+    background: #e8f5e9 !important;
+    opacity: 0.7;
+}
+
+.draggable-row {
+    cursor: move;
+}
+
+
+.selectable.selected {
+    background: #c8e6c9 !important;
+}
+
+.dragging {
+    opacity: 0.6;
+}
+
     </style>
 </head>
 
@@ -503,7 +521,7 @@ body.public-invoice .no-print {
         {% regroup spends by floor as floor_list %}
 
         {% for floor in floor_list %}
-            <tr class="floor-row">
+            <tr class="floor-row draggable-row selectable">
                 <td colspan="7">
                     {{ floor.grouper.name|default:"General" }}
                 </td>
@@ -512,14 +530,14 @@ body.public-invoice .no-print {
             {% regroup floor.list by room as room_list %}
 
             {% for room in room_list %}
-                <tr class="room-row">
+                <tr class="room-row draggable-row selectable">
                     <td colspan="7">
                         {{ room.grouper.name|default:"Room" }}
                     </td>
                 </tr>
 
                 {% for spend in room.list %}
-                <tr>
+                <tr class="draggable-row selectable">
                     <td>{{ forloop.counter }}</td>
                     <td><b>{{ spend.elements|upper }}</b></td>
                     <td style="text-align:left;">
@@ -720,6 +738,75 @@ body.public-invoice .no-print {
 
 
 </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const tableBody = document.querySelector(".summary-table tbody");
+    let selected = [];
+
+    // CTRL + CLICK selection
+    tableBody.addEventListener("click", function(e) {
+
+        const row = e.target.closest(".selectable");
+        if (!row) return;
+
+        if (e.ctrlKey) {
+
+            row.classList.toggle("selected");
+
+            if (row.classList.contains("selected")) {
+                selected.push(row);
+            } else {
+                selected = selected.filter(r => r !== row);
+            }
+
+        } else {
+
+            // normal click clears selection
+            selected.forEach(r => r.classList.remove("selected"));
+            selected = [];
+        }
+    });
+
+
+    new Sortable(tableBody, {
+        animation: 150,
+        ghostClass: 'dragging',
+        draggable: ".draggable-row",
+
+        onStart: function(evt) {
+
+            const dragged = evt.item;
+
+            if (!dragged.classList.contains("selected")) {
+                selected = [dragged];
+                dragged.classList.add("selected");
+            }
+
+        },
+
+        onEnd: function(evt) {
+
+            const newIndex = evt.newIndex;
+
+            selected.forEach((row, i) => {
+                tableBody.insertBefore(row, tableBody.children[newIndex + i]);
+            });
+
+            selected.forEach(r => r.classList.remove("selected"));
+            selected = [];
+
+        }
+
+    });
+
+});
+</script>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
