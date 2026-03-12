@@ -746,9 +746,52 @@ body.public-invoice .no-print {
 document.addEventListener("DOMContentLoaded", function () {
 
     const tableBody = document.querySelector(".summary-table tbody");
-    let selected = [];
 
+    let selected = [];
+    let undoStack = [];
+    let redoStack = [];
+    const HISTORY_LIMIT = 30;
+
+    // ---------------------------
+    // Save table state
+    // ---------------------------
+    function saveState() {
+
+        const rows = Array.from(tableBody.children);
+
+        undoStack.push(rows);
+
+        if (undoStack.length > HISTORY_LIMIT) {
+            undoStack.shift();
+        }
+
+        // clear redo when new action happens
+        redoStack = [];
+    }
+
+    // ---------------------------
+    // Restore state
+    // ---------------------------
+    function restoreState(stackFrom, stackTo) {
+
+        if (stackFrom.length === 0) return;
+
+        const current = Array.from(tableBody.children);
+        stackTo.push(current);
+
+        const state = stackFrom.pop();
+
+        tableBody.innerHTML = "";
+
+        state.forEach(row => {
+            tableBody.appendChild(row);
+        });
+    }
+
+
+    // ---------------------------
     // CTRL + CLICK selection
+    // ---------------------------
     tableBody.addEventListener("click", function(e) {
 
         const row = e.target.closest(".selectable");
@@ -766,19 +809,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
         } else {
 
-            // normal click clears selection
             selected.forEach(r => r.classList.remove("selected"));
             selected = [];
         }
+
     });
 
 
+    // ---------------------------
+    // Sortable
+    // ---------------------------
     new Sortable(tableBody, {
+
         animation: 150,
         ghostClass: 'dragging',
         draggable: ".draggable-row",
 
         onStart: function(evt) {
+
+            saveState();
 
             const dragged = evt.item;
 
@@ -800,6 +849,47 @@ document.addEventListener("DOMContentLoaded", function () {
             selected.forEach(r => r.classList.remove("selected"));
             selected = [];
 
+        }
+
+    });
+
+
+    // ---------------------------
+    // Keyboard shortcuts
+    // ---------------------------
+    document.addEventListener("keydown", function(e) {
+
+        const active = document.activeElement;
+
+        // Ignore when typing in inputs
+        if (active.tagName === "INPUT" || active.tagName === "TEXTAREA") {
+            return;
+        }
+
+        // CTRL + Z (UNDO MOVE)
+        if (e.ctrlKey && e.key.toLowerCase() === "z") {
+
+            e.preventDefault();
+            restoreState(undoStack, redoStack);
+        }
+
+        // CTRL + Y (REDO MOVE)
+        if (e.ctrlKey && e.key.toLowerCase() === "y") {
+
+            e.preventDefault();
+            restoreState(redoStack, undoStack);
+        }
+
+        // BACKSPACE → UNSELECT rows
+        if (e.key === "Backspace") {
+
+            if (selected.length === 0) return;
+
+            e.preventDefault();
+
+            selected.forEach(row => row.classList.remove("selected"));
+
+            selected = [];
         }
 
     });
