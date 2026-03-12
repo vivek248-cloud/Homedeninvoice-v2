@@ -1,4 +1,4 @@
-
+{% load humanize %}
 {% load static %}
 
 <!DOCTYPE html>
@@ -651,12 +651,19 @@ body.public-invoice .no-print {
         {% for row in payment_rows %}
         <tr>
             <td>{{ row.date }}</td>
-            <td>₹ {{ grand_total }}</td>
-            <td>₹ {{ row.previous_paid }}</td>
-            <td class="success">₹ {{ row.now_paid }}</td>
-            <td class="{% if row.balance_after == 0 %}success{% elif row.balance_after < 0 %}danger{% else %}primary{% endif %}">
-                ₹ {{ row.balance_after }}
+
+            <td>₹ {{ grand_total|floatformat:2|intcomma }}</td>
+
+            <td>₹ {{ row.previous_paid|floatformat:2|intcomma }}</td>
+
+            <td class="success">
+                ₹ {{ row.now_paid|floatformat:2|intcomma }}
             </td>
+
+            <td class="{% if row.balance_after == 0 %}success{% elif row.balance_after < 0 %}danger{% else %}primary{% endif %}">
+                ₹ {{ row.balance_after|floatformat:2|intcomma }}
+            </td>
+
             <td>{{ row.mode }}</td>
         </tr>
         {% endfor %}
