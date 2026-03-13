@@ -28,6 +28,7 @@ class LoginRequiredMiddleware:
         allowed_urls = [
             reverse("login"),
             reverse("logout"),
+            reverse("client_login"),   # allow client login page
         ]
 
         if request.path in allowed_urls:
