@@ -68,6 +68,11 @@ urlpatterns = [
 
     path('payments/<int:pk>/invoice/', views.payment_invoice, name='payment_invoice'),
     path('invoice/<uuid:token>/', views.public_invoice, name='public_invoice'),
+        path(
+        "payments/<int:pk>/save-adjustments/",
+        views.save_invoice_adjustments,
+        name="save_invoice_adjustments"
+    ),
 
 
 
