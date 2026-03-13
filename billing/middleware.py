@@ -30,11 +30,17 @@ class LoginRequiredMiddleware:
             reverse("logout"),
             reverse("client_login"),
             reverse("client_logout"),
-            reverse("client_dashboard"),
-            
         ]
 
         if request.path in allowed_urls:
+            return self.get_response(request)
+
+        # allow client invoice links with token
+        if request.path.startswith("/client/invoice/"):
+            return self.get_response(request)
+
+        # allow client dashboard
+        if request.path.startswith("/client/dashboard"):
             return self.get_response(request)
 
         # If user not logged in
