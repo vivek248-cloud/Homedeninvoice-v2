@@ -9,118 +9,289 @@
             
             <form method="POST" class="needs-validation" novalidate>
                 {% csrf_token %}
-
                 <div class="card border-0 shadow-sm mb-4">
+
                     <div class="card-header bg-white py-3">
-                        <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-geo-alt me-2"></i>Project & Location</h6>
+                        <h6 class="fw-bold mb-0 text-primary">
+                            <i class="bi bi-geo-alt me-2"></i>Project & Location
+                        </h6>
                     </div>
+
                     <div class="card-body p-4">
-                        <div class="row g-3">
+
+                        <div class="row g-3 align-items-end">
+
+                            <!-- Project Selection -->
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-uppercase">Target Project</label>
+
+                                <label class="form-label small fw-bold text-uppercase">
+                                    Target Project
+                                </label>
+
                                 <select name="project" class="form-select" required>
                                     <option value="" selected disabled>Select Project...</option>
+
                                     {% for project in projects %}
-                                    <option value="{{ project.id }}">{{ project.name }} ({{ project.client.name }})</option>
+                                        <option value="{{ project.id }}" required>
+                                            {{ project.name }} ({{ project.client.name }})
+                                        </option>
                                     {% endfor %}
+
                                 </select>
+
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold text-uppercase">Floor</label>
-                                <select name="floor" class="form-select">
-                                    <option value="">N/A</option>
-                                    {% for floor in floors %}
-                                    <option value="{{ floor.id }}">{{ floor.name }}</option>
-                                    {% endfor %}
-                                </select>
+
+                            <!-- Total Spend Display -->
+                            <div class="col-md-6 text-end">
+
+                                <label class="form-label small fw-bold text-uppercase">
+                                    Total Project Spend
+                                </label>
+
+                                <h4 class="fw-bold text-primary mb-0">
+                                    ₹ <span id="grandTotal">0.00</span>
+                                </h4>
+
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold text-uppercase">Room</label>
-                                <select name="room" class="form-select">
-                                    <option value="">N/A</option>
-                                    {% for room in rooms %}
-                                    <option value="{{ room.id }}">{{ room.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+
                         </div>
+
                     </div>
+
                 </div>
 
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3">
-                        <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-rulers me-2"></i>Measurements & Elements</h6>
+              <div class="card border-0 shadow-sm mb-4">
+
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+
+                        <h6 class="fw-bold mb-0 text-primary">
+                            <i class="bi bi-rulers me-2"></i>Measurements & Elements
+                        </h6>
+
+                        <button type="button" class="btn btn-sm btn-dark rounded-pill" onclick="addRow()">
+                            + Add New Item
+                        </button>
+
                     </div>
-                    <div class="card-body p-4">
-                        <div class="row g-4">
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold text-uppercase">Type (Full/Semi)</label>
-                                <select name="fullsemi" id="fullsemi" class="form-select border-primary-subtle" required>
-                                    <option value="" selected disabled>Choose pricing model...</option>
-                                    {% for fs in fullsemis %}
-                                    <option value="{{ fs.id }}" data-rate="{{ fs.rate }}">
-                                        {{ fs.name }} (₹{{ fs.rate }})
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-8">
-                                <label class="form-label small fw-bold text-uppercase">Work Element Name</label>
-                                <input type="text" name="elements" class="form-control" placeholder="e.g. Wardrobe, Cabinet">
-                            </div>
 
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold text-uppercase">Length</label>
-                                <div class="input-group">
-                                    <input type="number" step="0.01" name="length" id="length" class="form-control form-control-lg">
-                                    <span class="input-group-text bg-light"><small>ft</small></span>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold text-uppercase">Width</label>
-                                <div class="input-group">
-                                    <input type="number" step="0.01" name="width" id="width" class="form-control form-control-lg">
-                                    <span class="input-group-text bg-light"><small>ft</small></span>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold text-uppercase">Quantity</label>
-                                <input type="number" step="0.01" name="qty" id="qty" value="1" class="form-control form-control-lg">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold text-uppercase">Display Unit</label>
-                                <input type="text" name="unit" value="sqft" class="form-control form-control-lg" required>
-                            </div>
 
-                            <div class="col-12">
-                                <label class="form-label small fw-bold text-uppercase">Item Description/Notes</label>
-                                <textarea name="description" class="form-control" rows="2" placeholder="Specific material details or color codes..."></textarea>
-                            </div>
+                    <div class="card-body p-0">
+
+                        <div class="table-responsive">
+
+                            <table class="table align-middle mb-0" id="spendTable">
+
+                                <thead class="table-light">
+
+                                    <tr>
+                                        <th style="width:220px">FLOOR / LOCATION</th>
+                                        <th style="width:240px">ELEMENT DETAILS</th>
+                                        <th style="width:200px">SERIES</th>
+                                        <th style="width:160px">SPEC</th>
+                                        <th style="width:220px">DIMENSIONS</th>
+                                        <th style="width:80px">QTY</th>
+                                        <th style="width:140px" class="text-center bg-primary text-white">LINE TOTAL</th>
+                                        <th style="width:120px">ACTION</th>
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    <tr class="spend-row">
+
+                                        <!-- FLOOR / LOCATION -->
+                                        <td>
+
+                                            <select name="floor[]" class="form-select form-select-sm mb-1 bg-light border-0" required>
+
+                                            <option value="" disabled selected class="text-muted">
+                                            Select Floor
+                                            </option>
+
+                                            {% for floor in floors %}
+                                            <option value="{{ floor.id }}">
+                                            {{ floor.name }}
+                                            </option>
+                                            {% endfor %}
+
+                                            </select>
+
+                                            <select name="room[]" class="form-select form-select-sm bg-light border-0">
+
+                                            <option value="" disabled selected class="text-muted">
+                                            Select Location
+                                            </option>
+
+                                            {% for room in rooms %}
+                                            <option value="{{ room.id }}">
+                                            {{ room.name }}
+                                            </option>
+                                            {% endfor %}
+
+                                            </select>
+
+                                        </td>
+
+
+                                        <!-- ELEMENT -->
+                                        <td>
+
+                                            <input 
+                                                name="elements[]" 
+                                                class="form-control form-control-sm mb-1"
+                                                placeholder="e.g Wardrobe"
+                                                required
+                                            >
+
+                                            <input 
+                                                name="unit[]" 
+                                                value="sqft"
+                                                class="form-control form-control-sm"
+                                                placeholder="Unit"
+                                                required
+                                            >
+
+                                        </td>
+
+
+                                        <!-- SERIES -->
+                                        <td>
+
+                                            <select name="fullsemi[]" class="form-select form-select-sm fullsemi mb-1 bg-light border-0" required>
+
+                                            <option value="" disabled selected class="text-muted">
+                                            Select Series
+                                            </option>
+
+                                            {% for fs in fullsemis %}
+                                            <option value="{{ fs.id }}" data-rate="{{ fs.rate }}">
+                                            {{ fs.name }} (₹{{ fs.rate }})
+                                            </option>
+                                            {% endfor %}
+
+                                            </select>
+
+                                            <input 
+                                                name="rate[]" 
+                                                class="form-control form-control-sm rate"
+                                                placeholder="Rate"
+                                                readonly
+                                                required
+                                            >
+
+                                        </td>
+
+
+                                        <!-- SPEC -->
+                                        <td class="text-center">
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary rounded-pill spec-btn"
+                                                    onclick="openSpecModal(this)">
+                                                Specs
+                                            </button>
+
+                                            <textarea 
+                                                name="description[]" 
+                                                class="d-none spec-text"
+                                            ></textarea>
+
+                                        </td>
+
+
+                                        <!-- DIMENSIONS -->
+                                        <td>
+
+                                            <div class="d-flex bg-light rounded-pill p-1">
+
+                                                <input
+                                                    class="form-control form-control-sm border-0 bg-transparent length text-center"
+                                                    name="length[]"
+                                                    required
+                                                >
+
+                                                <span class="mx-1">×</span>
+
+                                                <input
+                                                    class="form-control form-control-sm border-0 bg-transparent width text-center"
+                                                    name="width[]"
+                                                    required
+                                                >
+
+                                            </div>
+
+                                            <div class="text-center small mt-1">
+                                                Area: <span class="area">0.00</span>
+                                                <input type="hidden" name="area[]" class="area-input">
+                                            </div>
+
+                                        </td>
+
+
+                                        <!-- QTY -->
+                                        <td>
+
+                                            <input
+                                                name="qty[]"
+                                                value="1"
+                                                class="form-control form-control-sm text-center qty"
+                                                required
+                                            >
+
+                                        </td>
+
+
+                                        <!-- TOTAL -->
+                                        <td class="text-center bg-primary-subtle">
+
+                                            <div class="fw-bold text-primary total">
+                                                0.00
+                                            </div>
+
+                                            <input type="hidden" name="total_amount[]" class="total-input">
+
+                                        </td>
+
+
+                                        <!-- ACTION -->
+                                        <td class="text-center">
+
+                                            <div class="d-flex justify-content-center gap-2">
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-light btn-sm text-info"
+                                                    onclick="duplicateRow(this)"
+                                                >
+                                                    <i class="bi bi-files"></i>
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-light btn-sm text-danger"
+                                                    onclick="removeRow(this)"
+                                                >
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
                         </div>
+
                     </div>
+
                 </div>
 
-                <div class="card border-0 shadow-sm bg-primary text-white mb-4">
-                    <div class="card-body p-4">
-                        <div class="row align-items-center text-center text-md-start">
-                            <div class="col-md-3 mb-3 mb-md-0 border-end border-white border-opacity-25">
-                                <small class="text-uppercase opacity-75 d-block mb-1">Calculated Area</small>
-                                <div class="h4 mb-0 fw-bold"><span id="area_display">0.00</span> <small class="fs-6 fw-normal">sqft</small></div>
-                                <input type="hidden" name="area" id="area">
-                            </div>
-                            <div class="col-md-3 mb-3 mb-md-0 border-end border-white border-opacity-25">
-                                <small class="text-uppercase opacity-75 d-block mb-1">Standard Rate</small>
-                                <div class="h4 mb-0 fw-bold">₹ <span id="rate_display">0.00</span></div>
-                                <input type="hidden" name="rate" id="rate">
-                            </div>
-                            <div class="col-md-6 text-md-end">
-                                <small class="text-uppercase opacity-75 d-block mb-1">Total Billable Amount</small>
-                                <div class="display-6 mb-0 fw-bold">₹ <span id="total_display">0.00</span></div>
-                                <input type="hidden" name="total_amount" id="total">
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-5">
                     <a href="{% url 'spend_list' %}" class="btn btn-secondary text-white text-decoration-none">
@@ -135,46 +306,314 @@
     </div>
 </div>
 
+
+<div class="modal fade" id="specModal" tabindex="-1">
+<div class="modal-dialog modal-lg">
+<div class="modal-content">
+
+<div class="modal-header">
+<h5 class="modal-title">Item Specifications</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+
+<textarea id="specEditor"
+class="form-control"
+rows="10"
+placeholder="Enter specifications here..."></textarea>
+
+</div>
+
+<div class="modal-footer">
+
+<button type="button"
+class="btn btn-secondary"
+onclick="copySpec()">
+<i class="bi bi-clipboard"></i> Copy
+</button>
+
+<button type="button"
+class="btn btn-secondary"
+onclick="pasteSpec()">Paste</button>
+
+<button type="button"
+class="btn btn-primary"
+onclick="saveSpec()">Save</button>
+
+<button type="button"
+class="btn btn-dark"
+data-bs-dismiss="modal">Close</button>
+
+</div>
+
+</div>
+</div>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const lengthInput = document.getElementById('length');
-    const widthInput = document.getElementById('width');
-    const qtyInput = document.getElementById('qty');
-    const areaHidden = document.getElementById('area');
-    const areaDisplay = document.getElementById('area_display');
-    const rateHidden = document.getElementById('rate');
-    const rateDisplay = document.getElementById('rate_display');
-    const totalHidden = document.getElementById('total');
-    const totalDisplay = document.getElementById('total_display');
-    const fullsemiSelect = document.getElementById('fullsemi');
 
-    function calculate() {
-        let length = parseFloat(lengthInput.value) || 0;
-        let width = parseFloat(widthInput.value) || 0;
-        let qty = parseFloat(qtyInput.value) || 0;
 
-        // Area Calculation (If length/width are 0, it might be a fixed qty item)
-        let area = (length > 0 && width > 0) ? (length * width) : 1;
-        
-        // Visual Area Display (only show actual area if dimensions exist)
-        areaDisplay.innerText = (length * width).toFixed(2);
-        areaHidden.value = (length * width).toFixed(2);
 
-        let selectedOption = fullsemiSelect.options[fullsemiSelect.selectedIndex];
-        let rate = selectedOption ? parseFloat(selectedOption.getAttribute('data-rate')) || 0 : 0;
 
-        rateDisplay.innerText = rate.toLocaleString('en-IN', {minimumFractionDigits: 2});
-        rateHidden.value = rate.toFixed(2);
+let currentSpecField = null;
 
-        // Final Calculation
-        let total = area * rate * qty;
-        totalDisplay.innerText = total.toLocaleString('en-IN', {minimumFractionDigits: 2});
-        totalHidden.value = total.toFixed(2);
+
+
+
+function updateSpecButton(row){
+
+    const textarea = row.querySelector(".spec-text");
+    const button = row.querySelector(".spec-btn");
+
+    if(!textarea || !button) return;
+
+    if(textarea.value.trim() !== ""){
+
+        button.classList.remove("btn-outline-secondary");
+        button.classList.add("btn-success");
+
+    }else{
+
+        button.classList.remove("btn-success");
+        button.classList.add("btn-outline-secondary");
+
+    }
+}
+
+
+
+function openSpecModal(btn){
+
+    const row = btn.closest("tr");
+
+    currentSpecField = row.querySelector(".spec-text");
+
+    const modal = new bootstrap.Modal(document.getElementById("specModal"));
+
+    const editor = document.getElementById("specEditor");
+
+    editor.value = currentSpecField.value || "";
+
+    modal.show();
+
+}
+
+
+function saveSpec(){
+
+    if(!currentSpecField) return;
+
+    const editor = document.getElementById("specEditor");
+
+    currentSpecField.value = editor.value;
+
+    const row = currentSpecField.closest("tr");   // ✅ get row correctly
+
+    updateSpecButton(row);                        // ✅ update button color
+
+    bootstrap.Modal
+        .getInstance(document.getElementById("specModal"))
+        .hide();
+}
+
+
+function copySpec(){
+
+    const editor = document.getElementById("specEditor");
+
+    navigator.clipboard.writeText(editor.value)
+    .then(()=>{
+
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "success",
+            title: "Specification copied",
+            showConfirmButton: false,
+            timer: 1200
+        });
+
+    })
+    .catch(()=>{
+
+        Swal.fire({
+            icon: "error",
+            title: "Copy failed",
+            text: "Unable to copy specification"
+        });
+
+    });
+
+}
+
+
+async function pasteSpec(){
+
+    const text = await navigator.clipboard.readText();
+
+    document.getElementById("specEditor").value = text;
+
+}
+
+</script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+/* --------------------------
+ROW CALCULATION
+-------------------------- */
+
+function calculateRow(row){
+
+    const length = parseFloat(row.querySelector(".length")?.value) || 0;
+    const width  = parseFloat(row.querySelector(".width")?.value) || 0;
+    const qty    = parseFloat(row.querySelector(".qty")?.value) || 1;
+    const rate   = parseFloat(row.querySelector(".rate")?.value) || 0;
+
+    const area = length * width;
+
+    const areaText  = row.querySelector(".area");
+    const areaInput = row.querySelector(".area-input");
+
+    if(areaText)  areaText.innerText  = area.toFixed(2);
+    if(areaInput) areaInput.value     = area.toFixed(2);
+
+    const total = area * rate * qty;
+
+    const totalText  = row.querySelector(".total");
+    const totalInput = row.querySelector(".total-input");
+
+    if(totalText)  totalText.innerText = total.toFixed(2);
+    if(totalInput) totalInput.value    = total.toFixed(2);
+
+    updateGrandTotal();
+}
+
+
+/* --------------------------
+GRAND TOTAL
+-------------------------- */
+
+function updateGrandTotal(){
+
+    let total = 0;
+
+    document.querySelectorAll(".total-input").forEach(input=>{
+        total += parseFloat(input.value) || 0;
+    });
+
+    const grand = document.getElementById("grandTotal");
+
+    if(grand){
+        grand.innerText = total.toLocaleString("en-IN",{minimumFractionDigits:2});
     }
 
-    [lengthInput, widthInput, qtyInput].forEach(el => el.addEventListener('input', calculate));
-    fullsemiSelect.addEventListener('change', calculate);
+}
+
+
+/* --------------------------
+INPUT LISTENER
+-------------------------- */
+
+document.addEventListener("input", function(e){
+
+    if(
+        e.target.classList.contains("length") ||
+        e.target.classList.contains("width") ||
+        e.target.classList.contains("qty") ||
+        e.target.classList.contains("rate")
+    ){
+
+        const row = e.target.closest("tr");
+        calculateRow(row);
+
+    }
+
 });
+
+
+/* --------------------------
+FULLSEMI RATE AUTO SET
+-------------------------- */
+
+document.addEventListener("change", function(e){
+
+    if(e.target.classList.contains("fullsemi")){
+
+        const row = e.target.closest("tr");
+
+        const selected = e.target.options[e.target.selectedIndex];
+
+        const rate = parseFloat(selected.dataset.rate) || 0;
+
+        const rateInput = row.querySelector(".rate");
+
+        if(rateInput){
+            rateInput.value = rate.toFixed(2);
+        }
+
+        calculateRow(row);
+
+    }
+
+});
+
+
+/* --------------------------
+DUPLICATE ROW
+-------------------------- */
+
+window.duplicateRow = function(btn){
+
+    const row = btn.closest("tr");
+
+    const clone = row.cloneNode(true);
+
+    row.parentNode.insertBefore(clone, row.nextSibling);
+
+    calculateRow(clone);
+
+};
+
+
+/* --------------------------
+REMOVE ROW
+-------------------------- */
+
+window.removeRow = function(btn){
+
+    const row = btn.closest("tr");
+    const tbody = row.parentNode;
+
+    if(tbody.rows.length === 1){
+        alert("At least one row is required.");
+        return;
+    }
+
+    row.remove();
+
+    updateGrandTotal();
+
+};
+
+});
+
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    document.querySelectorAll(".spend-row").forEach(row=>{
+        updateSpecButton(row);
+    });
+
+});
+
 </script>
 
 <style>

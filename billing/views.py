@@ -771,6 +771,12 @@ def spend_list(request):
 
 
 # 📌 Spend Create
+from decimal import Decimal, InvalidOperation
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .models import Spend, Project, FloorType, RoomType, FullSemi
+
+
 def spend_create(request):
 
     projects = Project.objects.select_related('client').all()
@@ -778,119 +784,192 @@ def spend_create(request):
     rooms = RoomType.objects.all()
     fullsemis = FullSemi.objects.all()
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
-        try:
-            length = request.POST.get('length')
-            width = request.POST.get('width')
-            qty = request.POST.get('qty') or "1"
+        project_id = request.POST.get("project")
 
-            length = Decimal(length) if length else None
-            width = Decimal(width) if width else None
-            qty = Decimal(qty)
+        if not project_id:
+            messages.error(request, "Please select a project.")
+            return redirect("spend_create")
 
-        except (InvalidOperation, TypeError):
-            messages.error(request, "Invalid numeric input.")
-            return redirect('spend_create')
+        floors_list = request.POST.getlist("floor[]")
+        rooms_list = request.POST.getlist("room[]")
+        fullsemis_list = request.POST.getlist("fullsemi[]")
 
-        unit = request.POST.get('unit') or "sqft"
+        elements_list = request.POST.getlist("elements[]")
+        descriptions_list = request.POST.getlist("description[]")
 
-        spend = Spend.objects.create(
-            project_id=request.POST.get('project') or None,
-            floor_id=request.POST.get('floor') or None,
-            room_id=request.POST.get('room') or None,
-            fullsemi_id=request.POST.get('fullsemi') or None,   # ✅ FIXED
-            elements=request.POST.get('elements'),              # ✅ NEW FIELD
-            description=request.POST.get('description'),
-            length=length,
-            width=width,
-            unit=unit,
-            qty=qty,
-        )
+        lengths = request.POST.getlist("length[]")
+        widths = request.POST.getlist("width[]")
+        areas = request.POST.getlist("area[]")
 
-        spend.refresh_from_db()
+        units = request.POST.getlist("unit[]")
+        rates = request.POST.getlist("rate[]")
 
-        # 🔥 Update project budget
-        project = spend.project
-        project.budget += spend.total_amount
+        qtys = request.POST.getlist("qty[]")
+        totals = request.POST.getlist("total_amount[]")
+
+        rows = []
+
+        for i in range(len(elements_list)):
+
+            if not elements_list[i]:
+                continue
+
+            try:
+                length = Decimal(lengths[i]) if lengths[i] else None
+                width = Decimal(widths[i]) if widths[i] else None
+                area = Decimal(areas[i]) if areas[i] else None
+                rate = Decimal(rates[i]) if rates[i] else None
+                qty = Decimal(qtys[i]) if qtys[i] else Decimal("1")
+                
+
+            except InvalidOperation:
+                continue
+
+            rows.append(
+                Spend(
+                    project_id=project_id,
+                    floor_id=floors_list[i] or None,
+                    room_id=rooms_list[i] or None,
+                    fullsemi_id=fullsemis_list[i] or None,
+                    elements=elements_list[i],
+                    description=descriptions_list[i],
+                    length=length,
+                    width=width,
+                    area=area,
+                    unit=units[i] if units else "sqft",
+                    rate=rate,
+                    qty=qty,
+                    
+                )
+            )
+
+        if rows:
+            Spend.objects.bulk_create(rows)
+
+        # update project budget
+        project = Project.objects.get(id=project_id)
+        project.budget += sum(r.total_amount for r in rows if r.total_amount)
         project.save()
 
-        messages.success(request, "Spend entry created successfully.")
-        return redirect('spend_list')
+        messages.success(request, "Spend entries created successfully.")
+        return redirect("spend_list")
 
-    return render(request, 'billing/spend/create.html', {
-        'projects': projects,
-        'floors': floors,
-        'rooms': rooms,
-        'fullsemis': fullsemis,  # renamed
+    return render(request, "billing/spend/create.html", {
+        "projects": projects,
+        "floors": floors,
+        "rooms": rooms,
+        "fullsemis": fullsemis
     })
 
 
 
 
 # 📌 Spend Update
+from decimal import Decimal, InvalidOperation
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+from .models import Spend, Project, FloorType, RoomType, FullSemi
+
+
 def spend_update(request, pk):
 
     spend = get_object_or_404(Spend, pk=pk)
 
-    projects = Project.objects.select_related('client').all()
+    projects = Project.objects.select_related("client").all()
     floors = FloorType.objects.all()
     rooms = RoomType.objects.all()
     fullsemis = FullSemi.objects.all()
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
-        old_project = spend.project
-        old_total = spend.total_amount
+        project_id = request.POST.get("project")
 
-        try:
-            length = request.POST.get('length')
-            width = request.POST.get('width')
-            qty = request.POST.get('qty') or "1"
+        if not project_id:
+            messages.error(request, "Project is required.")
+            return redirect("spend_update", pk=pk)
 
-            spend.length = Decimal(length) if length else None
-            spend.width = Decimal(width) if width else None
-            spend.qty = Decimal(qty)
+        floors_list = request.POST.getlist("floor[]")
+        rooms_list = request.POST.getlist("room[]")
+        fullsemi_list = request.POST.getlist("fullsemi[]")
 
-        except (InvalidOperation, TypeError):
-            messages.error(request, "Invalid numeric input.")
-            return redirect('spend_update', pk=pk)
+        elements_list = request.POST.getlist("elements[]")
+        description_list = request.POST.getlist("description[]")
 
-        spend.project_id = request.POST.get('project') or None
-        spend.floor_id = request.POST.get('floor') or None
-        spend.room_id = request.POST.get('room') or None
-        spend.fullsemi_id = request.POST.get('fullsemi') or None   # ✅ FIXED
-        spend.elements = request.POST.get('elements')              # ✅ NEW FIELD
-        spend.description = request.POST.get('description')
-        spend.unit = request.POST.get('unit') or "sqft"
+        length_list = request.POST.getlist("length[]")
+        width_list = request.POST.getlist("width[]")
+        area_list = request.POST.getlist("area[]")
 
-        spend.save()
+        rate_list = request.POST.getlist("rate[]")
+        qty_list = request.POST.getlist("qty[]")
+        total_list = request.POST.getlist("total_amount[]")
 
-        new_total = spend.total_amount
-        new_project = spend.project
+        unit_list = request.POST.getlist("unit[]")
 
-        # 🔥 Correct budget adjustment
-        if old_project == new_project:
-            difference = new_total - old_total
-            new_project.budget += difference
-            new_project.save()
-        else:
-            old_project.budget -= old_total
-            old_project.save()
+        rows = []
 
-            new_project.budget += new_total
-            new_project.save()
+        for i in range(len(elements_list)):
 
-        messages.success(request, "Spend updated successfully.")
-        return redirect('spend_list')
+            if not elements_list[i]:
+                continue
 
-    return render(request, 'billing/spend/update.html', {
-        'spend': spend,
-        'projects': projects,
-        'floors': floors,
-        'rooms': rooms,
-        'fullsemis': fullsemis,   # renamed
-    })
+            try:
+                length = Decimal(length_list[i]) if length_list[i] else None
+                width = Decimal(width_list[i]) if width_list[i] else None
+                area = Decimal(area_list[i]) if area_list[i] else None
+                rate = Decimal(rate_list[i]) if rate_list[i] else None
+                qty = Decimal(qty_list[i]) if qty_list[i] else Decimal("1")
+                total = Decimal(total_list[i]) if total_list[i] else Decimal("0")
+
+            except (InvalidOperation, IndexError):
+                continue
+
+            rows.append(
+                Spend(
+                    project_id=project_id,
+                    floor_id=floors_list[i] or None,
+                    room_id=rooms_list[i] or None,
+                    fullsemi_id=fullsemi_list[i] or None,
+                    elements=elements_list[i],
+                    description=description_list[i],
+                    length=length,
+                    width=width,
+                    area=area,
+                    rate=rate,
+                    qty=qty,
+                    unit=unit_list[i] if unit_list else "sqft",
+                )
+            )
+
+        # Remove the old spend entry
+        Spend.objects.filter(pk=pk).delete()
+
+        # Bulk create new rows
+        Spend.objects.bulk_create(rows)
+
+        # Update project budget
+        project = Project.objects.get(id=project_id)
+
+        total_spend = sum(r.total_amount for r in rows if r.total_amount)
+
+        project.budget += total_spend
+        project.save()
+
+        messages.success(request, "Spend entries updated successfully.")
+        return redirect("spend_list")
+
+    return render(
+        request,
+        "billing/spend/update.html",
+        {
+            "spend": spend,
+            "projects": projects,
+            "floors": floors,
+            "rooms": rooms,
+            "fullsemis": fullsemis,
+        },
+    )
 
 
 
