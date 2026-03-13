@@ -79,9 +79,9 @@ urlpatterns = [
     path('backup/download/<str:filename>/', views.download_backup_file, name='download_backup_file'),
     path("backup/delete/<str:filename>/",views.delete_backup_file,name="delete_backup_file",),
     path(
-        "payments/<int:pk>/save-adjustments/",
-        views.save_invoice_adjustments,
-        name="save_invoice_adjustments"
+        "quotation/<int:client_id>/save-order/",
+        views.save_quotation_order,
+        name="save_quotation_order"
     ),
 
 
@@ -103,6 +103,9 @@ urlpatterns = [
 
     path("quotation/<int:client_id>/view/", views.quotation_detail, name="quotation_detail"),
 
+    path("quotation/<int:client_id>/preview/", views.quotation_preview, name="quotation_preview"),
+    path("quotation/<int:client_id>/pdf/", views.quotation_pdf, name="quotation_pdf"),
+    path("quotation/<int:client_id>/save-order/", views.save_quotation_order, name="save_quotation_order"),
 
     path("quotation/clients/", views.qtn_client_index, name="qtn_client_index"),
     path("quotation/clients/create/", views.qtn_client_create, name="qtn_client_create"),

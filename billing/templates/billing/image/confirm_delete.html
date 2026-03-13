@@ -1,0 +1,14 @@
+{% extends "billing/layouts/base.html" %}
+{% block content %}
+
+<h3>Delete Image</h3>
+
+<p>Are you sure you want to delete <strong>{{ image.name }}</strong>?</p>
+
+<form method="post">
+{% csrf_token %}
+<button class="btn btn-danger">Delete</button>
+<a href="{% url 'image_index' %}" class="btn btn-secondary">Cancel</a>
+</form>
+
+{% endblock %}

@@ -76,7 +76,7 @@
         </div>
 
         <div class="col-xl-3 col-lg-4">
-            <div class="sticky-top" style="top: 100px; z-index: 10;">
+            <div class="sticky-top" style="top: 80px; z-index: 10;">
                 
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-body p-4">
@@ -191,10 +191,14 @@
                                 <i class="bi bi-cloud-check me-2"></i> Save Changes
                             </button>
                         </form>
-                        <a href="{% url 'quotation_update' client.id %}" target="_blank" class="btn btn-warning btn-sm rounded-pill px-3 py-4 mt-3 w-50">
+                        <a href="{% url 'quotation_update' client.id %}"  class="btn btn-warning btn-sm rounded-pill px-3 py-4 mt-3 w-50">
                             <i class="bi bi-pencil-square"></i> Edit
                         </a>
-                        <a href="{% url 'quotation_pdf' client.id %}" target="_blank" class="btn btn-danger btn-sm rounded-pill px-3 py-4 mt-3">
+                        <a href="{% url 'quotation_pdf' client.id %}?preview=1"
+                        class="btn btn-primary btn-sm rounded-pill px-3 py-4 mt-3">
+                            <i class="bi bi-file-pdf me-1"></i> Preview PDF
+                        </a>
+                        <a href="{% url 'quotation_pdf' client.id %}" target="_blank" class="btn btn-danger btn-sm rounded-pill px-3 py-4 mt-3 w-100">
                             <i class="bi bi-file-pdf me-1"></i> Download PDF
                         </a>
                     </div>
@@ -222,6 +226,8 @@
         box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
 </style>
+
+
 
 <script>
 

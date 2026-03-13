@@ -106,8 +106,33 @@
                         <tbody class="border-top-0">
                             <tr class="transition-row">
                                 <td class="ps-4">
-                                    <input name="floor[]" class="form-control form-control-sm mb-1 fw-bold border-0 bg-light-hover" placeholder="Floor (e.g. 1st)" required>
-                                    <input name="location[]" list="locationList" class="form-control form-control-sm border-0 bg-light-hover text-muted" placeholder="Location" required>
+
+                                <input name="floor[]"
+                                    class="form-control form-control-sm mb-1 fw-bold border-0 bg-light-hover floor-input"
+                                    placeholder="Floor (e.g. 1st)"
+                                    required>
+
+                                <label class="small">
+
+                                <input type="checkbox"
+                                    class="floor-end-toggle">
+
+                                Move to end
+
+                                </label>
+
+                                <!-- hidden field used by Django -->
+                                <input type="hidden"
+                                    name="floor_end_{{ forloop.counter0|default:0 }}"
+                                    class="floor-end-hidden"
+                                    value="0">
+
+                                <input name="location[]"
+                                    list="locationList"
+                                    class="form-control form-control-sm border-0 bg-light-hover text-muted"
+                                    placeholder="Location"
+                                    required>
+
                                 </td>
 
                                 <td>
@@ -242,6 +267,17 @@ function duplicateRow(btn){
     const clone = row.cloneNode(true);
 
     document.querySelector("#quoteTable tbody").appendChild(clone);
+
+    // reindex floor_end inputs
+    document.querySelectorAll("#quoteTable tbody tr").forEach((tr, index) => {
+
+        const hidden = tr.querySelector(".floor-end-hidden");
+
+        if(hidden){
+            hidden.name = `floor_end_${index}`;
+        }
+
+    });
 
     calcAll();
 }
@@ -784,6 +820,49 @@ startInput.addEventListener("change", () => {
     endInput.value = `${yyyy}-${mm}-${dd}`;
 });
 </script>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+document.addEventListener("change", function(e){
+
+if(!e.target.classList.contains("floor-end-toggle")) return;
+
+let row = e.target.closest("tr");
+let floorName = row.querySelector(".floor-input").value.trim().toLowerCase();
+let checked = e.target.checked;
+
+document.querySelectorAll("tbody tr").forEach((tr, index)=>{
+
+let floorInput = tr.querySelector(".floor-input");
+let checkbox = tr.querySelector(".floor-end-toggle");
+let hidden = tr.querySelector(".floor-end-hidden");
+
+if(!floorInput) return;
+
+if(floorInput.value.trim().toLowerCase() === floorName){
+
+    if(checkbox){
+        checkbox.checked = checked;
+    }
+
+    if(hidden){
+        hidden.value = checked ? "1" : "0";
+    }
+
+}
+
+});
+
+});
+
+});
+
+</script>
+
+
 
 <style>
 /* 1. Add subtle vertical lines to separate columns */

@@ -323,7 +323,8 @@ class QuotationItem(models.Model):
         decimal_places=2,
         editable=False
     )
-
+    sort_order = models.IntegerField(default=0)
+    end = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

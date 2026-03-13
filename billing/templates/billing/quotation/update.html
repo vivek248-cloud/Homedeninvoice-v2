@@ -112,16 +112,36 @@ class="form-control form-control-lg border-0 bg-light" required>
 <tr>
 
 <td>
+
 <input name="floor[]"
        value="{{ q.floor|default:'' }}"
-       class="form-control form-control-sm mb-1 border-0 bg-light-hover"
+       class="form-control form-control-sm mb-1 border-0 bg-light-hover floor-input"
        placeholder="Floor">
+
+<label class="small">
+
+    <!-- UI checkbox -->
+    <input type="checkbox"
+           class="floor-end-toggle"
+           data-floor="{{ q.floor }}"
+           {% if q.end %}checked{% endif %}>
+
+    Move this floor to end
+
+</label>
+
+<!-- Hidden field used by Django -->
+<input type="hidden"
+       name="floor_end_{{ forloop.counter0 }}"
+       class="floor-end-hidden"
+       value="{% if q.end %}1{% else %}0{% endif %}">
 
 <input name="location[]"
        list="locationList"
        value="{{ q.location|default:'' }}"
        class="form-control form-control-sm border-0 bg-light-hover"
        placeholder="Location">
+
 </td>
 
 <td>
@@ -352,6 +372,17 @@ function duplicateRow(btn){
     const clone = row.cloneNode(true);
 
     document.querySelector("#quoteTable tbody").appendChild(clone);
+
+    // reindex floor_end inputs
+    document.querySelectorAll("#quoteTable tbody tr").forEach((tr, index) => {
+
+        const hidden = tr.querySelector(".floor-end-hidden");
+
+        if(hidden){
+            hidden.name = `floor_end_${index}`;
+        }
+
+    });
 
     calcAll();
 }
@@ -1047,6 +1078,50 @@ document.addEventListener("DOMContentLoaded", function(){
 
 </script>
 
+
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+document.querySelectorAll(".floor-end-toggle").forEach(toggle => {
+
+toggle.addEventListener("change", function(){
+
+let row = this.closest("tr");
+let floorName = row.querySelector(".floor-input").value.trim().toLowerCase();
+let checked = this.checked;
+
+document.querySelectorAll("tbody tr").forEach((tr, index)=>{
+
+let floorInput = tr.querySelector(".floor-input");
+let checkbox = tr.querySelector(".floor-end-toggle");
+let hidden = tr.querySelector(".floor-end-hidden");
+
+if(!floorInput) return;
+
+if(floorInput.value.trim().toLowerCase() === floorName){
+
+    if(checkbox){
+        checkbox.checked = checked;   // update visible checkbox
+    }
+
+    if(hidden){
+        hidden.value = checked ? "1" : "0";   // update hidden value
+    }
+
+}
+
+});
+
+});
+
+});
+
+});
+
+</script>
 
 
 

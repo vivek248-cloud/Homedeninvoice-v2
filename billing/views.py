@@ -1231,7 +1231,7 @@ def qtn_client_create(request):
             estimate_end_date=request.POST.get("estimate_end_date"),
         )
 
-        return redirect("quotation_index")
+        return redirect("qtn_client_index")
 
     return render(request, "billing/clientQT/create.html")
 
@@ -1262,7 +1262,7 @@ def qtn_client_update(request, id):
 
         client.save()
 
-        return redirect("quotation_index")
+        return redirect("qtn_client_index")
 
     return render(
         request,
@@ -1395,11 +1395,15 @@ def quotation_create(request):
                 except FullSemi.DoesNotExist:
                     price = Decimal("0.00")
 
+            # Correct checkbox reading
+            end_floor = request.POST.get(f"floor_end_{i}") == "1"
+
             total = area * price * qty
 
             quotation_rows.append(
                 QuotationItem(
                     client_id=client_id,
+
                     floor=floors[i] if i < len(floors) else "",
                     location=locations[i] if i < len(locations) else "",
                     element=elements[i],
@@ -1421,6 +1425,7 @@ def quotation_create(request):
                     price=price,
                     qty=qty,
                     total=total,
+                    end=end_floor,
                 )
             )
 
@@ -1487,7 +1492,7 @@ def quotation_update(request, id):
         lengths = request.POST.getlist("length[]")
         widths = request.POST.getlist("width[]")
         qtys = request.POST.getlist("qty[]")
-
+        floor_ends = request.POST.getlist("floor_end[]")
         quotation_rows = []
 
         # preload rates (fast)
@@ -1509,6 +1514,9 @@ def quotation_update(request, id):
 
             if fullsemi_id:
                 price = fullsemi_rates.get(int(fullsemi_id), Decimal("0.00"))
+
+            # Correct checkbox reading
+            end_floor = request.POST.get(f"floor_end_{i}") == "1"
 
             total = area * price * qty
 
@@ -1537,6 +1545,7 @@ def quotation_update(request, id):
                     price=price,
                     qty=qty,
                     total=total,
+                    end=end_floor,
                 )
             )
 
@@ -1670,6 +1679,83 @@ def quotation_detail(request, client_id):
 
 
 
+
+
+
+
+@login_required
+def quotation_preview(request, client_id):
+
+    client = get_object_or_404(QtnClient, id=client_id)
+
+    rows = QuotationItem.objects.filter(
+        client_id=client_id
+    ).order_by("id")
+
+    subtotal = sum(r.total for r in rows)
+
+    gst_rate = Decimal(client.gst or 0)
+    gst_amount = (subtotal * gst_rate) / Decimal("100")
+
+    total_with_gst = subtotal + gst_amount
+
+    discount = client.discount_amount or Decimal("0.00")
+
+    grand_total = total_with_gst - discount
+
+    return render(
+        request,
+        "billing/quotation/pdf.html",
+        {
+            "client": client,
+            "rows": rows,
+            "subtotal": subtotal,
+            "gst_rate": gst_rate,
+            "gst_amount": gst_amount,
+            "grand_total": grand_total,
+            "preview": True
+        }
+    )
+
+
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+
+@require_POST
+@login_required
+def save_quotation_order(request, client_id):
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+
+        order = data.get("order", [])
+
+        for index, item_id in enumerate(order):
+
+            QuotationItem.objects.filter(
+                id=int(item_id),
+                client_id=client_id
+            ).update(sort_order=index)
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Order saved"
+        })
+
+    except Exception as e:
+
+        print("ORDER SAVE ERROR:", e)   # ← IMPORTANT DEBUG
+
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=400)
+
+
+
 from io import BytesIO
 from datetime import date
 from django.http import HttpResponse
@@ -1683,29 +1769,157 @@ from django.db.models import Case, When, Value, IntegerField
 
 
 
+# @login_required
+# def quotation_pdf(request, client_id):
+
+#     client = QtnClient.objects.get(id=client_id)
+
+#     rows = (
+#         QuotationItem.objects
+#         .filter(client_id=client_id)
+#         .annotate(
+#             floor_lower=Lower("floor"),
+#             location_lower=Lower("location"),
+#             end_priority=Case(
+#                 When(element__iexact="FLASE CEILING - PLAIN", then=Value(1)),
+#                 When(element__iexact="ELECTRICAL LABOUR", then=Value(1)),
+#                 default=Value(0),
+#                 output_field=IntegerField(),
+#             )
+#         )
+#         .order_by("floor_lower", "location_lower", "end_priority", "id")
+#     )
+
+#     # -------------------------
+#     # Subtotal
+#     # -------------------------
+#     subtotal = sum((r.total for r in rows), Decimal("0.00"))
+
+#     gst_rate = Decimal(client.gst or 0)
+#     gst_amount = (subtotal * gst_rate) / Decimal("100")
+
+#     total_with_gst = subtotal + gst_amount
+
+#     # Discount
+#     if client.discount_mode == "percent":
+#         percent = Decimal(client.discount_percent or 0)
+#         discount_amount = (subtotal * percent) / Decimal("100")
+#     else:
+#         discount_amount = Decimal(client.discount_amount or 0)
+
+#     grand_total = max(
+#         total_with_gst - discount_amount,
+#         Decimal("0.00")
+#     )
+
+#     quotation_number = f"QTN-{client.id}-{date.today().strftime('%m%y')}"
+
+#     # Render HTML
+#     template = get_template("billing/quotation/pdf.html")
+
+#     html = template.render({
+#         "client": client,
+#         "rows": rows,
+
+#         "total_amount": subtotal,
+#         "gst_rate": gst_rate,
+#         "gst_amount": gst_amount,
+
+#         "discount": discount_amount,
+#         "grand_total": grand_total,
+
+#         "quotation_number": quotation_number,
+#         "total_with_gst": total_with_gst,
+#         "today": date.today(),
+#     })
+
+#     quotation_buffer = BytesIO()
+
+#     pisa_status = pisa.CreatePDF(
+#         html,
+#         dest=quotation_buffer,
+#         link_callback=fetch_resources
+#     )
+
+#     if pisa_status.err:
+#         return HttpResponse("PDF generation error", status=500)
+
+#     quotation_buffer.seek(0)
+
+#     # Static PDFs
+#     front_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "front.pdf")
+#     back_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "back.pdf")
+
+#     merger = PdfMerger()
+
+#     if os.path.exists(front_pdf):
+#         merger.append(front_pdf)
+
+#     merger.append(quotation_buffer)
+
+#     if os.path.exists(back_pdf):
+#         merger.append(back_pdf)
+
+#     final_buffer = BytesIO()
+
+#     merger.write(final_buffer)
+#     merger.close()
+
+#     final_buffer.seek(0)
+
+#     response = HttpResponse(
+#         final_buffer.read(),
+#         content_type="application/pdf"
+#     )
+
+#     response["Content-Disposition"] = (
+#         f'inline; filename="QTN_{client.name}_{date.today().strftime("%Y%m%d")}.pdf"'
+#     )
+
+#     return response
+
+from decimal import Decimal
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
+from django.template.loader import get_template
+from django.db.models import Case, When, Value, IntegerField, Max
+from django.db.models.functions import Lower
+from datetime import date
+from io import BytesIO
+import os
+from PyPDF2 import PdfMerger
+from xhtml2pdf import pisa
+
+
 @login_required
 def quotation_pdf(request, client_id):
 
-    client = QtnClient.objects.get(id=client_id)
+    client = get_object_or_404(QtnClient, id=client_id)
 
+    # -------------------------
+    # Get rows
+    # -------------------------
     rows = (
         QuotationItem.objects
         .filter(client_id=client_id)
         .annotate(
             floor_lower=Lower("floor"),
             location_lower=Lower("location"),
-            end_priority=Case(
-                When(element__iexact="FLASE CEILING - PLAIN", then=Value(1)),
-                When(element__iexact="ELECTRICAL LABOUR", then=Value(1)),
-                default=Value(0),
-                output_field=IntegerField(),
-            )
+
+            # if any row of floor has end=True → whole floor becomes end
+            floor_end=Max("end")
         )
-        .order_by("floor_lower", "location_lower", "end_priority", "id")
+        .order_by(
+            "floor_end",      # normal floors first
+            "floor_lower",
+            "location_lower",
+            "sort_order",
+            "id"
+        )
     )
 
     # -------------------------
-    # Subtotal
+    # Totals
     # -------------------------
     subtotal = sum((r.total for r in rows), Decimal("0.00"))
 
@@ -1728,24 +1942,30 @@ def quotation_pdf(request, client_id):
 
     quotation_number = f"QTN-{client.id}-{date.today().strftime('%m%y')}"
 
-    # Render HTML
-    template = get_template("billing/quotation/pdf.html")
-
-    html = template.render({
+    context = {
         "client": client,
         "rows": rows,
-
         "total_amount": subtotal,
         "gst_rate": gst_rate,
         "gst_amount": gst_amount,
-
         "discount": discount_amount,
         "grand_total": grand_total,
-
         "quotation_number": quotation_number,
         "total_with_gst": total_with_gst,
         "today": date.today(),
-    })
+    }
+
+    # -------------------------
+    # PREVIEW MODE
+    # -------------------------
+    if request.GET.get("preview") == "1":
+        return render(request, "billing/quotation/pdf.html", context)
+
+    # -------------------------
+    # PDF GENERATION
+    # -------------------------
+    template = get_template("billing/quotation/pdf.html")
+    html = template.render(context)
 
     quotation_buffer = BytesIO()
 
@@ -1760,7 +1980,9 @@ def quotation_pdf(request, client_id):
 
     quotation_buffer.seek(0)
 
-    # Static PDFs
+    # -------------------------
+    # Merge with front/back PDFs
+    # -------------------------
     front_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "front.pdf")
     back_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "back.pdf")
 
@@ -1791,9 +2013,6 @@ def quotation_pdf(request, client_id):
     )
 
     return response
-
-
-
 
 
 @login_required
@@ -1895,7 +2114,7 @@ ImageForm = modelform_factory(Image, fields="__all__")
 @login_required
 def image_index(request):
     data = Image.objects.all()
-    return render(request, "image/index.html", {"data": data})
+    return render(request, "billing/image/index.html", {"data": data})
 
 
 @login_required
@@ -1907,7 +2126,7 @@ def image_create(request):
         )
         return redirect("image_index")
 
-    return render(request, "image/create.html")
+    return render(request, "billing/image/create.html")
 
 
 @login_required
@@ -1924,7 +2143,7 @@ def image_update(request, id):
         image.save()
         return redirect("image_index")
 
-    return render(request, "image/update.html", {
+    return render(request, "billing/image/update.html", {
         "image": image
     })
 
@@ -1939,7 +2158,7 @@ def image_delete(request, id):
         obj.delete()
         return redirect("image_index")
 
-    return render(request, "image/confirm_delete.html", {
+    return render(request, "billing/image/confirm_delete.html", {
         "image": obj
     })
 

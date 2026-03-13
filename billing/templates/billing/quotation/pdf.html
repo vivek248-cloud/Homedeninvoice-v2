@@ -152,6 +152,28 @@ td, th {
     page-break-inside: avoid;
 }
 
+
+.selected{
+background:#dbeafe;
+outline:2px solid #3b82f6;
+}
+
+
+
+.dragging{
+opacity:0.6;
+}
+
+/* show drag cursor */
+.draggable-row{
+    cursor: grab;
+}
+
+/* while dragging */
+.draggable-row:active{
+    cursor: grabbing;
+}
+
 </style>
 </head>
 
@@ -214,54 +236,47 @@ td, th {
 </tr>
 </thead>
 
-<tbody>
+<tbody id="quotationRows">
 
 {% regroup rows by floor_lower as floor_list %}
 
 {% for floor in floor_list %}
 
-<!-- FLOOR ROW -->
-<tr class="floor-row">
-    <td colspan="7">
-       {{ floor.list.0.floor|upper }}
-    </td>
+<tr class="floor-row draggable-row" data-type="floor">
+<td colspan="7">
+{{ floor.list.0.floor|upper }}
+</td>
 </tr>
 
 {% regroup floor.list by location_lower as location_list %}
 
 {% for location in location_list %}
 
-<!-- LOCATION ROW -->
-<tr class="location-row">
-    <td colspan="7">
-        {{ location.list.0.location|upper }}
-    </td>
+<tr class="location-row draggable-row" data-type="location">
+<td colspan="7">
+{{ location.list.0.location|upper }}
+</td>
 </tr>
 
 {% for r in location.list %}
-<tr>
+
+<tr class="item-row draggable-row"
+    data-type="item"
+    data-id="{{ r.id }}">
 
 <td class="text-center">
-    {{ forloop.parentloop.counter }}.{{ forloop.counter }}
+{{ forloop.parentloop.counter }}.{{ forloop.counter }}
 </td>
 
-<td style="
-    width:240px;
-    vertical-align:top;
-    font-size:11px;
-    line-height:1.5;
-">
-
+<td style="width:240px;vertical-align:top;font-size:11px;line-height:1.5;">
 <b>{{ r.element }} :</b><br>
 
 {{ r.specification|pdf_wrap|safe }}
 
 {% if r.image %}
 <br>
-<img src="{{ r.image.image.url }}"
-     style="width:55px;border:1px solid #ccc;">
+<img src="{{ r.image.image.url }}" style="width:55px;border:1px solid #ccc;">
 {% endif %}
-
 </td>
 
 <td>{{ r.core_material }}<br>/ {{r.finish_material }}</td>
@@ -271,17 +286,16 @@ td, th {
 <td class="text-center">{{ r.width }}</td>
 
 <td class="text-right">
-    Rs. {{ r.total|indian_currency }}
+Rs. {{ r.total|indian_currency }}
 </td>
 
 </tr>
-{% endfor %}
 
+{% endfor %}
 {% endfor %}
 {% endfor %}
 
 </tbody>
-
 </table>
 
 <div class="total-wrapper">
@@ -323,6 +337,111 @@ td, th {
 </div>
 
 </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+
+function getCookie(name) {
+    let cookieValue = null;
+
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+
+            if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+
+    return cookieValue;
+}
+
+const csrftoken = getCookie("csrftoken");
+
+
+document.addEventListener("DOMContentLoaded", function(){
+
+const tbody = document.getElementById("quotationRows");
+
+function saveOrder(){
+
+    const rows = document.querySelectorAll("#quotationRows tr[data-id]");
+
+    let order = [];
+
+    rows.forEach(row=>{
+        order.push(row.dataset.id);
+    });
+
+    console.log("Saving order:", order);
+
+    fetch("{% url 'save_quotation_order' client.id %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
+        },
+        body: JSON.stringify({order: order})
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if(data.status === "success"){
+
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "success",
+                title: "Order auto-saved",
+                showConfirmButton: false,
+                timer: 1200
+            });
+
+        }else{
+            console.error(data.message);
+        }
+
+    })
+    .catch(err=>{
+        console.error("SAVE ERROR:", err);
+    });
+
+}
+
+
+new Sortable(tbody,{
+    animation:150,
+    draggable:"tr[data-id]",
+    ghostClass:"dragging",
+
+    onEnd:function(evt){
+
+        if(evt.oldIndex !== evt.newIndex){
+            saveOrder();
+        }
+
+    }
+});
+
+
+document.getElementById("downloadPDF").addEventListener("click", function(){
+
+    window.open("{% url 'quotation_pdf' client.id %}", "_blank");
+
+});
+
+});
+
+
+
+</script>
 
 </body>
 </html>

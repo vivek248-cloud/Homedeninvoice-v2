@@ -38,6 +38,7 @@
             width: var(--sidebar-width);
             height: 100vh;
             position: fixed;
+            overflow-y: auto;
             left: 0;
             top: 0;
             z-index: 1000;
@@ -47,6 +48,40 @@
             box-shadow: 10px 0 30px -15px rgba(0,0,0,0.03);
         }
 
+        /* --- Improved Sidebar Scrollbar UI --- */
+
+        /* 1. Standard for Firefox */
+        #sidebar {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(67, 98, 238, 0) transparent; /* thumb color | track color */
+        }
+
+        /* 2. Webkit Browsers (Chrome, Safari, Edge) */
+        #sidebar::-webkit-scrollbar {
+            width: 5px; /* Narrower for a cleaner look */
+        }
+
+        /* The background of the scrollbar area */
+        #sidebar::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+
+        /* The actual draggable handle */
+        #sidebar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1); /* Subtle default */
+            border-radius: 10px;
+            transition: background 0.2s ease;
+        }
+
+        /* Show the primary color when hovering over the sidebar */
+        #sidebar:hover::-webkit-scrollbar-thumb {
+            background: rgba(67, 97, 238, 0.3); /* Uses your --primary-color */
+        }
+
+        /* Darken handle on direct hover */
+        #sidebar::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color) !important;
+        }
         .sidebar-logo-container {
             padding: 2rem 1.5rem;
             border-bottom: 1px solid rgba(0,0,0,0.03);
@@ -392,7 +427,7 @@
                 <i class="bi bi-chevron-down ms-auto small"></i>
             </a>
 
-<div class="collapse {% if request.resolver_match.url_name == 'floor_list' or request.resolver_match.url_name == 'room_list' or request.resolver_match.url_name == 'fullsemi_list' %}show{% endif %}" id="masterSubmenu">
+            <div class="collapse {% if request.resolver_match.url_name == 'floor_list' or request.resolver_match.url_name == 'room_list' or request.resolver_match.url_name == 'fullsemi_list' %}show{% endif %}" id="masterSubmenu">
 
                 <a class="nav-link py-2 {% if request.resolver_match.url_name == 'floor_list' %}active{% endif %}" 
                 href="{% url 'floor_list' %}">
@@ -408,6 +443,11 @@
                 href="{% url 'fullsemi_list' %}">
                 Full / Semi
                 </a>
+                <a class="nav-link py-2 {% if request.resolver_match.url_name == 'image_index' %}active{% endif %}" 
+                href="{% url 'image_index' %}">
+                Image Index
+                </a>
+
 
             </div>
 
