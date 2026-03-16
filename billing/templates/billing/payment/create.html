@@ -99,6 +99,61 @@
     </div>
 </div>
 
+
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    const amountField = document.querySelector("[name='amount']");
+    const projectField = document.querySelector("[name='project']");
+    const modeField = document.querySelector("[name='payment_mode']");
+
+    if(!amountField) return;
+
+    let timer = null;
+
+    amountField.addEventListener("input", function(){
+
+        clearTimeout(timer);
+
+        timer = setTimeout(function(){
+
+            const project = projectField.value;
+            const amount = amountField.value;
+            const payment_mode = modeField.value;
+
+            if(!project || !amount || !payment_mode) return;
+
+            fetch(`{% url 'check_duplicate_payment' %}?project=${project}&amount=${amount}&payment_mode=${payment_mode}`)
+            .then(res => res.json())
+            .then(data => {
+
+                if(data.duplicate){
+
+                    Swal.fire({
+                        toast: true,
+                        position: "top-end",
+                        icon: "warning",
+                        title: "Similar payment already exists",
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+
+                }
+
+            });
+
+        }, 500); // delay for typing
+
+    });
+
+});
+
+</script>
+
 <script>
 // Standard Bootstrap Form Validation
 (function () {
@@ -116,6 +171,11 @@
     })
 })()
 </script>
+
+
+
+
+
 
 <style>
     .bg-success-subtle { background-color: #e1fcef !important; }

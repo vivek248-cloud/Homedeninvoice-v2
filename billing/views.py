@@ -768,6 +768,52 @@ def spend_list(request):
         'query': query,
     })
 
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from decimal import Decimal
+import json
+
+@require_POST
+def check_duplicate_spend(request):
+
+    data = json.loads(request.body)
+
+    project_id = data.get("project")
+    rows = data.get("rows", [])
+
+    duplicates = []
+
+    for row in rows:
+
+        element = row.get("elements")
+        floor = row.get("floor")
+        room = row.get("room")
+        length = row.get("length")
+        width = row.get("width")
+
+        qs = Spend.objects.filter(
+            project_id=project_id,
+            elements=element,
+            floor_id=floor,
+            room_id=room,
+            length=length,
+            width=width
+        )
+
+        if qs.exists():
+
+            duplicates.append({
+                "element": element,
+                "floor": qs.first().floor.name if qs.first().floor else "",
+                "room": qs.first().room.name if qs.first().room else "",
+                "length": str(length),
+                "width": str(width),
+            })
+
+    return JsonResponse({
+        "duplicates": duplicates
+    })
+
 
 
 # 📌 Spend Create
@@ -890,6 +936,9 @@ def spend_update(request, pk):
             messages.error(request, "Project is required.")
             return redirect("spend_update", pk=pk)
 
+        # 🔹 Calculate OLD spend total for this record
+        old_total = spend.total_amount or Decimal("0")
+
         floors_list = request.POST.getlist("floor[]")
         rooms_list = request.POST.getlist("room[]")
         fullsemi_list = request.POST.getlist("fullsemi[]")
@@ -920,7 +969,6 @@ def spend_update(request, pk):
                 area = Decimal(area_list[i]) if area_list[i] else None
                 rate = Decimal(rate_list[i]) if rate_list[i] else None
                 qty = Decimal(qty_list[i]) if qty_list[i] else Decimal("1")
-                total = Decimal(total_list[i]) if total_list[i] else Decimal("0")
 
             except (InvalidOperation, IndexError):
                 continue
@@ -942,18 +990,19 @@ def spend_update(request, pk):
                 )
             )
 
-        # Remove the old spend entry
+        # 🔹 Delete old spend row
         Spend.objects.filter(pk=pk).delete()
 
-        # Bulk create new rows
+        # 🔹 Create new rows
         Spend.objects.bulk_create(rows)
 
-        # Update project budget
+        # 🔹 Calculate new spend total
+        new_total = sum(r.total_amount for r in rows if r.total_amount)
+
         project = Project.objects.get(id=project_id)
 
-        total_spend = sum(r.total_amount for r in rows if r.total_amount)
-
-        project.budget += total_spend
+        # 🔹 Correct budget adjustment
+        project.budget = project.budget - old_total + new_total
         project.save()
 
         messages.success(request, "Spend entries updated successfully.")
@@ -1024,6 +1073,36 @@ def payment_list(request):
     return render(request, 'billing/payment/index.html', context)
 
 
+
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+import json
+from datetime import date
+from decimal import Decimal
+from .models import Payment
+
+
+def check_duplicate_payment(request):
+
+    project_id = request.GET.get("project")
+    amount = request.GET.get("amount")
+    payment_mode = request.GET.get("payment_mode")
+
+    try:
+        amount = Decimal(amount)
+    except:
+        return JsonResponse({"duplicate": False})
+
+    duplicate = Payment.objects.filter(
+        project_id=project_id,
+        amount=amount,
+        payment_mode=payment_mode
+    ).exists()
+
+    return JsonResponse({"duplicate": duplicate})
+
+
 # 📌 Payment Create
 def payment_create(request):
     projects = Project.objects.all()
@@ -1039,22 +1118,68 @@ def payment_create(request):
     return render(request, 'billing/payment/create.html', {'projects': projects})
 
 
-# 📌 Payment Update
+from decimal import Decimal
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+from .models import Payment, Project
+
+
 def payment_update(request, pk):
+
     payment = get_object_or_404(Payment, pk=pk)
+
     projects = Project.objects.all()
 
-    if request.method == 'POST':
-        payment.project_id = request.POST.get('project')
-        payment.amount = request.POST.get('amount')
-        payment.payment_mode = request.POST.get('payment_mode')
-        payment.save()
-        return redirect('payment_list')
+    if request.method == "POST":
 
-    return render(request, 'billing/payment/update.html', {
-        'payment': payment,
-        'projects': projects,
-    })
+        old_project = payment.project
+        old_amount = payment.amount or Decimal("0")
+
+        new_project_id = request.POST.get("project")
+        new_amount = request.POST.get("amount")
+        payment_mode = request.POST.get("payment_mode")
+
+        try:
+            new_amount = Decimal(new_amount)
+        except:
+            messages.error(request, "Invalid payment amount.")
+            return redirect("payment_update", pk=pk)
+
+        payment.project_id = new_project_id
+        payment.amount = new_amount
+        payment.payment_mode = payment_mode
+        payment.save()
+
+        new_project = Project.objects.get(id=new_project_id)
+
+        # 🔹 Adjust project budget correctly
+        if old_project == new_project:
+
+            difference = new_amount - old_amount
+            new_project.budget += difference
+            new_project.save()
+
+        else:
+
+            # remove old payment from old project
+            old_project.budget -= old_amount
+            old_project.save()
+
+            # add new payment to new project
+            new_project.budget += new_amount
+            new_project.save()
+
+        messages.success(request, "Payment updated successfully.")
+        return redirect("payment_list")
+
+    return render(
+        request,
+        "billing/payment/update.html",
+        {
+            "payment": payment,
+            "projects": projects,
+        },
+    )
 
 
 # 📌 Payment Delete
@@ -2265,8 +2390,54 @@ def profile(request):
 
 
 
+from django.shortcuts import render
+from django.db.models import Value, CharField, Sum, F, DateTimeField, DecimalField, ExpressionWrapper
+from django.db.models.functions import Cast
+from datetime import date
+from itertools import chain
+from operator import attrgetter
+from .models import Spend, Payment
 
 
+def my_activity(request):
+
+    today = date.today()
+
+    spends = (
+        Spend.objects.filter(created_at__date=today)
+        .select_related("project")
+        .annotate(
+            activity_type=Value("spend", output_field=CharField()),
+            activity_amount=ExpressionWrapper(
+                F("area") * F("rate") * F("qty"),
+                output_field=DecimalField(max_digits=12, decimal_places=2)
+            )
+        )
+    )
+
+    payments = (
+        Payment.objects.filter(date=today)
+        .select_related("project")
+        .annotate(
+            activity_type=Value("payment", output_field=CharField()),
+            created_at=Cast("date", output_field=DateTimeField())
+        )
+    )
+
+    activity_log = sorted(
+        chain(spends, payments),
+        key=attrgetter("created_at"),
+        reverse=True
+    )
+
+    total_spend = spends.aggregate(total=Sum("activity_amount"))["total"] or 0
+    total_pay = payments.aggregate(total=Sum("amount"))["total"] or 0
+
+    return render(request, "billing/my_activity.html", {
+        "activity_log": activity_log,
+        "total_spend_today": total_spend,
+        "total_pay_today": total_pay,
+    })
 
 
 

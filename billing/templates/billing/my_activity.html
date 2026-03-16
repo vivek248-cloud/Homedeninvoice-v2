@@ -1,0 +1,141 @@
+{% extends "billing/layouts/base.html" %}
+
+{% block title %}My Activity{% endblock %}
+{% block page_title %}Today's Activity{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
+            
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="card border-0 shadow-sm p-3">
+                        <small class="text-muted d-block mb-1">Total Spends</small>
+                        <h5 class="fw-bold text-danger mb-0">₹{{ total_spend_today|default:"0" }}</h5>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card border-0 shadow-sm p-3">
+                        <small class="text-muted d-block mb-1">Payments Recv.</small>
+                        <h5 class="fw-bold text-success mb-0">₹{{ total_pay_today|default:"0" }}</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-bottom-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <span class="badge bg-primary-soft text-primary me-2">
+                            <i class="bi bi-calendar-event"></i>
+                        </span>
+                        Recent Timeline
+                    </h5>
+                    <button class="btn btn-sm btn-light text-muted">View All</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                
+                                <th class="border-0 text-uppercase small fw-bold text-muted">Activity Details</th>
+                                <th class="border-0 text-uppercase small fw-bold text-muted">Project</th>
+                                <th class="pe-4 border-0 text-uppercase small fw-bold text-muted text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        {% if not activity_log %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                No activity recorded for today.
+                            </td>
+                        </tr>
+                        {% endif %}
+
+                        {% for activity in activity_log %}
+
+                        <tr>
+
+          
+
+                        <td>
+
+                        <div class="d-flex align-items-center">
+
+                        {% if activity.activity_type == "spend" %}
+
+                        <div class="icon-shape rounded-circle me-3"
+                        style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#ffe5e5;color:#dc3545;">
+                        <i class="bi bi-arrow-up-right small"></i>
+                        </div>
+
+                        <div>
+                        <p class="mb-0 fw-bold small">Expense Added</p>
+                        <small class="text-muted">Direct Debit</small>
+                        </div>
+
+                        {% else %}
+
+                        <div class="icon-shape rounded-circle me-3"
+                        style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#e6fcf5;color:#198754;">
+                        <i class="bi bi-arrow-down-left small"></i>
+                        </div>
+
+                        <div>
+                        <p class="mb-0 fw-bold small">Payment Received</p>
+                        <small class="text-muted">Project Credit</small>
+                        </div>
+
+                        {% endif %}
+
+                        </div>
+
+                        </td>
+
+                        <td>
+                        <span class="text-secondary small">
+                        {{ activity.project.name }}
+                        </span>
+                        </td>
+
+                        <td class="pe-4 text-end">
+
+                        {% if activity.activity_type == "spend" %}
+
+                        <span class="fw-bold text-danger">
+                        - ₹{{ activity.total_amount }}
+                        </span>
+
+                        {% else %}
+
+                        <span class="fw-bold text-success">
+                        + ₹{{ activity.amount }}
+                        </span>
+
+                        {% endif %}
+
+
+
+                        </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-primary-soft { background-color: #e7f0ff; }
+    .table > :not(caption) > * > * { padding: 1rem 0.75rem; }
+    .icon-shape { flex-shrink: 0; }
+</style>
+{% endblock %}

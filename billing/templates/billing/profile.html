@@ -137,6 +137,12 @@
                                     <span class="status-pulse me-2"></span>
                                     <small class="text-success fw-bold">Database Healthy</small>
                                 </div>
+                                <a href="{% url 'my_activity' %}" class="text-decoration-none">
+                                    <div class="d-inline-flex align-items-center bg-white bg-opacity-20 rounded-pill px-3 py-1 mt-2">
+                                        <span class="status-pulse2 me-2"></span>
+                                        <small class="text-dark fw-bold">My Activity</small>
+                                    </div>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -178,6 +184,23 @@
         0% { box-shadow: 0 0 0 0 rgba(0, 184, 148, 0.7); }
         70% { box-shadow: 0 0 0 10px rgba(0, 184, 148, 0); }
         100% { box-shadow: 0 0 0 0 rgba(0, 184, 148, 0); }
+    }
+
+
+        .status-pulse2 {
+        width: 8px;
+        height: 8px;
+        background: #0022b8;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 rgba(0, 49, 184, 0.4);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse2 {
+        0% { box-shadow: 0 0 0 0 rgba(64, 0, 184, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(0, 43, 184, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(3, 0, 184, 0); }
     }
 
     .list-group-item {

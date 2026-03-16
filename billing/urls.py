@@ -9,6 +9,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
 
     path('profile/', views.profile, name='profile'),
+    path("activity/", views.my_activity, name="my_activity"),
     path('password-change/', views.admin_password_change, name='password_change'),
 
 
@@ -53,14 +54,22 @@ urlpatterns = [
 
 
 
-
+    path(
+        "spends/check-duplicate/",
+        views.check_duplicate_spend,
+        name="check_duplicate_spend"
+    ),
     path('spends/', views.spend_list, name='spend_list'),
     path('spends/create/', views.spend_create, name='spend_create'),
     path('spends/update/<int:pk>/', views.spend_update, name='spend_update'),
     path('spends/delete/<int:pk>/', views.spend_delete, name='spend_delete'),
 
 
-
+    path(
+        "payments/check-duplicate/",
+        views.check_duplicate_payment,
+        name="check_duplicate_payment"
+    ),
     path('payments/', views.payment_list, name='payment_list'),
     path('payments/create/', views.payment_create, name='payment_create'),
     path('payments/update/<int:pk>/', views.payment_update, name='payment_update'),

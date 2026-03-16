@@ -364,6 +364,81 @@ data-bs-dismiss="modal">Close</button>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    document.querySelector("form").addEventListener("submit", function(e){
+
+    e.preventDefault();
+
+    const form = this;
+
+    const project = form.querySelector("[name='project']").value;
+
+    let rows = [];
+
+    document.querySelectorAll(".spend-row").forEach(row => {
+
+        rows.push({
+            floor: row.querySelector("[name='floor[]']").value,
+            room: row.querySelector("[name='room[]']").value,
+            elements: row.querySelector("[name='elements[]']").value,
+            length: row.querySelector("[name='length[]']").value,
+            width: row.querySelector("[name='width[]']").value
+        });
+
+    });
+
+    fetch("{% url 'check_duplicate_spend' %}",{
+
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json",
+            "X-CSRFToken":"{{ csrf_token }}"
+        },
+
+        body:JSON.stringify({
+            project:project,
+            rows:rows
+        })
+
+    })
+    .then(res=>res.json())
+    .then(data=>{
+
+        if(data.duplicates.length > 0){
+
+            let list = data.duplicates.map(d=>`
+                ${d.element} ( ${d.floor} / ${d.room} )
+            `).join("<br>");
+
+            Swal.fire({
+                icon:"warning",
+                title:"Duplicate Spend Found",
+                html:`These items already exist:<br><br>${list}`,
+                showCancelButton:true,
+                confirmButtonText:"Save Anyway",
+                cancelButtonText:"Cancel"
+            })
+            .then(result=>{
+
+                if(result.isConfirmed){
+                    form.submit();
+                }
+
+            });
+
+        }else{
+
+            form.submit();
+
+        }
+
+    });
+
+});
+
+</script>
+
+
+<script>
 
 let currentSpecField = null;
 
