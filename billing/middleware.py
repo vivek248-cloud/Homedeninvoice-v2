@@ -36,7 +36,13 @@ class LoginRequiredMiddleware:
             return self.get_response(request)
 
         # allow client invoice links with token
+        
         if request.path.startswith("/client/invoice/"):
+            return self.get_response(request)
+
+        # ✅ FIX: allow public invoice
+        # allow public invoice by name
+        if request.resolver_match and request.resolver_match.url_name == "public_invoice":
             return self.get_response(request)
 
         # allow client dashboard
