@@ -30,6 +30,7 @@ class LoginRequiredMiddleware:
             reverse("logout"),
             reverse("client_login"),
             reverse("client_logout"),
+            
         ]
 
         if request.path in allowed_urls:
@@ -37,12 +38,13 @@ class LoginRequiredMiddleware:
 
         # allow client invoice links with token
         
+
+        # allow client invoice links with token
         if request.path.startswith("/client/invoice/"):
             return self.get_response(request)
 
-        # ✅ FIX: allow public invoice
-        # allow public invoice by name
-        if request.resolver_match and request.resolver_match.url_name == "public_invoice":
+        # ✅ IMPORTANT FIX
+        if request.path.startswith("/invoice/"):
             return self.get_response(request)
 
         # allow client dashboard
