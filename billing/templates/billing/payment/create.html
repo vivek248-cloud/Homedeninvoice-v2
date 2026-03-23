@@ -43,11 +43,25 @@
                         <div class="row g-3">
                             <div class="col-md-7 mb-4">
                                 <label class="form-label fw-semibold small text-uppercase">Amount Received <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-lg has-validation">
-                                    <span class="input-group-text bg-success-subtle text-success fw-bold">₹</span>
-                                    <input type="number" step="0.01" name="amount" class="form-control" placeholder="0.00" required min="1">
-                                    <div class="invalid-feedback">Enter a valid payment amount.</div>
-                                </div>
+                                    <div class="input-group input-group-lg has-validation">
+                                        <span class="input-group-text bg-success-subtle text-success fw-bold">₹</span>
+
+                                        <input 
+                                            type="number" 
+                                            step="0.01" 
+                                            name="amount" 
+                                            id="amountInput"
+                                            class="form-control" 
+                                            placeholder="0.00" 
+                                            required 
+                                            min="1"
+                                        >
+
+                                        <div class="invalid-feedback">Enter a valid payment amount.</div>
+                                    </div>
+
+                                    <!-- 👇 Amount in words -->
+                                    <small id="amountWords" class="text-danger mt-1 d-block"></small>
                             </div>
 
                             <div class="col-md-5 mb-4">
@@ -102,7 +116,45 @@
 
 
 
+
+
 <script>
+function numberToWords(num){
+
+    const ones = ["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine"];
+    const teens = ["Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
+    const tens = ["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+
+    function convert(n){
+        if(n < 10) return ones[n];
+        if(n < 20) return teens[n - 10];
+        if(n < 100) return tens[Math.floor(n/10)] + " " + ones[n%10];
+        if(n < 1000) return ones[Math.floor(n/100)] + " Hundred " + convert(n%100);
+        if(n < 100000) return convert(Math.floor(n/1000)) + " Thousand " + convert(n%1000);
+        if(n < 10000000) return convert(Math.floor(n/100000)) + " Lakh " + convert(n%100000);
+        return convert(Math.floor(n/10000000)) + " Crore " + convert(n%10000000);
+    }
+
+    return convert(num).trim();
+}
+
+document.getElementById("amountInput").addEventListener("input", function(){
+
+    const value = parseFloat(this.value);
+
+    const display = document.getElementById("amountWords");
+
+    if(!value || value <= 0){
+        display.innerText = "";
+        return;
+    }
+
+    const words = numberToWords(Math.floor(value));
+
+    display.innerText = words + " Rupees Only";
+
+});
+
 
 document.addEventListener("DOMContentLoaded", function(){
 
