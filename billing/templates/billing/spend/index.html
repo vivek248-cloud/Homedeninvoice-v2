@@ -5,9 +5,123 @@
 {% block content %}
 
 {% if not selected_client %}
-    <div class="alert alert-danger mt-3">
-        Please select a client to view spends.
+<div class="selection-prompt" data-aos="zoom-in">
+    <div class="prompt-content">
+        <div class="indicator-wrapper">
+            <span class="pulse-ring"></span>
+            <span class="pulse-dot"></span>
+        </div>
+        
+        <div class="text-group">
+            <span class="prompt-title">Client Selection Required</span>
+            <span class="prompt-subtitle">Select a client from the menu to unlock ledger data and financial insights.</span>
+        </div>
     </div>
+    
+    <div class="prompt-action">
+        <i class="fa-solid fa-arrow-pointer"></i>
+    </div>
+</div>
+
+<style>
+    .selection-prompt {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-left: 4px solid #3b82f6; /* Blue accent instead of red for a professional feel */
+        border-radius: 12px;
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 20px 0;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        color: white;
+    }
+
+    .prompt-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    /* Pulse Animation */
+    .indicator-wrapper {
+        position: relative;
+        display: flex;
+        height: 12px;
+        width: 12px;
+    }
+
+    .pulse-ring {
+        animation: pulse-animation 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        position: absolute;
+        display: inline-flex;
+        height: 100%;
+        width: 100%;
+        border-radius: 50%;
+        background-color: #3b82f6;
+        opacity: 0.75;
+    }
+
+    .pulse-dot {
+        position: relative;
+        display: inline-flex;
+        border-radius: 50%;
+        height: 12px;
+        width: 12px;
+        background-color: #60a5fa;
+        border: 2px solid #ffffff;
+    }
+
+    .text-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .prompt-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        letter-spacing: 0.3px;
+        color: #ffffff;
+    }
+
+    .prompt-subtitle {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
+
+    .prompt-action {
+        background: rgba(255, 255, 255, 0.05);
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #60a5fa;
+        transition: 0.3s;
+    }
+
+    @keyframes pulse-animation {
+        75%, 100% {
+            transform: scale(3);
+            opacity: 0;
+        }
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 600px) {
+        .selection-prompt {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .prompt-action {
+            display: none; /* Hide icon on small mobile to save space */
+        }
+    }
+</style>
 {% endif %}
 
 

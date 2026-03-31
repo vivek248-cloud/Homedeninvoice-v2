@@ -403,20 +403,6 @@ box-shadow:0 0 0 .15rem rgba(13,110,253,.15);
                 <i class="bi bi-inbox-fill"></i> Projects
             </a>
 
-
-            <div class="sidebar-heading">Quotation Hub</div>
-
-            <a class="nav-link {% if request.resolver_match.url_name == 'qtn_client_index' %}active{% endif %}" 
-            href="{% url 'qtn_client_index' %}">
-                <i class="bi bi-people"></i> Quotation Clients
-            </a>
-
-            <a class="nav-link {% if request.resolver_match.url_name == 'quotation_index' %}active{% endif %}" 
-            href="{% url 'quotation_index' %}">
-                <i class="bi bi-substack"></i> Quotations
-            </a>
-
-
             <div class="sidebar-heading">Finance</div>
 
             <a class="nav-link {% if request.resolver_match.url_name == 'spend_list' %}active{% endif %}" 
@@ -429,6 +415,17 @@ box-shadow:0 0 0 .15rem rgba(13,110,253,.15);
                 <i class="bi bi-wallet2"></i> Payments
             </a>
 
+            <div class="sidebar-heading">Quotation Hub</div>
+
+            <a class="nav-link {% if request.resolver_match.url_name == 'qtn_client_index' %}active{% endif %}" 
+            href="{% url 'qtn_client_index' %}">
+                <i class="bi bi-people"></i> Quotation Clients
+            </a>
+
+            <a class="nav-link {% if request.resolver_match.url_name == 'quotation_index' %}active{% endif %}" 
+            href="{% url 'quotation_index' %}">
+                <i class="bi bi-substack"></i> Quotations
+            </a>
 
             <div class="sidebar-heading">Configuration</div>
 
