@@ -106,6 +106,12 @@ from decimal import Decimal
 from datetime import datetime
 
 
+from decimal import Decimal
+from django.db.models import Sum, F, DecimalField, ExpressionWrapper
+from django.db.models.functions import Coalesce
+from django.utils import timezone
+from datetime import datetime
+
 @login_required(login_url='login')
 def dashboard(request):
 
@@ -153,6 +159,13 @@ def dashboard(request):
         if budget > 0:
             progress = int((paid / budget) * 100)
 
+        # ✅ STATUS COLOR MAPPING
+        status_color_map = {
+            "completed": "success",
+            "ongoing": "warning",
+            "hold": "secondary",
+        }
+
         projects.append({
             "id": project.id,
             "name": project.name,
@@ -161,12 +174,16 @@ def dashboard(request):
             "paid": paid,
             "remaining": budget - paid,
             "progress": min(progress, 100),
+
+            # 🔥 NEW
+            "status": project.status,  # raw value
+            "status_display": project.get_status_display(),  # readable
+            "status_color": status_color_map.get(project.status, "dark"),
         })
 
     # =====================================
-    # 🔥 COMBINED RECENT ACTIVITY (FIXED PROPERLY)
+    # RECENT ACTIVITY
     # =====================================
-
     payments = Payment.objects.select_related(
         'project__client'
     ).order_by('-date')[:5]
@@ -178,7 +195,6 @@ def dashboard(request):
     activities = []
 
     for p in payments:
-        # Convert DateField → aware datetime
         dt = datetime.combine(p.date, datetime.min.time())
         dt = timezone.make_aware(dt)
 
@@ -194,14 +210,13 @@ def dashboard(request):
     for s in spends:
         activities.append({
             "type": "spend",
-            "date": s.created_at,  # already aware
+            "date": s.created_at,
             "title": "Expense Logged",
             "description": f"{s.project.name} expense entry",
             "amount": s.total_amount,
             "color": "danger",
         })
 
-    # Now both are timezone-aware → safe sorting
     activities = sorted(
         activities,
         key=lambda x: x["date"],
@@ -221,7 +236,6 @@ def dashboard(request):
     }
 
     return render(request, "billing/dashboard.html", context)
-
 
 
 
@@ -293,10 +307,11 @@ def client_dashboard(request):
 
     projects = Project.objects.filter(client=client)
 
-
-    # ✅ latest project status
     latest_project = projects.order_by('-id').first()
     project_status = latest_project.status if latest_project else None
+
+    # ✅ CORRECT
+    completed_projects = projects.filter(status="Completed").exists()
 
     payments = (
         Payment.objects
@@ -305,30 +320,29 @@ def client_dashboard(request):
         .order_by("-date")
     )
 
-    # ✅ TOTAL PAID
     total_paid = payments.aggregate(
         total=Sum("amount")
     )["total"] or Decimal("0.00")
 
-    # ✅ TOTAL PROJECT BUDGET (optional but useful)
     total_budget = projects.aggregate(
         total=Sum("budget")
     )["total"] or Decimal("0.00")
 
-    # ✅ TOTAL RECEIVABLE (optional premium metric)
     total_receivable = total_budget - total_paid
 
-    context = {
+    return render(request, "billing/client_auth/dashboard.html", {
         "client": client,
         "projects": projects,
         "payments": payments,
-        "total_paid": total_paid,                 # ⭐ IMPORTANT
+        "total_paid": total_paid,
         "total_budget": total_budget,
         "total_receivable": total_receivable,
         "project_status": project_status,
-    }
+        "has_completed_projects": completed_projects,
+    })
 
-    return render(request, "billing/client_auth/dashboard.html", context)
+
+
 
 
 
@@ -742,31 +756,27 @@ def fullsemi_delete(request, pk):
 
 # 📌 Spend List
 def spend_list(request):
+    client_id = request.GET.get('client')
 
-    query = request.GET.get('q')
+    spends = Spend.objects.none()
 
-    spends = (
-        Spend.objects
-        .select_related('project__client', 'floor', 'room', 'fullsemi')
-        .order_by('-id')
-    )
-
-    # 🔍 Apply Search Filter
-    if query:
-        spends = spends.filter(
-            Q(project__name__icontains=query) |
-            Q(project__client__name__icontains=query) 
-            # Q(floor__name__icontains=query) |
-            # Q(room__name__icontains=query) |
-            # Q(elements__icontains=query) |
-            # Q(description__icontains=query) |
-            # Q(rate__icontains=query)
+    if client_id:
+        spends = (
+            Spend.objects
+            .select_related('project__client', 'floor', 'room', 'fullsemi')
+            .filter(project__client_id=client_id)
+            .order_by('-id')
         )
+
+    clients = Client.objects.all()
 
     return render(request, 'billing/spend/index.html', {
         'spends': spends,
-        'query': query,
+        'clients': clients,
+        'selected_client': client_id,
     })
+
+
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -1048,30 +1058,33 @@ def spend_delete(request, pk):
 
 
 # 📌 Payment List
+from django.db.models import Q
+from .models import Payment, Client  # adjust if needed
+
 def payment_list(request):
+    client_id = request.GET.get('client')
 
-    query = request.GET.get('q')
+    # 👇 Default empty
+    payments = Payment.objects.none()
 
-    payments = Payment.objects.select_related(
-        'project__client'
-    ).order_by('-id')
-
-    # 🔍 Apply Search Filter
-    if query:
-        payments = payments.filter(
-            Q(project__name__icontains=query) |
-            Q(project__client__name__icontains=query) |
-            Q(payment_mode__icontains=query) |
-            Q(amount__icontains=query)
+    # 👇 Load only when client selected
+    if client_id:
+        payments = (
+            Payment.objects
+            .select_related('project__client')
+            .filter(project__client_id=client_id)
+            .order_by('-id')
         )
+
+    clients = Client.objects.all()
 
     context = {
         'payments': payments,
-        'query': query,
+        'clients': clients,
+        'selected_client': client_id,
     }
 
     return render(request, 'billing/payment/index.html', context)
-
 
 
 
@@ -2774,3 +2787,75 @@ def admin_password_change(request):
 
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+
+@login_required
+def help_page(request):
+
+    roadmap = [
+        {
+            "title": "Client Creation",
+            "icon": "bi-people",
+            "steps": [
+                "Go to Clients → Add New Client",
+                "Enter name, phone, email",
+                "Add GST & discount details",
+                "Save client profile"
+            ]
+        },
+        {
+            "title": "Project Creation",
+            "icon": "bi-kanban",
+            "steps": [
+                "Open client → Create Project",
+                "Enter project name & budget",
+                "Set project status",
+                "Save project"
+            ]
+        },
+        {
+            "title": "Add Expenses (Spends)",
+            "icon": "bi-receipt",
+            "steps": [
+                "Go to project",
+                "Add floor, room, material",
+                "Enter qty & rate",
+                "System auto calculates total"
+            ]
+        },
+        {
+            "title": "Quotation System",
+            "icon": "bi-file-earmark-text",
+            "steps": [
+                "Create quotation client",
+                "Add items (floor, location, element)",
+                "Set GST & discount",
+                "Preview and reorder rows",
+                "Download PDF"
+            ]
+        },
+        {
+            "title": "Payments & Invoice",
+            "icon": "bi-wallet2",
+            "steps": [
+                "Add payment for project",
+                "System tracks paid vs remaining",
+                "Generate invoice",
+                "Share via WhatsApp link"
+            ]
+        },
+        {
+            "title": "Public Invoice Sharing",
+            "icon": "bi-link-45deg",
+            "steps": [
+                "Click share invoice",
+                "Send link to client",
+                "Client views without login"
+            ]
+        }
+    ]
+
+    return render(request, "billing/help.html", {
+        "roadmap": roadmap
+    })

@@ -132,4 +132,6 @@ urlpatterns = [
     path("image/<int:id>/edit/", views.image_update, name="image_update"),
     path("image/<int:id>/delete/", views.image_delete, name="image_delete"),
 
+
+    path("help/", views.help_page, name="help_page"),
 ]

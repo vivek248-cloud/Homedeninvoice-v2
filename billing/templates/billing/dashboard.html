@@ -8,61 +8,61 @@
     <!-- Top Metrics Row -->
     <div class="row g-4 mb-4">
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card metric-card border-0 shadow-sm glass-card">
+            <div class="card metric-card border-0 shadow-sm glass-card bg-primary">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="icon-box bg-primary-soft text-primary">
+                        <div class="icon-box bg-primary-soft text-white">
                             <i class="bi bi-people-fill"></i>
                         </div>
                         <span class="badge-status status-blue">+{{ total_clients }} Total</span>
                     </div>
-                    <p class="metric-label">Total Clients</p>
-                    <h2 class="metric-value">{{ total_clients }}</h2>
+                    <p class="metric-label text-white">Total Clients</p>
+                    <h2 class="metric-value text-white">{{ total_clients }}</h2>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card metric-card border-0 shadow-sm glass-card">
+            <div class="card metric-card border-0 shadow-sm glass-card bg-warning opacity-20">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="icon-box bg-warning-soft text-warning">
+                        <div class="icon-box bg-warning-soft text-dark">
                             <i class="bi bi-stack"></i>
                         </div>
                         <span class="badge-status status-orange">Live</span>
                     </div>
-                    <p class="metric-label">Active Projects</p>
-                    <h2 class="metric-value">{{ total_projects }}</h2>
+                    <p class="metric-label text-dark">Active Projects</p>
+                    <h2 class="metric-value text-dark">{{ total_projects }}</h2>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card metric-card border-0 shadow-sm glass-card">
+            <div class="card metric-card border-0 shadow-sm glass-card bg-success opacity-20">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="icon-box bg-success-soft text-success">
+                        <div class="icon-box bg-success-soft text-white">
                             <i class="bi bi-wallet2"></i>
                         </div>
                         <span class="badge-status status-green">Inflow</span>
                     </div>
-                    <p class="metric-label">Revenue Received</p>
-                    <h2 class="metric-value">₹{{ total_payments }}</h2>
+                    <p class="metric-label text-white">Revenue Received</p>
+                    <h2 class="metric-value text-white">₹{{ total_payments }}</h2>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card metric-card border-0 shadow-sm glass-card">
+            <div class="card metric-card border-0 shadow-sm glass-card bg-danger opacity-20">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="icon-box bg-danger-soft text-danger">
+                        <div class="icon-box bg-danger-soft text-white">
                             <i class="bi bi-arrow-down-right-circle"></i>
                         </div>
                         <span class="badge-status status-red">Outflow</span>
                     </div>
-                    <p class="metric-label">Expenditures</p>
-                    <h2 class="metric-value">₹{{ total_spend }}</h2>
+                    <p class="metric-label text-white">Expends</p>
+                    <h2 class="metric-value text-white">₹{{ total_spend }}</h2>
                 </div>
             </div>
         </div>
@@ -159,12 +159,14 @@
                                 <th class="ps-4">Project Entity</th>
                                 <th>Budget Consumption</th>
                                 <th>Collection Status</th>
-                                <th class="text-end pe-4">Yet to Receive</th>
+                                <th>Yet to Receive</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for project in projects %}
-                            <tr onclick="window.location='{% url 'project_detail' project.id %}'">
+                            <tr onclick="window.location='{% url 'project_detail' project.id %}'" style="cursor:pointer;">
 
                                 <!-- PROJECT INFO -->
                                 <td class="ps-4 py-4">
@@ -179,7 +181,7 @@
                                     </div>
                                 </td>
 
-                                <!-- BUDGET CONSUMPTION -->
+                                <!-- BUDGET -->
                                 <td style="width: 280px;">
                                     <div class="d-flex justify-content-between mb-2">
                                         <span class="badge bg-light text-dark fw-bold border">
@@ -197,7 +199,7 @@
                                     </div>
                                 </td>
 
-                                <!-- COLLECTION STATUS -->
+                                <!-- PAID -->
                                 <td>
                                     <div class="received-pill">
                                         <i class="bi bi-check-circle-fill me-2"></i>
@@ -205,11 +207,34 @@
                                     </div>
                                 </td>
 
-                                <!-- YET TO RECEIVE -->
-                                <td class="text-end pe-4">
+                                <!-- REMAINING -->
+                                <td>
                                     <span class="fs-6 fw-800 text-danger">
                                         ₹{{ project.remaining }}
                                     </span>
+                                </td>
+
+                                <!-- STATUS -->
+                                <td>
+                                    <a href="{% url 'project_update' project.id %}"
+                                    class="text-decoration-none"
+                                    onclick="event.stopPropagation();">
+                                        <span class="badge bg-{{ project.status_color }}-subtle text-{{ project.status_color }} fw-bold">
+                                            {{ project.status_display }}
+                                        </span>
+                                    </a>
+                                </td>
+
+                                <!-- ACTIONS -->
+                                <td class="text-end pe-4">
+
+                                    <!-- EDIT BUTTON -->
+                                    <a href="{% url 'project_update' project.id %}"
+                                    class="btn btn-sm btn-warning rounded-pill px-3"
+                                    onclick="event.stopPropagation();">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+
                                 </td>
 
                             </tr>

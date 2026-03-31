@@ -83,7 +83,7 @@
                     </thead>
                     <tbody>
                         {% for project in projects %}
-                        <tr>
+                        <tr data-id="{{ project.id }}" data-status="{{ project.status }}">
                             <td class="ps-4">
                                 <a href="{% url 'project_detail' project.id %}" class="text-decoration-none d-block">
                                     <span class="fw-bold text-dark d-block mb-0">{{ project.name }}</span>
@@ -147,6 +147,98 @@
         </div>
     </div>
 </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const rows = document.querySelectorAll('[data-id]');
+    
+    // Configuration for the "Victory" effect
+    const celebrate = () => {
+        const end = Date.now() + (3 * 1000);
+        const colors = ['#6366f1', '#a855f7', '#22c55e', '#ffffff', '#ffbd00'];
+        const GLOBAL_Z_INDEX = 10000; // Force to front of all UI
+
+        // 1. The Continuous Side Cannons (60fps)
+        (function frame() {
+            confetti({
+                particleCount: 2,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0, y: 0.8 },
+                colors: colors,
+                zIndex: GLOBAL_Z_INDEX
+            });
+            confetti({
+                particleCount: 2,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1, y: 0.8 },
+                colors: colors,
+                zIndex: GLOBAL_Z_INDEX
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+
+        // 2. The "Big Pops" (Timed Explosions)
+        const fireBurst = (x, y, angle, spread, particleCount) => {
+            confetti({
+                particleCount: particleCount || 40,
+                startVelocity: 45,
+                spread: spread || 70,
+                origin: { x, y },
+                angle: angle || 90,
+                colors: colors,
+                scalar: 1.2,
+                zIndex: GLOBAL_Z_INDEX // Applied here
+            });
+        };
+
+        // --- The Grand Finale Sequence ---
+        
+        // Wave 1: Corner Explosions
+        setTimeout(() => fireBurst(0.1, 0.9, 60, 80, 60), 0);      
+        setTimeout(() => fireBurst(0.9, 0.9, 120, 80, 60), 200);   
+        
+        // Wave 2: The Mega Center Boom
+        setTimeout(() => fireBurst(0.5, 0.6, 90, 150, 100), 600); 
+
+        // Wave 3: Random Rapid-Fire "Pops"
+        const interval = setInterval(() => {
+            if (Date.now() > end) return clearInterval(interval);
+            
+            // Randomly choose left, right, or center for the late-game pops
+            const randomX = Math.random();
+            fireBurst(randomX, 0.5 + (Math.random() * 0.3), 90, 60, 20);
+        }, 400); // Faster interval for more "Pops"
+    };
+
+    rows.forEach(row => {
+        const { id, status } = row.dataset;
+        const key = `project_status_${id}`;
+        const oldStatus = localStorage.getItem(key);
+
+        if (status === "completed" && oldStatus !== "completed") {
+            // 1. Fire the advanced confetti
+            celebrate();
+
+            // 2. Add a professional "Success Glow" to the specific row
+            row.style.transition = "all 0.8s ease";
+            row.style.backgroundColor = "rgba(25, 135, 84, 0.1)"; // Soft Bootstrap success green
+            row.classList.add('animate__animated', 'animate__pulse'); // If using Animate.css
+
+            // 3. Optional: Play a subtle success chime
+            // new Audio('/static/sounds/success.mp3').play();
+        }
+
+        localStorage.setItem(key, status);
+    });
+});
+</script>
 
 <style>
     /* Styling for the Receivables/Balance Column */

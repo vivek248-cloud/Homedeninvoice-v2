@@ -2,120 +2,133 @@
 {% block title %}Dashboard | {{ client.name }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 px-lg-5">
     
     <div class="row align-items-center mb-5">
-        <div class="col-md-8 text-center text-md-start">
-            <h1 class="fw-800 text-dark mb-1">Welcome back, {{ client.name|cut:" "|truncatewords:1 }}!</h1>
-            <p class="text-muted mb-0">Track your home's transformation and billing history in real-time.</p>
+        <div class="col-md-7 text-center text-md-start">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-2 fw-bold">
+                <i class="bi bi-calendar3 me-2"></i>{% now "l, d F Y" %}
+            </span>
+            <h1 class="fw-800 text-dark mb-1">
+                <span id="greeting">Welcome back,</span> {{ client.name|truncatechars:15 }}!
+            </h1>
+            <p class="text-muted mb-0">Monitor your project milestones and financial overview.</p>
         </div>
-        <div class="col-md-4 text-center text-md-end mt-3 mt-md-0">
-            <div class="d-inline-flex align-items-center bg-white shadow-sm rounded-pill px-3 py-2 border-primary">
-                <b class="text-dark">Project status</b>&ensp;
+        <div class="col-md-5 text-center text-md-end mt-4 mt-md-0">
+            <div class="status-pill d-inline-flex align-items-center bg-white shadow-sm rounded-pill px-4 py-2 border border-light">
+                <small class="text-muted fw-bold text-uppercase me-3" style="font-size: 10px; letter-spacing: 1px;">Project Health</small>
                 {% if project_status == "completed" %}
-                    <span class="status-indicator-online me-2 bg-success"></span>
+                    <span class="status-dot bg-success"></span>
                     <span class="small fw-bold text-success">Completed</span>
-
                 {% elif project_status == "ongoing" %}
-                    <span class="status-indicator-online me-2 bg-warning"></span>
+                    <span class="status-dot bg-warning"></span>
                     <span class="small fw-bold text-warning">In Progress</span>
-
                 {% elif project_status == "hold" %}
-                    <span class="status-indicator-online me-2 bg-secondary"></span>
-                    <span class="small fw-bold text-muted">Hold</span>
-
+                    <span class="status-dot bg-secondary"></span>
+                    <span class="small fw-bold text-muted">On Hold</span>
                 {% else %}
-                    <span class="status-indicator-online me-2"></span>
-                    <span class="small fw-bold text-muted">Portal Active</span>
+                    <span class="status-dot bg-info"></span>
+                    <span class="small fw-bold text-info">Portal Active</span>
                 {% endif %}
-
             </div>
         </div>
     </div>
 
     <div class="row g-4 mb-5">
         <div class="col-sm-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100 p-3" style="border-radius: 24px; background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);">
-                <div class="card-body text-white">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="bg-white bg-opacity-10 rounded-3 p-2">
-                            <i class="bi bi-stack fs-4"></i>
+            <div class="stat-card card border-0 shadow-sm h-100 overflow-hidden" style="background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);">
+                <div class="card-body p-4 text-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="icon-shape bg-white text-primary bg-opacity-20 rounded-3">
+                            <i class="bi bi-collection-fill fs-4"></i>
                         </div>
-                        <span class="badge bg-white bg-opacity-10 rounded-pill">Active</span>
+                        <span class="badge bg-white text-primary bg-opacity-20 rounded-pill">Total</span>
                     </div>
-                    <h6 class="text-white text-opacity-75 small fw-bold text-uppercase">Projects</h6>
-                    <h2 class="fw-800 mb-0">{{ projects|length }}</h2>
+                    <p class="text-white text-opacity-75 small fw-bold text-uppercase mb-1">Active Projects</p>
+                    <h2 class="fw-800 mb-0 ls-tight">{{ projects|length }}</h2>
                 </div>
             </div>
         </div>
 
         <div class="col-sm-6 col-xl-3">
-            <div class="card  shadow-sm h-100 p-3 bg-success" style="border-radius: 24px;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="bg-white bg-opacity-10 text-white rounded-3 p-2">
-                            <i class="bi bi-wallet-fill fs-4"></i>
+            <div class="stat-card card border-0 shadow-sm h-100 overflow-hidden" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="card-body p-4 text-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="icon-shape bg-white text-success bg-opacity-20 rounded-3">
+                            <i class="bi bi-wallet2 fs-4"></i>
                         </div>
                     </div>
-                    <h6 class="text-white text-opacity-75 small fw-bold text-uppercase">Total Paid</h6>
-                    <h2 class="fw-800 text-white mb-0">₹ {{ total_paid|default:"0" }}</h2>
+                    <p class="text-white text-opacity-75 small fw-bold text-uppercase mb-1">Total Contribution</p>
+                    <h2 class="fw-800 mb-0 ls-tight">₹ {{ total_paid|default:"0" }}</h2>
                 </div>
             </div>
         </div>
 
         <div class="col-sm-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100 p-3 bg-info" style="border-radius: 24px;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="bg-white bg-opacity-10 text-white rounded-3 p-2">
-                            <i class="bi bi-clock-fill fs-4"></i>
+            <div class="stat-card card border-0 shadow-sm h-100 overflow-hidden" style="background: linear-gradient(135deg, #b91010 0%, #ee0134 100%);">
+                <div class="card-body p-4 text-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="icon-shape bg-white text-success bg-opacity-20 rounded-3">
+                            <i class="bi bi-wallet2 fs-4"></i>
                         </div>
                     </div>
-                    <h6 class="text-white text-opacity-75 small fw-bold text-uppercase">Invoices</h6>
-                    <h2 class="fw-800 text-white mb-0">{{ payments|length }}</h2>
+                    <p class="text-white text-opacity-75 small fw-bold text-uppercase mb-1">Yet to be Paid</p>
+                    <h2 class="fw-800 mb-0 ls-tight">₹ {{ total_receivable|default:"0" }}</h2>
                 </div>
             </div>
         </div>
 
         <div class="col-sm-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100 p-3 " style="border-radius: 24px;">
-                <div class="card-body text-center">
-                    <div class="d-flex  align-items-center justify-content-between flex-column mb-3">
-                        <p class="small text-muted mb-2">Support Contact</p>
-                        <a href="mailto:homedeninterior@gmail.com" class="btn btn-primary rounded-pill w-100 fw-bold border py-2">
-                            <i class="bi bi-headset me-2"></i> Get Help
-                        </a>
+            <div class="stat-card card border-0 shadow-sm h-100 overflow-hidden" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
+                <div class="card-body p-4 text-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="icon-shape bg-white text-info bg-opacity-20 rounded-3">
+                            <i class="bi bi-receipt-cutoff fs-4"></i>
+                        </div>
                     </div>
+                    <p class="text-white text-opacity-75 small fw-bold text-uppercase mb-1">Invoices Issued</p>
+                    <h2 class="fw-800 mb-0 ls-tight">{{ payments|length }}</h2>
                 </div>
             </div>
         </div>
+
+
     </div>
 
     <div class="row g-4">
         <div class="col-lg-5">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 24px;">
-                <div class="card-header bg-transparent border-0 p-4 pb-0">
-                    <h5 class="fw-800 text-dark mb-0">Assigned Projects</h5>
+            <div class="card border-0 shadow-sm h-100 main-card">
+                <div class="card-header bg-transparent border-0 p-4 pb-0 d-flex align-items-center">
+                    <div class="header-indicator me-3"></div>
+                    <h5 class="fw-800 text-dark mb-0">Project Progress</h5>
                 </div>
                 <div class="card-body p-4">
                     {% for project in projects %}
-                    <div class="project-item p-3 rounded-4 mb-3 border border-light bg-light bg-opacity-50">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-dark">{{ project.name }}</span>
-                            <span class="badge bg-primary rounded-pill">Live</span>
+                    <div class="project-item p-4 rounded-4 mb-3 border bg-white">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">{{ project.name }}</h6>
+                                <span class="badge bg-success-soft text-success rounded-pill" style="font-size: 10px;">Ongoing Phase</span>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted d-block mb-1">Budget Allocation</small>
+                                <span class="fw-800 text-primary">₹ {{ project.budget }}</span>
+                            </div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">Total Budget</small>
-                            <span class="fw-800 text-primary">₹ {{ project.budget }}</span>
+                        <div class="d-flex justify-content-between small text-muted mb-2">
+                            <span>Completion</span>
+                            <span class="fw-bold text-dark">65%</span>
                         </div>
-                        <div class="progress mt-3" style="height: 6px; border-radius: 10px;">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 65%;"></div>
+                        <div class="progress rounded-pill" style="height: 8px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 65%;"></div>
                         </div>
                     </div>
                     {% empty %}
                     <div class="text-center py-5">
-                        <i class="bi bi-folder2-open fs-1 text-muted opacity-25"></i>
-                        <p class="text-muted mt-2">No active projects.</p>
+                        <div class="mb-3 text-muted opacity-25">
+                            <i class="bi bi-box2 fs-1"></i>
+                        </div>
+                        <p class="text-muted">No active project data available.</p>
                     </div>
                     {% endfor %}
                 </div>
@@ -123,33 +136,36 @@
         </div>
 
         <div class="col-lg-7">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 24px;">
+            <div class="card border-0 shadow-sm h-100 main-card">
                 <div class="card-header bg-transparent border-0 p-4 pb-0 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-800 text-dark mb-0">Recent Billing</h5>
-                    <i class="bi bi-filter-right fs-4 text-muted"></i>
+                    <div class="d-flex align-items-center">
+                        <div class="header-indicator me-3 bg-success"></div>
+                        <h5 class="fw-800 text-dark mb-0">Transaction History</h5>
+                    </div>
+                    <button class="btn btn-light btn-sm rounded-circle shadow-none"><i class="bi bi-three-dots-vertical"></i></button>
                 </div>
                 <div class="card-body p-0 mt-3">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
+                            <thead class="bg-light bg-opacity-50">
                                 <tr>
-                                    <th class="border-0 px-4 py-3 text-uppercase small fw-bold text-muted">Invoice Date</th>
+                                    <th class="border-0 px-4 py-3 text-uppercase small fw-bold text-muted">Invoice Info</th>
                                     <th class="border-0 py-3 text-uppercase small fw-bold text-muted">Amount</th>
                                     <th class="border-0 py-3 text-uppercase small fw-bold text-muted text-center">Status</th>
-                                    <th class="border-0 px-4 py-3 text-end"></th>
+                                    <th class="border-0 px-4 py-3"></th>
                                 </tr>
                             </thead>
-                            <tbody style="border-radius:19px;">
+                            <tbody>
                                 {% for pay in payments %}
                                 <tr>
                                     <td class="px-4">
                                         <div class="d-flex align-items-center">
-                                            <div class="bg-light rounded-3 p-2 me-3">
-                                                <i class="bi bi-file-earmark-text text-primary"></i>
+                                            <div class="icon-shape-sm bg-primary bg-opacity-10 text-primary rounded-3 me-3">
+                                                <i class="bi bi-file-earmark-check"></i>
                                             </div>
                                             <div>
                                                 <span class="d-block fw-bold text-dark small">{{ pay.date|date:"d M Y" }}</span>
-                                                <small class="text-muted">{{ pay.project.name }}</small>
+                                                <small class="text-muted" style="font-size: 11px;">Ref: INV-{{ pay.id|stringformat:"04d" }}</small>
                                             </div>
                                         </div>
                                     </td>
@@ -157,17 +173,21 @@
                                         <span class="fw-800 text-dark">₹ {{ pay.amount }}</span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Cleared</span>
+                                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-bold" style="font-size: 11px;">
+                                            <i class="bi bi-check2-circle me-1"></i> Paid
+                                        </span>
                                     </td>
                                     <td class="px-4 text-end">
-                                        <a href="{% url 'client_invoice_view' pay.invoice_token %}" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" target="_blank">
-                                            <i class="bi bi-cloud-arrow-down me-1"></i> PDF
+                                        <a href="{% url 'client_invoice_view' pay.invoice_token %}" class="btn btn-sm btn-white border rounded-pill shadow-sm px-3" target="_blank">
+                                            <i class="bi bi-download me-1 text-primary"></i> <small class="fw-bold">PDF</small>
                                         </a>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="4" class="text-center py-5 text-muted">No transactions found.</td>
+                                    <td colspan="4" class="text-center py-5">
+                                        <p class="text-muted small mb-0">Your financial history will appear here once invoices are issued.</p>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -176,46 +196,167 @@
                 </div>
             </div>
         </div>
+        <div class="col-sm-7 col-xl-12">
+            <div class="card border-0 shadow-sm h-100 stat-card" style="border: 1px dashed #000000 !important;">
+                <div class="card-body bg-warning d-flex flex-column align-items-center justify-content-center text-center p-4 rounded-4">
+                    <p class="small text-muted mb-3">Need assistance?</p>
+                    <a href="mailto:homedeninterior@gmail.com" class="btn btn-dark rounded-pill px-4 py-2 fw-bold w-100">
+                        <i class="bi bi-chat-dots me-2"></i> Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<style>
-    .fw-800 { font-weight: 800; }
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+
+<script>
+    // Time-based greeting
+    document.addEventListener('DOMContentLoaded', function() {
+        const hours = new Date().getHours();
+        let greeting = "Welcome back,";
+        if (hours < 12) greeting = "Good morning,";
+        else if (hours < 18) greeting = "Good afternoon,";
+        else greeting = "Good evening,";
+        document.getElementById('greeting').innerText = greeting;
+    });
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+    //const hasCompleted = {{ has_completed_projects|yesno:"true,false" }};
+    const hasCompleted = true;
     
-    .status-indicator-online {
+    if (!hasCompleted) return;
+
+    // Show only once per session
+    if (sessionStorage.getItem("client_confetti_shown")) return;
+
+    // 🎉 Fire confetti
+    confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 }
+    });
+
+    // Optional multi burst
+    setTimeout(() => {
+        confetti({
+            particleCount: 100,
+            spread: 100,
+            origin: { y: 0.5 }
+        });
+    }, 300);
+
+    sessionStorage.setItem("client_confetti_shown", "true");
+
+});
+</script>
+
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        --bs-font-sans-serif: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+        background-color: #f8fafc;
+    }
+
+    .fw-800 { font-weight: 800; }
+    .ls-tight { letter-spacing: -1px; }
+
+    /* Card Styling */
+    .main-card, .stat-card {
+        border-radius: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    /* Icon Shapes */
+    .icon-shape {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .icon-shape-sm {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    /* Status Dot Animation */
+    .status-dot {
         width: 10px;
         height: 10px;
-        background: #10b981;
         border-radius: 50%;
         display: inline-block;
-        box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
-        animation: pulse-green 2s infinite;
+        margin-right: 8px;
+        position: relative;
     }
 
-    @keyframes pulse-green {
-        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-        70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    .status-dot::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: inherit;
+        border-radius: 50%;
+        animation: status-pulse 2s infinite;
+        opacity: 0.7;
     }
 
+    @keyframes status-pulse {
+        0% { transform: scale(1); opacity: 0.7; }
+        100% { transform: scale(2.5); opacity: 0; }
+    }
+
+    /* Project List */
     .project-item {
-        transition: all 0.2s ease;
-        border: 1px solid transparent;
-        border-color: #4361ee !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid #f1f5f9 !important;
     }
     
     .project-item:hover {
-        background: #fff !important;
-        
-        box-shadow: 0 10px 20px rgba(67, 97, 238, 0.05);
-        transform: translateX(5px);
+        border-color: #cbd5e1 !important;
+        background-color: #f8fafc !important;
+        transform: scale(1.02);
     }
 
+    .header-indicator {
+        width: 4px;
+        height: 20px;
+        background: #4361ee;
+        border-radius: 10px;
+    }
+
+    /* Table Styling */
     .table thead th {
-        font-size: 0.7rem;
-        letter-spacing: 1px;
+        font-size: 10px;
+        letter-spacing: 0.05rem;
+        background-color: #f8fafc;
     }
 
-    .bg-success-soft { background-color: #ecfdf5; }
+    .bg-success-soft { background-color: #dcfce7; }
+    .btn-white { background: #fff; color: #475569; }
 </style>
+
+
+
+
 {% endblock %}

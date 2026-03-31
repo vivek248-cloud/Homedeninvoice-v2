@@ -3,6 +3,14 @@
 {% block page_title %}Itemized Costs{% endblock %}
 
 {% block content %}
+
+{% if not selected_client %}
+    <div class="alert alert-danger mt-3">
+        Please select a client to view spends.
+    </div>
+{% endif %}
+
+
 <div class="container-fluid p-0">
 
 
@@ -11,18 +19,24 @@
                 <div class="row align-items-center g-3">
                     <div class="col-md-6">
                         <form method="GET">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0">
-                                    <i class="bi bi-search text-muted"></i>
-                                </span>
-                                <input type="text"
-                                    name="q"
-                                    value="{{ query|default:'' }}"
-                                    class="form-control border-start-0 ps-0"
-                                    placeholder="Search by project, client, mode or amount...">
-                                <button type="submit" class="btn btn-primary">
-                                    Search
-                                </button>
+                            <div class="row g-2">
+
+                                <!-- 👇 Client Dropdown -->
+                                <div class="col-md-6">
+                                    <select name="client" class="form-select" onchange="this.form.submit()" required>
+                                        <option value="">Select Client</option>
+
+                                        {% for client in clients %}
+                                            <option value="{{ client.id }}"
+                                                {% if client.id|stringformat:"s" == selected_client %}selected{% endif %}>
+                                                
+                                                {{ client.name }} ({{ client.address }})
+                                            
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
                             </div>
                         </form>
                     </div>
