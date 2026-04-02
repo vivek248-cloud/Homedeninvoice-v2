@@ -1151,7 +1151,7 @@ def payment_update(request, pk):
         new_project_id = request.POST.get("project")
         new_amount = request.POST.get("amount")
         payment_mode = request.POST.get("payment_mode")
-
+        date = request.POST.get("date")
         try:
             new_amount = Decimal(new_amount)
         except:
@@ -1161,6 +1161,7 @@ def payment_update(request, pk):
         payment.project_id = new_project_id
         payment.amount = new_amount
         payment.payment_mode = payment_mode
+        payment.date = date
         payment.save()
 
         new_project = Project.objects.get(id=new_project_id)

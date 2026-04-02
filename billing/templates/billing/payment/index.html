@@ -3,281 +3,1764 @@
 {% block page_title %}Transaction History{% endblock %}
 
 {% block content %}
+<div class="container-fluid payments-page">
 
-{% if not selected_client %}
-<div class="selection-prompt" data-aos="zoom-in">
-    <div class="prompt-content">
-        <div class="indicator-wrapper">
-            <span class="pulse-ring"></span>
-            <span class="pulse-dot"></span>
+    <!-- ═══════════════════════════════════ -->
+    <!--  CLIENT SELECTION PROMPT           -->
+    <!-- ═══════════════════════════════════ -->
+    {% if not selected_client %}
+    <div class="select-prompt fade-in fi-1">
+        <div class="sp-left">
+            <div class="sp-pulse-wrap">
+                <span class="sp-pulse-ring"></span>
+                <span class="sp-pulse-dot"></span>
+            </div>
+            <div class="sp-icon-box">
+                <i class="bi bi-wallet2"></i>
+            </div>
+            <div class="sp-text">
+                <h6 class="sp-title">Client Selection Required</h6>
+                <p class="sp-desc">Choose a client below to view their payment history, collection status, and financial records.</p>
+            </div>
         </div>
-        
-        <div class="text-group">
-            <span class="prompt-title">Client Selection Required</span>
-            <span class="prompt-subtitle">Select a client from the menu to unlock ledger data and financial insights.</span>
+        <div class="sp-arrow">
+            <i class="bi bi-arrow-down-circle"></i>
         </div>
     </div>
-    
-    <div class="prompt-action">
-        <i class="fa-solid fa-arrow-pointer"></i>
+    {% endif %}
+
+    <!-- ═══════════════════════════════════ -->
+    <!--  PAGE HEADER                       -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page-header fade-in fi-2">
+        <div class="page-header-left">
+            <div class="page-icon-wrap">
+                <i class="bi bi-credit-card-2-front-fill"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Payments</h1>
+                <p class="page-subtitle">Track collections, receipts & payment modes</p>
+            </div>
+        </div>
+        <a href="{% url 'payment_create' %}" class="btn-add-new">
+            <i class="bi bi-plus-lg"></i>
+            <span>Record Payment</span>
+        </a>
     </div>
-</div>
 
-<style>
-    .selection-prompt {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-left: 4px solid #3b82f6; /* Blue accent instead of red for a professional feel */
-        border-radius: 12px;
-        padding: 16px 24px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin: 20px 0;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-        color: white;
-    }
-
-    .prompt-content {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-
-    /* Pulse Animation */
-    .indicator-wrapper {
-        position: relative;
-        display: flex;
-        height: 12px;
-        width: 12px;
-    }
-
-    .pulse-ring {
-        animation: pulse-animation 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-        position: absolute;
-        display: inline-flex;
-        height: 100%;
-        width: 100%;
-        border-radius: 50%;
-        background-color: #3b82f6;
-        opacity: 0.75;
-    }
-
-    .pulse-dot {
-        position: relative;
-        display: inline-flex;
-        border-radius: 50%;
-        height: 12px;
-        width: 12px;
-        background-color: #60a5fa;
-        border: 2px solid #ffffff;
-    }
-
-    .text-group {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .prompt-title {
-        font-weight: 700;
-        font-size: 0.95rem;
-        letter-spacing: 0.3px;
-        color: #ffffff;
-    }
-
-    .prompt-subtitle {
-        font-size: 0.8rem;
-        color: #94a3b8;
-        margin-top: 2px;
-    }
-
-    .prompt-action {
-        background: rgba(255, 255, 255, 0.05);
-        width: 35px;
-        height: 35px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #60a5fa;
-        transition: 0.3s;
-    }
-
-    @keyframes pulse-animation {
-        75%, 100% {
-            transform: scale(3);
-            opacity: 0;
-        }
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 600px) {
-        .selection-prompt {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-        .prompt-action {
-            display: none; /* Hide icon on small mobile to save space */
-        }
-    }
-</style>
-{% endif %}
-
-<div class="container-fluid p-0">
-
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-3">
-                <div class="row align-items-center g-3">
-                    <div class="col-md-6">
-                        <form method="GET">
-                            <div class="row g-2">
-
-                                <!-- 👇 Client Dropdown -->
-                                <div class="col-md-6">
-                                    <select name="client" class="form-select" onchange="this.form.submit()" required>
-                                        <option value="">Select Client</option>
-
-                                        {% for client in clients %}
-                                            <option value="{{ client.id }}"
-                                                {% if client.id|stringformat:"s" == selected_client %}selected{% endif %}>
-                                                
-                                                {{ client.name }} ({{ client.address }})
-                                            
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                            </div>
-                        </form>
-                    </div>
-                    <div class="col-md-6 text-md-end">
-                        <a href="{% url 'payment_create' %}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle me-2"></i> Add New  Payment
-                        </a>
-                    </div>
+    <!-- ═══════════════════════════════════ -->
+    <!--  TOOLBAR                           -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="toolbar-card fade-in fi-3">
+        <div class="toolbar-left">
+            <form method="GET" class="client-filter-form">
+                <div class="client-select-wrap">
+                    <i class="bi bi-person-fill cs-icon"></i>
+                    <select name="client" class="client-select" onchange="this.form.submit()">
+                        <option value="">Select Client</option>
+                        {% for client in clients %}
+                        <option value="{{ client.id }}"
+                            {% if client.id|stringformat:"s" == selected_client %}selected{% endif %}>
+                            {{ client.name }} — {{ client.address|truncatewords:4 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <i class="bi bi-chevron-down cs-chevron"></i>
                 </div>
+            </form>
+
+            <div class="search-wrap">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="liveSearch" class="search-input" placeholder="Search payments..." autocomplete="off">
+                <kbd class="search-kbd">⌘K</kbd>
+            </div>
+
+            <!-- Payment Mode Filter -->
+            <div class="filter-pills">
+                <button class="fp-btn active" data-filter="all">
+                    All <span class="fp-count">{{ payments|length }}</span>
+                </button>
+                <button class="fp-btn" data-filter="cash">
+                    <span class="fp-dot dot-amber"></span> Cash
+                </button>
+                <button class="fp-btn" data-filter="bank">
+                    <span class="fp-dot dot-blue"></span> Bank
+                </button>
+                <button class="fp-btn" data-filter="online">
+                    <span class="fp-dot dot-violet"></span> Online
+                </button>
+                <button class="fp-btn" data-filter="cheque">
+                    <span class="fp-dot dot-emerald"></span> Cheque
+                </button>
             </div>
         </div>
 
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="fw-bold mb-0">Collections & Payments</h4>
-            <p class="text-muted small mb-0">Review and manage all incoming client payments</p>
+        <div class="toolbar-right">
+            <div class="result-count">
+                <span id="visibleCount">{{ payments|length }}</span> transactions
+            </div>
+            <div class="view-toggle">
+                <button class="vt-btn active" data-view="table" title="Table">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+                <button class="vt-btn" data-view="grid" title="Cards">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                </button>
+            </div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive"  style="border-radius:19px;">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="ps-4 py-3 text-muted small fw-bold text-uppercase">Project Reference</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase">Date</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase">Payment Mode</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase">Amount Received</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase text-end pe-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for payment in payments %}
-                        <tr>
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-success bg-opacity-10 text-success rounded p-2 me-3">
-                                        <i class="bi bi-cash-stack"></i>
-                                    </div>
-                                    <div>
-                                        <span class="fw-bold text-dark d-block">{{ payment.project.name }}</span>
-                                        <small class="text-muted">{{ payment.project.client.name }}</small>
+    <!-- ═══════════════════════════════════ -->
+    <!--  STAT CARDS                        -->
+    <!-- ═══════════════════════════════════ -->
+    {% if selected_client %}
+    <div class="row g-3 mb-4 fade-in fi-4">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card sc-emerald">
+                <div class="sc-top">
+                    <div class="sc-icon si-emerald"><i class="bi bi-arrow-down-left"></i></div>
+                    <div class="sc-trend trend-up"><i class="bi bi-arrow-up-short"></i> Inflow</div>
+                </div>
+                <p class="sc-label">Total Collected</p>
+                <h3 class="sc-value" id="totalCollected">₹0</h3>
+                <div class="sc-bar"><div class="sc-bar-fill" style="width:100%;"></div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card sc-indigo">
+                <div class="sc-top">
+                    <div class="sc-icon si-indigo"><i class="bi bi-receipt"></i></div>
+                    <div class="sc-trend trend-neutral"><i class="bi bi-dash"></i> All</div>
+                </div>
+                <p class="sc-label">Transactions</p>
+                <h3 class="sc-value" data-count="{{ payments|length }}">0</h3>
+                <div class="sc-bar"><div class="sc-bar-fill" style="width:85%;"></div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card sc-amber">
+                <div class="sc-top">
+                    <div class="sc-icon si-amber"><i class="bi bi-cash-coin"></i></div>
+                    <div class="sc-trend trend-neutral"><i class="bi bi-dash"></i> Avg</div>
+                </div>
+                <p class="sc-label">Avg. Payment</p>
+                <h3 class="sc-value" id="avgPayment">₹0</h3>
+                <div class="sc-bar"><div class="sc-bar-fill" style="width:60%;"></div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card sc-sky">
+                <div class="sc-top">
+                    <div class="sc-icon si-sky"><i class="bi bi-calendar-check-fill"></i></div>
+                    <div class="sc-trend trend-up"><i class="bi bi-arrow-up-short"></i> Recent</div>
+                </div>
+                <p class="sc-label">Last Payment</p>
+                <h3 class="sc-value sc-value-sm" id="lastPayDate">—</h3>
+                <div class="sc-bar"><div class="sc-bar-fill" style="width:45%;"></div></div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══════════════════════════════════ -->
+    <!--  TABLE VIEW                        -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="table-card fade-in fi-5" id="tableView">
+        <div class="table-responsive">
+            <table class="table saas-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Project & Client</th>
+                        <th>Date</th>
+                        <th>Payment Mode</th>
+                        <th>Amount</th>
+                        <th>Receipt</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentTableBody">
+                    {% for payment in payments %}
+                    <tr class="payment-row"
+                        data-project="{{ payment.project.name|lower }}"
+                        data-client="{{ payment.project.client.name|lower }}"
+                        data-mode="{{ payment.get_payment_mode_display|lower }}"
+                        data-amount="{{ payment.amount }}"
+                        data-date="{{ payment.date|date:'Y-m-d' }}">
+
+                        <!-- PROJECT & CLIENT -->
+                        <td class="ps-4 py-3">
+                            <div class="cell-project">
+                                <div class="cell-avatar ca-{% cycle 'emerald' 'indigo' 'amber' 'sky' 'rose' %}">
+                                    <i class="bi bi-arrow-down-left"></i>
+                                </div>
+                                <div>
+                                    <div class="cell-project-name">{{ payment.project.name }}</div>
+                                    <div class="cell-client-sub">
+                                        <i class="bi bi-person-fill"></i>
+                                        {{ payment.project.client.name }}
                                     </div>
                                 </div>
-                            </td>
+                            </div>
+                        </td>
 
-                            <td>
-                                <div class="text-dark">{{ payment.date|date:"d M, Y" }}</div>
-                                <small class="text-muted">{{ payment.date|time:"h:i A" }}</small>
-                            </td>
+                        <!-- DATE -->
+                        <td>
+                            <div class="date-cell">
+                                <div class="date-main">{{ payment.date|date:"d M, Y" }}</div>
+                            </div>
+                        </td>
 
-                            <td>
-                                {% with mode=payment.get_payment_mode_display %}
-                                    <span class="badge rounded-pill px-3 py-2 fw-medium 
-                                        {% if 'Cash' in mode %}bg-warning-subtle text-warning border border-warning-subtle
-                                        {% elif 'Bank' in mode or 'Online' in mode %}bg-primary-subtle text-primary border border-primary-subtle
-                                        {% else %}bg-info-subtle text-info border border-info-subtle{% endif %}">
-                                        {{ mode }}
-                                    </span>
-                                {% endwith %}
-                            </td>
+                        <!-- PAYMENT MODE -->
+                        <td>
+                            {% with mode=payment.get_payment_mode_display %}
+                            <span class="mode-pill mp-{% if 'Cash' in mode or 'cash' in mode %}amber{% elif 'Bank' in mode or 'bank' in mode %}indigo{% elif 'Online' in mode or 'online' in mode %}violet{% elif 'Cheque' in mode or 'cheque' in mode %}emerald{% else %}sky{% endif %}">
+                                <i class="bi {% if 'Cash' in mode %}bi-cash{% elif 'Bank' in mode %}bi-bank{% elif 'Online' in mode %}bi-globe{% elif 'Cheque' in mode %}bi-file-earmark-text{% else %}bi-credit-card{% endif %}"></i>
+                                {{ mode }}
+                            </span>
+                            {% endwith %}
+                        </td>
 
-                            <td>
-                                <span class="fs-5 fw-bold text-success">₹ {{ payment.amount }}</span>
-                            </td>
+                        <!-- AMOUNT -->
+                        <td>
+                            <div class="amount-cell">
+                                <span class="amount-value">₹{{ payment.amount }}</span>
+                                <span class="amount-badge">Received</span>
+                            </div>
+                        </td>
 
-                            <td class="text-end pe-4">
-                                <div class="btn-group shadow-sm">
-                                    <a href="{% url 'payment_update' payment.id %}" class="btn btn-sm btn-white border" title="Edit Record">
-                                        <i class="bi bi-pencil text-warning"></i>
-                                    </a>
-                                    <a href="{% url 'payment_invoice' payment.id %}" class="btn btn-sm btn-white border" target="_blank" title="View Receipt">
-                                        <i class="bi bi-file-earmark-pdf text-danger"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-white border" 
-                                            data-bs-toggle="modal" data-bs-target="#deletePayment{{ payment.id }}">
-                                        <i class="bi bi-trash3 text-danger"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                        <!-- RECEIPT -->
+                        <td>
+                            <a href="{% url 'payment_invoice' payment.id %}" target="_blank" class="receipt-btn" title="View Receipt">
+                                <i class="bi bi-file-earmark-pdf-fill"></i>
+                                <span>PDF</span>
+                            </a>
+                        </td>
 
-                        <div class="modal fade" id="deletePayment{{ payment.id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-sm">
-                                <div class="modal-content border-0 shadow-lg">
-                                    <div class="modal-body text-center p-4">
-                                        <i class="bi bi-exclamation-triangle text-danger fs-1 mb-3"></i>
-                                        <h6 class="fw-bold">Delete Payment Entry?</h6>
-                                        <p class="small text-muted">This will increase the project's outstanding balance by <strong>₹{{ payment.amount }}</strong>.</p>
-                                        <div class="d-flex justify-content-center gap-2 mt-3">
-                                            <button type="button" class="btn btn-light btn-sm w-50" data-bs-dismiss="modal">Cancel</button>
-                                            <a href="{% url 'payment_delete' payment.id %}" class="btn btn-danger btn-sm w-50">Delete</a>
+                        <!-- ACTIONS -->
+                        <td class="text-end pe-4">
+                            <div class="action-group">
+                                <a href="{% url 'payment_update' payment.id %}" class="action-btn ab-edit" title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a href="{% url 'payment_invoice' payment.id %}" target="_blank" class="action-btn ab-pdf d-none d-md-inline-flex" title="Receipt">
+                                    <i class="bi bi-file-pdf"></i>
+                                </a>
+                                <button type="button" class="action-btn ab-delete" title="Delete"
+                                        data-bs-toggle="modal" data-bs-target="#delPay{{ payment.id }}">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- DELETE MODAL -->
+                    <div class="modal fade" id="delPay{{ payment.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content del-modal">
+                                <div class="modal-body p-0">
+                                    <div class="dm-header">
+                                        <div class="dm-icon-wrap">
+                                            <i class="bi bi-exclamation-triangle-fill"></i>
                                         </div>
+                                    </div>
+                                    <div class="dm-body">
+                                        <h4 class="dm-title">Delete Payment Record</h4>
+                                        <p class="dm-desc">
+                                            Removing this payment will increase the outstanding balance for
+                                            <strong>{{ payment.project.name }}</strong>.
+                                        </p>
+                                        <div class="dm-info-box">
+                                            <div class="dm-info-row">
+                                                <span class="dm-label">Project</span>
+                                                <span class="dm-val">{{ payment.project.name }}</span>
+                                            </div>
+                                            <div class="dm-info-row">
+                                                <span class="dm-label">Client</span>
+                                                <span class="dm-val">{{ payment.project.client.name }}</span>
+                                            </div>
+                                            <div class="dm-info-row">
+                                                <span class="dm-label">Date</span>
+                                                <span class="dm-val">{{ payment.date|date:"d M, Y" }}</span>
+                                            </div>
+                                            <div class="dm-info-row">
+                                                <span class="dm-label">Mode</span>
+                                                <span class="dm-val">{{ payment.get_payment_mode_display }}</span>
+                                            </div>
+                                            <div class="dm-info-row">
+                                                <span class="dm-label">Amount</span>
+                                                <span class="dm-val dm-amount-danger">+ ₹{{ payment.amount }} to balance</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="dm-footer">
+                                        <button type="button" class="dm-btn dm-cancel" data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{% url 'payment_delete' payment.id %}" class="dm-btn dm-delete">
+                                            <i class="bi bi-trash3 me-1"></i> Delete Payment
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center py-5">
-                                <div class="opacity-25 mb-3">
-                                    <i class="bi bi-wallet2 fs-1"></i>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="empty-state">
+                                <div class="empty-circle">
+                                    <i class="bi bi-wallet2"></i>
                                 </div>
-                                <p class="text-muted">No payments recorded yet.</p>
-                                <a href="{% url 'payment_create' %}" class="btn btn-sm btn-outline-success">Record first collection</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                <h5 class="empty-title">No payments recorded</h5>
+                                <p class="empty-desc">
+                                    {% if selected_client %}
+                                    No payment entries found for this client yet.
+                                    {% else %}
+                                    Select a client above or record your first collection.
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'payment_create' %}" class="btn-add-first">
+                                    <i class="bi bi-plus-lg me-2"></i> Record First Payment
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+                {% if payments %}
+                <tfoot>
+                    <tr class="total-row">
+                        <td class="ps-4 py-3" colspan="3">
+                            <div class="total-label">
+                                <i class="bi bi-calculator-fill me-2"></i>
+                                Total Collections
+                                <span class="total-count">({{ payments|length }} transactions)</span>
+                            </div>
+                        </td>
+                        <td class="py-3" colspan="1">
+                            <span class="total-amount" id="grandTotal">₹0</span>
+                        </td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
         </div>
     </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!--  GRID / CARD VIEW                  -->
+    <!-- ═══════════════════════════════════ -->
+    <div id="gridView" style="display:none;" class="fade-in">
+        <div class="row g-3" id="paymentGridBody">
+            {% for payment in payments %}
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3 grid-item"
+                 data-project="{{ payment.project.name|lower }}"
+                 data-client="{{ payment.project.client.name|lower }}"
+                 data-mode="{{ payment.get_payment_mode_display|lower }}">
+                <div class="payment-grid-card">
+                    <!-- Top accent -->
+                    <div class="pgc-accent pgc-acc-{% cycle 'emerald' 'indigo' 'amber' 'sky' %}"></div>
+
+                    <div class="pgc-top">
+                        <div class="pgc-avatar ca-{% cycle 'emerald' 'indigo' 'amber' 'sky' 'rose' %}">
+                            <i class="bi bi-arrow-down-left"></i>
+                        </div>
+                        <div class="pgc-actions">
+                            <a href="{% url 'payment_update' payment.id %}" class="pgc-act" title="Edit">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="{% url 'payment_invoice' payment.id %}" target="_blank" class="pgc-act" title="Receipt">
+                                <i class="bi bi-file-pdf"></i>
+                            </a>
+                            <button class="pgc-act pgc-del"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#delPay{{ payment.id }}" title="Delete">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <h6 class="pgc-project">{{ payment.project.name }}</h6>
+                    <p class="pgc-client"><i class="bi bi-person-fill"></i> {{ payment.project.client.name }}</p>
+
+                    <div class="pgc-divider"></div>
+
+                    <div class="pgc-details">
+                        <div class="pgc-detail-row">
+                            <span class="pgc-d-label">Date</span>
+                            <span class="pgc-d-value">{{ payment.date|date:"d M, Y" }}</span>
+                        </div>
+                        <div class="pgc-detail-row">
+                            <span class="pgc-d-label">Mode</span>
+                            <span class="pgc-d-value">
+                                {% with mode=payment.get_payment_mode_display %}
+                                <span class="mode-pill-sm mp-{% if 'Cash' in mode %}amber{% elif 'Bank' in mode %}indigo{% elif 'Online' in mode %}violet{% elif 'Cheque' in mode %}emerald{% else %}sky{% endif %}">
+                                    {{ mode }}
+                                </span>
+                                {% endwith %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="pgc-amount-bar">
+                        <span class="pgc-amount-label">Amount Received</span>
+                        <span class="pgc-amount-value">₹{{ payment.amount }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
 </div>
 
+<!-- ════════════════════════════════════════════ -->
+<!--  STYLES                                     -->
+<!-- ════════════════════════════════════════════ -->
 <style>
-    .bg-success-subtle { background-color: #e1fcef !important; }
-    .bg-warning-subtle { background-color: #fff3cd !important; }
-    .bg-primary-subtle { background-color: #e7f1ff !important; }
-    .bg-info-subtle { background-color: #e0f7fa !important; }
-    
-    .btn-white { background-color: #fff; }
-    .btn-white:hover { background-color: #f8f9fa; }
-    
-    .table-hover tbody tr:hover {
-        background-color: rgba(25, 135, 84, 0.02);
+    :root {
+        --indigo: #6366f1;
+        --indigo-soft: rgba(99, 102, 241, 0.08);
+        --amber: #f59e0b;
+        --amber-soft: rgba(245, 158, 11, 0.08);
+        --emerald: #10b981;
+        --emerald-soft: rgba(16, 185, 129, 0.08);
+        --rose: #f43f5e;
+        --rose-soft: rgba(244, 63, 94, 0.08);
+        --sky: #0ea5e9;
+        --sky-soft: rgba(14, 165, 233, 0.08);
+        --violet: #8b5cf6;
+        --violet-soft: rgba(139, 92, 246, 0.08);
+        --text-1: #0f172a;
+        --text-2: #475569;
+        --text-3: #94a3b8;
+        --surface: #ffffff;
+        --surface-2: #f8fafc;
+        --border: #e2e8f0;
+        --border-light: #f1f5f9;
+        --radius: 16px;
+        --radius-sm: 10px;
+        --radius-xs: 8px;
     }
+
+    .payments-page {
+        padding: 1.5rem 2rem 3rem;
+        max-width: 1480px;
+        margin: 0 auto;
+    }
+
+    /* Animations */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(16px);
+        animation: fadeIn 0.45s ease forwards;
+    }
+    .fi-1 { animation-delay: 0.03s; }
+    .fi-2 { animation-delay: 0.08s; }
+    .fi-3 { animation-delay: 0.13s; }
+    .fi-4 { animation-delay: 0.18s; }
+    .fi-5 { animation-delay: 0.23s; }
+
+    @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes barGrow {
+        from { transform: scaleX(0); }
+        to   { transform: scaleX(1); }
+    }
+
+    /* ══════════════════ */
+    /*  SELECTION PROMPT   */
+    /* ══════════════════ */
+    .select-prompt {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: var(--radius);
+        padding: 1.5rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .select-prompt::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; bottom: 0;
+        width: 4px;
+        background: linear-gradient(180deg, var(--emerald), var(--sky));
+        border-radius: 16px 0 0 16px;
+    }
+
+    .select-prompt::after {
+        content: "";
+        position: absolute;
+        top: -50%; right: -20%;
+        width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.08), transparent 70%);
+        border-radius: 50%;
+    }
+
+    .sp-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .sp-pulse-wrap {
+        position: relative;
+        width: 12px; height: 12px;
+        flex-shrink: 0;
+    }
+
+    .sp-pulse-ring {
+        position: absolute; inset: 0;
+        border-radius: 50%;
+        background: var(--emerald);
+        opacity: 0.6;
+        animation: pulseRing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+
+    .sp-pulse-dot {
+        position: relative;
+        width: 12px; height: 12px;
+        border-radius: 50%;
+        background: #34d399;
+        border: 2px solid #fff;
+        display: block;
+    }
+
+    @keyframes pulseRing {
+        75%, 100% { transform: scale(3); opacity: 0; }
+    }
+
+    .sp-icon-box {
+        width: 42px; height: 42px;
+        background: rgba(16, 185, 129, 0.15);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: #34d399;
+        flex-shrink: 0;
+    }
+
+    .sp-text { display: flex; flex-direction: column; }
+
+    .sp-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 3px;
+    }
+
+    .sp-desc {
+        font-size: 0.78rem;
+        color: rgba(255,255,255,0.4);
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .sp-arrow {
+        width: 38px; height: 38px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #34d399;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+        animation: bounceDown 2s ease infinite;
+    }
+
+    @keyframes bounceDown {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(5px); }
+    }
+
+    /* ══════════════════ */
+    /*  PAGE HEADER       */
+    /* ══════════════════ */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.75rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-icon-wrap {
+        width: 48px; height: 48px;
+        background: var(--emerald-soft);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--emerald);
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-1);
+        letter-spacing: -0.03em;
+        margin: 0;
+    }
+
+    .page-subtitle {
+        font-size: 0.82rem;
+        color: var(--text-3);
+        margin: 2px 0 0;
+    }
+
+    .btn-add-new {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        background: var(--emerald);
+        color: #fff;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-add-new::after {
+        content: "";
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+        transition: left 0.5s;
+    }
+
+    .btn-add-new:hover {
+        background: #059669; color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-add-new:hover::after { left: 100%; }
+
+    /* ══════════════════ */
+    /*  TOOLBAR            */
+    /* ══════════════════ */
+    .toolbar-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 14px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+        flex-wrap: wrap;
+    }
+
+    .client-filter-form { flex-shrink: 0; }
+
+    .client-select-wrap {
+        position: relative;
+        min-width: 220px;
+    }
+
+    .cs-icon {
+        position: absolute;
+        left: 14px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-3);
+        font-size: 0.85rem;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .client-select {
+        width: 100%;
+        height: 42px;
+        padding: 0 36px 0 38px;
+        border: 1.5px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        background: var(--surface-2);
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-1);
+        font-family: inherit;
+        appearance: none;
+        outline: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .client-select:focus {
+        border-color: var(--emerald);
+        box-shadow: 0 0 0 3px var(--emerald-soft);
+        background: var(--surface);
+    }
+
+    .cs-chevron {
+        position: absolute;
+        right: 12px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-3);
+        font-size: 0.7rem;
+        pointer-events: none;
+    }
+
+    .search-wrap {
+        position: relative;
+        min-width: 200px;
+        flex: 1;
+        max-width: 280px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 14px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-3);
+        font-size: 0.85rem;
+        pointer-events: none;
+    }
+
+    .search-input {
+        width: 100%;
+        height: 42px;
+        padding: 0 56px 0 40px;
+        border: 1.5px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        background: var(--surface-2);
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-1);
+        font-family: inherit;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+    .search-input::placeholder { color: var(--text-3); font-weight: 400; }
+
+    .search-input:focus {
+        background: var(--surface);
+        border-color: var(--emerald);
+        box-shadow: 0 0 0 3px var(--emerald-soft);
+    }
+
+    .search-kbd {
+        position: absolute;
+        right: 10px; top: 50%;
+        transform: translateY(-50%);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 1px 7px;
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: var(--text-3);
+        pointer-events: none;
+        font-family: inherit;
+    }
+
+    /* Filter pills */
+    .filter-pills {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .fp-btn {
+        padding: 6px 14px;
+        border-radius: 100px;
+        border: 1px solid var(--border-light);
+        background: var(--surface);
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-3);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: inherit;
+    }
+
+    .fp-btn:hover {
+        border-color: var(--border);
+        color: var(--text-2);
+        background: var(--surface-2);
+    }
+
+    .fp-btn.active {
+        background: var(--text-1);
+        color: #fff;
+        border-color: var(--text-1);
+    }
+
+    .fp-count {
+        background: rgba(255,255,255,0.2);
+        padding: 1px 7px;
+        border-radius: 100px;
+        font-size: 0.65rem;
+    }
+
+    .fp-dot {
+        width: 7px; height: 7px;
+        border-radius: 50%;
+    }
+
+    .dot-amber { background: var(--amber); }
+    .dot-blue { background: var(--indigo); }
+    .dot-violet { background: var(--violet); }
+    .dot-emerald { background: var(--emerald); }
+
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .result-count {
+        font-size: 0.78rem;
+        color: var(--text-3);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .result-count span {
+        color: var(--text-1);
+        font-weight: 800;
+    }
+
+    .view-toggle {
+        display: flex;
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-xs);
+        overflow: hidden;
+    }
+
+    .vt-btn {
+        width: 36px; height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .vt-btn.active {
+        background: var(--surface);
+        color: var(--emerald);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .vt-btn:hover:not(.active) { color: var(--text-2); }
+
+    /* ══════════════════ */
+    /*  STAT CARDS        */
+    /* ══════════════════ */
+    .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 14px;
+        padding: 1.25rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 35px -8px rgba(0, 0, 0, 0.1);
+        border-color: transparent;
+    }
+
+    .sc-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .sc-icon {
+        width: 40px; height: 40px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .si-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .si-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .si-amber { background: var(--amber-soft); color: var(--amber); }
+    .si-sky { background: var(--sky-soft); color: var(--sky); }
+
+    .sc-trend {
+        padding: 3px 10px;
+        border-radius: 100px;
+        font-size: 0.62rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .sc-trend i { font-size: 0.82rem; }
+    .trend-up { background: var(--emerald-soft); color: var(--emerald); }
+    .trend-down { background: var(--rose-soft); color: var(--rose); }
+    .trend-neutral { background: var(--border-light); color: var(--text-3); }
+
+    .sc-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-3);
+        margin: 0 0 4px;
+    }
+
+    .sc-value {
+        font-size: 1.45rem;
+        font-weight: 900;
+        color: var(--text-1);
+        letter-spacing: -0.02em;
+        margin: 0;
+        line-height: 1;
+    }
+
+    .sc-value-sm { font-size: 1.05rem; }
+
+    .sc-bar {
+        margin-top: 0.85rem;
+        height: 4px;
+        background: var(--border-light);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+
+    .sc-bar-fill {
+        height: 100%;
+        border-radius: 100px;
+        animation: barGrow 1s ease forwards;
+        transform-origin: left;
+    }
+
+    .sc-emerald .sc-bar-fill { background: linear-gradient(90deg, var(--emerald), #34d399); }
+    .sc-indigo .sc-bar-fill { background: linear-gradient(90deg, var(--indigo), #818cf8); }
+    .sc-amber .sc-bar-fill { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+    .sc-sky .sc-bar-fill { background: linear-gradient(90deg, var(--sky), #38bdf8); }
+
+    /* ══════════════════ */
+    /*  TABLE              */
+    /* ══════════════════ */
+    .table-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+
+    .saas-table thead th {
+        background: var(--surface-2);
+        font-size: 0.66rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-3);
+        padding: 13px 16px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .saas-table tbody tr {
+        border-bottom: 1px solid var(--border-light);
+        transition: all 0.2s;
+    }
+
+    .saas-table tbody tr:last-child { border-bottom: none; }
+    .saas-table tbody tr:hover { background: rgba(16, 185, 129, 0.02); }
+    .saas-table tbody td { padding: 14px 16px; vertical-align: middle; }
+
+    /* Cell: Project */
+    .cell-project {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .cell-avatar {
+        width: 40px; height: 40px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.82rem;
+        flex-shrink: 0;
+        transition: transform 0.2s;
+    }
+
+    tr:hover .cell-avatar { transform: scale(1.08); }
+
+    .ca-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .ca-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .ca-amber { background: var(--amber-soft); color: var(--amber); }
+    .ca-sky { background: var(--sky-soft); color: var(--sky); }
+    .ca-rose { background: var(--rose-soft); color: var(--rose); }
+
+    .cell-project-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .cell-client-sub {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        font-weight: 500;
+        margin-top: 2px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .cell-client-sub i { font-size: 0.6rem; }
+
+    /* Cell: Date */
+    .date-cell {}
+
+    .date-main {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .date-time {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    /* Mode pill */
+    .mode-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        border-radius: 100px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .mode-pill i { font-size: 0.7rem; }
+
+    .mp-amber { background: var(--amber-soft); color: #b45309; }
+    .mp-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .mp-violet { background: var(--violet-soft); color: var(--violet); }
+    .mp-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .mp-sky { background: var(--sky-soft); color: var(--sky); }
+
+    .mode-pill-sm {
+        display: inline-flex;
+        padding: 3px 10px;
+        border-radius: 100px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    /* Amount */
+    .amount-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .amount-value {
+        font-size: 1rem;
+        font-weight: 900;
+        color: var(--emerald);
+        letter-spacing: -0.01em;
+    }
+
+    .amount-badge {
+        font-size: 0.6rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-3);
+        background: var(--emerald-soft);
+        padding: 1px 8px;
+        border-radius: 100px;
+        width: fit-content;
+        color: var(--emerald);
+    }
+
+    /* Receipt button */
+    .receipt-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 14px;
+        border-radius: var(--radius-xs);
+        background: var(--rose-soft);
+        color: var(--rose);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .receipt-btn i { font-size: 0.85rem; }
+
+    .receipt-btn:hover {
+        background: var(--rose);
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(244, 63, 94, 0.2);
+    }
+
+    /* Actions */
+    .action-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        justify-content: flex-end;
+    }
+
+    .action-btn {
+        width: 33px; height: 33px;
+        border-radius: var(--radius-xs);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border-light);
+        background: var(--surface);
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .ab-edit:hover {
+        background: var(--indigo); color: #fff;
+        border-color: var(--indigo);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    }
+
+    .ab-pdf:hover {
+        background: var(--rose); color: #fff;
+        border-color: var(--rose);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
+    }
+
+    .ab-delete:hover {
+        background: var(--rose); color: #fff;
+        border-color: var(--rose);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
+    }
+
+    /* Total row */
+    .total-row {
+        background: var(--surface-2) !important;
+        border-top: 2px solid var(--border) !important;
+    }
+
+    .total-row:hover { background: var(--surface-2) !important; }
+
+    .total-label {
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: var(--text-1);
+        display: flex;
+        align-items: center;
+    }
+
+    .total-label i { color: var(--emerald); }
+
+    .total-count {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-3);
+        margin-left: 8px;
+    }
+
+    .total-amount {
+        font-size: 1.1rem;
+        font-weight: 900;
+        color: var(--emerald);
+        letter-spacing: -0.01em;
+    }
+
+    /* ══════════════════ */
+    /*  GRID VIEW          */
+    /* ══════════════════ */
+    .payment-grid-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        transition: all 0.3s;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .payment-grid-card:hover {
+        border-color: transparent;
+        box-shadow: 0 12px 35px -5px rgba(0, 0, 0, 0.08);
+        transform: translateY(-4px);
+    }
+
+    .pgc-accent {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+    }
+
+    .pgc-acc-emerald { background: var(--emerald); }
+    .pgc-acc-indigo { background: var(--indigo); }
+    .pgc-acc-amber { background: var(--amber); }
+    .pgc-acc-sky { background: var(--sky); }
+
+    .pgc-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .pgc-avatar {
+        width: 44px; height: 44px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .pgc-actions {
+        display: flex;
+        gap: 4px;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .payment-grid-card:hover .pgc-actions { opacity: 1; }
+
+    .pgc-act {
+        width: 28px; height: 28px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.72rem;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .pgc-act:hover { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+    .pgc-del:hover { background: var(--rose); border-color: var(--rose); }
+
+    .pgc-project {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--text-1);
+        margin: 0 0 3px;
+    }
+
+    .pgc-client {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        font-weight: 500;
+        margin: 0 0 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .pgc-client i { font-size: 0.62rem; }
+
+    .pgc-divider {
+        height: 1px;
+        background: var(--border-light);
+        margin: 0.75rem 0;
+    }
+
+    .pgc-details {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 0.75rem;
+    }
+
+    .pgc-detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .pgc-d-label {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        font-weight: 600;
+    }
+
+    .pgc-d-value {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .pgc-amount-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: var(--emerald-soft);
+        border-radius: 12px;
+        margin-top: 0.5rem;
+    }
+
+    .pgc-amount-label {
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--emerald);
+    }
+
+    .pgc-amount-value {
+        font-size: 1rem;
+        font-weight: 900;
+        color: var(--emerald);
+    }
+
+    /* ══════════════════ */
+    /*  DELETE MODAL       */
+    /* ══════════════════ */
+    .del-modal {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.2);
+        max-width: 420px;
+        margin: 0 auto;
+    }
+
+    .dm-header {
+        background: linear-gradient(135deg, #fef2f2, #fff1f2);
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .dm-icon-wrap {
+        width: 56px; height: 56px;
+        background: var(--rose-soft);
+        border: 4px solid #fff;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: var(--rose);
+        box-shadow: 0 8px 16px rgba(244, 63, 94, 0.15);
+        animation: bounceIn 0.5s ease;
+    }
+
+    @keyframes bounceIn {
+        0% { transform: scale(0.5); opacity: 0; }
+        60% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .dm-body {
+        padding: 1.5rem 2rem;
+        text-align: center;
+    }
+
+    .dm-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin-bottom: 0.5rem;
+    }
+
+    .dm-desc {
+        font-size: 0.85rem;
+        color: var(--text-3);
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+    }
+
+    .dm-desc strong { color: var(--text-1); }
+
+    .dm-info-box {
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        text-align: left;
+    }
+
+    .dm-info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .dm-info-row:last-child { border-bottom: none; }
+
+    .dm-label {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        font-weight: 600;
+    }
+
+    .dm-val {
+        font-size: 0.78rem;
+        color: var(--text-1);
+        font-weight: 700;
+    }
+
+    .dm-amount-danger { color: var(--rose); }
+
+    .dm-footer {
+        display: flex;
+        gap: 10px;
+        padding: 0 2rem 1.75rem;
+    }
+
+    .dm-btn {
+        flex: 1;
+        height: 44px;
+        border-radius: 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        font-family: inherit;
+    }
+
+    .dm-cancel {
+        background: var(--surface-2);
+        color: var(--text-2);
+        border: 1px solid var(--border);
+    }
+
+    .dm-cancel:hover { background: var(--border-light); }
+
+    .dm-delete {
+        background: var(--rose);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+    }
+
+    .dm-delete:hover {
+        background: #e11d48; color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(244, 63, 94, 0.35);
+    }
+
+    /* ══════════════════ */
+    /*  EMPTY STATE        */
+    /* ══════════════════ */
+    .empty-state { padding: 3rem 2rem; text-align: center; }
+
+    .empty-circle {
+        width: 72px; height: 72px;
+        background: var(--emerald-soft);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--emerald);
+        margin-bottom: 1.25rem;
+    }
+
+    .empty-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin-bottom: 0.35rem;
+    }
+
+    .empty-desc {
+        font-size: 0.85rem;
+        color: var(--text-3);
+        margin-bottom: 1.25rem;
+        max-width: 340px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .btn-add-first {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 24px;
+        background: var(--emerald);
+        color: #fff;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-add-first:hover {
+        background: #059669; color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(16, 185, 129, 0.3);
+    }
+
+    /* ══════════════════ */
+    /*  RESPONSIVE         */
+    /* ══════════════════ */
+    @media (max-width: 1024px) {
+        .toolbar-left { flex-direction: column; align-items: stretch; }
+        .search-wrap { max-width: 100%; }
+        .client-select-wrap { min-width: 100%; }
+    }
+
+    @media (max-width: 768px) {
+        .payments-page { padding: 1rem; }
+        .page-header { flex-direction: column; align-items: flex-start; }
+        .toolbar-card { flex-direction: column; align-items: stretch; }
+        .toolbar-right { justify-content: space-between; }
+        .filter-pills { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+        .search-kbd { display: none; }
+        .select-prompt { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        .sp-arrow { display: none; }
+
+        .saas-table thead th:nth-child(5),
+        .saas-table tbody td:nth-child(5) {
+            display: none;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .saas-table thead th:nth-child(3),
+        .saas-table tbody td:nth-child(3) {
+            display: none;
+        }
+        .sc-value { font-size: 1.15rem; }
+        .stat-card { padding: 1rem; }
+        .sp-icon-box { display: none; }
+    }
+
+    .table-responsive::-webkit-scrollbar { height: 4px; }
+    .table-responsive::-webkit-scrollbar-track { background: transparent; }
+    .table-responsive::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
 </style>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  SCRIPTS                                    -->
+<!-- ════════════════════════════════════════════ -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ═══════════════════════════════
+    //  LIVE SEARCH + MODE FILTER
+    // ═══════════════════════════════
+    const searchInput = document.getElementById('liveSearch');
+    const tableRows = document.querySelectorAll('.payment-row');
+    const gridItems = document.querySelectorAll('.grid-item');
+    const visibleCount = document.getElementById('visibleCount');
+    let activeFilter = 'all';
+
+    function applyFilters() {
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        let count = 0;
+
+        function matchItem(el) {
+            const project = el.dataset.project || '';
+            const client = el.dataset.client || '';
+            const mode = el.dataset.mode || '';
+
+            const matchSearch = project.includes(query) || client.includes(query) || mode.includes(query);
+            const matchFilter = activeFilter === 'all' || mode.includes(activeFilter);
+
+            return matchSearch && matchFilter;
+        }
+
+        tableRows.forEach(row => {
+            const show = matchItem(row);
+            row.style.display = show ? '' : 'none';
+            if (show) count++;
+        });
+
+        gridItems.forEach(item => {
+            item.style.display = matchItem(item) ? '' : 'none';
+        });
+
+        if (visibleCount) visibleCount.textContent = count;
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+
+        document.addEventListener('keydown', function (e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
+        });
+    }
+
+    // Filter pills
+    document.querySelectorAll('.fp-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.fp-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            activeFilter = this.dataset.filter;
+            applyFilters();
+        });
+    });
+
+    // ═══════════════════════════════
+    //  VIEW TOGGLE
+    // ═══════════════════════════════
+    const viewBtns = document.querySelectorAll('.vt-btn');
+    const tableView = document.getElementById('tableView');
+    const gridView = document.getElementById('gridView');
+
+    viewBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+            viewBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            if (this.dataset.view === 'table') {
+                tableView.style.display = '';
+                gridView.style.display = 'none';
+            } else {
+                tableView.style.display = 'none';
+                gridView.style.display = '';
+            }
+        });
+    });
+
+    // ═══════════════════════════════
+    //  COMPUTE STATS
+    // ═══════════════════════════════
+    let totalCollected = 0;
+    let latestDate = null;
+
+    tableRows.forEach(row => {
+        const amount = parseFloat(row.dataset.amount) || 0;
+        totalCollected += amount;
+
+        const dateStr = row.dataset.date;
+        if (dateStr) {
+            const d = new Date(dateStr);
+            if (!latestDate || d > latestDate) latestDate = d;
+        }
+    });
+
+    // Grand total
+    const grandEl = document.getElementById('grandTotal');
+    if (grandEl) {
+        grandEl.textContent = '₹' + totalCollected.toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    // Stat: Total collected
+    const tcEl = document.getElementById('totalCollected');
+    if (tcEl) {
+        tcEl.textContent = '₹' + totalCollected.toLocaleString('en-IN', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+    }
+
+    // Stat: Avg payment
+    const avgEl = document.getElementById('avgPayment');
+    if (avgEl && tableRows.length > 0) {
+        const avg = totalCollected / tableRows.length;
+        avgEl.textContent = '₹' + avg.toLocaleString('en-IN', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+    }
+
+    // Stat: Last payment date
+    const lastEl = document.getElementById('lastPayDate');
+    if (lastEl && latestDate) {
+        const options = { day: 'numeric', month: 'short', year: 'numeric' };
+        lastEl.textContent = latestDate.toLocaleDateString('en-IN', options);
+    }
+
+    // Counter animations
+    document.querySelectorAll('.sc-value[data-count]').forEach(el => {
+        const target = parseInt(el.getAttribute('data-count')) || 0;
+        let current = 0;
+        const step = Math.max(1, Math.ceil(target / 30));
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) { current = target; clearInterval(timer); }
+            el.textContent = current;
+        }, 30);
+    });
+});
+</script>
 {% endblock %}

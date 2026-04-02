@@ -3,149 +3,1398 @@
 {% block page_title %}Client Directory{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
+<div class="container-fluid client-page">
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-3">
-            <div class="row align-items-center g-3">
-                <div class="col-md-6">
-                    <form method="GET">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="bi bi-search text-muted"></i>
-                            </span>
-                            <input type="text"
-                                name="q"
-                                value="{{ query|default:'' }}"
-                                class="form-control border-start-0 ps-0"
-                                placeholder="Search clients by name, email or mobile...">
-                            <button type="submit" class="btn btn-primary">
-                                Search
-                            </button>
-                        </div>
-                    </form>
+    <!-- ═══════════════════════════════════ -->
+    <!--  PAGE HEADER                       -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page-header fade-in fi-1">
+        <div class="page-header-left">
+            <div class="page-icon-wrap">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Clients</h1>
+                <p class="page-subtitle">Manage your client relationships & contact info</p>
+            </div>
+        </div>
+        <a href="{% url 'client_create' %}" class="btn-add-new">
+            <i class="bi bi-plus-lg"></i>
+            <span>Add Client</span>
+        </a>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!--  STAT CARDS                        -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3 fade-in fi-2">
+            <div class="stat-card">
+                <div class="stat-icon si-indigo">
+                    <i class="bi bi-people-fill"></i>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <a href="{% url 'client_create' %}" class="btn btn-primary">
-                        <i class="bi bi-person-plus-fill me-1"></i> Add New Client
-                    </a>
+                <div>
+                    <p class="stat-label">Total Clients</p>
+                    <h3 class="stat-value">{{ clients|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3 fade-in fi-3">
+            <div class="stat-card">
+                <div class="stat-icon si-emerald">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div>
+                    <p class="stat-label">With GST</p>
+                    <h3 class="stat-value" id="gstCount">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3 fade-in fi-4">
+            <div class="stat-card">
+                <div class="stat-icon si-amber">
+                    <i class="bi bi-percent"></i>
+                </div>
+                <div>
+                    <p class="stat-label">With Discount</p>
+                    <h3 class="stat-value" id="discountCount">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3 fade-in fi-5">
+            <div class="stat-card">
+                <div class="stat-icon si-sky">
+                    <i class="bi bi-envelope-fill"></i>
+                </div>
+                <div>
+                    <p class="stat-label">With Email</p>
+                    <h3 class="stat-value" id="emailCount">0</h3>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive" style="border-radius:19px;">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="ps-4 py-3 text-muted small fw-bold text-uppercase">Client Details</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase">Contact Info</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase">Tax & Billing</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase text-end pe-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for client in clients %}
-                        <tr>
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-sm me-3 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold">
-                                        {{ client.name|slice:":1"|upper }}
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold text-dark">{{ client.name }}</div>
-                                        <div class="small text-muted" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                            <i class="bi bi-geo-alt small"></i> {{ client.address|default:"No address set" }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="small">
-                                    <div class="mb-1 text-dark">
-                                        <i class="bi bi-telephone me-2 text-muted"></i>{{ client.mobile_1 }}
-                                    </div>
-                                    <div class="text-muted">
-                                        <i class="bi bi-envelope me-2"></i>{{ client.email|default:"N/A" }}
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                {% if client.gst_number %}
-                                <span class="badge bg-info-subtle text-info border border-info-subtle mb-1">
-                                    GST: {{ client.gst_number }}
-                                </span><br>
-                                {% endif %}
-                                <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                    {{ client.discount }}% Preferred Discount
-                                </span>
-                            </td>
-                            <td class="text-end pe-4">
-                                <div class="btn-group">
-                                    <a href="{% url 'client_update' client.id %}" class="btn btn-sm btn-outline-light text-dark border shadow-sm me-2">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-outline-light text-danger border shadow-sm" 
-                                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ client.id }}">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+    <!-- ═══════════════════════════════════ -->
+    <!--  SEARCH & FILTER BAR              -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="search-bar-card fade-in fi-6">
+        <form method="GET" class="search-form">
+            <div class="search-input-wrap">
+                <i class="bi bi-search search-icon"></i>
+                <input
+                    type="text"
+                    name="q"
+                    id="liveSearch"
+                    value="{{ query|default:'' }}"
+                    class="search-input"
+                    placeholder="Search by name, email, mobile or GST..."
+                    autocomplete="off"
+                >
+                <kbd class="search-kbd">⌘K</kbd>
+            </div>
+        </form>
+        <div class="search-bar-right">
+            <div class="result-count">
+                <span id="visibleCount">{{ clients|length }}</span> results
+            </div>
+            <div class="view-toggle">
+                <button class="vt-btn active" data-view="table" title="Table view">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+                <button class="vt-btn" data-view="grid" title="Grid view">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
-                        <div class="modal fade" id="deleteModal{{ client.id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-sm">
-                                <div class="modal-content">
-                                    <div class="modal-body text-center p-4">
-                                        <i class="bi bi-exclamation-circle text-danger fs-1 mb-3"></i>
-                                        <h5>Delete Client?</h5>
-                                        <p class="small text-muted">Are you sure you want to remove <strong>{{ client.name }}</strong>?</p>
-                                        <div class="d-flex justify-content-center gap-2 mt-4">
-                                            <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
-                                            <a href="{% url 'client_delete' client.id %}" class="btn btn-danger btn-sm px-3">Delete</a>
+    <!-- ═══════════════════════════════════ -->
+    <!--  TABLE VIEW                        -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="table-card fade-in fi-7" id="tableView">
+        <div class="table-responsive">
+            <table class="table saas-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">
+                            <div class="th-content">
+                                <span>Client</span>
+                                <i class="bi bi-arrow-down-short th-sort"></i>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="th-content">
+                                <span>Contact</span>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="th-content">
+                                <span>Tax & Billing</span>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="th-content">
+                                <span>Location</span>
+                            </div>
+                        </th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="clientTableBody">
+                    {% for client in clients %}
+                    <tr class="client-row"
+                        data-name="{{ client.name|lower }}"
+                        data-email="{{ client.email|lower|default:'' }}"
+                        data-mobile="{{ client.mobile_1|default:'' }}"
+                        data-gst="{{ client.gst_number|lower|default:'' }}">
+
+                        <!-- CLIENT INFO -->
+                        <td class="ps-4">
+                            <div class="client-cell">
+                                <div class="client-avatar ca-{{ forloop.counter|divisibleby:4|yesno:'rose,indigo' }}{% if forloop.counter|divisibleby:3 %} ca-emerald{% elif forloop.counter|divisibleby:2 %} ca-amber{% else %} ca-indigo{% endif %}">
+                                    {{ client.name|slice:":2"|upper }}
+                                </div>
+                                <div>
+                                    <div class="client-name">{{ client.name }}</div>
+                                    <div class="client-id">ID: #CLT-{{ client.id|stringformat:"04d" }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- CONTACT -->
+                        <td>
+                            <div class="contact-stack">
+                                <div class="contact-item">
+                                    <i class="bi bi-telephone-fill ci-icon"></i>
+                                    <span>{{ client.mobile_1 }}</span>
+                                </div>
+                                <div class="contact-item ci-muted">
+                                    <i class="bi bi-envelope-fill ci-icon"></i>
+                                    <span>{{ client.email|default:"No email" }}</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- TAX & BILLING -->
+                        <td>
+                            <div class="tag-stack">
+                                {% if client.gst_number %}
+                                <span class="info-tag it-sky" data-has-gst="true">
+                                    <i class="bi bi-building"></i> {{ client.gst_number }}
+                                </span>
+                                {% else %}
+                                <span class="info-tag it-neutral">
+                                    <i class="bi bi-dash-circle"></i> No GST
+                                </span>
+                                {% endif %}
+
+                                {% if client.discount > 0 %}
+                                <span class="info-tag it-emerald" data-has-discount="true">
+                                    <i class="bi bi-tag-fill"></i> {{ client.discount }}% Discount
+                                </span>
+                                {% else %}
+                                <span class="info-tag it-neutral">
+                                    <i class="bi bi-tag"></i> No Discount
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- LOCATION -->
+                        <td>
+                            <div class="location-cell">
+                                <i class="bi bi-geo-alt-fill loc-icon"></i>
+                                <span class="loc-text">{{ client.address|default:"Not specified"|truncatewords:5 }}</span>
+                            </div>
+                        </td>
+
+                        <!-- ACTIONS -->
+                        <td class="text-end pe-4">
+                            <div class="action-group">
+                                <a href="{% url 'client_update' client.id %}"
+                                   class="action-btn ab-edit"
+                                   title="Edit Client">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <button type="button"
+                                        class="action-btn ab-delete"
+                                        title="Delete Client"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal{{ client.id }}">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- DELETE MODAL -->
+                    <div class="modal fade" id="deleteModal{{ client.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content delete-modal">
+                                <div class="modal-body p-0">
+                                    <div class="dm-header">
+                                        <div class="dm-icon-wrap">
+                                            <i class="bi bi-exclamation-triangle-fill"></i>
                                         </div>
+                                    </div>
+                                    <div class="dm-body">
+                                        <h4 class="dm-title">Delete Client</h4>
+                                        <p class="dm-desc">
+                                            Are you sure you want to permanently remove
+                                            <strong>{{ client.name }}</strong>? This action cannot be undone.
+                                        </p>
+                                        <div class="dm-info-box">
+                                            <div class="dm-info-row">
+                                                <span class="dm-info-label">Client</span>
+                                                <span class="dm-info-value">{{ client.name }}</span>
+                                            </div>
+                                            <div class="dm-info-row">
+                                                <span class="dm-info-label">Phone</span>
+                                                <span class="dm-info-value">{{ client.mobile_1 }}</span>
+                                            </div>
+                                            <div class="dm-info-row">
+                                                <span class="dm-info-label">Email</span>
+                                                <span class="dm-info-value">{{ client.email|default:"N/A" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="dm-footer">
+                                        <button type="button" class="dm-btn dm-btn-cancel" data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                        <a href="{% url 'client_delete' client.id %}" class="dm-btn dm-btn-delete">
+                                            <i class="bi bi-trash3 me-1"></i> Delete Client
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center py-5">
-                                <div class="text-muted">
-                                    <i class="bi bi-people fs-1 d-block mb-3 opacity-25"></i>
-                                    <p>No clients found in the records.</p>
-                                    <a href="{% url 'client_create' %}" class="btn btn-primary btn-sm">Add your first client</a>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="empty-state">
+                                <div class="empty-illustration">
+                                    <div class="empty-circle">
+                                        <i class="bi bi-people"></i>
+                                    </div>
                                 </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                <h5 class="empty-title">No clients yet</h5>
+                                <p class="empty-desc">
+                                    Start building your client directory by adding your first client.
+                                </p>
+                                <a href="{% url 'client_create' %}" class="btn-add-first">
+                                    <i class="bi bi-plus-lg me-2"></i> Add First Client
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!--  GRID VIEW (Hidden by default)     -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="grid-view fade-in" id="gridView" style="display: none;">
+        <div class="row g-3" id="clientGridBody">
+            {% for client in clients %}
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3 grid-item"
+                 data-name="{{ client.name|lower }}"
+                 data-email="{{ client.email|lower|default:'' }}"
+                 data-mobile="{{ client.mobile_1|default:'' }}"
+                 data-gst="{{ client.gst_number|lower|default:'' }}">
+                <div class="client-grid-card">
+                    <div class="gc-top">
+                        <div class="gc-avatar ca-{{ forloop.counter|divisibleby:4|yesno:'rose,indigo' }}{% if forloop.counter|divisibleby:3 %} ca-emerald{% elif forloop.counter|divisibleby:2 %} ca-amber{% else %} ca-indigo{% endif %}">
+                            {{ client.name|slice:":2"|upper }}
+                        </div>
+                        <div class="gc-actions">
+                            <a href="{% url 'client_update' client.id %}" class="gc-action-btn">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <button type="button" class="gc-action-btn gc-del"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal{{ client.id }}">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <h6 class="gc-name">{{ client.name }}</h6>
+                    <p class="gc-id">ID: #CLT-{{ client.id|stringformat:"04d" }}</p>
+                    <div class="gc-divider"></div>
+                    <div class="gc-info">
+                        <div class="gc-info-row">
+                            <i class="bi bi-telephone-fill"></i>
+                            <span>{{ client.mobile_1 }}</span>
+                        </div>
+                        <div class="gc-info-row">
+                            <i class="bi bi-envelope-fill"></i>
+                            <span>{{ client.email|default:"No email" }}</span>
+                        </div>
+                        <div class="gc-info-row">
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>{{ client.address|default:"Not specified"|truncatewords:4 }}</span>
+                        </div>
+                    </div>
+                    <div class="gc-tags">
+                        {% if client.gst_number %}
+                        <span class="gc-tag gt-sky">GST</span>
+                        {% endif %}
+                        {% if client.discount > 0 %}
+                        <span class="gc-tag gt-emerald">{{ client.discount }}% Off</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
 </div>
 
+<!-- ════════════════════════════════════════════ -->
+<!--  STYLES                                     -->
+<!-- ════════════════════════════════════════════ -->
 <style>
-    .avatar-sm {
-        width: 40px;
-        height: 40px;
-        font-size: 0.9rem;
+    :root {
+        --indigo: #6366f1;
+        --indigo-soft: rgba(99, 102, 241, 0.08);
+        --amber: #f59e0b;
+        --amber-soft: rgba(245, 158, 11, 0.08);
+        --emerald: #10b981;
+        --emerald-soft: rgba(16, 185, 129, 0.08);
+        --rose: #f43f5e;
+        --rose-soft: rgba(244, 63, 94, 0.08);
+        --sky: #0ea5e9;
+        --sky-soft: rgba(14, 165, 233, 0.08);
+        --text-1: #0f172a;
+        --text-2: #475569;
+        --text-3: #94a3b8;
+        --surface: #ffffff;
+        --surface-2: #f8fafc;
+        --border: #e2e8f0;
+        --border-light: #f1f5f9;
+        --radius: 16px;
+        --radius-sm: 10px;
+        --radius-xs: 8px;
     }
-    .table thead th {
-        letter-spacing: 0.05em;
-        font-size: 0.7rem !important;
+
+    .client-page {
+        padding: 1.5rem 2rem 3rem;
+        max-width: 1440px;
+        margin: 0 auto;
     }
-    .btn-outline-light:hover {
-        background-color: #f8f9fa;
-        border-color: #dee2e6 !important;
+
+    /* Animations */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(16px);
+        animation: fadeIn 0.45s ease forwards;
     }
-    /* Subtle row hover */
-    .table-hover tbody tr:hover {
-        background-color: rgba(67, 97, 238, 0.02);
+    .fi-1 { animation-delay: 0.03s; }
+    .fi-2 { animation-delay: 0.06s; }
+    .fi-3 { animation-delay: 0.09s; }
+    .fi-4 { animation-delay: 0.12s; }
+    .fi-5 { animation-delay: 0.15s; }
+    .fi-6 { animation-delay: 0.18s; }
+    .fi-7 { animation-delay: 0.22s; }
+
+    @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════ */
+    /*  PAGE HEADER       */
+    /* ══════════════════ */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.75rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-icon-wrap {
+        width: 48px;
+        height: 48px;
+        background: var(--indigo-soft);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--indigo);
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-1);
+        letter-spacing: -0.03em;
+        margin: 0;
+    }
+
+    .page-subtitle {
+        font-size: 0.82rem;
+        color: var(--text-3);
+        margin: 2px 0 0;
+    }
+
+    .btn-add-new {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        background: var(--indigo);
+        color: #fff;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    }
+
+    .btn-add-new:hover {
+        background: #4f46e5;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    /* ══════════════════ */
+    /*  STAT CARDS        */
+    /* ══════════════════ */
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 14px;
+        padding: 1.15rem 1.25rem;
+        transition: all 0.25s;
+    }
+
+    .stat-card:hover {
+        border-color: transparent;
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .si-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .si-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .si-amber { background: var(--amber-soft); color: var(--amber); }
+    .si-sky { background: var(--sky-soft); color: var(--sky); }
+
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-3);
+        margin: 0 0 2px;
+    }
+
+    .stat-value {
+        font-size: 1.35rem;
+        font-weight: 900;
+        color: var(--text-1);
+        letter-spacing: -0.02em;
+        margin: 0;
+        line-height: 1;
+    }
+
+    /* ══════════════════ */
+    /*  SEARCH BAR        */
+    /* ══════════════════ */
+    .search-bar-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 14px;
+        padding: 0.75rem 1.25rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .search-form {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .search-input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 14px;
+        color: var(--text-3);
+        font-size: 0.95rem;
+        pointer-events: none;
+    }
+
+    .search-input {
+        width: 100%;
+        height: 44px;
+        padding: 0 60px 0 42px;
+        border: 1.5px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        background: var(--surface-2);
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: var(--text-1);
+        font-family: inherit;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+    .search-input::placeholder {
+        color: var(--text-3);
+        font-weight: 400;
+    }
+
+    .search-input:focus {
+        background: var(--surface);
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px var(--indigo-soft);
+    }
+
+    .search-kbd {
+        position: absolute;
+        right: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 2px 8px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--text-3);
+        pointer-events: none;
+        font-family: inherit;
+    }
+
+    .search-bar-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .result-count {
+        font-size: 0.78rem;
+        color: var(--text-3);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .result-count span {
+        color: var(--text-1);
+        font-weight: 800;
+    }
+
+    .view-toggle {
+        display: flex;
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-xs);
+        overflow: hidden;
+    }
+
+    .vt-btn {
+        width: 36px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .vt-btn.active {
+        background: var(--surface);
+        color: var(--indigo);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .vt-btn:hover:not(.active) {
+        color: var(--text-2);
+    }
+
+    /* ══════════════════ */
+    /*  TABLE CARD        */
+    /* ══════════════════ */
+    .table-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+
+    .saas-table thead th {
+        background: var(--surface-2);
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-3);
+        padding: 14px 16px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .th-content {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .th-sort {
+        font-size: 0.85rem;
+        opacity: 0.4;
+    }
+
+    .saas-table tbody tr {
+        border-bottom: 1px solid var(--border-light);
+        transition: all 0.2s;
+    }
+
+    .saas-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .saas-table tbody tr:hover {
+        background: rgba(99, 102, 241, 0.02);
+    }
+
+    .saas-table tbody td {
+        padding: 16px;
+        vertical-align: middle;
+    }
+
+    /* Client cell */
+    .client-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .client-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+        transition: transform 0.2s;
+    }
+
+    tr:hover .client-avatar {
+        transform: scale(1.08);
+    }
+
+    .ca-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .ca-amber { background: var(--amber-soft); color: var(--amber); }
+    .ca-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .ca-rose { background: var(--rose-soft); color: var(--rose); }
+
+    .client-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .client-id {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        font-weight: 500;
+        margin-top: 1px;
+    }
+
+    /* Contact stack */
+    .contact-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-1);
+    }
+
+    .ci-muted {
+        color: var(--text-3);
+        font-weight: 500;
+    }
+
+    .ci-icon {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        width: 14px;
+        text-align: center;
+    }
+
+    /* Tags */
+    .tag-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .info-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 100px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        width: fit-content;
+        letter-spacing: 0.2px;
+    }
+
+    .info-tag i {
+        font-size: 0.65rem;
+    }
+
+    .it-sky { background: var(--sky-soft); color: var(--sky); }
+    .it-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .it-neutral { background: var(--border-light); color: var(--text-3); }
+
+    /* Location */
+    .location-cell {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        max-width: 180px;
+    }
+
+    .loc-icon {
+        color: var(--text-3);
+        font-size: 0.75rem;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .loc-text {
+        font-size: 0.8rem;
+        color: var(--text-2);
+        font-weight: 500;
+        line-height: 1.4;
+    }
+
+    /* Action buttons */
+    .action-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        justify-content: flex-end;
+    }
+
+    .action-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: var(--radius-xs);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border-light);
+        background: var(--surface);
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.82rem;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .ab-edit:hover {
+        background: var(--indigo);
+        color: #fff;
+        border-color: var(--indigo);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    }
+
+    .ab-delete:hover {
+        background: var(--rose);
+        color: #fff;
+        border-color: var(--rose);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
+    }
+
+    /* ══════════════════ */
+    /*  GRID VIEW          */
+    /* ══════════════════ */
+    .client-grid-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        transition: all 0.3s;
+        height: 100%;
+    }
+
+    .client-grid-card:hover {
+        border-color: transparent;
+        box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.08);
+        transform: translateY(-3px);
+    }
+
+    .gc-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .gc-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.82rem;
+        font-weight: 800;
+    }
+
+    .gc-actions {
+        display: flex;
+        gap: 4px;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .client-grid-card:hover .gc-actions {
+        opacity: 1;
+    }
+
+    .gc-action-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.75rem;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .gc-action-btn:hover {
+        background: var(--indigo);
+        color: #fff;
+        border-color: var(--indigo);
+    }
+
+    .gc-del:hover {
+        background: var(--rose);
+        border-color: var(--rose);
+    }
+
+    .gc-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-1);
+        margin: 0 0 2px;
+    }
+
+    .gc-id {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .gc-divider {
+        height: 1px;
+        background: var(--border-light);
+        margin: 1rem 0;
+    }
+
+    .gc-info {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .gc-info-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.78rem;
+        color: var(--text-2);
+        font-weight: 500;
+    }
+
+    .gc-info-row i {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        width: 14px;
+        text-align: center;
+    }
+
+    .gc-tags {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .gc-tag {
+        padding: 3px 10px;
+        border-radius: 100px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .gt-sky { background: var(--sky-soft); color: var(--sky); }
+    .gt-emerald { background: var(--emerald-soft); color: var(--emerald); }
+
+    /* ══════════════════ */
+    /*  DELETE MODAL       */
+    /* ══════════════════ */
+    .delete-modal {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.2);
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .dm-header {
+        background: linear-gradient(135deg, #fef2f2, #fff1f2);
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .dm-icon-wrap {
+        width: 56px;
+        height: 56px;
+        background: var(--rose-soft);
+        border: 4px solid #fff;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: var(--rose);
+        margin: 0 auto;
+        box-shadow: 0 8px 16px rgba(244, 63, 94, 0.15);
+        animation: bounceIn 0.5s ease;
+    }
+
+    @keyframes bounceIn {
+        0% { transform: scale(0.5); opacity: 0; }
+        60% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .dm-body {
+        padding: 1.5rem 2rem;
+        text-align: center;
+    }
+
+    .dm-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin-bottom: 0.5rem;
+    }
+
+    .dm-desc {
+        font-size: 0.85rem;
+        color: var(--text-3);
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+    }
+
+    .dm-desc strong {
+        color: var(--text-1);
+    }
+
+    .dm-info-box {
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        text-align: left;
+    }
+
+    .dm-info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .dm-info-row:last-child {
+        border-bottom: none;
+    }
+
+    .dm-info-label {
+        font-size: 0.75rem;
+        color: var(--text-3);
+        font-weight: 600;
+    }
+
+    .dm-info-value {
+        font-size: 0.78rem;
+        color: var(--text-1);
+        font-weight: 700;
+    }
+
+    .dm-footer {
+        display: flex;
+        gap: 10px;
+        padding: 0 2rem 1.75rem;
+    }
+
+    .dm-btn {
+        flex: 1;
+        height: 44px;
+        border-radius: 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .dm-btn-cancel {
+        background: var(--surface-2);
+        color: var(--text-2);
+        border: 1px solid var(--border);
+    }
+
+    .dm-btn-cancel:hover {
+        background: var(--border-light);
+    }
+
+    .dm-btn-delete {
+        background: var(--rose);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+    }
+
+    .dm-btn-delete:hover {
+        background: #e11d48;
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(244, 63, 94, 0.35);
+    }
+
+    /* ══════════════════ */
+    /*  EMPTY STATE        */
+    /* ══════════════════ */
+    .empty-state {
+        padding: 3rem 2rem;
+    }
+
+    .empty-illustration {
+        margin-bottom: 1.25rem;
+    }
+
+    .empty-circle {
+        width: 72px;
+        height: 72px;
+        background: var(--indigo-soft);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--indigo);
+    }
+
+    .empty-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin-bottom: 0.35rem;
+    }
+
+    .empty-desc {
+        font-size: 0.85rem;
+        color: var(--text-3);
+        margin-bottom: 1.25rem;
+        max-width: 320px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .btn-add-first {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 24px;
+        background: var(--indigo);
+        color: #fff;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-add-first:hover {
+        background: #4f46e5;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(99, 102, 241, 0.3);
+    }
+
+    /* ══════════════════ */
+    /*  RESPONSIVE         */
+    /* ══════════════════ */
+    @media (max-width: 768px) {
+        .client-page {
+            padding: 1rem;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .search-bar-card {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-bar-right {
+            justify-content: space-between;
+        }
+
+        .search-kbd {
+            display: none;
+        }
+
+        .location-cell {
+            display: none;
+        }
+
+        .saas-table thead th:nth-child(4),
+        .saas-table tbody td:nth-child(4) {
+            display: none;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stat-card {
+            padding: 0.85rem 1rem;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+        }
+
+        .saas-table thead th:nth-child(3),
+        .saas-table tbody td:nth-child(3) {
+            display: none;
+        }
+    }
+
+    /* ══════════════════ */
+    /*  ROW HIGHLIGHT      */
+    /* ══════════════════ */
+    .client-row.highlight {
+        animation: rowHighlight 1s ease;
+    }
+
+    @keyframes rowHighlight {
+        0% { background: rgba(99, 102, 241, 0.08); }
+        100% { background: transparent; }
+    }
+
+    /* Hide scrollbar on table */
+    .table-responsive::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 100px;
     }
 </style>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  SCRIPTS                                    -->
+<!-- ════════════════════════════════════════════ -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ═══════════════════════════════
+    //  LIVE SEARCH (no page reload)
+    // ═══════════════════════════════
+    const searchInput = document.getElementById('liveSearch');
+    const tableRows = document.querySelectorAll('.client-row');
+    const gridItems = document.querySelectorAll('.grid-item');
+    const visibleCount = document.getElementById('visibleCount');
+
+    function performSearch() {
+        const query = searchInput.value.toLowerCase().trim();
+        let count = 0;
+
+        tableRows.forEach(row => {
+            const name = row.dataset.name || '';
+            const email = row.dataset.email || '';
+            const mobile = row.dataset.mobile || '';
+            const gst = row.dataset.gst || '';
+
+            const match = name.includes(query) ||
+                          email.includes(query) ||
+                          mobile.includes(query) ||
+                          gst.includes(query);
+
+            row.style.display = match ? '' : 'none';
+            if (match) count++;
+        });
+
+        gridItems.forEach(item => {
+            const name = item.dataset.name || '';
+            const email = item.dataset.email || '';
+            const mobile = item.dataset.mobile || '';
+            const gst = item.dataset.gst || '';
+
+            const match = name.includes(query) ||
+                          email.includes(query) ||
+                          mobile.includes(query) ||
+                          gst.includes(query);
+
+            item.style.display = match ? '' : 'none';
+            if (!document.getElementById('tableView').style.display !== 'none') {
+                // count already handled by table
+            }
+        });
+
+        if (visibleCount) {
+            visibleCount.textContent = count;
+        }
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', performSearch);
+
+        // Keyboard shortcut: Cmd+K / Ctrl+K
+        document.addEventListener('keydown', function (e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
+        });
+    }
+
+    // ═══════════════════════════════
+    //  VIEW TOGGLE (Table ↔ Grid)
+    // ═══════════════════════════════
+    const viewBtns = document.querySelectorAll('.vt-btn');
+    const tableView = document.getElementById('tableView');
+    const gridView = document.getElementById('gridView');
+
+    viewBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+            viewBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const view = this.dataset.view;
+            if (view === 'table') {
+                tableView.style.display = '';
+                gridView.style.display = 'none';
+            } else {
+                tableView.style.display = 'none';
+                gridView.style.display = '';
+            }
+        });
+    });
+
+    // ═══════════════════════════════
+    //  STAT COUNTERS
+    // ═══════════════════════════════
+    const gstCount = document.querySelectorAll('[data-has-gst="true"]').length;
+    const discountCount = document.querySelectorAll('[data-has-discount="true"]').length;
+    const emailCount = document.querySelectorAll('.ci-muted span').length;
+    let emailValid = 0;
+
+    document.querySelectorAll('.ci-muted span').forEach(el => {
+        if (el.textContent.trim() !== 'No email') emailValid++;
+    });
+
+    function animateCount(el, target) {
+        if (!el) return;
+        let current = 0;
+        const step = Math.max(1, Math.ceil(target / 30));
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            el.textContent = current;
+        }, 30);
+    }
+
+    animateCount(document.getElementById('gstCount'), gstCount);
+    animateCount(document.getElementById('discountCount'), discountCount);
+    animateCount(document.getElementById('emailCount'), emailValid);
+});
+</script>
 {% endblock %}

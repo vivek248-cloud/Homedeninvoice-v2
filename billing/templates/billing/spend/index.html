@@ -3,274 +3,1742 @@
 {% block page_title %}Itemized Costs{% endblock %}
 
 {% block content %}
+<div class="container-fluid spend-page">
 
-{% if not selected_client %}
-<div class="selection-prompt" data-aos="zoom-in">
-    <div class="prompt-content">
-        <div class="indicator-wrapper">
-            <span class="pulse-ring"></span>
-            <span class="pulse-dot"></span>
+    <!-- ═══════════════════════════════════ -->
+    <!--  CLIENT SELECTION PROMPT           -->
+    <!-- ═══════════════════════════════════ -->
+    {% if not selected_client %}
+    <div class="select-prompt fade-in fi-1">
+        <div class="sp-left">
+            <div class="sp-pulse-wrap">
+                <span class="sp-pulse-ring"></span>
+                <span class="sp-pulse-dot"></span>
+            </div>
+            <div class="sp-icon-box">
+                <i class="bi bi-funnel-fill"></i>
+            </div>
+            <div class="sp-text">
+                <h6 class="sp-title">Client Selection Required</h6>
+                <p class="sp-desc">Choose a client from the dropdown below to view their itemized cost breakdown and financial data.</p>
+            </div>
         </div>
-        
-        <div class="text-group">
-            <span class="prompt-title">Client Selection Required</span>
-            <span class="prompt-subtitle">Select a client from the menu to unlock ledger data and financial insights.</span>
+        <div class="sp-arrow">
+            <i class="bi bi-arrow-down-circle"></i>
         </div>
     </div>
-    
-    <div class="prompt-action">
-        <i class="fa-solid fa-arrow-pointer"></i>
+    {% endif %}
+
+    <!-- ═══════════════════════════════════ -->
+    <!--  PAGE HEADER                       -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page-header fade-in fi-2">
+        <div class="page-header-left">
+            <div class="page-icon-wrap">
+                <i class="bi bi-receipt-cutoff"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Spend Entries</h1>
+                <p class="page-subtitle">Itemized costs — work, materials & dimensions breakdown</p>
+            </div>
+        </div>
+        <a href="{% url 'spend_create' %}" class="btn-add-new">
+            <i class="bi bi-plus-lg"></i>
+            <span>Add Spend</span>
+        </a>
     </div>
-</div>
 
-<style>
-    .selection-prompt {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-left: 4px solid #3b82f6; /* Blue accent instead of red for a professional feel */
-        border-radius: 12px;
-        padding: 16px 24px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin: 20px 0;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-        color: white;
-    }
+    <!-- ═══════════════════════════════════ -->
+    <!--  TOOLBAR: CLIENT FILTER + SEARCH   -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="toolbar-card fade-in fi-3">
+        <div class="toolbar-left">
+            <!-- Client Dropdown -->
+            <form method="GET" class="client-filter-form">
+                <div class="client-select-wrap">
+                    <i class="bi bi-person-fill cs-icon"></i>
+                    <select name="client" class="client-select" onchange="this.form.submit()">
+                        <option value="">Select Client</option>
+                        {% for client in clients %}
+                        <option value="{{ client.id }}"
+                            {% if client.id|stringformat:"s" == selected_client %}selected{% endif %}>
+                            {{ client.name }} — {{ client.address|truncatewords:4 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <i class="bi bi-chevron-down cs-chevron"></i>
+                </div>
+            </form>
 
-    .prompt-content {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
+            <!-- Search -->
+            <div class="search-wrap">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="liveSearch" class="search-input" placeholder="Search entries..." autocomplete="off">
+                <kbd class="search-kbd">⌘K</kbd>
+            </div>
+        </div>
 
-    /* Pulse Animation */
-    .indicator-wrapper {
-        position: relative;
-        display: flex;
-        height: 12px;
-        width: 12px;
-    }
+        <div class="toolbar-right">
+            <div class="result-count">
+                <span id="visibleCount">{{ spends|length }}</span> entries
+            </div>
+            <div class="view-toggle">
+                <button class="vt-btn active" data-view="table" title="Table">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+                <button class="vt-btn" data-view="grid" title="Cards">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
-    .pulse-ring {
-        animation: pulse-animation 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-        position: absolute;
-        display: inline-flex;
-        height: 100%;
-        width: 100%;
-        border-radius: 50%;
-        background-color: #3b82f6;
-        opacity: 0.75;
-    }
+    <!-- ═══════════════════════════════════ -->
+    <!--  STAT CARDS                        -->
+    <!-- ═══════════════════════════════════ -->
+    {% if selected_client %}
+    <div class="row g-3 mb-4 fade-in fi-4">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card sc-indigo">
+                <div class="sc-top">
+                    <div class="sc-icon si-indigo"><i class="bi bi-receipt"></i></div>
+                    <div class="sc-trend trend-neutral"><i class="bi bi-dash"></i> All</div>
+                </div>
+                <p class="sc-label">Total Entries</p>
+                <h3 class="sc-value" data-count="{{ spends|length }}">0</h3>
+                <div class="sc-bar"><div class="sc-bar-fill" style="width:100%;"></div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card sc-rose">
+                <div class="sc-top">
+                    <div class="sc-icon si-rose"><i class="bi bi-cash-stack"></i></div>
+                    <div class="sc-trend trend-down"><i class="bi bi-arrow-down-short"></i> Cost</div>
+                </div>
+                <p class="sc-label">Total Spend</p>
+                <h3 class="sc-value" id="totalSpendVal">₹0</h3>
+                <div class="sc-bar"><div class="sc-bar-fill" style="width:80%;"></div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card sc-amber">
+                <div class="sc-top">
+                    <div class="sc-icon si-amber"><i class="bi bi-rulers"></i></div>
+                    <div class="sc-trend trend-neutral"><i class="bi bi-dash"></i> Avg</div>
+                </div>
+                <p class="sc-label">Avg. Rate</p>
+                <h3 class="sc-value" id="avgRateVal">₹0</h3>
+                <div class="sc-bar"><div class="sc-bar-fill" style="width:55%;"></div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card sc-emerald">
+                <div class="sc-top">
+                    <div class="sc-icon si-emerald"><i class="bi bi-folder-fill"></i></div>
+                    <div class="sc-trend trend-up"><i class="bi bi-arrow-up-short"></i> Active</div>
+                </div>
+                <p class="sc-label">Projects Covered</p>
+                <h3 class="sc-value" id="projectsCovered">0</h3>
+                <div class="sc-bar"><div class="sc-bar-fill" style="width:65%;"></div></div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
-    .pulse-dot {
-        position: relative;
-        display: inline-flex;
-        border-radius: 50%;
-        height: 12px;
-        width: 12px;
-        background-color: #60a5fa;
-        border: 2px solid #ffffff;
-    }
+    <!-- ═══════════════════════════════════ -->
+    <!--  TABLE VIEW                        -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="table-card fade-in fi-5" id="tableView">
+        <div class="table-responsive">
+            <table class="table saas-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Project & Location</th>
+                        <th>Element</th>
+                        <th>Description</th>
+                        <th class="text-center">Dimensions</th>
+                        <th class="text-center">Qty / Area</th>
+                        <th>Rate</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="spendTableBody">
+                    {% for spend in spends %}
+                    <tr class="spend-row"
+                        data-project="{{ spend.project.name|lower }}"
+                        data-client="{{ spend.project.client.name|lower }}"
+                        data-element="{{ spend.elements|lower|default:'' }}"
+                        data-desc="{{ spend.description|lower|default:'' }}"
+                        data-amount="{{ spend.total_amount }}">
 
-    .text-group {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .prompt-title {
-        font-weight: 700;
-        font-size: 0.95rem;
-        letter-spacing: 0.3px;
-        color: #ffffff;
-    }
-
-    .prompt-subtitle {
-        font-size: 0.8rem;
-        color: #94a3b8;
-        margin-top: 2px;
-    }
-
-    .prompt-action {
-        background: rgba(255, 255, 255, 0.05);
-        width: 35px;
-        height: 35px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #60a5fa;
-        transition: 0.3s;
-    }
-
-    @keyframes pulse-animation {
-        75%, 100% {
-            transform: scale(3);
-            opacity: 0;
-        }
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 600px) {
-        .selection-prompt {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-        .prompt-action {
-            display: none; /* Hide icon on small mobile to save space */
-        }
-    }
-</style>
-{% endif %}
-
-
-<div class="container-fluid p-0">
-
-
-            <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-3">
-                <div class="row align-items-center g-3">
-                    <div class="col-md-6">
-                        <form method="GET">
-                            <div class="row g-2">
-
-                                <!-- 👇 Client Dropdown -->
-                                <div class="col-md-6">
-                                    <select name="client" class="form-select" onchange="this.form.submit()" required>
-                                        <option value="">Select Client</option>
-
-                                        {% for client in clients %}
-                                            <option value="{{ client.id }}"
-                                                {% if client.id|stringformat:"s" == selected_client %}selected{% endif %}>
-                                                
-                                                {{ client.name }} ({{ client.address }})
-                                            
-                                            </option>
-                                        {% endfor %}
-                                    </select>
+                        <!-- PROJECT & LOCATION -->
+                        <td class="ps-4 py-3">
+                            <div class="cell-project">
+                                <div class="cell-avatar ca-{% cycle 'indigo' 'emerald' 'amber' 'rose' 'sky' %}">
+                                    {{ spend.project.name|slice:":2"|upper }}
                                 </div>
-
+                                <div>
+                                    <div class="cell-project-name">
+                                        {{ spend.project.name }}
+                                        <span class="cell-client-tag">{{ spend.project.client.name }}</span>
+                                    </div>
+                                    <div class="cell-location">
+                                        {% if spend.floor.name or spend.room.name %}
+                                        <i class="bi bi-geo-alt-fill"></i>
+                                        {{ spend.floor.name|default:"" }}
+                                        {% if spend.floor.name and spend.room.name %}•{% endif %}
+                                        {{ spend.room.name|default:"" }}
+                                        {% else %}
+                                        <i class="bi bi-geo-alt"></i> No location
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
-                        </form>
+                        </td>
+
+                        <!-- ELEMENT & TYPE -->
+                        <td>
+                            <div class="cell-element">{{ spend.elements|default:"-" }}</div>
+                            <span class="element-tag et-{% cycle 'sky' 'violet' 'emerald' 'amber' %}">
+                                {{ spend.fullsemi.name|default:"Standard" }}
+                            </span>
+                        </td>
+
+                        <!-- DESCRIPTION -->
+                        <td>
+                            <div class="cell-desc" title="{{ spend.description }}">
+                                {{ spend.description|default:"-"|truncatewords:8 }}
+                            </div>
+                        </td>
+
+                        <!-- DIMENSIONS -->
+                        <td class="text-center">
+                            {% if spend.length or spend.width %}
+                            <div class="dim-chip">
+                                {{ spend.length|default:"0" }}
+                                <span class="dim-x">×</span>
+                                {{ spend.width|default:"0" }}
+                            </div>
+                            {% else %}
+                            <span class="dim-na">—</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- QTY / AREA -->
+                        <td class="text-center">
+                            <div class="qty-main">{{ spend.qty }}</div>
+                            {% if spend.area %}
+                            <div class="qty-area">{{ spend.area }} {{ spend.unit }}</div>
+                            {% endif %}
+                        </td>
+
+                        <!-- RATE -->
+                        <td>
+                            <span class="rate-text">₹{{ spend.rate|default:"0" }}</span>
+                        </td>
+
+                        <!-- TOTAL AMOUNT -->
+                        <td class="text-end">
+                            <span class="amount-text">₹{{ spend.total_amount }}</span>
+                        </td>
+
+                        <!-- ACTIONS -->
+                        <td class="text-end pe-4">
+                            <div class="action-group">
+                                <a href="{% url 'spend_update' spend.id %}" class="action-btn ab-edit" title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <button type="button" class="action-btn ab-delete" title="Delete"
+                                        data-bs-toggle="modal" data-bs-target="#delSpend{{ spend.id }}">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- DELETE MODAL -->
+                    <div class="modal fade" id="delSpend{{ spend.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content del-modal">
+                                <div class="modal-body p-0">
+                                    <div class="dm-header">
+                                        <div class="dm-icon-wrap">
+                                            <i class="bi bi-exclamation-triangle-fill"></i>
+                                        </div>
+                                    </div>
+                                    <div class="dm-body">
+                                        <h4 class="dm-title">Delete Spend Entry</h4>
+                                        <p class="dm-desc">
+                                            This will permanently remove this cost entry from
+                                            <strong>{{ spend.project.name }}</strong>.
+                                        </p>
+                                        <div class="dm-info-box">
+                                            <div class="dm-info-row">
+                                                <span class="dm-label">Element</span>
+                                                <span class="dm-val">{{ spend.elements|default:"-" }}</span>
+                                            </div>
+                                            <div class="dm-info-row">
+                                                <span class="dm-label">Location</span>
+                                                <span class="dm-val">{{ spend.floor.name|default:"-" }} • {{ spend.room.name|default:"-" }}</span>
+                                            </div>
+                                            <div class="dm-info-row">
+                                                <span class="dm-label">Amount</span>
+                                                <span class="dm-val dm-amount">₹{{ spend.total_amount }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="dm-footer">
+                                        <button type="button" class="dm-btn dm-cancel" data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{% url 'spend_delete' spend.id %}" class="dm-btn dm-delete">
+                                            <i class="bi bi-trash3 me-1"></i> Delete Entry
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-6 text-md-end">
-                        <a href="{% url 'spend_create' %}" class="btn btn-primary">
-                            <i class="bi bi-plus-square me-2"></i> Add New Spend
-                        </a>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <div class="empty-circle">
+                                    <i class="bi bi-receipt-cutoff"></i>
+                                </div>
+                                <h5 class="empty-title">No spend entries found</h5>
+                                <p class="empty-desc">
+                                    {% if selected_client %}
+                                    No cost items recorded for this client yet.
+                                    {% else %}
+                                    Select a client above, or start by adding your first entry.
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'spend_create' %}" class="btn-add-first">
+                                    <i class="bi bi-plus-lg me-2"></i> Add First Entry
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+                {% if spends %}
+                <tfoot>
+                    <tr class="total-row">
+                        <td class="ps-4 py-3" colspan="6">
+                            <div class="total-label">
+                                <i class="bi bi-calculator-fill me-2"></i>
+                                Grand Total
+                                <span class="total-count">({{ spends|length }} entries)</span>
+                            </div>
+                        </td>
+                        <td class="text-end py-3">
+                            <span class="total-amount" id="grandTotal">₹0</span>
+                        </td>
+                        <td class="pe-4"></td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!--  GRID / CARD VIEW                  -->
+    <!-- ═══════════════════════════════════ -->
+    <div id="gridView" style="display:none;" class="fade-in">
+        <div class="row g-3" id="spendGridBody">
+            {% for spend in spends %}
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3 grid-item"
+                 data-project="{{ spend.project.name|lower }}"
+                 data-element="{{ spend.elements|lower|default:'' }}"
+                 data-desc="{{ spend.description|lower|default:'' }}">
+                <div class="spend-grid-card">
+                    <div class="sgc-top">
+                        <div class="sgc-avatar ca-{% cycle 'indigo' 'emerald' 'amber' 'rose' 'sky' %}">
+                            {{ spend.project.name|slice:":2"|upper }}
+                        </div>
+                        <div class="sgc-actions">
+                            <a href="{% url 'spend_update' spend.id %}" class="sgc-act" title="Edit">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <button class="sgc-act sgc-del"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#delSpend{{ spend.id }}" title="Delete">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <h6 class="sgc-project">{{ spend.project.name }}</h6>
+                    <p class="sgc-client"><i class="bi bi-person-fill"></i> {{ spend.project.client.name }}</p>
+
+                    {% if spend.floor.name or spend.room.name %}
+                    <div class="sgc-location">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        {{ spend.floor.name|default:"" }} {{ spend.room.name|default:"" }}
+                    </div>
+                    {% endif %}
+
+                    <div class="sgc-divider"></div>
+
+                    <div class="sgc-element">
+                        <span class="sgc-el-name">{{ spend.elements|default:"-" }}</span>
+                        <span class="element-tag et-sky">{{ spend.fullsemi.name|default:"Standard" }}</span>
+                    </div>
+
+                    {% if spend.description %}
+                    <p class="sgc-desc">{{ spend.description|truncatewords:10 }}</p>
+                    {% endif %}
+
+                    <div class="sgc-divider"></div>
+
+                    <div class="sgc-finance">
+                        <div class="sgc-fin-row">
+                            <span class="sgc-fin-label">Qty</span>
+                            <span class="sgc-fin-value">{{ spend.qty }} units</span>
+                        </div>
+                        {% if spend.length or spend.width %}
+                        <div class="sgc-fin-row">
+                            <span class="sgc-fin-label">Dimensions</span>
+                            <span class="sgc-fin-value">{{ spend.length }} × {{ spend.width }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="sgc-fin-row">
+                            <span class="sgc-fin-label">Rate</span>
+                            <span class="sgc-fin-value">₹{{ spend.rate|default:"0" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="sgc-total-bar">
+                        <span class="sgc-total-label">Total</span>
+                        <span class="sgc-total-value">₹{{ spend.total_amount }}</span>
                     </div>
                 </div>
             </div>
-        </div>
-
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="fw-bold mb-0 text-dark">Work & Material Entries</h4>
-            <p class="text-muted small mb-0">Detailed breakdown of all billable elements across projects</p>
+            {% endfor %}
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive" style="border-radius:19px;">
-                <table class="table table-hover align-middle mb-0" style="font-size: 0.875rem;">
-                    <thead class="bg-light text-muted small fw-bold text-uppercase">
-                        <tr>
-                            <th class="ps-4 py-3">Project & Location</th>
-                            <th>Element & Type</th>
-                            <th>Description</th>
-                            <th class="text-center">Dimensions (L × W)</th>
-                            <th class="text-center">Qty / Area</th>
-                            <th>Rate</th>
-                            <th class="text-end">Total Amount</th>
-                            <th class="text-end pe-4">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for spend in spends %}
-                        <tr>
-                            <td class="ps-4">
-                                <div class="fw-bold text-dark">{{ spend.project.name }}<span class="small text-muted">({{spend.project.client.name}})</span></div>
-                                <div class="small text-muted">{{ spend.floor.name|default:"" }} • {{ spend.room.name|default:"" }}</div>
-                            </td>
-
-                            <td>
-                                <div class="text-dark fw-medium">{{ spend.elements|default:"-" }}</div>
-                                <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.7rem;">
-                                    {{ spend.fullsemi.name|default:"Standard" }}
-                                </span>
-                            </td>
-
-                            <td class="text-muted" style="max-width: 200px;">
-                                <div class="text-truncate" title="{{ spend.description }}">
-                                    {{ spend.description|default:"-" }}
-                                </div>
-                            </td>
-
-                            <td class="text-center text-muted">
-                                {% if spend.length or spend.width %}
-                                    {{ spend.length|default:"0" }} <i class="bi bi-x small"></i> {{ spend.width|default:"0" }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-
-                            <td class="text-center">
-                                <div class="fw-bold text-dark">{{ spend.qty }} <small class="text-muted fw-normal">Unit(s)</small></div>
-                                {% if spend.area %}
-                                    <small class="text-primary">{{ spend.area }} {{ spend.unit }}</small>
-                                {% endif %}
-                            </td>
-
-                            <td class="text-muted">₹{{ spend.rate|default:"0" }}</td>
-                            
-                            <td class="text-end fw-bold text-primary">
-                                ₹{{ spend.total_amount }}
-                            </td>
-
-                            <td class="text-end pe-4">
-                                <div class="btn-group shadow-sm">
-                                    <a href="{% url 'spend_update' spend.id %}" class="btn btn-sm btn-white border" title="Edit">
-                                        <i class="bi bi-pencil-fill text-warning"></i>
-                                    </a>
-                                    <a href="{% url 'spend_delete' spend.id %}" class="btn btn-sm btn-white border" title="Delete">
-                                        <i class="bi bi-trash-fill text-danger"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="8" class="text-center py-5">
-                                <div class="opacity-25 mb-3">
-                                    <i class="bi bi-calculator fs-1"></i>
-                                </div>
-                                <h6 class="text-muted">No spend entries found.</h6>
-                                <p class="small text-muted mb-3">Start itemizing project work to see the financial breakdown.</p>
-                                <a href="{% url 'spend_create' %}" class="btn btn-sm btn-outline-primary">Add First Entry</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 </div>
 
+<!-- ════════════════════════════════════════════ -->
+<!--  STYLES                                     -->
+<!-- ════════════════════════════════════════════ -->
 <style>
-    .bg-info-subtle { background-color: #e0f7fa !important; }
-    .btn-white { background-color: #fff; }
-    .btn-white:hover { background-color: #f8f9fa; }
-    .table-hover tbody tr:hover {
-        background-color: rgba(67, 97, 238, 0.02);
+    :root {
+        --indigo: #6366f1;
+        --indigo-soft: rgba(99, 102, 241, 0.08);
+        --amber: #f59e0b;
+        --amber-soft: rgba(245, 158, 11, 0.08);
+        --emerald: #10b981;
+        --emerald-soft: rgba(16, 185, 129, 0.08);
+        --rose: #f43f5e;
+        --rose-soft: rgba(244, 63, 94, 0.08);
+        --sky: #0ea5e9;
+        --sky-soft: rgba(14, 165, 233, 0.08);
+        --violet: #8b5cf6;
+        --violet-soft: rgba(139, 92, 246, 0.08);
+        --text-1: #0f172a;
+        --text-2: #475569;
+        --text-3: #94a3b8;
+        --surface: #ffffff;
+        --surface-2: #f8fafc;
+        --border: #e2e8f0;
+        --border-light: #f1f5f9;
+        --radius: 16px;
+        --radius-sm: 10px;
+        --radius-xs: 8px;
     }
-    .text-truncate {
-        display: block;
-        white-space: nowrap;
+
+    .spend-page {
+        padding: 1.5rem 2rem 3rem;
+        max-width: 1480px;
+        margin: 0 auto;
+    }
+
+    /* Animations */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(16px);
+        animation: fadeIn 0.45s ease forwards;
+    }
+    .fi-1 { animation-delay: 0.03s; }
+    .fi-2 { animation-delay: 0.08s; }
+    .fi-3 { animation-delay: 0.13s; }
+    .fi-4 { animation-delay: 0.18s; }
+    .fi-5 { animation-delay: 0.23s; }
+
+    @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes barGrow {
+        from { transform: scaleX(0); }
+        to   { transform: scaleX(1); }
+    }
+
+    /* ══════════════════ */
+    /*  SELECTION PROMPT   */
+    /* ══════════════════ */
+    .select-prompt {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: var(--radius);
+        padding: 1.5rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        position: relative;
         overflow: hidden;
-        text-overflow: ellipsis;
     }
+
+    .select-prompt::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; bottom: 0;
+        width: 4px;
+        background: linear-gradient(180deg, var(--indigo), var(--sky));
+        border-radius: 16px 0 0 16px;
+    }
+
+    .select-prompt::after {
+        content: "";
+        position: absolute;
+        top: -50%; right: -20%;
+        width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.08), transparent 70%);
+        border-radius: 50%;
+    }
+
+    .sp-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .sp-pulse-wrap {
+        position: relative;
+        width: 12px; height: 12px;
+        flex-shrink: 0;
+    }
+
+    .sp-pulse-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: var(--indigo);
+        opacity: 0.6;
+        animation: pulseRing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+
+    .sp-pulse-dot {
+        position: relative;
+        width: 12px; height: 12px;
+        border-radius: 50%;
+        background: #818cf8;
+        border: 2px solid #fff;
+        display: block;
+    }
+
+    @keyframes pulseRing {
+        75%, 100% { transform: scale(3); opacity: 0; }
+    }
+
+    .sp-icon-box {
+        width: 42px; height: 42px;
+        background: rgba(99, 102, 241, 0.15);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: #818cf8;
+        flex-shrink: 0;
+    }
+
+    .sp-text { display: flex; flex-direction: column; }
+
+    .sp-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 3px;
+    }
+
+    .sp-desc {
+        font-size: 0.78rem;
+        color: rgba(255,255,255,0.4);
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .sp-arrow {
+        width: 38px; height: 38px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #818cf8;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+        animation: bounceDown 2s ease infinite;
+    }
+
+    @keyframes bounceDown {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(5px); }
+    }
+
+    /* ══════════════════ */
+    /*  PAGE HEADER       */
+    /* ══════════════════ */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.75rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-icon-wrap {
+        width: 48px; height: 48px;
+        background: var(--rose-soft);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--rose);
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-1);
+        letter-spacing: -0.03em;
+        margin: 0;
+    }
+
+    .page-subtitle {
+        font-size: 0.82rem;
+        color: var(--text-3);
+        margin: 2px 0 0;
+    }
+
+    .btn-add-new {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        background: var(--indigo);
+        color: #fff;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-add-new::after {
+        content: "";
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+        transition: left 0.5s;
+    }
+
+    .btn-add-new:hover {
+        background: #4f46e5; color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-add-new:hover::after { left: 100%; }
+
+    /* ══════════════════ */
+    /*  TOOLBAR            */
+    /* ══════════════════ */
+    .toolbar-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 14px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+        flex-wrap: wrap;
+    }
+
+    /* Client dropdown */
+    .client-filter-form { flex-shrink: 0; }
+
+    .client-select-wrap {
+        position: relative;
+        min-width: 220px;
+    }
+
+    .cs-icon {
+        position: absolute;
+        left: 14px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-3);
+        font-size: 0.85rem;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .client-select {
+        width: 100%;
+        height: 42px;
+        padding: 0 36px 0 38px;
+        border: 1.5px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        background: var(--surface-2);
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-1);
+        font-family: inherit;
+        appearance: none;
+        outline: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .client-select:focus {
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px var(--indigo-soft);
+        background: var(--surface);
+    }
+
+    .cs-chevron {
+        position: absolute;
+        right: 12px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-3);
+        font-size: 0.7rem;
+        pointer-events: none;
+    }
+
+    /* Search */
+    .search-wrap {
+        position: relative;
+        min-width: 200px;
+        flex: 1;
+        max-width: 300px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 14px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-3);
+        font-size: 0.85rem;
+        pointer-events: none;
+    }
+
+    .search-input {
+        width: 100%;
+        height: 42px;
+        padding: 0 56px 0 40px;
+        border: 1.5px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        background: var(--surface-2);
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-1);
+        font-family: inherit;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+    .search-input::placeholder { color: var(--text-3); font-weight: 400; }
+
+    .search-input:focus {
+        background: var(--surface);
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px var(--indigo-soft);
+    }
+
+    .search-kbd {
+        position: absolute;
+        right: 10px; top: 50%;
+        transform: translateY(-50%);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 1px 7px;
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: var(--text-3);
+        pointer-events: none;
+        font-family: inherit;
+    }
+
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .result-count {
+        font-size: 0.78rem;
+        color: var(--text-3);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .result-count span {
+        color: var(--text-1);
+        font-weight: 800;
+    }
+
+    .view-toggle {
+        display: flex;
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-xs);
+        overflow: hidden;
+    }
+
+    .vt-btn {
+        width: 36px; height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .vt-btn.active {
+        background: var(--surface);
+        color: var(--indigo);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .vt-btn:hover:not(.active) { color: var(--text-2); }
+
+    /* ══════════════════ */
+    /*  STAT CARDS        */
+    /* ══════════════════ */
+    .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 14px;
+        padding: 1.25rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 35px -8px rgba(0, 0, 0, 0.1);
+        border-color: transparent;
+    }
+
+    .sc-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .sc-icon {
+        width: 40px; height: 40px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .si-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .si-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .si-amber { background: var(--amber-soft); color: var(--amber); }
+    .si-rose { background: var(--rose-soft); color: var(--rose); }
+
+    .sc-trend {
+        padding: 3px 10px;
+        border-radius: 100px;
+        font-size: 0.62rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .sc-trend i { font-size: 0.82rem; }
+    .trend-up { background: var(--emerald-soft); color: var(--emerald); }
+    .trend-down { background: var(--rose-soft); color: var(--rose); }
+    .trend-neutral { background: var(--border-light); color: var(--text-3); }
+
+    .sc-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-3);
+        margin: 0 0 4px;
+    }
+
+    .sc-value {
+        font-size: 1.45rem;
+        font-weight: 900;
+        color: var(--text-1);
+        letter-spacing: -0.02em;
+        margin: 0;
+        line-height: 1;
+    }
+
+    .sc-bar {
+        margin-top: 0.85rem;
+        height: 4px;
+        background: var(--border-light);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+
+    .sc-bar-fill {
+        height: 100%;
+        border-radius: 100px;
+        animation: barGrow 1s ease forwards;
+        transform-origin: left;
+    }
+
+    .sc-indigo .sc-bar-fill { background: linear-gradient(90deg, var(--indigo), #818cf8); }
+    .sc-rose .sc-bar-fill { background: linear-gradient(90deg, var(--rose), #fb7185); }
+    .sc-amber .sc-bar-fill { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+    .sc-emerald .sc-bar-fill { background: linear-gradient(90deg, var(--emerald), #34d399); }
+
+    /* ══════════════════ */
+    /*  TABLE              */
+    /* ══════════════════ */
+    .table-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+
+    .saas-table thead th {
+        background: var(--surface-2);
+        font-size: 0.66rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-3);
+        padding: 13px 16px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .saas-table tbody tr {
+        border-bottom: 1px solid var(--border-light);
+        transition: all 0.2s;
+    }
+
+    .saas-table tbody tr:last-child { border-bottom: none; }
+    .saas-table tbody tr:hover { background: rgba(99, 102, 241, 0.02); }
+    .saas-table tbody td { padding: 14px 16px; vertical-align: middle; }
+
+    /* Cell: Project */
+    .cell-project {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .cell-avatar {
+        width: 40px; height: 40px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+        transition: transform 0.2s;
+    }
+
+    tr:hover .cell-avatar { transform: scale(1.08); }
+
+    .ca-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .ca-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .ca-amber { background: var(--amber-soft); color: var(--amber); }
+    .ca-rose { background: var(--rose-soft); color: var(--rose); }
+    .ca-sky { background: var(--sky-soft); color: var(--sky); }
+
+    .cell-project-name {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .cell-client-tag {
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: var(--text-3);
+        background: var(--border-light);
+        padding: 1px 8px;
+        border-radius: 100px;
+        margin-left: 6px;
+    }
+
+    .cell-location {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        font-weight: 500;
+        margin-top: 3px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .cell-location i { font-size: 0.62rem; }
+
+    /* Cell: Element */
+    .cell-element {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-1);
+        margin-bottom: 4px;
+    }
+
+    .element-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 10px;
+        border-radius: 100px;
+        font-size: 0.62rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .et-sky { background: var(--sky-soft); color: var(--sky); }
+    .et-violet { background: var(--violet-soft); color: var(--violet); }
+    .et-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .et-amber { background: var(--amber-soft); color: #b45309; }
+
+    /* Cell: Description */
+    .cell-desc {
+        font-size: 0.78rem;
+        color: var(--text-3);
+        font-weight: 500;
+        max-width: 180px;
+        line-height: 1.5;
+    }
+
+    /* Cell: Dimensions */
+    .dim-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        background: var(--border-light);
+        border-radius: 100px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-2);
+    }
+
+    .dim-x {
+        color: var(--text-3);
+        font-size: 0.7rem;
+    }
+
+    .dim-na {
+        font-size: 0.82rem;
+        color: var(--text-3);
+    }
+
+    /* Cell: Qty */
+    .qty-main {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: var(--text-1);
+    }
+
+    .qty-area {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--indigo);
+        margin-top: 2px;
+    }
+
+    /* Cell: Rate & Amount */
+    .rate-text {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-2);
+    }
+
+    .amount-text {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: var(--indigo);
+    }
+
+    /* Action buttons */
+    .action-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        justify-content: flex-end;
+    }
+
+    .action-btn {
+        width: 33px; height: 33px;
+        border-radius: var(--radius-xs);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border-light);
+        background: var(--surface);
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .ab-edit:hover {
+        background: var(--indigo);
+        color: #fff;
+        border-color: var(--indigo);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    }
+
+    .ab-delete:hover {
+        background: var(--rose);
+        color: #fff;
+        border-color: var(--rose);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
+    }
+
+    /* Total row */
+    .total-row {
+        background: var(--surface-2) !important;
+        border-top: 2px solid var(--border) !important;
+    }
+
+    .total-row:hover {
+        background: var(--surface-2) !important;
+    }
+
+    .total-label {
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: var(--text-1);
+        display: flex;
+        align-items: center;
+    }
+
+    .total-label i {
+        color: var(--indigo);
+    }
+
+    .total-count {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-3);
+        margin-left: 8px;
+    }
+
+    .total-amount {
+        font-size: 1.05rem;
+        font-weight: 900;
+        color: var(--indigo);
+        letter-spacing: -0.01em;
+    }
+
+    /* ══════════════════ */
+    /*  GRID VIEW          */
+    /* ══════════════════ */
+    .spend-grid-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        transition: all 0.3s;
+        height: 100%;
+    }
+
+    .spend-grid-card:hover {
+        border-color: transparent;
+        box-shadow: 0 12px 35px -5px rgba(0, 0, 0, 0.08);
+        transform: translateY(-4px);
+    }
+
+    .sgc-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .sgc-avatar {
+        width: 44px; height: 44px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 800;
+    }
+
+    .sgc-actions {
+        display: flex;
+        gap: 4px;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .spend-grid-card:hover .sgc-actions { opacity: 1; }
+
+    .sgc-act {
+        width: 28px; height: 28px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.72rem;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .sgc-act:hover { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+    .sgc-del:hover { background: var(--rose); border-color: var(--rose); }
+
+    .sgc-project {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--text-1);
+        margin: 0 0 3px;
+    }
+
+    .sgc-client {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        font-weight: 500;
+        margin: 0 0 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .sgc-client i { font-size: 0.62rem; }
+
+    .sgc-location {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 0.5rem;
+    }
+
+    .sgc-location i { font-size: 0.6rem; color: var(--indigo); }
+
+    .sgc-divider {
+        height: 1px;
+        background: var(--border-light);
+        margin: 0.75rem 0;
+    }
+
+    .sgc-element {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .sgc-el-name {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .sgc-desc {
+        font-size: 0.75rem;
+        color: var(--text-3);
+        line-height: 1.5;
+        margin: 0 0 0.5rem;
+    }
+
+    .sgc-finance {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 0.75rem;
+    }
+
+    .sgc-fin-row {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .sgc-fin-label {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        font-weight: 600;
+    }
+
+    .sgc-fin-value {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .sgc-total-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 14px;
+        background: var(--indigo-soft);
+        border-radius: 10px;
+        margin-top: 0.5rem;
+    }
+
+    .sgc-total-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--indigo);
+    }
+
+    .sgc-total-value {
+        font-size: 0.92rem;
+        font-weight: 900;
+        color: var(--indigo);
+    }
+
+    /* ══════════════════ */
+    /*  DELETE MODAL       */
+    /* ══════════════════ */
+    .del-modal {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.2);
+        max-width: 420px;
+        margin: 0 auto;
+    }
+
+    .dm-header {
+        background: linear-gradient(135deg, #fef2f2, #fff1f2);
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .dm-icon-wrap {
+        width: 56px; height: 56px;
+        background: var(--rose-soft);
+        border: 4px solid #fff;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: var(--rose);
+        box-shadow: 0 8px 16px rgba(244, 63, 94, 0.15);
+        animation: bounceIn 0.5s ease;
+    }
+
+    @keyframes bounceIn {
+        0% { transform: scale(0.5); opacity: 0; }
+        60% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .dm-body {
+        padding: 1.5rem 2rem;
+        text-align: center;
+    }
+
+    .dm-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin-bottom: 0.5rem;
+    }
+
+    .dm-desc {
+        font-size: 0.85rem;
+        color: var(--text-3);
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+    }
+
+    .dm-desc strong { color: var(--text-1); }
+
+    .dm-info-box {
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        text-align: left;
+    }
+
+    .dm-info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .dm-info-row:last-child { border-bottom: none; }
+
+    .dm-label {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        font-weight: 600;
+    }
+
+    .dm-val {
+        font-size: 0.78rem;
+        color: var(--text-1);
+        font-weight: 700;
+    }
+
+    .dm-amount { color: var(--rose); }
+
+    .dm-footer {
+        display: flex;
+        gap: 10px;
+        padding: 0 2rem 1.75rem;
+    }
+
+    .dm-btn {
+        flex: 1;
+        height: 44px;
+        border-radius: 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        font-family: inherit;
+    }
+
+    .dm-cancel {
+        background: var(--surface-2);
+        color: var(--text-2);
+        border: 1px solid var(--border);
+    }
+
+    .dm-cancel:hover { background: var(--border-light); }
+
+    .dm-delete {
+        background: var(--rose);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+    }
+
+    .dm-delete:hover {
+        background: #e11d48; color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(244, 63, 94, 0.35);
+    }
+
+    /* ══════════════════ */
+    /*  EMPTY STATE        */
+    /* ══════════════════ */
+    .empty-state { padding: 3rem 2rem; text-align: center; }
+
+    .empty-circle {
+        width: 72px; height: 72px;
+        background: var(--rose-soft);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--rose);
+        margin-bottom: 1.25rem;
+    }
+
+    .empty-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin-bottom: 0.35rem;
+    }
+
+    .empty-desc {
+        font-size: 0.85rem;
+        color: var(--text-3);
+        margin-bottom: 1.25rem;
+        max-width: 340px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .btn-add-first {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 24px;
+        background: var(--indigo);
+        color: #fff;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-add-first:hover {
+        background: #4f46e5; color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(99, 102, 241, 0.3);
+    }
+
+    /* ══════════════════ */
+    /*  RESPONSIVE         */
+    /* ══════════════════ */
+    @media (max-width: 1024px) {
+        .toolbar-left { flex-direction: column; align-items: stretch; }
+        .search-wrap { max-width: 100%; }
+        .client-select-wrap { min-width: 100%; }
+    }
+
+    @media (max-width: 768px) {
+        .spend-page { padding: 1rem; }
+        .page-header { flex-direction: column; align-items: flex-start; }
+        .toolbar-card { flex-direction: column; align-items: stretch; }
+        .toolbar-right { justify-content: space-between; }
+        .search-kbd { display: none; }
+
+        .select-prompt { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        .sp-arrow { display: none; }
+
+        .saas-table thead th:nth-child(3),
+        .saas-table tbody td:nth-child(3),
+        .saas-table thead th:nth-child(4),
+        .saas-table tbody td:nth-child(4),
+        .saas-table thead th:nth-child(6),
+        .saas-table tbody td:nth-child(6) {
+            display: none;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .saas-table thead th:nth-child(5),
+        .saas-table tbody td:nth-child(5) {
+            display: none;
+        }
+
+        .sc-value { font-size: 1.15rem; }
+        .stat-card { padding: 1rem; }
+        .sp-icon-box { display: none; }
+    }
+
+    /* Scrollbar */
+    .table-responsive::-webkit-scrollbar { height: 4px; }
+    .table-responsive::-webkit-scrollbar-track { background: transparent; }
+    .table-responsive::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
 </style>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  SCRIPTS                                    -->
+<!-- ════════════════════════════════════════════ -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ═══════════════════════════════
+    //  LIVE SEARCH
+    // ═══════════════════════════════
+    const searchInput = document.getElementById('liveSearch');
+    const tableRows = document.querySelectorAll('.spend-row');
+    const gridItems = document.querySelectorAll('.grid-item');
+    const visibleCount = document.getElementById('visibleCount');
+
+    function performSearch() {
+        const query = searchInput.value.toLowerCase().trim();
+        let count = 0;
+
+        function matchItem(el) {
+            const project = el.dataset.project || '';
+            const client = el.dataset.client || '';
+            const element = el.dataset.element || '';
+            const desc = el.dataset.desc || '';
+
+            return project.includes(query) ||
+                   client.includes(query) ||
+                   element.includes(query) ||
+                   desc.includes(query);
+        }
+
+        tableRows.forEach(row => {
+            const show = matchItem(row);
+            row.style.display = show ? '' : 'none';
+            if (show) count++;
+        });
+
+        gridItems.forEach(item => {
+            item.style.display = matchItem(item) ? '' : 'none';
+        });
+
+        if (visibleCount) visibleCount.textContent = count;
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', performSearch);
+
+        document.addEventListener('keydown', function (e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
+        });
+    }
+
+    // ═══════════════════════════════
+    //  VIEW TOGGLE
+    // ═══════════════════════════════
+    const viewBtns = document.querySelectorAll('.vt-btn');
+    const tableView = document.getElementById('tableView');
+    const gridView = document.getElementById('gridView');
+
+    viewBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+            viewBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            if (this.dataset.view === 'table') {
+                tableView.style.display = '';
+                gridView.style.display = 'none';
+            } else {
+                tableView.style.display = 'none';
+                gridView.style.display = '';
+            }
+        });
+    });
+
+    // ═══════════════════════════════
+    //  COUNTER ANIMATION
+    // ═══════════════════════════════
+    document.querySelectorAll('.sc-value[data-count]').forEach(el => {
+        const target = parseInt(el.getAttribute('data-count')) || 0;
+        let current = 0;
+        const step = Math.max(1, Math.ceil(target / 30));
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) { current = target; clearInterval(timer); }
+            el.textContent = current;
+        }, 30);
+    });
+
+    // ═══════════════════════════════
+    //  COMPUTE STATS
+    // ═══════════════════════════════
+    let totalSpend = 0;
+    let totalRate = 0;
+    let rateCount = 0;
+    const projectSet = new Set();
+
+    tableRows.forEach(row => {
+        const amount = parseFloat(row.dataset.amount) || 0;
+        totalSpend += amount;
+
+        const project = row.dataset.project || '';
+        if (project) projectSet.add(project);
+
+        // Rate calculation from amount cells
+        rateCount++;
+    });
+
+    // Grand total
+    const grandEl = document.getElementById('grandTotal');
+    if (grandEl) {
+        grandEl.textContent = '₹' + totalSpend.toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    // Total spend stat
+    const totalSpendEl = document.getElementById('totalSpendVal');
+    if (totalSpendEl) {
+        totalSpendEl.textContent = '₹' + totalSpend.toLocaleString('en-IN', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+    }
+
+    // Avg rate
+    const avgRateEl = document.getElementById('avgRateVal');
+    if (avgRateEl && rateCount > 0) {
+        const avg = totalSpend / rateCount;
+        avgRateEl.textContent = '₹' + avg.toLocaleString('en-IN', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+    }
+
+    // Projects covered
+    const projEl = document.getElementById('projectsCovered');
+    if (projEl) {
+        let c = 0;
+        const target = projectSet.size;
+        const s = Math.max(1, Math.ceil(target / 20));
+        const t = setInterval(() => {
+            c += s;
+            if (c >= target) { c = target; clearInterval(t); }
+            projEl.textContent = c;
+        }, 40);
+    }
+});
+</script>
 {% endblock %}

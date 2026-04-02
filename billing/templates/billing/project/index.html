@@ -3,256 +3,1700 @@
 {% block page_title %}Project Portfolio{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
+<div class="container-fluid project-page">
 
+    <!-- ═══════════════════════════════════ -->
+    <!--  PAGE HEADER                       -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page-header fade-in fi-1">
+        <div class="page-header-left">
+            <div class="page-icon-wrap">
+                <i class="bi bi-kanban-fill"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Projects</h1>
+                <p class="page-subtitle">Track budgets, spending & payment collection</p>
+            </div>
+        </div>
+        <a href="{% url 'project_create' %}" class="btn-add-new">
+            <i class="bi bi-plus-lg"></i>
+            <span>New Project</span>
+        </a>
+    </div>
 
-
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-3">
-                <div class="row align-items-center g-3">
-                    <div class="col-md-6">
-                        <form method="GET">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0">
-                                    <i class="bi bi-search text-muted"></i>
-                                </span>
-                                <input type="text"
-                                    name="q"
-                                    value="{{ query|default:'' }}"
-                                    class="form-control border-start-0 ps-0"
-                                    placeholder="Search clients by name, email or mobile...">
-                                <button type="submit" class="btn btn-primary">
-                                    Search
-                                </button>
-                            </div>
-                        </form>
+    <!-- ═══════════════════════════════════ -->
+    <!--  STAT CARDS                        -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3 fade-in fi-2">
+            <div class="stat-card sc-indigo">
+                <div class="sc-top">
+                    <div class="sc-icon si-indigo">
+                        <i class="bi bi-folder-fill"></i>
                     </div>
-                    <div class="col-md-6 text-md-end">
-                        <a href="{% url 'project_create' %}" class="btn btn-primary">
-                            <i class="bi bi-person-plus-fill me-1"></i> Add New Project
-                        </a>
+                    <div class="sc-trend trend-up">
+                        <i class="bi bi-arrow-up-short"></i> All
                     </div>
+                </div>
+                <p class="sc-label">Total Projects</p>
+                <h3 class="sc-value" data-count="{{ projects.count }}">0</h3>
+                <div class="sc-bar">
+                    <div class="sc-bar-fill" style="width: 100%;"></div>
                 </div>
             </div>
         </div>
 
-
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3">
-                <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">Active Projects</small>
-                <h3 class="fw-bold mb-0 text-primary">{{ projects.count }}</h3>
+        <div class="col-6 col-lg-3 fade-in fi-3">
+            <div class="stat-card sc-emerald">
+                <div class="sc-top">
+                    <div class="sc-icon si-emerald">
+                        <i class="bi bi-play-circle-fill"></i>
+                    </div>
+                    <div class="sc-trend trend-up">
+                        <i class="bi bi-lightning-charge-fill"></i> Live
+                    </div>
+                </div>
+                <p class="sc-label">Ongoing</p>
+                <h3 class="sc-value" id="ongoingCount">0</h3>
+                <div class="sc-bar">
+                    <div class="sc-bar-fill" style="width: 70%;"></div>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3">
-                <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">
-                    Total Receivables
-                </small>
 
-                <h3 class="fw-bold mb-0 text-danger">
-                    <span class="fs-6">₹</span>
-                    {% if total_receivable %}
-                        {{ total_receivable|floatformat:2 }}
-                    {% else %}
-                        0.00
-                    {% endif %}
+        <div class="col-6 col-lg-3 fade-in fi-4">
+            <div class="stat-card sc-amber">
+                <div class="sc-top">
+                    <div class="sc-icon si-amber">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <div class="sc-trend trend-neutral">
+                        <i class="bi bi-dash"></i> Total
+                    </div>
+                </div>
+                <p class="sc-label">Total Budget</p>
+                <h3 class="sc-value" id="totalBudget">₹0</h3>
+                <div class="sc-bar">
+                    <div class="sc-bar-fill" style="width: 85%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3 fade-in fi-5">
+            <div class="stat-card sc-rose">
+                <div class="sc-top">
+                    <div class="sc-icon si-rose">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="sc-trend trend-down">
+                        <i class="bi bi-arrow-down-short"></i> Due
+                    </div>
+                </div>
+                <p class="sc-label">Total Receivable</p>
+                <h3 class="sc-value">
+                    ₹{% if total_receivable %}{{ total_receivable|floatformat:2 }}{% else %}0.00{% endif %}
                 </h3>
+                <div class="sc-bar">
+                    <div class="sc-bar-fill" style="width: 60%;"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold text-dark mb-0">Project Directory</h4>
+    <!-- ═══════════════════════════════════ -->
+    <!--  SEARCH + FILTER BAR              -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="toolbar-card fade-in fi-6">
+        <div class="toolbar-left">
+            <div class="search-wrap">
+                <i class="bi bi-search search-icon"></i>
+                <input
+                    type="text"
+                    id="liveSearch"
+                    value="{{ query|default:'' }}"
+                    class="search-input"
+                    placeholder="Search projects, clients..."
+                    autocomplete="off"
+                >
+                <kbd class="search-kbd">⌘K</kbd>
+            </div>
+
+            <!-- Status Filter Pills -->
+            <div class="filter-pills">
+                <button class="fp-btn active" data-filter="all">
+                    All <span class="fp-count" id="filterAll">{{ projects.count }}</span>
+                </button>
+                <button class="fp-btn" data-filter="ongoing">
+                    <span class="fp-dot dot-blue"></span> Ongoing
+                </button>
+                <button class="fp-btn" data-filter="completed">
+                    <span class="fp-dot dot-green"></span> Completed
+                </button>
+                <button class="fp-btn" data-filter="on_hold">
+                    <span class="fp-dot dot-amber"></span> On Hold
+                </button>
+            </div>
+        </div>
+
+        <div class="toolbar-right">
+            <div class="result-count">
+                <span id="visibleCount">{{ projects.count }}</span> projects
+            </div>
+            <div class="view-toggle">
+                <button class="vt-btn active" data-view="table" title="Table">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+                <button class="vt-btn" data-view="grid" title="Grid">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive" style="border-radius:19px;">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="ps-4 py-3 text-muted small fw-bold text-uppercase">Project & Client</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase">Budget</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase">Spent</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase">Paid</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase">Balance</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase text-center">Status</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase text-end pe-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for project in projects %}
-                        <tr data-id="{{ project.id }}" data-status="{{ project.status }}">
-                            <td class="ps-4">
-                                <a href="{% url 'project_detail' project.id %}" class="text-decoration-none d-block">
-                                    <span class="fw-bold text-dark d-block mb-0">{{ project.name }}</span>
-                                    <span class="text-muted small"><i class="bi bi-person me-1"></i>{{ project.client.name }}</span>
-                                </a>
-                            </td>
+    <!-- ═══════════════════════════════════ -->
+    <!--  TABLE VIEW                        -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="table-card fade-in fi-7" id="tableView">
+        <div class="table-responsive">
+            <table class="table saas-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">
+                            <div class="th-inner">Project & Client</div>
+                        </th>
+                        <th><div class="th-inner">Budget</div></th>
+                        <th><div class="th-inner">Spent</div></th>
+                        <th><div class="th-inner">Collected</div></th>
+                        <th><div class="th-inner">Pending</div></th>
+                        <th><div class="th-inner">Progress</div></th>
+                        <th class="text-center"><div class="th-inner justify-content-center">Status</div></th>
+                        <th class="text-end pe-4"><div class="th-inner justify-content-end">Actions</div></th>
+                    </tr>
+                </thead>
+                <tbody id="projectTableBody">
+                    {% for project in projects %}
+                    <tr class="project-row"
+                        data-id="{{ project.id }}"
+                        data-status="{{ project.status }}"
+                        data-name="{{ project.name|lower }}"
+                        data-client="{{ project.client.name|lower }}"
+                        data-budget="{{ project.budget }}"
+                        data-paid="{{ project.total_paid }}"
+                        data-balance="{{ project.yet_to_receive }}">
 
-                            <td><span class="text-muted">₹</span>{{ project.budget }}</td>
-                            <td><span class="text-muted">₹</span>{{ project.total_spent }}</td>
-                            <td><span class="text-muted text-success">₹</span>{{ project.total_paid }}</td>
-                            
-                            <td>
-                                <span class="fw-bold {% if project.yet_to_receive > 0 %}text-danger{% else %}text-muted{% endif %}">
-                                    ₹{{ project.yet_to_receive }}
+                        <!-- PROJECT & CLIENT -->
+                        <td class="ps-4 py-3">
+                            <a href="{% url 'project_detail' project.id %}" class="project-link">
+                                <div class="project-cell">
+                                    <div class="project-avatar pa-{% cycle 'indigo' 'emerald' 'amber' 'rose' 'sky' %}">
+                                        {{ project.name|slice:":2"|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="project-name">{{ project.name }}</div>
+                                        <div class="project-client-name">
+                                            <i class="bi bi-person-fill"></i>
+                                            {{ project.client.name }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </td>
+
+                        <!-- BUDGET -->
+                        <td>
+                            <span class="money-text">₹{{ project.budget }}</span>
+                        </td>
+
+                        <!-- SPENT -->
+                        <td>
+                            <span class="money-text mt-spent">₹{{ project.total_spent }}</span>
+                        </td>
+
+                        <!-- COLLECTED -->
+                        <td>
+                            <div class="collected-chip">
+                                <i class="bi bi-check-circle-fill"></i>
+                                ₹{{ project.total_paid }}
+                            </div>
+                        </td>
+
+                        <!-- PENDING -->
+                        <td>
+                            <span class="pending-amount {% if project.yet_to_receive > 0 %}has-pending{% endif %}">
+                                ₹{{ project.yet_to_receive }}
+                            </span>
+                        </td>
+
+                        <!-- PROGRESS BAR -->
+                        <td>
+                            <div class="progress-mini">
+                                {% widthratio project.total_paid project.budget 100 as pay_pct %}
+                                <div class="progress-mini-top">
+                                    <span class="pm-pct">
+                                        {% if project.budget > 0 %}
+                                            {% widthratio project.total_paid project.budget 100 %}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="progress-mini-track">
+                                    <div class="progress-mini-fill pmf-{% if project.status == 'completed' %}green{% elif project.status == 'on_hold' %}amber{% else %}indigo{% endif %}"
+                                         style="width: {% if project.budget > 0 %}{% widthratio project.total_paid project.budget 100 %}{% else %}0{% endif %}%;">
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- STATUS -->
+                        <td class="text-center">
+                            {% if project.status == "ongoing" %}
+                                <span class="status-pill sp-blue">
+                                    <span class="sp-dot"></span> Ongoing
                                 </span>
-                            </td>
+                            {% elif project.status == "completed" %}
+                                <span class="status-pill sp-green">
+                                    <span class="sp-dot"></span> Completed
+                                </span>
+                            {% else %}
+                                <span class="status-pill sp-amber">
+                                    <span class="sp-dot"></span> On Hold
+                                </span>
+                            {% endif %}
+                        </td>
 
-                            <td class="text-center">
-                                {% if project.status == "ongoing" %}
-                                    <span class="badge rounded-pill bg-primary-subtle text-primary px-3 border border-primary-subtle">Ongoing</span>
-                                {% elif project.status == "completed" %}
-                                    <span class="badge rounded-pill bg-success-subtle text-success px-3 border border-success-subtle">Completed</span>
-                                {% else %}
-                                    <span class="badge rounded-pill bg-warning-subtle text-warning px-3 border border-warning-subtle">On Hold</span>
-                                {% endif %}
-                            </td>
+                        <!-- ACTIONS -->
+                        <td class="text-end pe-4">
+                            <div class="action-group">
+                                <a href="{% url 'project_detail' project.id %}"
+                                   class="action-btn ab-view" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'project_update' project.id %}"
+                                   class="action-btn ab-edit" title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <button type="button"
+                                        class="action-btn ab-delete"
+                                        title="Delete"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#delModal{{ project.id }}">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
 
-                            <td class="text-end pe-4">
-                                <div class="dropdown">
-                                    <button class="btn btn-light btn-sm border" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                        <li><a class="dropdown-item py-2" href="{% url 'project_detail' project.id %}"><i class="bi bi-eye me-2 text-primary"></i> View Detail</a></li>
-                                        <li><a class="dropdown-item py-2" href="{% url 'project_update' project.id %}"><i class="bi bi-pencil me-2 text-warning"></i> Edit Project</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <a class="dropdown-item py-2 text-danger" href="{% url 'project_delete' project.id %}">
-                                                <i class="bi bi-trash3 me-2"></i> Delete
-                                            </a>
-                                        </li>
-                                    </ul>
+                    <!-- ── DELETE MODAL ── -->
+                    <div class="modal fade" id="delModal{{ project.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content del-modal">
+                                <div class="modal-body p-0">
+                                    <div class="dm-header">
+                                        <div class="dm-icon-wrap">
+                                            <i class="bi bi-exclamation-triangle-fill"></i>
+                                        </div>
+                                    </div>
+                                    <div class="dm-body">
+                                        <h4 class="dm-title">Delete Project</h4>
+                                        <p class="dm-desc">
+                                            Are you sure you want to permanently delete
+                                            <strong>{{ project.name }}</strong>?
+                                            All associated data will be removed.
+                                        </p>
+                                        <div class="dm-info-box">
+                                            <div class="dm-info-row">
+                                                <span class="dm-label">Project</span>
+                                                <span class="dm-value">{{ project.name }}</span>
+                                            </div>
+                                            <div class="dm-info-row">
+                                                <span class="dm-label">Client</span>
+                                                <span class="dm-value">{{ project.client.name }}</span>
+                                            </div>
+                                            <div class="dm-info-row">
+                                                <span class="dm-label">Budget</span>
+                                                <span class="dm-value">₹{{ project.budget }}</span>
+                                            </div>
+                                            <div class="dm-info-row">
+                                                <span class="dm-label">Status</span>
+                                                <span class="dm-value" style="text-transform:capitalize;">{{ project.status }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="dm-footer">
+                                        <button type="button" class="dm-btn dm-cancel" data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                        <a href="{% url 'project_delete' project.id %}" class="dm-btn dm-delete">
+                                            <i class="bi bi-trash3 me-1"></i> Delete Project
+                                        </a>
+                                    </div>
                                 </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center py-5">
-                                <div class="opacity-25 mb-3">
-                                    <i class="bi bi-building-add fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <div class="empty-circle">
+                                    <i class="bi bi-kanban"></i>
                                 </div>
-                                <h5 class="text-muted">No Projects Found</h5>
-                                <p class="small text-muted mb-3">Start by creating your first client project.</p>
-                                <a href="{% url 'project_create' %}" class="btn btn-sm btn-primary px-4">Add Project</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                <h5 class="empty-title">No projects yet</h5>
+                                <p class="empty-desc">Create your first project and start tracking budgets & payments.</p>
+                                <a href="{% url 'project_create' %}" class="btn-add-first">
+                                    <i class="bi bi-plus-lg me-2"></i> Create First Project
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!--  GRID VIEW                         -->
+    <!-- ═══════════════════════════════════ -->
+    <div id="gridView" style="display: none;" class="fade-in">
+        <div class="row g-3" id="projectGridBody">
+            {% for project in projects %}
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3 grid-item"
+                 data-id="{{ project.id }}"
+                 data-status="{{ project.status }}"
+                 data-name="{{ project.name|lower }}"
+                 data-client="{{ project.client.name|lower }}">
+                <div class="project-grid-card pgc-{% if project.status == 'completed' %}completed{% elif project.status == 'on_hold' %}hold{% else %}active{% endif %}">
+
+                    <!-- Card top -->
+                    <div class="pgc-top">
+                        <div class="pgc-avatar pa-{% cycle 'indigo' 'emerald' 'amber' 'rose' 'sky' %}">
+                            {{ project.name|slice:":2"|upper }}
+                        </div>
+                        <div class="pgc-actions">
+                            <a href="{% url 'project_detail' project.id %}" class="pgc-act" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'project_update' project.id %}" class="pgc-act" title="Edit">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <button class="pgc-act pgc-del"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#delModal{{ project.id }}" title="Delete">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card info -->
+                    <a href="{% url 'project_detail' project.id %}" class="pgc-link">
+                        <h6 class="pgc-name">{{ project.name }}</h6>
+                    </a>
+                    <p class="pgc-client"><i class="bi bi-person-fill"></i> {{ project.client.name }}</p>
+
+                    <!-- Status -->
+                    {% if project.status == "ongoing" %}
+                        <span class="status-pill sp-blue mb-3 d-inline-flex">
+                            <span class="sp-dot"></span> Ongoing
+                        </span>
+                    {% elif project.status == "completed" %}
+                        <span class="status-pill sp-green mb-3 d-inline-flex">
+                            <span class="sp-dot"></span> Completed
+                        </span>
+                    {% else %}
+                        <span class="status-pill sp-amber mb-3 d-inline-flex">
+                            <span class="sp-dot"></span> On Hold
+                        </span>
+                    {% endif %}
+
+                    <!-- Divider -->
+                    <div class="pgc-divider"></div>
+
+                    <!-- Financial summary -->
+                    <div class="pgc-finance">
+                        <div class="pgc-fin-row">
+                            <span class="pgc-fin-label">Budget</span>
+                            <span class="pgc-fin-value">₹{{ project.budget }}</span>
+                        </div>
+                        <div class="pgc-fin-row">
+                            <span class="pgc-fin-label">Collected</span>
+                            <span class="pgc-fin-value pgc-green">₹{{ project.total_paid }}</span>
+                        </div>
+                        <div class="pgc-fin-row">
+                            <span class="pgc-fin-label">Pending</span>
+                            <span class="pgc-fin-value pgc-red">₹{{ project.yet_to_receive }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress -->
+                    <div class="pgc-progress">
+                        <div class="pgc-progress-track">
+                            <div class="pgc-progress-fill ppf-{% if project.status == 'completed' %}green{% elif project.status == 'on_hold' %}amber{% else %}indigo{% endif %}"
+                                 style="width: {% if project.budget > 0 %}{% widthratio project.total_paid project.budget 100 %}{% else %}0{% endif %}%;">
+                            </div>
+                        </div>
+                        <span class="pgc-progress-label">
+                            {% if project.budget > 0 %}{% widthratio project.total_paid project.budget 100 %}%{% else %}0%{% endif %} collected
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
 </div>
 
+<!-- ════════════════════════════════════════════ -->
+<!--  STYLES                                     -->
+<!-- ════════════════════════════════════════════ -->
+<style>
+    :root {
+        --indigo: #6366f1;
+        --indigo-soft: rgba(99, 102, 241, 0.08);
+        --amber: #f59e0b;
+        --amber-soft: rgba(245, 158, 11, 0.08);
+        --emerald: #10b981;
+        --emerald-soft: rgba(16, 185, 129, 0.08);
+        --rose: #f43f5e;
+        --rose-soft: rgba(244, 63, 94, 0.08);
+        --sky: #0ea5e9;
+        --sky-soft: rgba(14, 165, 233, 0.08);
+        --text-1: #0f172a;
+        --text-2: #475569;
+        --text-3: #94a3b8;
+        --surface: #ffffff;
+        --surface-2: #f8fafc;
+        --border: #e2e8f0;
+        --border-light: #f1f5f9;
+        --radius: 16px;
+        --radius-sm: 10px;
+        --radius-xs: 8px;
+    }
 
+    .project-page {
+        padding: 1.5rem 2rem 3rem;
+        max-width: 1480px;
+        margin: 0 auto;
+    }
+
+    /* ── ANIMATIONS ── */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(16px);
+        animation: fadeIn 0.45s ease forwards;
+    }
+    .fi-1 { animation-delay: 0.03s; }
+    .fi-2 { animation-delay: 0.06s; }
+    .fi-3 { animation-delay: 0.09s; }
+    .fi-4 { animation-delay: 0.12s; }
+    .fi-5 { animation-delay: 0.15s; }
+    .fi-6 { animation-delay: 0.18s; }
+    .fi-7 { animation-delay: 0.22s; }
+
+    @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes barGrow {
+        from { transform: scaleX(0); }
+        to   { transform: scaleX(1); }
+    }
+
+    /* ══════════════════ */
+    /*  PAGE HEADER       */
+    /* ══════════════════ */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.75rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-icon-wrap {
+        width: 48px;
+        height: 48px;
+        background: var(--indigo-soft);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--indigo);
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-1);
+        letter-spacing: -0.03em;
+        margin: 0;
+    }
+
+    .page-subtitle {
+        font-size: 0.82rem;
+        color: var(--text-3);
+        margin: 2px 0 0;
+    }
+
+    .btn-add-new {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        background: var(--indigo);
+        color: #fff;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-add-new::after {
+        content: "";
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+        transition: left 0.5s;
+    }
+
+    .btn-add-new:hover {
+        background: #4f46e5;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-add-new:hover::after { left: 100%; }
+
+    /* ══════════════════ */
+    /*  STAT CARDS        */
+    /* ══════════════════ */
+    .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 14px;
+        padding: 1.25rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 35px -8px rgba(0, 0, 0, 0.1);
+        border-color: transparent;
+    }
+
+    .sc-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .sc-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .si-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .si-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .si-amber { background: var(--amber-soft); color: var(--amber); }
+    .si-rose { background: var(--rose-soft); color: var(--rose); }
+
+    .sc-trend {
+        padding: 3px 10px;
+        border-radius: 100px;
+        font-size: 0.62rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .sc-trend i { font-size: 0.82rem; }
+    .trend-up { background: var(--emerald-soft); color: var(--emerald); }
+    .trend-down { background: var(--rose-soft); color: var(--rose); }
+    .trend-neutral { background: var(--border-light); color: var(--text-3); }
+
+    .sc-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-3);
+        margin: 0 0 4px;
+    }
+
+    .sc-value {
+        font-size: 1.45rem;
+        font-weight: 900;
+        color: var(--text-1);
+        letter-spacing: -0.02em;
+        margin: 0;
+        line-height: 1;
+    }
+
+    .sc-bar {
+        margin-top: 0.85rem;
+        height: 4px;
+        background: var(--border-light);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+
+    .sc-bar-fill {
+        height: 100%;
+        border-radius: 100px;
+        animation: barGrow 1s ease forwards;
+        transform-origin: left;
+    }
+
+    .sc-indigo .sc-bar-fill { background: linear-gradient(90deg, var(--indigo), #818cf8); }
+    .sc-indigo:hover { border-color: rgba(99, 102, 241, 0.15); }
+    .sc-emerald .sc-bar-fill { background: linear-gradient(90deg, var(--emerald), #34d399); }
+    .sc-emerald:hover { border-color: rgba(16, 185, 129, 0.15); }
+    .sc-amber .sc-bar-fill { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+    .sc-amber:hover { border-color: rgba(245, 158, 11, 0.15); }
+    .sc-rose .sc-bar-fill { background: linear-gradient(90deg, var(--rose), #fb7185); }
+    .sc-rose:hover { border-color: rgba(244, 63, 94, 0.15); }
+
+    /* ══════════════════ */
+    /*  TOOLBAR            */
+    /* ══════════════════ */
+    .toolbar-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 14px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+        flex-wrap: wrap;
+    }
+
+    .search-wrap {
+        position: relative;
+        min-width: 240px;
+        flex: 1;
+        max-width: 360px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-3);
+        font-size: 0.9rem;
+        pointer-events: none;
+    }
+
+    .search-input {
+        width: 100%;
+        height: 42px;
+        padding: 0 56px 0 40px;
+        border: 1.5px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        background: var(--surface-2);
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-1);
+        font-family: inherit;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+    .search-input::placeholder { color: var(--text-3); font-weight: 400; }
+
+    .search-input:focus {
+        background: var(--surface);
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px var(--indigo-soft);
+    }
+
+    .search-kbd {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 1px 7px;
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: var(--text-3);
+        pointer-events: none;
+        font-family: inherit;
+    }
+
+    /* Filter pills */
+    .filter-pills {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .fp-btn {
+        padding: 6px 14px;
+        border-radius: 100px;
+        border: 1px solid var(--border-light);
+        background: var(--surface);
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-3);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: inherit;
+    }
+
+    .fp-btn:hover {
+        border-color: var(--border);
+        color: var(--text-2);
+        background: var(--surface-2);
+    }
+
+    .fp-btn.active {
+        background: var(--text-1);
+        color: #fff;
+        border-color: var(--text-1);
+    }
+
+    .fp-count {
+        background: rgba(255,255,255,0.2);
+        padding: 1px 7px;
+        border-radius: 100px;
+        font-size: 0.65rem;
+    }
+
+    .fp-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+
+    .dot-blue { background: var(--indigo); }
+    .dot-green { background: var(--emerald); }
+    .dot-amber { background: var(--amber); }
+
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .result-count {
+        font-size: 0.78rem;
+        color: var(--text-3);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .result-count span {
+        color: var(--text-1);
+        font-weight: 800;
+    }
+
+    .view-toggle {
+        display: flex;
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-xs);
+        overflow: hidden;
+    }
+
+    .vt-btn {
+        width: 36px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .vt-btn.active {
+        background: var(--surface);
+        color: var(--indigo);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .vt-btn:hover:not(.active) { color: var(--text-2); }
+
+    /* ══════════════════ */
+    /*  TABLE              */
+    /* ══════════════════ */
+    .table-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+
+    .saas-table thead th {
+        background: var(--surface-2);
+        font-size: 0.66rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-3);
+        padding: 13px 16px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .th-inner {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .saas-table tbody tr {
+        border-bottom: 1px solid var(--border-light);
+        transition: all 0.2s;
+    }
+
+    .saas-table tbody tr:last-child { border-bottom: none; }
+
+    .saas-table tbody tr:hover {
+        background: rgba(99, 102, 241, 0.02);
+    }
+
+    .saas-table tbody td {
+        padding: 14px 16px;
+        vertical-align: middle;
+    }
+
+    /* Project cell */
+    .project-link {
+        text-decoration: none;
+        display: block;
+    }
+
+    .project-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .project-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+        transition: transform 0.2s;
+    }
+
+    tr:hover .project-avatar { transform: scale(1.08); }
+
+    .pa-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .pa-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .pa-amber { background: var(--amber-soft); color: var(--amber); }
+    .pa-rose { background: var(--rose-soft); color: var(--rose); }
+    .pa-sky { background: var(--sky-soft); color: var(--sky); }
+
+    .project-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-1);
+        transition: color 0.2s;
+    }
+
+    .project-link:hover .project-name {
+        color: var(--indigo);
+    }
+
+    .project-client-name {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        font-weight: 500;
+        margin-top: 2px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .project-client-name i { font-size: 0.62rem; }
+
+    /* Money */
+    .money-text {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .mt-spent { color: var(--text-2); }
+
+    .collected-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        background: var(--emerald-soft);
+        color: var(--emerald);
+        border-radius: 100px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .collected-chip i { font-size: 0.7rem; }
+
+    .pending-amount {
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: var(--text-3);
+    }
+
+    .has-pending { color: var(--rose); }
+
+    /* Mini progress */
+    .progress-mini { min-width: 100px; }
+
+    .progress-mini-top {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 5px;
+    }
+
+    .pm-pct {
+        font-size: 0.68rem;
+        font-weight: 800;
+        color: var(--text-2);
+    }
+
+    .progress-mini-track {
+        height: 5px;
+        background: var(--border-light);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+
+    .progress-mini-fill {
+        height: 100%;
+        border-radius: 100px;
+        transition: width 0.8s ease;
+    }
+
+    .pmf-indigo { background: linear-gradient(90deg, var(--indigo), #818cf8); }
+    .pmf-green { background: linear-gradient(90deg, var(--emerald), #34d399); }
+    .pmf-amber { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+
+    /* Status pills */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        border-radius: 100px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: transform 0.2s;
+    }
+
+    .status-pill:hover { transform: scale(1.05); }
+
+    .sp-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    .sp-blue { background: var(--indigo-soft); color: var(--indigo); }
+    .sp-blue .sp-dot { background: var(--indigo); }
+    .sp-green { background: var(--emerald-soft); color: var(--emerald); }
+    .sp-green .sp-dot { background: var(--emerald); animation: livePulse 2s ease infinite; }
+    .sp-amber { background: var(--amber-soft); color: #b45309; }
+    .sp-amber .sp-dot { background: var(--amber); }
+
+    @keyframes livePulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.5); opacity: 0.5; }
+    }
+
+    /* Action buttons */
+    .action-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        justify-content: flex-end;
+    }
+
+    .action-btn {
+        width: 33px;
+        height: 33px;
+        border-radius: var(--radius-xs);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border-light);
+        background: var(--surface);
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .ab-view:hover {
+        background: var(--sky);
+        color: #fff;
+        border-color: var(--sky);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+    }
+
+    .ab-edit:hover {
+        background: var(--indigo);
+        color: #fff;
+        border-color: var(--indigo);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    }
+
+    .ab-delete:hover {
+        background: var(--rose);
+        color: #fff;
+        border-color: var(--rose);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
+    }
+
+    /* ══════════════════ */
+    /*  GRID VIEW          */
+    /* ══════════════════ */
+    .project-grid-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        transition: all 0.3s;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .project-grid-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .pgc-active::before { background: var(--indigo); }
+    .pgc-completed::before { background: var(--emerald); }
+    .pgc-hold::before { background: var(--amber); }
+
+    .project-grid-card:hover {
+        border-color: transparent;
+        box-shadow: 0 12px 35px -5px rgba(0, 0, 0, 0.08);
+        transform: translateY(-4px);
+    }
+
+    .pgc-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .pgc-avatar {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .pgc-actions {
+        display: flex;
+        gap: 4px;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .project-grid-card:hover .pgc-actions { opacity: 1; }
+
+    .pgc-act {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.72rem;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .pgc-act:hover { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+    .pgc-del:hover { background: var(--rose); border-color: var(--rose); }
+
+    .pgc-link { text-decoration: none; }
+
+    .pgc-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-1);
+        margin: 0 0 3px;
+        transition: color 0.2s;
+    }
+
+    .pgc-link:hover .pgc-name { color: var(--indigo); }
+
+    .pgc-client {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        font-weight: 500;
+        margin: 0 0 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .pgc-client i { font-size: 0.62rem; }
+
+    .pgc-divider {
+        height: 1px;
+        background: var(--border-light);
+        margin: 0.75rem 0;
+    }
+
+    .pgc-finance {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .pgc-fin-row {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .pgc-fin-label {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        font-weight: 600;
+    }
+
+    .pgc-fin-value {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: var(--text-1);
+    }
+
+    .pgc-green { color: var(--emerald); }
+    .pgc-red { color: var(--rose); }
+
+    .pgc-progress {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .pgc-progress-track {
+        flex: 1;
+        height: 5px;
+        background: var(--border-light);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+
+    .pgc-progress-fill {
+        height: 100%;
+        border-radius: 100px;
+        transition: width 0.8s ease;
+    }
+
+    .ppf-indigo { background: var(--indigo); }
+    .ppf-green { background: var(--emerald); }
+    .ppf-amber { background: var(--amber); }
+
+    .pgc-progress-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--text-3);
+        white-space: nowrap;
+    }
+
+    /* ══════════════════ */
+    /*  DELETE MODAL       */
+    /* ══════════════════ */
+    .del-modal {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.2);
+        max-width: 420px;
+        margin: 0 auto;
+    }
+
+    .dm-header {
+        background: linear-gradient(135deg, #fef2f2, #fff1f2);
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .dm-icon-wrap {
+        width: 56px;
+        height: 56px;
+        background: var(--rose-soft);
+        border: 4px solid #fff;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: var(--rose);
+        box-shadow: 0 8px 16px rgba(244, 63, 94, 0.15);
+        animation: bounceIn 0.5s ease;
+    }
+
+    @keyframes bounceIn {
+        0% { transform: scale(0.5); opacity: 0; }
+        60% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .dm-body {
+        padding: 1.5rem 2rem;
+        text-align: center;
+    }
+
+    .dm-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin-bottom: 0.5rem;
+    }
+
+    .dm-desc {
+        font-size: 0.85rem;
+        color: var(--text-3);
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+    }
+
+    .dm-desc strong { color: var(--text-1); }
+
+    .dm-info-box {
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        text-align: left;
+    }
+
+    .dm-info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .dm-info-row:last-child { border-bottom: none; }
+
+    .dm-label {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        font-weight: 600;
+    }
+
+    .dm-value {
+        font-size: 0.78rem;
+        color: var(--text-1);
+        font-weight: 700;
+    }
+
+    .dm-footer {
+        display: flex;
+        gap: 10px;
+        padding: 0 2rem 1.75rem;
+    }
+
+    .dm-btn {
+        flex: 1;
+        height: 44px;
+        border-radius: 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        font-family: inherit;
+    }
+
+    .dm-cancel {
+        background: var(--surface-2);
+        color: var(--text-2);
+        border: 1px solid var(--border);
+    }
+
+    .dm-cancel:hover { background: var(--border-light); }
+
+    .dm-delete {
+        background: var(--rose);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+    }
+
+    .dm-delete:hover {
+        background: #e11d48;
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(244, 63, 94, 0.35);
+    }
+
+    /* ══════════════════ */
+    /*  EMPTY STATE        */
+    /* ══════════════════ */
+    .empty-state { padding: 3rem 2rem; text-align: center; }
+
+    .empty-circle {
+        width: 72px;
+        height: 72px;
+        background: var(--indigo-soft);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--indigo);
+        margin-bottom: 1.25rem;
+    }
+
+    .empty-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin-bottom: 0.35rem;
+    }
+
+    .empty-desc {
+        font-size: 0.85rem;
+        color: var(--text-3);
+        margin-bottom: 1.25rem;
+        max-width: 340px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .btn-add-first {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 24px;
+        background: var(--indigo);
+        color: #fff;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-add-first:hover {
+        background: #4f46e5;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(99, 102, 241, 0.3);
+    }
+
+    /* ══════════════════ */
+    /*  CELEBRATION ROW    */
+    /* ══════════════════ */
+    .row-celebrate {
+        animation: celebrateGlow 2s ease;
+    }
+
+    @keyframes celebrateGlow {
+        0% { background: rgba(16, 185, 129, 0.12); }
+        100% { background: transparent; }
+    }
+
+    /* ══════════════════ */
+    /*  RESPONSIVE         */
+    /* ══════════════════ */
+    @media (max-width: 1024px) {
+        .toolbar-left { flex-direction: column; align-items: stretch; }
+        .search-wrap { max-width: 100%; }
+    }
+
+    @media (max-width: 768px) {
+        .project-page { padding: 1rem; }
+        .page-header { flex-direction: column; align-items: flex-start; }
+        .toolbar-card { flex-direction: column; align-items: stretch; }
+        .toolbar-right { justify-content: space-between; }
+        .filter-pills { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+        .search-kbd { display: none; }
+
+        .saas-table thead th:nth-child(3),
+        .saas-table tbody td:nth-child(3),
+        .saas-table thead th:nth-child(6),
+        .saas-table tbody td:nth-child(6) {
+            display: none;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .saas-table thead th:nth-child(5),
+        .saas-table tbody td:nth-child(5) {
+            display: none;
+        }
+
+        .sc-value { font-size: 1.15rem; }
+        .stat-card { padding: 1rem; }
+    }
+
+    /* Scrollbar */
+    .table-responsive::-webkit-scrollbar { height: 4px; }
+    .table-responsive::-webkit-scrollbar-track { background: transparent; }
+    .table-responsive::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
+</style>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  SCRIPTS                                    -->
+<!-- ════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    const rows = document.querySelectorAll('[data-id]');
-    
-    // Configuration for the "Victory" effect
-    const celebrate = () => {
-        const end = Date.now() + (3 * 1000);
-        const colors = ['#6366f1', '#a855f7', '#22c55e', '#ffffff', '#ffbd00'];
-        const GLOBAL_Z_INDEX = 10000; // Force to front of all UI
+document.addEventListener('DOMContentLoaded', function () {
 
-        // 1. The Continuous Side Cannons (60fps)
-        (function frame() {
-            confetti({
-                particleCount: 2,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0, y: 0.8 },
-                colors: colors,
-                zIndex: GLOBAL_Z_INDEX
-            });
-            confetti({
-                particleCount: 2,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1, y: 0.8 },
-                colors: colors,
-                zIndex: GLOBAL_Z_INDEX
-            });
+    // ═══════════════════════════════
+    //  LIVE SEARCH
+    // ═══════════════════════════════
+    const searchInput = document.getElementById('liveSearch');
+    const tableRows = document.querySelectorAll('.project-row');
+    const gridItems = document.querySelectorAll('.grid-item');
+    const visibleCount = document.getElementById('visibleCount');
+    let activeFilter = 'all';
 
-            if (Date.now() < end) {
-                requestAnimationFrame(frame);
+    function applyFilters() {
+        const query = searchInput.value.toLowerCase().trim();
+        let count = 0;
+
+        function matchRow(el) {
+            const name = el.dataset.name || '';
+            const client = el.dataset.client || '';
+            const status = el.dataset.status || '';
+
+            const matchSearch = name.includes(query) || client.includes(query);
+            const matchFilter = activeFilter === 'all' || status === activeFilter;
+
+            return matchSearch && matchFilter;
+        }
+
+        tableRows.forEach(row => {
+            const show = matchRow(row);
+            row.style.display = show ? '' : 'none';
+            if (show) count++;
+        });
+
+        gridItems.forEach(item => {
+            const show = matchRow(item);
+            item.style.display = show ? '' : 'none';
+        });
+
+        if (visibleCount) visibleCount.textContent = count;
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+
+        document.addEventListener('keydown', function (e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
             }
-        }());
+        });
+    }
 
-        // 2. The "Big Pops" (Timed Explosions)
-        const fireBurst = (x, y, angle, spread, particleCount) => {
+    // ═══════════════════════════════
+    //  STATUS FILTER PILLS
+    // ═══════════════════════════════
+    document.querySelectorAll('.fp-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.fp-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            activeFilter = this.dataset.filter;
+            applyFilters();
+        });
+    });
+
+    // ═══════════════════════════════
+    //  VIEW TOGGLE
+    // ═══════════════════════════════
+    const viewBtns = document.querySelectorAll('.vt-btn');
+    const tableView = document.getElementById('tableView');
+    const gridView = document.getElementById('gridView');
+
+    viewBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+            viewBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            if (this.dataset.view === 'table') {
+                tableView.style.display = '';
+                gridView.style.display = 'none';
+            } else {
+                tableView.style.display = 'none';
+                gridView.style.display = '';
+            }
+        });
+    });
+
+    // ═══════════════════════════════
+    //  COUNTER ANIMATION
+    // ═══════════════════════════════
+    document.querySelectorAll('.sc-value[data-count]').forEach(el => {
+        const target = parseInt(el.getAttribute('data-count')) || 0;
+        let current = 0;
+        const step = Math.max(1, Math.ceil(target / 30));
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) { current = target; clearInterval(timer); }
+            el.textContent = current;
+        }, 30);
+    });
+
+    // Dynamic stat counts
+    let ongoing = 0, totalBudget = 0;
+    tableRows.forEach(row => {
+        if (row.dataset.status === 'ongoing') ongoing++;
+        totalBudget += parseFloat(row.dataset.budget) || 0;
+    });
+
+    const ongoingEl = document.getElementById('ongoingCount');
+    const budgetEl = document.getElementById('totalBudget');
+
+    if (ongoingEl) {
+        let c = 0;
+        const s = Math.max(1, Math.ceil(ongoing / 20));
+        const t = setInterval(() => {
+            c += s;
+            if (c >= ongoing) { c = ongoing; clearInterval(t); }
+            ongoingEl.textContent = c;
+        }, 40);
+    }
+
+    if (budgetEl) {
+        budgetEl.textContent = '₹' + totalBudget.toLocaleString('en-IN', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+    }
+
+    // ═══════════════════════════════
+    //  CONFETTI CELEBRATION
+    // ═══════════════════════════════
+    const celebrate = () => {
+        const end = Date.now() + 2000;
+        const colors = ['#6366f1', '#a855f7', '#10b981', '#f70808', '#fbbf24'];
+        const Z = 10000;
+
+        (function frame() {
+            confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors, zIndex: Z });
+            confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors, zIndex: Z });
+            if (Date.now() < end) requestAnimationFrame(frame);
+        })();
+
+        const burst = (x, y, angle, spread, count) => {
             confetti({
-                particleCount: particleCount || 40,
+                particleCount: count || 40,
                 startVelocity: 45,
                 spread: spread || 70,
                 origin: { x, y },
                 angle: angle || 90,
-                colors: colors,
+                colors,
                 scalar: 1.2,
-                zIndex: GLOBAL_Z_INDEX // Applied here
+                zIndex: Z
             });
         };
 
-        // --- The Grand Finale Sequence ---
-        
-        // Wave 1: Corner Explosions
-        setTimeout(() => fireBurst(0.1, 0.9, 60, 80, 60), 0);      
-        setTimeout(() => fireBurst(0.9, 0.9, 120, 80, 60), 200);   
-        
-        // Wave 2: The Mega Center Boom
-        setTimeout(() => fireBurst(0.5, 0.6, 90, 150, 100), 600); 
+        setTimeout(() => burst(0.1, 0.9, 60, 80, 60), 0);
+        setTimeout(() => burst(0.9, 0.9, 120, 80, 60), 200);
+        setTimeout(() => burst(0.5, 0.6, 90, 150, 100), 600);
 
-        // Wave 3: Random Rapid-Fire "Pops"
         const interval = setInterval(() => {
             if (Date.now() > end) return clearInterval(interval);
-            
-            // Randomly choose left, right, or center for the late-game pops
-            const randomX = Math.random();
-            fireBurst(randomX, 0.5 + (Math.random() * 0.3), 90, 60, 20);
-        }, 400); // Faster interval for more "Pops"
+            burst(Math.random(), 0.5 + Math.random() * 0.3, 90, 60, 20);
+        }, 400);
     };
 
-    rows.forEach(row => {
+    tableRows.forEach(row => {
         const { id, status } = row.dataset;
         const key = `project_status_${id}`;
-        const oldStatus = localStorage.getItem(key);
+        const old = localStorage.getItem(key);
 
-        if (status === "completed" && oldStatus !== "completed") {
-            // 1. Fire the advanced confetti
+        if (status === 'completed' && old !== 'completed') {
             celebrate();
-
-            // 2. Add a professional "Success Glow" to the specific row
-            row.style.transition = "all 0.8s ease";
-            row.style.backgroundColor = "rgba(25, 135, 84, 0.1)"; // Soft Bootstrap success green
-            row.classList.add('animate__animated', 'animate__pulse'); // If using Animate.css
-
-            // 3. Optional: Play a subtle success chime
-            // new Audio('/static/sounds/success.mp3').play();
+            row.classList.add('row-celebrate');
         }
 
         localStorage.setItem(key, status);
     });
 });
 </script>
-
-<style>
-    /* Styling for the Receivables/Balance Column */
-    .table-hover tbody tr:hover {
-        background-color: rgba(0,0,0,0.01);
-    }
-    
-    .bg-primary-subtle { background-color: #e7f1ff !important; }
-    .bg-success-subtle { background-color: #e1fcef !important; }
-    .bg-warning-subtle { background-color: #fff3cd !important; }
-    
-    .dropdown-item:active {
-        background-color: #f8f9fa;
-        color: #000;
-    }
-</style>
 {% endblock %}

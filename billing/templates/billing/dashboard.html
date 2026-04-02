@@ -3,310 +3,1743 @@
 {% block page_title %}Overview{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4 py-4">
+<div class="container-fluid dash-container">
 
-    <!-- Top Metrics Row -->
+    <!-- ═══════════════════════════════════ -->
+    <!--  GREETING + DATE BAR               -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="dash-topbar fade-in fi-1">
+        <div>
+            <!-- Replace the old greeting line with this -->
+            <h1 class="dash-greeting" id="greetingText">
+                Hello, <span>{{ request.user.first_name|default:"Admin" }}</span> 👋
+            </h1>
+            <p class="dash-subtitle">Here's what's happening with your projects today.</p>
+        </div>
+        <div class="dash-date-box">
+            <i class="bi bi-calendar3"></i>
+            <span id="currentDate"></span>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!--  METRIC CARDS                      -->
+    <!-- ═══════════════════════════════════ -->
     <div class="row g-4 mb-4">
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card metric-card border-0 shadow-sm glass-card bg-primary">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="icon-box bg-primary-soft text-white">
-                            <i class="bi bi-people-fill"></i>
-                        </div>
-                        <span class="badge-status status-blue">+{{ total_clients }} Total</span>
+
+        <!-- Clients -->
+        <div class="col-12 col-sm-6 col-xl-3 fade-in fi-2">
+            <div class="metric-card mc-indigo">
+                <div class="mc-glow"></div>
+                <div class="mc-top">
+                    <div class="mc-icon">
+                        <i class="bi bi-people-fill"></i>
                     </div>
-                    <p class="metric-label text-white">Total Clients</p>
-                    <h2 class="metric-value text-white">{{ total_clients }}</h2>
+                    <div class="mc-badge">
+                        <i class="bi bi-arrow-up-short"></i> All Time
+                    </div>
+                </div>
+                <div class="mc-body">
+                    <p class="mc-label">Total Clients</p>
+                    <h2 class="mc-value" data-count="{{ total_clients }}">0</h2>
+                </div>
+                <div class="mc-bar">
+                    <div class="mc-bar-fill" style="width: 100%;"></div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card metric-card border-0 shadow-sm glass-card bg-warning opacity-20">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="icon-box bg-warning-soft text-dark">
-                            <i class="bi bi-stack"></i>
-                        </div>
-                        <span class="badge-status status-orange">Live</span>
+        <!-- Projects -->
+        <div class="col-12 col-sm-6 col-xl-3 fade-in fi-3">
+            <div class="metric-card mc-amber">
+                <div class="mc-glow"></div>
+                <div class="mc-top">
+                    <div class="mc-icon">
+                        <i class="bi bi-kanban-fill"></i>
                     </div>
-                    <p class="metric-label text-dark">Active Projects</p>
-                    <h2 class="metric-value text-dark">{{ total_projects }}</h2>
+                    <div class="mc-badge">
+                        <i class="bi bi-lightning-charge-fill"></i> Live
+                    </div>
+                </div>
+                <div class="mc-body">
+                    <p class="mc-label">Active Projects</p>
+                    <h2 class="mc-value" data-count="{{ total_projects }}">0</h2>
+                </div>
+                <div class="mc-bar">
+                    <div class="mc-bar-fill" style="width: 75%;"></div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card metric-card border-0 shadow-sm glass-card bg-success opacity-20">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="icon-box bg-success-soft text-white">
-                            <i class="bi bi-wallet2"></i>
-                        </div>
-                        <span class="badge-status status-green">Inflow</span>
+        <!-- Revenue -->
+        <div class="col-12 col-sm-6 col-xl-3 fade-in fi-4">
+            <div class="metric-card mc-emerald">
+                <div class="mc-glow"></div>
+                <div class="mc-top">
+                    <div class="mc-icon">
+                        <i class="bi bi-graph-up-arrow"></i>
                     </div>
-                    <p class="metric-label text-white">Revenue Received</p>
-                    <h2 class="metric-value text-white">₹{{ total_payments }}</h2>
+                    <div class="mc-badge">
+                        <i class="bi bi-arrow-up-short"></i> Inflow
+                    </div>
+                </div>
+                <div class="mc-body">
+                    <p class="mc-label">Revenue Received</p>
+                    <h2 class="mc-value">₹{{ total_payments }}</h2>
+                </div>
+                <div class="mc-bar">
+                    <div class="mc-bar-fill" style="width: 85%;"></div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card metric-card border-0 shadow-sm glass-card bg-danger opacity-20">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="icon-box bg-danger-soft text-white">
-                            <i class="bi bi-arrow-down-right-circle"></i>
-                        </div>
-                        <span class="badge-status status-red">Outflow</span>
+        <!-- Expenses -->
+        <div class="col-12 col-sm-6 col-xl-3 fade-in fi-5">
+            <div class="metric-card mc-rose">
+                <div class="mc-glow"></div>
+                <div class="mc-top">
+                    <div class="mc-icon">
+                        <i class="bi bi-cash-stack"></i>
                     </div>
-                    <p class="metric-label text-white">Expends</p>
-                    <h2 class="metric-value text-white">₹{{ total_spend }}</h2>
+                    <div class="mc-badge">
+                        <i class="bi bi-arrow-down-short"></i> Outflow
+                    </div>
+                </div>
+                <div class="mc-body">
+                    <p class="mc-label">Total Expenses</p>
+                    <h2 class="mc-value">₹{{ total_spend|floatformat:2 }}</h2>
+                </div>
+                <div class="mc-bar">
+                    <div class="mc-bar-fill" style="width: 60%;"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4 mb-4 d-flex align-items-stretch"> 
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden"> 
-            <div class="card-header bg-white border-0 py-4 px-4 d-flex justify-content-between align-items-center">
-                <h5 class="fw-800 mb-0">Recent Activity</h5>
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-light rounded-pill px-3 border" type="button">
-                        Last 30 Days <i class="bi bi-chevron-down ms-1 small"></i>
-                    </button>
+    <!-- ═══════════════════════════════════ -->
+    <!--  MIDDLE ROW: ACTIVITY + SIDEBAR    -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="row g-4 mb-4">
+
+        <!-- Recent Activity -->
+        <div class="col-lg-8 fade-in fi-6">
+            <div class="card dash-card h-100">
+                <div class="card-header dash-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="header-icon bg-indigo-soft">
+                            <i class="bi bi-activity text-indigo"></i>
+                        </div>
+                        <h5 class="dash-card-title">Recent Activity</h5>
+                    </div>
+                    <div class="dropdown">
+                        <button class="filter-btn" type="button">
+                            <i class="bi bi-funnel"></i> Last 30 Days
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body px-4 pt-0 overflow-auto" style="max-height: 480px;"> 
-                <div class="custom-timeline">
-                    {% for activity in activities %}
-                    <div class="timeline-item">
-                        <div class="timeline-dot dot-{{ activity.color }}"></div>
-                        <div class="timeline-content">
-                            <div class="d-flex justify-content-between">
-                                <span class="fw-bold text-dark">{{ activity.title }}</span>
-                                <span class="timeline-time">{{ activity.date|date:"d M Y" }}</span>
+                <div class="card-body p-0">
+                    <div class="activity-feed">
+                        {% for activity in activities %}
+                        <div class="activity-item">
+                            <div class="activity-indicator">
+                                <div class="activity-dot ad-{{ activity.color }}">
+                                    {% if activity.type == 'payment' %}
+                                        <i class="bi bi-arrow-down-left"></i>
+                                    {% else %}
+                                        <i class="bi bi-arrow-up-right"></i>
+                                    {% endif %}
+                                </div>
+                                {% if not forloop.last %}
+                                <div class="activity-line"></div>
+                                {% endif %}
                             </div>
-                            <p class="mb-0 text-muted">{{ activity.description }}</p>
-                            <div class="mt-2">
-                                <span class="amount-pill {% if activity.type == 'payment' %}bg-success-soft text-success{% else %}bg-danger-soft text-danger{% endif %}">
-                                    {% if activity.type == 'payment' %}+{% else %}-{% endif %} ₹{{ activity.amount }}
-                                </span>
+                            <div class="activity-body">
+                                <div class="activity-row">
+                                    <div>
+                                        <span class="activity-title">{{ activity.title }}</span>
+                                        <p class="activity-desc">{{ activity.description }}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="activity-amount {% if activity.type == 'payment' %}amt-green{% else %}amt-red{% endif %}">
+                                            {% if activity.type == 'payment' %}+{% else %}-{% endif %}₹{{ activity.amount }}
+                                        </span>
+                                        <p class="activity-time">{{ activity.date|date:"d M Y" }}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <p>No recent activity found</p>
+                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-lg-4 d-flex flex-column gap-4 fade-in fi-7">
+
+            <!-- Quick Launch -->
+            <div class="card dash-card flex-grow-1">
+                <div class="card-header dash-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="header-icon bg-amber-soft">
+                            <i class="bi bi-rocket-takeoff-fill text-amber"></i>
+                        </div>
+                        <h5 class="dash-card-title">Quick Launch</h5>
+                    </div>
+                </div>
+                <div class="card-body d-flex align-items-center p-4">
+                    <div class="launch-grid w-100">
+                        <a href="{% url 'project_create' %}" class="launch-tile lt-indigo">
+                            <div class="lt-icon"><i class="bi bi-folder-plus"></i></div>
+                            <span class="lt-label">New Project</span>
+                            <i class="bi bi-plus lt-plus"></i>
+                        </a>
+                        <a href="{% url 'client_create' %}" class="launch-tile lt-sky">
+                            <div class="lt-icon"><i class="bi bi-person-plus-fill"></i></div>
+                            <span class="lt-label">Add Client</span>
+                            <i class="bi bi-plus lt-plus"></i>
+                        </a>
+                        <a href="{% url 'payment_create' %}" class="launch-tile lt-emerald">
+                            <div class="lt-icon"><i class="bi bi-wallet2"></i></div>
+                            <span class="lt-label">Record Pay</span>
+                            <i class="bi bi-plus lt-plus"></i>
+                        </a>
+                        <a href="{% url 'spend_create' %}" class="launch-tile lt-rose">
+                            <div class="lt-icon"><i class="bi bi-receipt-cutoff"></i></div>
+                            <span class="lt-label">Log Expense</span>
+                            <i class="bi bi-plus lt-plus"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insight Card -->
+            <div class="insight-card-v2">
+                <div class="insight-bg-pattern"></div>
+                <div class="insight-content">
+                    <div class="insight-top">
+                        <span class="insight-emoji">✨</span>
+                        <span class="insight-label">Pro Insight</span>
+                    </div>
+                    <p class="insight-text">
+                        Revenue is up <strong>12%</strong> this month.
+                        Your project <strong>{{ projects.0.name }}</strong> has the 
+                        highest collection efficiency.
+                    </p>
+                    <div class="insight-bar-wrap">
+                        <div class="insight-bar-track">
+                            <div class="insight-bar-fill"></div>
+                        </div>
+                        <span class="insight-bar-label">87% Efficiency</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-lg-4 d-flex flex-column"> 
-        <div class="card border-0 shadow-sm rounded-4 mb-4 flex-grow-1"> 
-            <div class="card-header bg-white border-0 pt-4 px-4">
-                <h5 class="fw-800 mb-0">Quick Launch</h5>
+    <!-- ═══════════════════════════════════ -->
+    <!--  PROJECT MATRIX TABLE              -->
+    <!-- ═══════════════════════════════════ -->
+         <!-- ═══════════════════════════════════ -->
+    <!--  SEARCH + FILTER BAR              -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="toolbar-card fade-in fi-6">
+        <div class="toolbar-left">
+            <div class="search-wrap">
+                <i class="bi bi-search search-icon"></i>
+                <input
+                    type="text"
+                    id="liveSearch"
+                    value="{{ query|default:'' }}"
+                    class="search-input"
+                    placeholder="Search projects, clients..."
+                    autocomplete="off"
+                >
+                <kbd class="search-kbd">⌘K</kbd>
             </div>
-            <div class="card-body p-4 d-flex align-items-center"> 
-                <div class="action-grid-modern w-100">
-                    <a href="{% url 'project_create' %}" class="q-action gradient-blue">
-                        <i class="bi bi-folder-plus"></i>
-                        <span>Project</span>
-                    </a>
-                    <a href="{% url 'client_create' %}" class="q-action gradient-cyan">
-                        <i class="bi bi-person-plus-fill"></i>
-                        <span>Client</span>
-                    </a>
-                    <a href="{% url 'payment_create' %}" class="q-action gradient-green">
-                        <i class="bi bi-currency-dollar"></i>
-                        <span>Payment</span>
-                    </a>
-                    <a href="{% url 'spend_create' %}" class="q-action gradient-red">
-                        <i class="bi bi-receipt"></i>
-                        <span>Expense</span>
-                    </a>
-                </div>
+
+            <!-- Status Filter Pills -->
+            <div class="filter-pills">
+                <button class="fp-btn active" data-filter="all">
+                    All <span class="fp-count" id="filterAll"></span>
+                </button>
+                <button class="fp-btn" data-filter="ongoing">
+                    <span class="fp-dot dot-blue"></span> Ongoing 
+                    <span class="fp-count" id="filterOngoing"></span>
+                </button>
+                <button class="fp-btn" data-filter="completed">
+                    <span class="fp-dot dot-green"></span> Completed 
+                    <span class="fp-count" id="filterCompleted"></span>
+                </button>
+                <button class="fp-btn" data-filter="on_hold">
+                    <span class="fp-dot dot-amber"></span> On Hold 
+                    <span class="fp-count" id="filterHold"></span>
+                </button>
             </div>
         </div>
-        
-        <div class="card border-0 rounded-4 insight-card p-4">
-            <div class="d-flex align-items-center mb-3">
-                <div class="insight-icon">✨</div>
-                <h6 class="fw-800 mb-0 text-white">Pro Insight</h6>
+
+        <div class="toolbar-right">
+            <div class="result-count">
+                <span id="visibleCount">{{ projects.count }}</span> projects
             </div>
-            <p class="small text-white-50 lh-base mb-0">
-                Revenue is up <span class="text-white fw-bold">12%</span> this month. 
-                Your project <strong>{{ projects.0.name }}</strong> has the highest collection efficiency.
-            </p>
+            <div class="view-toggle">
+                <button class="vt-btn active" data-view="table" title="Table">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+                <button class="vt-btn" data-view="grid" title="Grid">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                </button>
+            </div>
         </div>
     </div>
-</div>
-</div>
 
-    <!-- Project Performance -->
-    <div class="row">
+    <div class="row fade-in fi-8">
         <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-800 mb-0">Project Matrix</h5>
-                    <a href="{% url 'project_list' %}" class="btn btn-primary rounded-pill btn-sm px-4">All Projects</a>
+            <div class="card dash-card overflow-hidden">
+                <div class="card-header dash-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="header-icon bg-violet-soft">
+                            <i class="bi bi-grid-3x3-gap-fill text-violet"></i>
+                        </div>
+                        <div>
+                            <h5 class="dash-card-title mb-0">Project Matrix</h5>
+                            <p class="dash-card-sub">Track budgets, payments & progress</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'project_list' %}" class="view-all-btn">
+                        View All <i class="bi bi-arrow-right"></i>
+                    </a>
                 </div>
+
                 <div class="table-responsive">
-                    <table class="table table-custom align-middle mb-0">
+                    <div id="tableView">
+                    <table class="table dash-table align-middle mb-0">
                         <thead>
                             <tr>
-                                <th class="ps-4">Project Entity</th>
-                                <th>Budget Consumption</th>
-                                <th>Collection Status</th>
-                                <th>Yet to Receive</th>
+                                <th class="ps-4">Project</th>
+                                <th>Budget & Progress</th>
+                                <th>Collected</th>
+                                <th>Pending</th>
                                 <th>Status</th>
-                                <th class="text-end pe-4">Actions</th>
+                                <th class="text-center pe-4">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for project in projects %}
-                            <tr onclick="window.location='{% url 'project_detail' project.id %}'" style="cursor:pointer;">
+                            <tr class="table-row-hover project-row"
+                                data-name="{{ project.name|lower }}"
+                                data-client="{{ project.client_name|lower }}"
+                                data-status="{{ project.status|lower }}"
+                                onclick="window.location='{% url 'project_detail' project.id %}'">
 
-                                <!-- PROJECT INFO -->
-                                <td class="ps-4 py-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-box bg-light text-primary fw-bold">
-                                            {{ project.name|slice:":1" }}
+                                <td class="ps-4 py-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="project-avatar pa-{{ forloop.counter|divisibleby:4|yesno:'rose,indigo' }}{% if forloop.counter|divisibleby:3 %} pa-emerald{% elif forloop.counter|divisibleby:2 %} pa-amber{% else %} pa-indigo{% endif %}">
+                                            {{ project.name|slice:":2"|upper }}
                                         </div>
-                                        <div class="ms-3">
-                                            <div class="fw-bold text-dark fs-6">{{ project.name }}</div>
-                                            <div class="small text-muted">{{ project.client_name }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <!-- BUDGET -->
-                                <td style="width: 280px;">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span class="badge bg-light text-dark fw-bold border">
-                                            ₹{{ project.budget }}
-                                        </span>
-                                        <span class="small fw-bold text-primary">
-                                            {{ project.progress }}%
-                                        </span>
-                                    </div>
-
-                                    <div class="progress rounded-pill shadow-inner" style="height: 8px;">
-                                        <div class="progress-bar bg-primary"
-                                            style="width: {{ project.progress }}%">
+                                        <div>
+                                            <div class="project-name">{{ project.name }}</div>
+                                            <div class="project-client">
+                                                <i class="bi bi-person-fill"></i> {{ project.client_name }}
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
 
-                                <!-- PAID -->
+                                <td style="min-width: 260px;">
+                                    <div class="budget-section">
+                                        <div class="budget-top">
+                                            <span class="budget-amount">₹{{ project.budget }}</span>
+                                            <span class="budget-pct">{{ project.progress }}%</span>
+                                        </div>
+                                        <div class="progress-track">
+                                            <div class="progress-fill pf-gradient" style="width: {{ project.progress }}%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+
                                 <td>
-                                    <div class="received-pill">
-                                        <i class="bi bi-check-circle-fill me-2"></i>
+                                    <div class="collected-chip">
+                                        <i class="bi bi-check-circle-fill"></i>
                                         ₹{{ project.paid }}
                                     </div>
                                 </td>
 
-                                <!-- REMAINING -->
                                 <td>
-                                    <span class="fs-6 fw-800 text-danger">
-                                        ₹{{ project.remaining }}
-                                    </span>
+                                    <span class="pending-amount">₹{{ project.remaining }}</span>
                                 </td>
 
-                                <!-- STATUS -->
                                 <td>
                                     <a href="{% url 'project_update' project.id %}"
-                                    class="text-decoration-none"
-                                    onclick="event.stopPropagation();">
-                                        <span class="badge bg-{{ project.status_color }}-subtle text-{{ project.status_color }} fw-bold">
+                                       class="text-decoration-none"
+                                       onclick="event.stopPropagation();">
+                                        <span class="status-chip sc-{{ project.status_color }}">
                                             {{ project.status_display }}
                                         </span>
                                     </a>
                                 </td>
 
-                                <!-- ACTIONS -->
-                                <td class="text-end pe-4">
-
-                                    <!-- EDIT BUTTON -->
+                                <td class="text-center pe-4">
                                     <a href="{% url 'project_update' project.id %}"
-                                    class="btn btn-sm btn-warning rounded-pill px-3"
-                                    onclick="event.stopPropagation();">
-                                        <i class="bi bi-pencil"></i>
+                                       class="action-btn"
+                                       onclick="event.stopPropagation();"
+                                       title="Edit Project">
+                                        <i class="bi bi-pencil-square"></i>
                                     </a>
-
                                 </td>
 
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">📁</div>
+                                        <p>No projects found. Create your first one!</p>
+                                        <a href="{% url 'project_create' %}" class="btn btn-sm btn-primary rounded-pill px-4">
+                                            <i class="bi bi-plus-lg me-1"></i> Create Project
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                   
+
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+ <!-- ✅ GRID VIEW (NEW) -->
+                    <div id="gridView" style="display:none;">
+                        <div class="row g-3">
+                            {% for project in projects %}
+                            <div class="col-md-4 grid-item"
+                                data-name="{{ project.name|lower }}"
+                                data-client="{{ project.client_name|lower }}"
+                                data-status="{{ project.status|lower }}"
+                                onclick="window.location='{% url 'project_detail' project.id %}'">
+
+                                <div class="card p-3 h-100 shadow-sm">
+                                    <h6>{{ project.name }}</h6>
+                                    <small class="text-muted">{{ project.client_name }}</small>
+
+                                    <div class="mt-2">
+                                        <strong>₹{{ project.budget }}</strong>
+                                    </div>
+
+                                    <div class="progress mt-2" style="height:6px;">
+                                        <div class="progress-bar"
+                                            style="width: {{ project.progress }}%"></div>
+                                    </div>
+
+                                    <div class="mt-2">
+                                        <span class="badge bg-success">₹{{ project.paid }}</span>
+                                        <span class="badge bg-danger">₹{{ project.remaining }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  STYLES                                     -->
+<!-- ════════════════════════════════════════════ -->
 <style>
+    /* ── VARIABLES ── */
     :root {
-        --primary-soft: rgba(67, 97, 238, 0.1);
-        --warning-soft: rgba(255, 193, 7, 0.1);
-        --success-soft: rgba(25, 135, 84, 0.1);
-        --danger-soft: rgba(220, 53, 69, 0.1);
+        --indigo: #6366f1;
+        --indigo-soft: rgba(99, 102, 241, 0.1);
+        --amber: #f59e0b;
+        --amber-soft: rgba(245, 158, 11, 0.1);
+        --emerald: #10b981;
+        --emerald-soft: rgba(16, 185, 129, 0.1);
+        --rose: #f43f5e;
+        --rose-soft: rgba(244, 63, 94, 0.1);
+        --sky: #0ea5e9;
+        --sky-soft: rgba(14, 165, 233, 0.1);
+        --violet: #8b5cf6;
+        --violet-soft: rgba(139, 92, 246, 0.1);
+        --text-1: #0f172a;
+        --text-2: #475569;
+        --text-3: #94a3b8;
+        --surface: #ffffff;
+        --surface-2: #f8fafc;
+        --border: #e2e8f0;
+        --border-light: #f1f5f9;
+        --radius: 16px;
+        --radius-sm: 10px;
+        --radius-xs: 8px;
     }
 
-    .fw-800 { font-weight: 800; }
+    .fw-800 { font-weight: 800 !important; }
 
-    /* Glass Effect Cards */
-    .glass-card {
-        border: 1px solid rgba(255,255,255,0.4) !important;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .glass-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 24px rgba(0,0,0,0.08) !important;
+    .dash-container {
+        padding: 1.5rem 2rem 3rem;
+        max-width: 1440px;
+        margin: 0 auto;
     }
 
-    .metric-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; margin-bottom: 4px;}
-    .metric-value { font-weight: 800; letter-spacing: -1px; color: #1e293b; }
+    /* ── ENTRANCE ANIMATIONS ── */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.5s ease forwards;
+    }
+    .fi-1 { animation-delay: 0.05s; }
+    .fi-2 { animation-delay: 0.1s; }
+    .fi-3 { animation-delay: 0.15s; }
+    .fi-4 { animation-delay: 0.2s; }
+    .fi-5 { animation-delay: 0.25s; }
+    .fi-6 { animation-delay: 0.3s; }
+    .fi-7 { animation-delay: 0.35s; }
+    .fi-8 { animation-delay: 0.4s; }
 
-    /* Badge Styles */
-    .badge-status { padding: 4px 10px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
-    .status-blue { background: #e0e7ff; color: #4338ca; }
-    .status-green { background: #dcfce7; color: #15803d; }
-    .status-red { background: #fee2e2; color: #b91c1c; }
-    .status-orange { background: #fef3c7; color: #b45309; }
+    @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-    /* Timeline Styling */
-    .custom-timeline { position: relative; padding: 20px 0; }
-    .timeline-item { position: relative; padding-left: 35px; margin-bottom: 25px; }
-    .timeline-dot { position: absolute; left: 0; top: 5px; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px #f1f5f9; }
-    .dot-success { background: #22c55e; }
-    .dot-danger { background: #ef4444; }
-    .timeline-time { font-size: 0.75rem; color: #94a3b8; font-weight: 600; }
-    .amount-pill { padding: 2px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; display: inline-block; }
+    /* ══════════════════════ */
+    /*  TOP BAR               */
+    /* ══════════════════════ */
+    .dash-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
 
-    /* Action Grid Modern */
-    .action-grid-modern { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .q-action { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border-radius: 20px; text-decoration: none; transition: 0.3s; color: white; }
-    .q-action i { font-size: 1.5rem; margin-bottom: 8px; }
-    .q-action span { font-weight: 700; font-size: 0.85rem; }
-    .q-action:hover { transform: translateY(-3px); opacity: 0.9; color: white; }
+    .dash-greeting {
+        font-size: 1.65rem;
+        font-weight: 800;
+        color: var(--text-1);
+        letter-spacing: -0.03em;
+        margin-bottom: 2px;
+    }
 
-    .gradient-blue { background: linear-gradient(135deg, #4361ee, #4895ef); }
-    .gradient-cyan { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
-    .gradient-green { background: linear-gradient(135deg, #10b981, #34d399); }
-    .gradient-red { background: linear-gradient(135deg, #f43f5e, #fb7185); }
+    .dash-greeting span {
+        background: linear-gradient(135deg, var(--indigo), var(--violet));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 
-    /* Insight Card */
-    .insight-card { background: #0f172a; position: relative; overflow: hidden; }
-    .insight-icon { font-size: 1.5rem; margin-right: 12px; }
+    .dash-subtitle {
+        font-size: 0.88rem;
+        color: var(--text-3);
+        font-weight: 400;
+        margin: 0;
+    }
 
-    /* Table Improvements */
-    .table-custom thead th { background: #f8fafc; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; color: #64748b; padding: 15px; border: 0; }
-    .table-custom tbody tr { transition: 0.2s; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
-    .table-custom tbody tr:hover { background-color: #fcfdfe; }
-    .avatar-box { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.2rem; }
-    .received-pill { background: #f0fdf4; color: #16a34a; padding: 6px 14px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; }
+    .dash-date-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 100px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-2);
+    }
+
+    .dash-date-box i {
+        color: var(--indigo);
+    }
+
+    /* ══════════════════════ */
+    /*  METRIC CARDS          */
+    /* ══════════════════════ */
+    .metric-card {
+        position: relative;
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: default;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.1);
+        border-color: transparent;
+    }
+
+    .mc-glow {
+        position: absolute;
+        top: -50%;
+        right: -30%;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        filter: blur(50px);
+        opacity: 0.15;
+        transition: opacity 0.3s;
+    }
+
+    .metric-card:hover .mc-glow {
+        opacity: 0.25;
+    }
+
+    /* Color variants */
+    .mc-indigo .mc-icon { background: var(--indigo-soft); color: var(--indigo); }
+    .mc-indigo .mc-badge { background: var(--indigo-soft); color: var(--indigo); }
+    .mc-indigo .mc-glow { background: var(--indigo); }
+    .mc-indigo .mc-bar-fill { background: linear-gradient(90deg, var(--indigo), #818cf8); }
+    .mc-indigo:hover { border-color: rgba(99, 102, 241, 0.2); }
+
+    .mc-amber .mc-icon { background: var(--amber-soft); color: var(--amber); }
+    .mc-amber .mc-badge { background: var(--amber-soft); color: #b45309; }
+    .mc-amber .mc-glow { background: var(--amber); }
+    .mc-amber .mc-bar-fill { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+    .mc-amber:hover { border-color: rgba(245, 158, 11, 0.2); }
+
+    .mc-emerald .mc-icon { background: var(--emerald-soft); color: var(--emerald); }
+    .mc-emerald .mc-badge { background: var(--emerald-soft); color: #047857; }
+    .mc-emerald .mc-glow { background: var(--emerald); }
+    .mc-emerald .mc-bar-fill { background: linear-gradient(90deg, var(--emerald), #34d399); }
+    .mc-emerald:hover { border-color: rgba(16, 185, 129, 0.2); }
+
+    .mc-rose .mc-icon { background: var(--rose-soft); color: var(--rose); }
+    .mc-rose .mc-badge { background: var(--rose-soft); color: #be123c; }
+    .mc-rose .mc-glow { background: var(--rose); }
+    .mc-rose .mc-bar-fill { background: linear-gradient(90deg, var(--rose), #fb7185); }
+    .mc-rose:hover { border-color: rgba(244, 63, 94, 0.2); }
+
+    .mc-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .mc-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+    }
+
+    .mc-badge {
+        padding: 4px 10px;
+        border-radius: 100px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .mc-badge i { font-size: 0.85rem; }
+
+    .mc-body { position: relative; z-index: 1; }
+
+    .mc-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-3);
+        margin-bottom: 4px;
+    }
+
+    .mc-value {
+        font-size: 1.75rem;
+        font-weight: 900;
+        color: var(--text-1);
+        letter-spacing: -0.03em;
+        line-height: 1;
+        margin: 0;
+    }
+
+    .mc-bar {
+        margin-top: 1rem;
+        height: 4px;
+        background: var(--border-light);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+
+    .mc-bar-fill {
+        height: 100%;
+        border-radius: 100px;
+        animation: barGrow 1s ease forwards;
+        transform-origin: left;
+    }
+
+    @keyframes barGrow {
+        from { transform: scaleX(0); }
+        to { transform: scaleX(1); }
+    }
+
+    /* ══════════════════════ */
+    /*  CARDS GLOBAL          */
+    /* ══════════════════════ */
+    .dash-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light) !important;
+        border-radius: var(--radius) !important;
+        overflow: hidden;
+        transition: box-shadow 0.3s;
+    }
+
+    .dash-card:hover {
+        box-shadow: 0 8px 30px -6px rgba(0, 0, 0, 0.06);
+    }
+
+    .dash-card-header {
+        background: var(--surface) !important;
+        border-bottom: 1px solid var(--border-light) !important;
+        padding: 1.25rem 1.5rem !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+
+    .dash-card-title {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--text-1);
+        letter-spacing: -0.01em;
+        margin: 0;
+    }
+
+    .dash-card-sub {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        margin: 2px 0 0 0;
+        font-weight: 400;
+    }
+
+    .header-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+    }
+
+    .bg-indigo-soft { background: var(--indigo-soft); }
+    .bg-amber-soft { background: var(--amber-soft); }
+    .bg-violet-soft { background: var(--violet-soft); }
+    .text-indigo { color: var(--indigo); }
+    .text-amber { color: var(--amber); }
+    .text-violet { color: var(--violet); }
+
+    .filter-btn {
+        padding: 6px 14px;
+        border-radius: 100px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        font-size: 0.76rem;
+        font-weight: 600;
+        color: var(--text-2);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .filter-btn:hover {
+        background: var(--surface-2);
+        border-color: #cbd5e1;
+    }
+
+    .view-all-btn {
+        padding: 8px 18px;
+        border-radius: 100px;
+        background: var(--indigo);
+        color: #fff;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.25s;
+    }
+
+    .view-all-btn:hover {
+        background: #4f46e5;
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+    }
+
+    .view-all-btn i {
+        font-size: 0.7rem;
+        transition: transform 0.2s;
+    }
+
+    .view-all-btn:hover i {
+        transform: translateX(3px);
+    }
+
+    /* ══════════════════════ */
+    /*  ACTIVITY FEED         */
+    /* ══════════════════════ */
+    .activity-feed {
+        padding: 0.5rem 0;
+        max-height: 480px;
+        overflow-y: auto;
+    }
+
+    .activity-feed::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .activity-feed::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .activity-feed::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 100px;
+    }
+
+    .activity-item {
+        display: flex;
+        gap: 16px;
+        padding: 0 1.5rem;
+        transition: background 0.2s;
+    }
+
+    .activity-item:hover {
+        background: var(--surface-2);
+    }
+
+    .activity-indicator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 1.25rem;
+    }
+
+    .activity-dot {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        flex-shrink: 0;
+    }
+
+    .ad-success {
+        background: var(--emerald-soft);
+        color: var(--emerald);
+    }
+
+    .ad-danger {
+        background: var(--rose-soft);
+        color: var(--rose);
+    }
+
+    .activity-line {
+        width: 2px;
+        flex: 1;
+        background: var(--border-light);
+        margin: 6px 0;
+        min-height: 20px;
+    }
+
+    .activity-body {
+        flex: 1;
+        padding: 1.15rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .activity-item:last-child .activity-body {
+        border-bottom: none;
+    }
+
+    .activity-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .activity-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .activity-desc {
+        font-size: 0.78rem;
+        color: var(--text-3);
+        margin: 3px 0 0;
+        font-weight: 400;
+    }
+
+    .activity-amount {
+        font-size: 0.88rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+    }
+
+    .amt-green { color: var(--emerald); }
+    .amt-red { color: var(--rose); }
+
+    .activity-time {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        margin: 3px 0 0;
+        font-weight: 500;
+    }
+
+    /* ══════════════════════ */
+    /*  QUICK LAUNCH          */
+    /* ══════════════════════ */
+    .launch-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .launch-tile {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.35rem 1rem;
+        border-radius: 14px;
+        text-decoration: none;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .launch-tile:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15);
+    }
+
+    .lt-indigo {
+        background: linear-gradient(145deg, #6366f1, #4f46e5);
+        color: #fff;
+    }
+
+    .lt-sky {
+        background: linear-gradient(145deg, #0ea5e9, #0284c7);
+        color: #fff;
+    }
+
+    .lt-emerald {
+        background: linear-gradient(145deg, #10b981, #059669);
+        color: #fff;
+    }
+
+    .lt-rose {
+        background: linear-gradient(145deg, #f43f5e, #e11d48);
+        color: #fff;
+    }
+
+    /* Shine effect */
+    .launch-tile::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        transition: left 0.5s;
+    }
+
+    .launch-tile:hover::before {
+        left: 100%;
+    }
+
+    .lt-icon {
+        font-size: 1.35rem;
+        margin-bottom: 6px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .lt-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        position: relative;
+        z-index: 1;
+    }
+
+    .lt-plus {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        font-size: 0.85rem;
+        opacity: 0;
+        transition: all 0.25s;
+    }
+
+    .launch-tile:hover .lt-plus {
+        opacity: 0.7;
+    }
+
+    /* ══════════════════════ */
+    /*  INSIGHT CARD           */
+    /* ══════════════════════ */
+    .insight-card-v2 {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .insight-bg-pattern {
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15), transparent 50%),
+            radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.1), transparent 50%);
+    }
+
+    .insight-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .insight-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.85rem;
+    }
+
+    .insight-emoji {
+        font-size: 1.25rem;
+    }
+
+    .insight-label {
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .insight-text {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .insight-text strong {
+        color: #fff;
+    }
+
+    .insight-bar-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .insight-bar-track {
+        flex: 1;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+
+    .insight-bar-fill {
+        width: 87%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--indigo), var(--emerald));
+        border-radius: 100px;
+        animation: barGrow 1.2s ease forwards;
+        transform-origin: left;
+    }
+
+    .insight-bar-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--emerald);
+        white-space: nowrap;
+    }
+
+    /* ══════════════════════ */
+    /*  PROJECT TABLE          */
+    /* ══════════════════════ */
+    .dash-table thead th {
+        background: var(--surface-2);
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-3);
+        padding: 14px 16px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .dash-table tbody tr {
+        border-bottom: 1px solid var(--border-light);
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .dash-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .table-row-hover:hover {
+        background: var(--surface-2);
+    }
+
+    .project-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+    }
+
+    .pa-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .pa-amber { background: var(--amber-soft); color: var(--amber); }
+    .pa-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .pa-rose { background: var(--rose-soft); color: var(--rose); }
+
+    .project-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .project-client {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 2px;
+    }
+
+    .project-client i {
+        font-size: 0.65rem;
+    }
+
+    .budget-section {
+        padding-right: 1rem;
+    }
+
+    .budget-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .budget-amount {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .budget-pct {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--indigo);
+        background: var(--indigo-soft);
+        padding: 2px 8px;
+        border-radius: 100px;
+    }
+
+    .progress-track {
+        height: 6px;
+        background: var(--border-light);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 100px;
+        transition: width 0.8s ease;
+    }
+
+    .pf-gradient {
+        background: linear-gradient(90deg, var(--indigo), #818cf8);
+    }
+
+    .collected-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        background: var(--emerald-soft);
+        color: var(--emerald);
+        border-radius: 100px;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .collected-chip i {
+        font-size: 0.75rem;
+    }
+
+    .pending-amount {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: var(--rose);
+    }
+
+    .status-chip {
+        display: inline-block;
+        padding: 5px 14px;
+        border-radius: 100px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.2s;
+    }
+
+    .sc-success { background: var(--emerald-soft); color: var(--emerald); }
+    .sc-warning { background: var(--amber-soft); color: #b45309; }
+    .sc-danger { background: var(--rose-soft); color: var(--rose); }
+    .sc-primary { background: var(--indigo-soft); color: var(--indigo); }
+    .sc-info { background: var(--sky-soft); color: var(--sky); }
+    .sc-secondary { background: #f1f5f9; color: var(--text-3); }
+
+    .status-chip:hover {
+        transform: scale(1.05);
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-2);
+        color: var(--text-2);
+        border: 1px solid var(--border-light);
+        text-decoration: none;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+    }
+
+    .action-btn:hover {
+        background: var(--indigo);
+        color: #fff;
+        border-color: var(--indigo);
+        transform: scale(1.1);
+    }
+
+    /* ══════════════════════ */
+    /*  EMPTY STATE            */
+    /* ══════════════════════ */
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .empty-state p {
+        font-size: 0.85rem;
+        color: var(--text-3);
+        font-weight: 500;
+    }
+
+    /* ══════════════════════ */
+    /*  RESPONSIVE             */
+    /* ══════════════════════ */
+    @media (max-width: 768px) {
+        .dash-container {
+            padding: 1rem;
+        }
+
+        .dash-greeting {
+            font-size: 1.3rem;
+        }
+
+        .dash-topbar {
+            flex-direction: column;
+        }
+
+        .mc-value {
+            font-size: 1.4rem;
+        }
+
+        .launch-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .launch-tile {
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .activity-row {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .activity-row .text-end {
+            text-align: left !important;
+        }
+
+        .dash-card-header {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 0.75rem;
+        }
+    }
+
+     /* ══════════════════ */
+    /*  TOOLBAR            */
+    /* ══════════════════ */
+    .toolbar-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 14px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+        flex-wrap: wrap;
+    }
+
+    .search-wrap {
+        position: relative;
+        min-width: 240px;
+        flex: 1;
+        max-width: 360px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-3);
+        font-size: 0.9rem;
+        pointer-events: none;
+    }
+
+    .search-input {
+        width: 100%;
+        height: 42px;
+        padding: 0 56px 0 40px;
+        border: 1.5px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        background: var(--surface-2);
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-1);
+        font-family: inherit;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+    .search-input::placeholder { color: var(--text-3); font-weight: 400; }
+
+    .search-input:focus {
+        background: var(--surface);
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px var(--indigo-soft);
+    }
+
+    .search-kbd {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 1px 7px;
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: var(--text-3);
+        pointer-events: none;
+        font-family: inherit;
+    }
+
+    /* Filter pills */
+    .filter-pills {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .fp-btn {
+        padding: 6px 14px;
+        border-radius: 100px;
+        border: 1px solid var(--border-light);
+        background: var(--surface);
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-3);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: inherit;
+    }
+
+    .fp-btn:hover {
+        border-color: var(--border);
+        color: var(--text-2);
+        background: var(--surface-2);
+    }
+
+    .fp-btn.active {
+        background: var(--text-1);
+        color: #fff;
+        border-color: var(--text-1);
+    }
+
+    .fp-count {
+        background: rgba(255,255,255,0.2);
+        padding: 1px 7px;
+        border-radius: 100px;
+        font-size: 0.65rem;
+    }
+
+    .fp-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+
+    .dot-blue { background: var(--indigo); }
+    .dot-green { background: var(--emerald); }
+    .dot-amber { background: var(--amber); }
+
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .result-count {
+        font-size: 0.78rem;
+        color: var(--text-3);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .result-count span {
+        color: var(--text-1);
+        font-weight: 800;
+    }
+
+    .view-toggle {
+        display: flex;
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-xs);
+        overflow: hidden;
+    }
+
+    .vt-btn {
+        width: 36px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .vt-btn.active {
+        background: var(--surface);
+        color: var(--indigo);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .vt-btn:hover:not(.active) { color: var(--text-2); }
 </style>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  SCRIPTS                                    -->
+<!-- ════════════════════════════════════════════ -->
+<script>
+    
+    // Live date
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateEl = document.getElementById('currentDate');
+        if (dateEl) {
+            const now = new Date();
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            dateEl.textContent = now.toLocaleDateString('en-IN', options);
+        }
+
+        // Animate counters
+        document.querySelectorAll('.mc-value[data-count]').forEach(el => {
+            const target = parseInt(el.getAttribute('data-count')) || 0;
+            let current = 0;
+            const step = Math.max(1, Math.ceil(target / 40));
+            const timer = setInterval(() => {
+                current += step;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                el.textContent = current.toLocaleString();
+            }, 30);
+        });
+    });
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ═══════════════════════════════
+    //  DYNAMIC GREETING
+    // ═══════════════════════════════
+    const greetingEl = document.getElementById('greetingText');
+    const userName = greetingEl.querySelector('span').outerHTML; // preserve the styled name
+
+    function getGreeting() {
+        const hour = new Date().getHours();
+
+        if (hour >= 5 && hour < 12) {
+            return { text: 'Good Morning', emoji: '☀️' };
+        } else if (hour >= 12 && hour < 17) {
+            return { text: 'Good Afternoon', emoji: '🌤️' };
+        } else if (hour >= 17 && hour < 21) {
+            return { text: 'Good Evening', emoji: '🌅' };
+        } else {
+            return { text: 'Good Night', emoji: '🌙' };
+        }
+    }
+
+    function updateGreeting() {
+        const { text, emoji } = getGreeting();
+        greetingEl.innerHTML = `${text}, ${userName} ${emoji}`;
+    }
+
+    updateGreeting();
+
+    // Auto-update every minute (in case user keeps tab open)
+    setInterval(updateGreeting, 60000);
+
+
+    // ═══════════════════════════════
+    //  LIVE DATE
+    // ═══════════════════════════════
+    const dateEl = document.getElementById('currentDate');
+    if (dateEl) {
+        function updateDate() {
+            const now = new Date();
+            const options = {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            };
+            dateEl.textContent = now.toLocaleDateString('en-IN', options);
+        }
+        updateDate();
+        setInterval(updateDate, 60000);
+    }
+
+
+    // ═══════════════════════════════
+    //  COUNTER ANIMATION
+    // ═══════════════════════════════
+    document.querySelectorAll('.mc-value[data-count]').forEach(el => {
+        const target = parseInt(el.getAttribute('data-count')) || 0;
+        let current = 0;
+        const duration = 1000;
+        const steps = 40;
+        const stepValue = Math.max(1, Math.ceil(target / steps));
+        const interval = duration / steps;
+
+        const timer = setInterval(() => {
+            current += stepValue;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            el.textContent = current.toLocaleString('en-IN');
+        }, interval);
+    });
+
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const searchInput = document.getElementById('liveSearch');
+    const tableRows = document.querySelectorAll('.project-row');
+    const visibleCount = document.getElementById('visibleCount');
+
+    let activeFilter = 'all';
+
+    function applyFilters() {
+        const query = searchInput?.value.toLowerCase().trim() || '';
+
+        let count = 0;
+
+        function match(el) {
+            const name = el.dataset.name || '';
+            const client = el.dataset.client || '';
+            const status = el.dataset.status || '';
+
+            const matchSearch = name.includes(query) || client.includes(query);
+            const matchFilter = activeFilter === 'all' || status === activeFilter;
+
+            return matchSearch && matchFilter;
+        }
+
+        // ✅ TABLE
+        tableRows.forEach(row => {
+            const show = match(row);
+            row.style.display = show ? '' : 'none';
+            if (show) count++;
+        });
+
+        // ✅ GRID (FIX 🔥)
+        gridItems.forEach(item => {
+            const show = match(item);
+            item.style.display = show ? '' : 'none';
+        });
+
+        if (visibleCount) visibleCount.textContent = count;
+
+        updateCounts();
+    }
+
+    // ✅ Dynamic Count Calculation
+    function updateCounts() {
+        let all = 0, ongoing = 0, completed = 0, hold = 0;
+
+        tableRows.forEach(row => {
+            const name = row.dataset.name || '';
+            const client = row.dataset.client || '';
+            const status = row.dataset.status || '';
+
+            const query = searchInput?.value.toLowerCase().trim() || '';
+            const matchSearch = name.includes(query) || client.includes(query);
+
+            if (matchSearch) {
+                all++;
+                if (status === 'ongoing') ongoing++;
+                else if (status === 'completed') completed++;
+                else if (status === 'on_hold') hold++;
+            }
+        });
+
+        document.getElementById('filterAll').textContent = all;
+        document.getElementById('filterOngoing').textContent = ongoing;
+        document.getElementById('filterCompleted').textContent = completed;
+        document.getElementById('filterHold').textContent = hold;
+    }
+
+    // 🔍 Search
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+    }
+
+    // 🎯 Pills
+    document.querySelectorAll('.fp-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.fp-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            activeFilter = this.dataset.filter;
+            applyFilters();
+        });
+    });
+
+    // 🚀 Init
+    applyFilters();
+
+});
+
+
+
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ✅ VIEW TOGGLE FIX
+    const viewBtns = document.querySelectorAll('.vt-btn');
+    const tableView = document.getElementById('tableView');
+    const gridView = document.getElementById('gridView');
+
+    viewBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+
+            viewBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            if (this.dataset.view === 'table') {
+                tableView.style.display = 'block';
+                gridView.style.display = 'none';
+            } else {
+                tableView.style.display = 'none';
+                gridView.style.display = 'block';
+            }
+        });
+    });
+
+});
+</script>
+
 {% endblock %}
