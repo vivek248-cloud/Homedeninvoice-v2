@@ -249,16 +249,15 @@
                                 <a href="{% url 'spend_update' spend.id %}" class="action-btn ab-edit" title="Edit">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                <button type="button" class="action-btn ab-delete" title="Delete"
-                                        data-bs-toggle="modal" data-bs-target="#delSpend{{ spend.id }}">
+                                <a href="{% url 'spend_delete' spend.id %}" class="action-btn ab-delete" title="Delete">
                                     <i class="bi bi-trash3"></i>
-                                </button>
+                                </a>
                             </div>
                         </td>
                     </tr>
 
                     <!-- DELETE MODAL -->
-                    <div class="modal fade" id="delSpend{{ spend.id }}" tabindex="-1" aria-hidden="true">
+                    {% comment %} <div class="modal fade" id="delSpend{{ spend.id }}" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content del-modal">
                                 <div class="modal-body p-0">
@@ -297,7 +296,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> {% endcomment %}
 
                     {% empty %}
                     <tr>
@@ -1369,6 +1368,7 @@
         box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.2);
         max-width: 420px;
         margin: 0 auto;
+        z-index: 1000;
     }
 
     .dm-header {

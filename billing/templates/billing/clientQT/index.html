@@ -251,60 +251,13 @@
                                 <a href="{% url 'qtn_client_update' c.id %}" class="action-btn ab-edit" title="Edit">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                <button type="button" class="action-btn ab-delete" title="Delete"
-                                        data-bs-toggle="modal" data-bs-target="#delClient{{ c.id }}">
+                                <a href="{% url 'qtn_client_delete' c.id %}" class="action-btn ab-delete" title="Delete">
                                     <i class="bi bi-trash3"></i>
-                                </button>
+                                </a>
                             </div>
                         </td>
                     </tr>
 
-                    <!-- DELETE MODAL -->
-                    <div class="modal fade" id="delClient{{ c.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content del-modal">
-                                <div class="modal-body p-0">
-                                    <div class="dm-header">
-                                        <div class="dm-icon-wrap">
-                                            <i class="bi bi-exclamation-triangle-fill"></i>
-                                        </div>
-                                    </div>
-                                    <div class="dm-body">
-                                        <h4 class="dm-title">Archive Client</h4>
-                                        <p class="dm-desc">
-                                            Are you sure you want to remove
-                                            <strong>{{ c.name }}</strong> from your directory?
-                                            This action cannot be undone.
-                                        </p>
-                                        <div class="dm-info-box">
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Client</span>
-                                                <span class="dm-val">{{ c.name }}</span>
-                                            </div>
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">ID</span>
-                                                <span class="dm-val">#CL{{ c.id|stringformat:"03d" }}</span>
-                                            </div>
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Phone</span>
-                                                <span class="dm-val">{{ c.phone1|default:"N/A" }}</span>
-                                            </div>
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Location</span>
-                                                <span class="dm-val">{{ c.location|default:"N/A" }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="dm-footer">
-                                        <button type="button" class="dm-btn dm-cancel" data-bs-dismiss="modal">Cancel</button>
-                                        <a href="{% url 'qtn_client_delete' c.id %}" class="dm-btn dm-delete">
-                                            <i class="bi bi-trash3 me-1"></i> Archive Client
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     {% empty %}
                     <tr>

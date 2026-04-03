@@ -1,0 +1,1058 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Client Detail | {{ client.name }}{% endblock %}
+{% block page_title %}Client Profile{% endblock %}
+
+{% block content %}
+<div class="fixed-layout">
+
+    <!-- Fixed Header Section -->
+    <div class="fixed-header">
+        
+        <!-- Page Header -->
+        <div class="page-header fade-in fi-1">
+            <div class="page-header-left">
+                <a href="{% url 'client_list' %}" class="back-btn">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div class="client-avatar">
+                    {{ client.name|slice:":1"|upper }}
+                </div>
+                <div>
+                    <h1 class="page-title">{{ client.name }}</h1>
+                    <p class="page-subtitle">
+                        <i class="bi bi-phone"></i> +91 {{ client.mobile_1 }}
+                        {% if client.email %}
+                            <span class="subtitle-sep">•</span>
+                            <i class="bi bi-envelope"></i> {{ client.email }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="header-badges">
+                <span class="client-id-badge">
+                    <i class="bi bi-hash"></i> CL-{{ client.id|stringformat:"04d" }}
+                </span>
+                <span class="discount-badge">
+                    <i class="bi bi-percent"></i> {{ client.discount }}% Discount
+                </span>
+                <a href="{% url 'client_update' client.id %}" class="edit-btn">
+                    <i class="bi bi-pencil-square"></i>
+                    <span>Edit Profile</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid fade-in fi-2">
+            <div class="stat-card sc-projects">
+                <div class="sc-icon-wrap">
+                    <i class="bi bi-briefcase-fill"></i>
+                </div>
+                <div class="sc-content">
+                    <span class="sc-label">Total Projects</span>
+                    <span class="sc-value">{{ project_count }}</span>
+                </div>
+                <div class="sc-mini-stats">
+                    <span class="sms-item sms-ongoing">{{ status_counts.ongoing }} Active</span>
+                    <span class="sms-item sms-completed">{{ status_counts.completed }} Done</span>
+                </div>
+            </div>
+            <div class="stat-card sc-budget">
+                <div class="sc-icon-wrap">
+                    <i class="bi bi-bank"></i>
+                </div>
+                <div class="sc-content">
+                    <span class="sc-label">Total Budget</span>
+                    <span class="sc-value">₹{{ total_budget|floatformat:0 }}</span>
+                </div>
+            </div>
+            <div class="stat-card sc-paid">
+                <div class="sc-icon-wrap">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+                <div class="sc-content">
+                    <span class="sc-label">Total Collected</span>
+                    <span class="sc-value sc-positive">₹{{ total_paid|floatformat:0 }}</span>
+                </div>
+            </div>
+            <div class="stat-card sc-balance">
+                <div class="sc-icon-wrap">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="sc-content">
+                    <span class="sc-label">Outstanding</span>
+                    <span class="sc-value {% if total_balance > 0 %}sc-negative{% else %}sc-positive{% endif %}">
+                        ₹{{ total_balance|floatformat:0 }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scrollable Content Area -->
+    <div class="scroll-content-area">
+        <div class="row g-4">
+
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <div class="main-scroll-container" id="mainScrollContainer">
+
+                    <!-- Projects Table -->
+                    <div class="data-card fade-in fi-2">
+                        <div class="dc-header">
+                            <div class="dc-header-left">
+                                <div class="dc-icon dc-indigo">
+                                    <i class="bi bi-briefcase-fill"></i>
+                                </div>
+                                <div>
+                                    <h6 class="dc-title">Projects</h6>
+                                    <p class="dc-subtitle">All projects for this client</p>
+                                </div>
+                            </div>
+                            <div class="dc-header-right">
+                                <span class="count-badge">
+                                    <i class="bi bi-folder"></i> {{ project_count }} Projects
+                                </span>
+                                <a href="{% url 'project_create' %}?client={{ client.id }}" class="add-btn">
+                                    <i class="bi bi-plus-lg"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="dc-body">
+                            {% if project_stats %}
+                            <div class="table-scroll-container">
+                                <table class="custom-table">
+                                    <thead class="sticky-thead">
+                                        <tr>
+                                            <th class="th-project">Project</th>
+                                            <th>Status</th>
+                                            <th>Budget</th>
+                                            <th>Spent</th>
+                                            <th>Collected</th>
+                                            <th class="th-right">Balance</th>
+                                            <th class="th-action">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for stat in project_stats %}
+                                        <tr class="tr-hover">
+                                            <td class="td-project">
+                                                <a href="{% url 'project_detail' stat.project.id %}" class="project-link">
+                                                    <div class="project-name">{{ stat.project.name }}</div>
+                                                    <div class="project-id">PRJ-{{ stat.project.id|stringformat:"04d" }}</div>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="status-chip status-{{ stat.project.status }}">
+                                                    {% if stat.project.status == 'ongoing' %}
+                                                        <i class="bi bi-play-circle-fill"></i>
+                                                    {% elif stat.project.status == 'completed' %}
+                                                        <i class="bi bi-check-circle-fill"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-pause-circle-fill"></i>
+                                                    {% endif %}
+                                                    {{ stat.project.status|title }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="money-value">₹{{ stat.project.budget|floatformat:0 }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="spent-cell">
+                                                    <span class="money-value">₹{{ stat.spent|floatformat:0 }}</span>
+                                                    <div class="mini-progress">
+                                                        <div class="mini-progress-bar" style="width: {{ stat.progress }}%"></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="money-positive">₹{{ stat.paid|floatformat:0 }}</span>
+                                            </td>
+                                            <td class="td-right">
+                                                <span class="balance-chip {% if stat.balance > 0 %}bc-warning{% elif stat.balance < 0 %}bc-success{% else %}bc-neutral{% endif %}">
+                                                    ₹{{ stat.balance|floatformat:0 }}
+                                                </span>
+                                            </td>
+                                            <td class="td-action">
+                                                <div class="action-group">
+                                                    <a href="{% url 'project_detail' stat.project.id %}" class="action-link al-view" title="View">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'project_update' stat.project.id %}" class="action-link al-edit" title="Edit">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="table-footer-sticky">
+                                <div class="tf-stats">
+                                    <div class="tf-stat">
+                                        <span class="tf-label">Total Budget</span>
+                                        <span class="tf-value">₹{{ total_budget|floatformat:0 }}</span>
+                                    </div>
+                                    <div class="tf-stat">
+                                        <span class="tf-label">Total Spent</span>
+                                        <span class="tf-value tf-amber">₹{{ total_spent|floatformat:0 }}</span>
+                                    </div>
+                                    <div class="tf-stat">
+                                        <span class="tf-label">Total Collected</span>
+                                        <span class="tf-value tf-emerald">₹{{ total_paid|floatformat:0 }}</span>
+                                    </div>
+                                    <div class="tf-stat">
+                                        <span class="tf-label">Outstanding</span>
+                                        <span class="tf-value {% if total_balance > 0 %}tf-rose{% else %}tf-emerald{% endif %}">
+                                            ₹{{ total_balance|floatformat:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <div class="es-icon">
+                                    <i class="bi bi-briefcase"></i>
+                                </div>
+                                <h6 class="es-title">No Projects Yet</h6>
+                                <p class="es-text">This client doesn't have any projects yet.</p>
+                                <a href="{% url 'project_create' %}?client={{ client.id }}" class="es-btn">
+                                    <i class="bi bi-plus-lg"></i> Create First Project
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Recent Payments -->
+                    <div class="data-card fade-in fi-3">
+                        <div class="dc-header dc-header-dark">
+                            <div class="dc-header-left">
+                                <div class="dc-icon dc-emerald">
+                                    <i class="bi bi-cash-stack"></i>
+                                </div>
+                                <div>
+                                    <h6 class="dc-title">Recent Payments</h6>
+                                    <p class="dc-subtitle">Payment history across all projects</p>
+                                </div>
+                            </div>
+                            <div class="dc-header-right">
+                                <span class="count-badge cb-dark">
+                                    <i class="bi bi-receipt"></i> {{ payment_count }} Payments
+                                </span>
+                            </div>
+                        </div>
+                        <div class="dc-body">
+                            {% if recent_payments %}
+                            <div class="table-scroll-container">
+                                <table class="custom-table">
+                                    <thead class="sticky-thead">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Project</th>
+                                            <th>Amount</th>
+                                            <th>Mode</th>
+                                            <th class="th-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for payment in recent_payments %}
+                                        <tr class="tr-hover">
+                                            <td>
+                                                <span class="date-value">{{ payment.date }}</span>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'project_detail' payment.project_id %}" class="project-mini-link">
+                                                    {{ payment.project }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="money-positive">+ ₹{{ payment.amount|floatformat:0 }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="mode-badge">{{ payment.mode }}</span>
+                                            </td>
+                                            <td class="td-center">
+                                                <div class="action-group">
+                                                    <a href="{{ payment.whatsapp_url }}" target="_blank" class="action-link al-whatsapp" title="Share on WhatsApp">
+                                                        <i class="bi bi-whatsapp"></i>
+                                                    </a>
+                                                    <a href="{% url 'payment_invoice' payment.id %}" target="_blank" class="action-link al-pdf" title="Download Receipt">
+                                                        <i class="bi bi-file-earmark-pdf"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <div class="es-icon es-icon-success">
+                                    <i class="bi bi-wallet2"></i>
+                                </div>
+                                <h6 class="es-title">No Payments Yet</h6>
+                                <p class="es-text">No payment records for this client.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="sidebar-scroll-container" id="sidebarScrollContainer">
+
+                    <!-- Client Info Card -->
+                    <div class="sidebar-card client-profile-card fade-in fi-2">
+                        <div class="cpc-header">
+                            <div class="cpc-avatar">
+                                {{ client.name|slice:":1"|upper }}
+                            </div>
+                            <div class="cpc-info">
+                                <h5 class="cpc-name">{{ client.name }}</h5>
+                                <span class="cpc-id">CL-{{ client.id|stringformat:"04d" }}</span>
+                            </div>
+                        </div>
+                        <div class="cpc-body">
+                            <div class="cpc-item">
+                                <div class="cpc-icon"><i class="bi bi-phone"></i></div>
+                                <div class="cpc-content">
+                                    <span class="cpc-label">Primary Mobile</span>
+                                    <span class="cpc-value">+91 {{ client.mobile_1 }}</span>
+                                </div>
+                            </div>
+                            {% if client.mobile_2 %}
+                            <div class="cpc-item">
+                                <div class="cpc-icon"><i class="bi bi-phone"></i></div>
+                                <div class="cpc-content">
+                                    <span class="cpc-label">Secondary Mobile</span>
+                                    <span class="cpc-value">+91 {{ client.mobile_2 }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if client.email %}
+                            <div class="cpc-item">
+                                <div class="cpc-icon"><i class="bi bi-envelope"></i></div>
+                                <div class="cpc-content">
+                                    <span class="cpc-label">Email</span>
+                                    <span class="cpc-value cpc-truncate">{{ client.email }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="cpc-item">
+                                <div class="cpc-icon"><i class="bi bi-geo-alt"></i></div>
+                                <div class="cpc-content">
+                                    <span class="cpc-label">Address</span>
+                                    <span class="cpc-value cpc-address">{{ client.address|default:"Not provided" }}</span>
+                                </div>
+                            </div>
+                            {% if client.gst_number %}
+                            <div class="cpc-item">
+                                <div class="cpc-icon"><i class="bi bi-building"></i></div>
+                                <div class="cpc-content">
+                                    <span class="cpc-label">GST Number</span>
+                                    <span class="cpc-value cpc-mono">{{ client.gst_number }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="cpc-item">
+                                <div class="cpc-icon cpc-icon-emerald"><i class="bi bi-percent"></i></div>
+                                <div class="cpc-content">
+                                    <span class="cpc-label">Discount Rate</span>
+                                    <span class="cpc-value cpc-highlight">{{ client.discount }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cpc-actions">
+                            <a href="tel:+91{{ client.mobile_1 }}" class="cpc-btn cpc-call">
+                                <i class="bi bi-telephone-fill"></i> Call
+                            </a>
+                            <a href="https://wa.me/91{{ client.mobile_1 }}" target="_blank" class="cpc-btn cpc-whatsapp">
+                                <i class="bi bi-whatsapp"></i> WhatsApp
+                            </a>
+                            {% if client.email %}
+                            <a href="mailto:{{ client.email }}" class="cpc-btn cpc-email">
+                                <i class="bi bi-envelope-fill"></i> Email
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Financial Summary -->
+                    <div class="sidebar-card fade-in fi-3">
+                        <div class="sbc-header">
+                            <div class="sbc-icon sbc-emerald"><i class="bi bi-pie-chart-fill"></i></div>
+                            <h6 class="sbc-title">Financial Overview</h6>
+                        </div>
+                        <div class="finance-summary">
+                            <div class="fs-item">
+                                <div class="fs-bar">
+                                    <div class="fs-bar-fill fs-budget" style="width: 100%"></div>
+                                </div>
+                                <div class="fs-data">
+                                    <span class="fs-label">Total Budget</span>
+                                    <span class="fs-value">₹{{ total_budget|floatformat:0 }}</span>
+                                </div>
+                            </div>
+                            <div class="fs-item">
+                                <div class="fs-bar">
+                                    <div class="fs-bar-fill fs-spent" style="width: {% widthratio total_spent total_budget 100 %}%"></div>
+                                </div>
+                                <div class="fs-data">
+                                    <span class="fs-label">Total Spent</span>
+                                    <span class="fs-value">₹{{ total_spent|floatformat:0 }}</span>
+                                </div>
+                            </div>
+                            <div class="fs-item">
+                                <div class="fs-bar">
+                                    <div class="fs-bar-fill fs-paid" style="width: {% widthratio total_paid total_spent 100 %}%"></div>
+                                </div>
+                                <div class="fs-data">
+                                    <span class="fs-label">Collected</span>
+                                    <span class="fs-value fs-positive">₹{{ total_paid|floatformat:0 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fs-footer">
+                            <div class="fs-balance">
+                                <span class="fs-balance-label">Outstanding Balance</span>
+                                <span class="fs-balance-value {% if total_balance > 0 %}fs-negative{% else %}fs-positive{% endif %}">
+                                    ₹{{ total_balance|floatformat:0 }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project Status Summary -->
+                    <div class="sidebar-card fade-in fi-3">
+                        <div class="sbc-header">
+                            <div class="sbc-icon sbc-violet"><i class="bi bi-bar-chart-fill"></i></div>
+                            <h6 class="sbc-title">Project Status</h6>
+                        </div>
+                        <div class="status-summary">
+                            <div class="ss-item ss-ongoing">
+                                <div class="ss-icon"><i class="bi bi-play-circle-fill"></i></div>
+                                <div class="ss-content">
+                                    <span class="ss-count">{{ status_counts.ongoing }}</span>
+                                    <span class="ss-label">Ongoing</span>
+                                </div>
+                            </div>
+                            <div class="ss-item ss-completed">
+                                <div class="ss-icon"><i class="bi bi-check-circle-fill"></i></div>
+                                <div class="ss-content">
+                                    <span class="ss-count">{{ status_counts.completed }}</span>
+                                    <span class="ss-label">Completed</span>
+                                </div>
+                            </div>
+                            <div class="ss-item ss-hold">
+                                <div class="ss-icon"><i class="bi bi-pause-circle-fill"></i></div>
+                                <div class="ss-content">
+                                    <span class="ss-count">{{ status_counts.hold }}</span>
+                                    <span class="ss-label">On Hold</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="sidebar-card fade-in fi-3">
+                        <div class="sbc-header">
+                            <div class="sbc-icon sbc-amber"><i class="bi bi-lightning-charge-fill"></i></div>
+                            <h6 class="sbc-title">Quick Actions</h6>
+                        </div>
+                        <div class="quick-actions">
+                            <a href="{% url 'project_create' %}?client={{ client.id }}" class="qa-item qa-primary">
+                                <div class="qa-icon"><i class="bi bi-briefcase-fill"></i></div>
+                                <div class="qa-content">
+                                    <span class="qa-label">New Project</span>
+                                    <span class="qa-desc">Create a new project</span>
+                                </div>
+                                <i class="bi bi-chevron-right qa-arrow"></i>
+                            </a>
+                            <a href="{% url 'payment_create' %}?client={{ client.id }}" class="qa-item qa-success">
+                                <div class="qa-icon"><i class="bi bi-wallet2"></i></div>
+                                <div class="qa-content">
+                                    <span class="qa-label">Record Payment</span>
+                                    <span class="qa-desc">Add new payment</span>
+                                </div>
+                                <i class="bi bi-chevron-right qa-arrow"></i>
+                            </a>
+                            <a href="{% url 'client_update' client.id %}" class="qa-item qa-warning">
+                                <div class="qa-icon"><i class="bi bi-pencil-square"></i></div>
+                                <div class="qa-content">
+                                    <span class="qa-label">Edit Profile</span>
+                                    <span class="qa-desc">Update client info</span>
+                                </div>
+                                <i class="bi bi-chevron-right qa-arrow"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Notes Card -->
+                    {% if client.notes %}
+                    <div class="sidebar-card fade-in fi-4">
+                        <div class="sbc-header">
+                            <div class="sbc-icon sbc-sky"><i class="bi bi-journal-text"></i></div>
+                            <h6 class="sbc-title">Internal Notes</h6>
+                        </div>
+                        <div class="notes-content">
+                            {{ client.notes|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Navigation -->
+                    <div class="nav-card fade-in fi-4">
+                        <a href="{% url 'client_list' %}" class="nc-link bg-primary text-white">
+                            <i class="bi bi-arrow-left"></i>
+                            <span>Back to Clients</span>
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<style>
+:root {
+    --primary: #6366f1;
+    --primary-soft: rgba(99,102,241,0.08);
+    --emerald: #10b981;
+    --emerald-soft: rgba(16,185,129,0.08);
+    --amber: #f59e0b;
+    --amber-soft: rgba(245,158,11,0.08);
+    --rose: #f43f5e;
+    --rose-soft: rgba(244,63,94,0.08);
+    --violet: #8b5cf6;
+    --violet-soft: rgba(139,92,246,0.08);
+    --sky: #0ea5e9;
+    --sky-soft: rgba(14,165,233,0.08);
+    --text-1: #0f172a;
+    --text-2: #475569;
+    --text-3: #94a3b8;
+    --surface: #fff;
+    --surface-2: #f8fafc;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --page-padding: 1.5rem;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIXED LAYOUT STRUCTURE
+   ══════════════════════════════════════════════════════════════ */
+
+.fixed-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--surface-2);
+}
+
+.fixed-header {
+    flex-shrink: 0;
+    padding: var(--page-padding) var(--page-padding) 0;
+    background: var(--surface-2);
+    z-index: 100;
+}
+
+.scroll-content-area {
+    flex: 1;
+    overflow: hidden;
+    padding: 1rem var(--page-padding) var(--page-padding);
+}
+
+.scroll-content-area > .row {
+    height: 100%;
+}
+
+.scroll-content-area > .row > .col-lg-8,
+.scroll-content-area > .row > .col-lg-4 {
+    height: 100%;
+}
+
+.main-scroll-container,
+.sidebar-scroll-container {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+    scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+.main-scroll-container::-webkit-scrollbar,
+.sidebar-scroll-container::-webkit-scrollbar,
+.table-scroll-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.main-scroll-container::-webkit-scrollbar-track,
+.sidebar-scroll-container::-webkit-scrollbar-track,
+.table-scroll-container::-webkit-scrollbar-track {
+    background: var(--border-light);
+    border-radius: 10px;
+}
+
+.main-scroll-container::-webkit-scrollbar-thumb,
+.sidebar-scroll-container::-webkit-scrollbar-thumb,
+.table-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+.main-scroll-container::-webkit-scrollbar-thumb:hover,
+.sidebar-scroll-container::-webkit-scrollbar-thumb:hover,
+.table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-3);
+}
+
+.table-scroll-container {
+    max-height: 280px;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+.sticky-thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--surface-2);
+}
+
+/* Animations */
+.fade-in { opacity: 0; transform: translateY(12px); animation: fadeIn 0.4s ease forwards; }
+.fi-1 { animation-delay: .02s; } .fi-2 { animation-delay: .05s; }
+.fi-3 { animation-delay: .08s; } .fi-4 { animation-delay: .11s; }
+@keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+/* ══════════════════════════════════════════════════════════════
+   PAGE HEADER
+   ══════════════════════════════════════════════════════════════ */
+
+.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:1rem; }
+.page-header-left { display:flex; align-items:center; gap:14px; }
+
+.client-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary), var(--violet));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 800;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+}
+
+.back-btn { width:36px; height:36px; border-radius:10px; border:1px solid var(--border-light); background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--text-3); text-decoration:none; transition:all .2s; }
+.back-btn:hover { background:var(--surface-2); color:var(--text-1); transform:translateX(-2px); }
+
+.page-title { font-size:1.4rem; font-weight:800; color:var(--text-1); margin:0; letter-spacing:-.02em; }
+.page-subtitle { font-size:.75rem; color:var(--text-3); margin:4px 0 0; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.page-subtitle i { font-size:.65rem; }
+.subtitle-sep { color:var(--border); }
+
+.header-badges { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+.client-id-badge { display:flex; align-items:center; gap:4px; padding:6px 12px; background:var(--surface); border:1px solid var(--border-light); border-radius:100px; font-size:.7rem; font-weight:800; color:var(--text-2); }
+.client-id-badge i { color:var(--primary); }
+
+.discount-badge { display:flex; align-items:center; gap:4px; padding:6px 12px; background:var(--emerald-soft); border:1px solid rgba(16,185,129,.15); border-radius:100px; font-size:.7rem; font-weight:700; color:var(--emerald); }
+
+.edit-btn { display:flex; align-items:center; gap:6px; padding:8px 14px; background:var(--amber); color:#fff; border-radius:8px; font-size:.75rem; font-weight:600; text-decoration:none; transition:all .2s; }
+.edit-btn:hover { background:#d97706; transform:translateY(-1px); color:#fff; }
+
+/* ══════════════════════════════════════════════════════════════
+   STATS GRID
+   ══════════════════════════════════════════════════════════════ */
+
+.stats-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:0; }
+.stat-card { position:relative; background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); padding:14px 16px; display:flex; flex-direction:column; gap:8px; overflow:hidden; transition:all .3s; }
+.stat-card:hover { box-shadow:0 8px 24px -8px rgba(0,0,0,.08); transform:translateY(-2px); }
+
+.sc-icon-wrap { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:.9rem; }
+.sc-projects .sc-icon-wrap { background:var(--primary-soft); color:var(--primary); }
+.sc-budget .sc-icon-wrap { background:var(--sky-soft); color:var(--sky); }
+.sc-paid .sc-icon-wrap { background:var(--emerald-soft); color:var(--emerald); }
+.sc-balance .sc-icon-wrap { background:var(--rose-soft); color:var(--rose); }
+
+.sc-content { display:flex; flex-direction:column; }
+.sc-label { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-3); margin-bottom:2px; }
+.sc-value { font-size:1.15rem; font-weight:800; color:var(--text-1); }
+.sc-value.sc-positive { color:var(--emerald); }
+.sc-value.sc-negative { color:var(--rose); }
+
+.sc-mini-stats { display:flex; gap:8px; margin-top:4px; }
+.sms-item { font-size:.6rem; font-weight:600; padding:2px 6px; border-radius:4px; }
+.sms-ongoing { background:var(--emerald-soft); color:var(--emerald); }
+.sms-completed { background:var(--primary-soft); color:var(--primary); }
+
+/* ══════════════════════════════════════════════════════════════
+   DATA CARD
+   ══════════════════════════════════════════════════════════════ */
+
+.data-card { background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); overflow:hidden; margin-bottom:1rem; }
+.dc-header { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:var(--surface-2); border-bottom:1px solid var(--border-light); }
+.dc-header-dark { background:linear-gradient(135deg, #0f172a, #1e293b); border-bottom:none; }
+.dc-header-dark .dc-title { color:#fff; }
+.dc-header-dark .dc-subtitle { color:rgba(255,255,255,.5); }
+.dc-header-left { display:flex; align-items:center; gap:10px; }
+.dc-header-right { display:flex; align-items:center; gap:8px; }
+.dc-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.85rem; }
+.dc-indigo { background:var(--primary-soft); color:var(--primary); }
+.dc-emerald { background:var(--emerald-soft); color:var(--emerald); }
+.dc-title { font-size:.82rem; font-weight:800; color:var(--text-1); margin:0; }
+.dc-subtitle { font-size:.62rem; color:var(--text-3); margin:0; }
+.dc-body { padding:0; }
+
+.count-badge { display:flex; align-items:center; gap:5px; padding:5px 10px; background:var(--surface); border:1px solid var(--border-light); border-radius:100px; font-size:.65rem; font-weight:700; color:var(--text-2); }
+.count-badge i { font-size:.65rem; color:var(--primary); }
+.cb-dark { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.1); color:rgba(255,255,255,.7); }
+.cb-dark i { color:var(--emerald); }
+
+.add-btn { width:30px; height:30px; border-radius:8px; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; text-decoration:none; transition:all .2s; }
+.add-btn:hover { background:#4f46e5; transform:scale(1.05); color:#fff; }
+
+/* ══════════════════════════════════════════════════════════════
+   CUSTOM TABLE
+   ══════════════════════════════════════════════════════════════ */
+
+.custom-table { width:100%; border-collapse:collapse; }
+.custom-table thead { background:var(--surface-2); }
+.custom-table th { padding:10px 14px; font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-3); text-align:left; border-bottom:1px solid var(--border-light); white-space:nowrap; }
+.th-project { padding-left:18px; min-width:150px; }
+.th-center { text-align:center; }
+.th-right { text-align:right; }
+.th-action { text-align:center; width:80px; }
+.custom-table td { padding:12px 14px; font-size:.78rem; color:var(--text-2); border-bottom:1px solid var(--border-light); vertical-align:middle; }
+
+.tr-hover { transition:all .2s; }
+.tr-hover:hover { background:var(--surface-2); }
+
+.td-project { padding-left:18px; }
+.project-link { text-decoration:none; display:block; }
+.project-name { font-weight:700; color:var(--text-1); font-size:.78rem; transition:color .2s; }
+.project-link:hover .project-name { color:var(--primary); }
+.project-id { font-size:.62rem; color:var(--text-3); margin-top:2px; }
+
+.project-mini-link { color:var(--primary); text-decoration:none; font-weight:600; }
+.project-mini-link:hover { text-decoration:underline; }
+
+.status-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:100px; font-size:.62rem; font-weight:700; }
+.status-ongoing { background:var(--emerald-soft); color:var(--emerald); }
+.status-completed { background:var(--primary-soft); color:var(--primary); }
+.status-hold { background:var(--amber-soft); color:var(--amber); }
+
+.money-value { font-weight:600; color:var(--text-1); }
+.money-positive { font-weight:700; color:var(--emerald); }
+
+.spent-cell { display:flex; flex-direction:column; gap:4px; }
+.mini-progress { height:4px; background:var(--border-light); border-radius:100px; overflow:hidden; width:60px; }
+.mini-progress-bar { height:100%; background:var(--amber); border-radius:100px; }
+
+.td-right { text-align:right; }
+.balance-chip { display:inline-block; padding:4px 10px; border-radius:100px; font-size:.68rem; font-weight:700; }
+.bc-warning { background:var(--amber-soft); color:var(--amber); }
+.bc-success { background:var(--emerald-soft); color:var(--emerald); }
+.bc-neutral { background:var(--surface-2); color:var(--text-3); }
+.bc-danger { background:var(--rose-soft); color:var(--rose); }
+
+.td-action { text-align:center; }
+.action-group { display:flex; align-items:center; justify-content:center; gap:5px; }
+.action-link { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all .2s; text-decoration:none; }
+.al-view { background:var(--primary-soft); color:var(--primary); }
+.al-view:hover { background:var(--primary); color:#fff; }
+.al-edit { background:var(--amber-soft); color:var(--amber); }
+.al-edit:hover { background:var(--amber); color:#fff; }
+.al-whatsapp { background:rgba(37,211,102,.1); color:#25d366; }
+.al-whatsapp:hover { background:#25d366; color:#fff; }
+.al-pdf { background:var(--rose-soft); color:var(--rose); }
+.al-pdf:hover { background:var(--rose); color:#fff; }
+
+.date-value { font-weight:600; color:var(--text-2); font-size:.75rem; }
+.mode-badge { padding:3px 8px; background:var(--surface-2); border:1px solid var(--border-light); border-radius:6px; font-size:.65rem; font-weight:600; color:var(--text-2); }
+
+/* Table Footer */
+.table-footer-sticky {
+    padding: 14px 18px;
+    background: linear-gradient(135deg, var(--surface-2), var(--surface));
+    border-top: 1px solid var(--border-light);
+}
+
+.tf-stats { display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.tf-stat { display:flex; flex-direction:column; gap:2px; }
+.tf-label { font-size:.58rem; font-weight:700; text-transform:uppercase; color:var(--text-3); }
+.tf-value { font-size:.85rem; font-weight:800; color:var(--text-1); }
+.tf-amber { color:var(--amber); }
+.tf-emerald { color:var(--emerald); }
+.tf-rose { color:var(--rose); }
+
+/* ══════════════════════════════════════════════════════════════
+   EMPTY STATE
+   ══════════════════════════════════════════════════════════════ */
+
+.empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; }
+.es-icon { width:56px; height:56px; border-radius:14px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:var(--text-3); margin-bottom:14px; }
+.es-icon-success { background:var(--emerald-soft); color:var(--emerald); }
+.es-title { font-size:.85rem; font-weight:800; color:var(--text-1); margin:0 0 5px; }
+.es-text { font-size:.75rem; color:var(--text-3); margin:0 0 16px; }
+.es-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; background:var(--primary); color:#fff; border-radius:8px; font-size:.75rem; font-weight:600; text-decoration:none; transition:all .2s; }
+.es-btn:hover { background:#4f46e5; transform:translateY(-1px); color:#fff; }
+
+/* ══════════════════════════════════════════════════════════════
+   CLIENT PROFILE CARD
+   ══════════════════════════════════════════════════════════════ */
+
+.client-profile-card {
+    background: linear-gradient(135deg, var(--surface), var(--surface-2));
+    border: 1px solid var(--border-light);
+}
+
+.cpc-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 16px;
+}
+
+.cpc-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary), var(--violet));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.25);
+}
+
+.cpc-info { flex: 1; }
+.cpc-name { font-size: 1rem; font-weight: 800; color: var(--text-1); margin: 0 0 4px; }
+.cpc-id { font-size: .68rem; font-weight: 700; color: var(--text-3); background: var(--surface-2); padding: 3px 8px; border-radius: 4px; }
+
+.cpc-body { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+
+.cpc-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+}
+
+.cpc-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    flex-shrink: 0;
+}
+
+.cpc-icon-emerald { background: var(--emerald-soft); color: var(--emerald); }
+
+.cpc-content { flex: 1; min-width: 0; }
+.cpc-label { display: block; font-size: .58rem; font-weight: 700; text-transform: uppercase; color: var(--text-3); margin-bottom: 2px; }
+.cpc-value { display: block; font-size: .78rem; font-weight: 600; color: var(--text-1); }
+.cpc-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cpc-address { font-size: .72rem; line-height: 1.4; white-space: normal; }
+.cpc-mono { font-family: 'SF Mono', monospace; letter-spacing: .5px; }
+.cpc-highlight { color: var(--emerald); font-weight: 700; }
+
+.cpc-actions { display: flex; gap: 8px; }
+.cpc-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: .7rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .2s;
+}
+.cpc-call { background: var(--primary-soft); color: var(--primary); }
+.cpc-call:hover { background: var(--primary); color: #fff; }
+.cpc-whatsapp { background: rgba(37,211,102,.1); color: #25d366; }
+.cpc-whatsapp:hover { background: #25d366; color: #fff; }
+.cpc-email { background: var(--rose-soft); color: var(--rose); }
+.cpc-email:hover { background: var(--rose); color: #fff; }
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR CARDS
+   ══════════════════════════════════════════════════════════════ */
+
+.sidebar-card { background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); padding:16px; margin-bottom:.75rem; transition:all .3s; }
+.sidebar-card:hover { box-shadow:0 8px 24px -8px rgba(0,0,0,.06); }
+.sbc-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.sbc-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.75rem; }
+.sbc-sky { background:var(--sky-soft); color:var(--sky); }
+.sbc-emerald { background:var(--emerald-soft); color:var(--emerald); }
+.sbc-amber { background:var(--amber-soft); color:var(--amber); }
+.sbc-violet { background:var(--violet-soft); color:var(--violet); }
+.sbc-title { font-size:.78rem; font-weight:800; color:var(--text-1); margin:0; }
+
+/* Financial Summary */
+.finance-summary { display:flex; flex-direction:column; gap:10px; }
+.fs-item { display:flex; flex-direction:column; gap:5px; }
+.fs-bar { height:6px; background:var(--border-light); border-radius:100px; overflow:hidden; }
+.fs-bar-fill { height:100%; border-radius:100px; transition:width .5s; }
+.fs-budget { background:var(--primary); }
+.fs-spent { background:var(--amber); }
+.fs-paid { background:var(--emerald); }
+.fs-data { display:flex; justify-content:space-between; align-items:center; }
+.fs-label { font-size:.62rem; font-weight:600; color:var(--text-3); }
+.fs-value { font-size:.75rem; font-weight:700; color:var(--text-1); }
+.fs-value.fs-positive { color:var(--emerald); }
+.fs-footer { margin-top:12px; padding-top:12px; border-top:1px solid var(--border-light); }
+.fs-balance { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--surface-2); border-radius:8px; }
+.fs-balance-label { font-size:.65rem; font-weight:700; text-transform:uppercase; color:var(--text-3); }
+.fs-balance-value { font-size:.95rem; font-weight:800; }
+.fs-balance-value.fs-positive { color:var(--emerald); }
+.fs-balance-value.fs-negative { color:var(--rose); }
+
+/* Status Summary */
+.status-summary { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+.ss-item { display:flex; flex-direction:column; align-items:center; padding:12px 8px; background:var(--surface-2); border-radius:10px; text-align:center; }
+.ss-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.85rem; margin-bottom:6px; }
+.ss-ongoing .ss-icon { background:var(--emerald-soft); color:var(--emerald); }
+.ss-completed .ss-icon { background:var(--primary-soft); color:var(--primary); }
+.ss-hold .ss-icon { background:var(--amber-soft); color:var(--amber); }
+.ss-count { font-size:1.1rem; font-weight:800; color:var(--text-1); }
+.ss-label { font-size:.58rem; font-weight:600; text-transform:uppercase; color:var(--text-3); }
+
+/* Quick Actions */
+.quick-actions { display:flex; flex-direction:column; gap:6px; }
+.qa-item { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface-2); border-radius:10px; text-decoration:none; transition:all .2s; }
+.qa-item:hover { transform:translateX(4px); }
+.qa-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.8rem; }
+.qa-primary .qa-icon { background:var(--primary-soft); color:var(--primary); }
+.qa-primary:hover { background:var(--primary-soft); }
+.qa-success .qa-icon { background:var(--emerald-soft); color:var(--emerald); }
+.qa-success:hover { background:var(--emerald-soft); }
+.qa-warning .qa-icon { background:var(--amber-soft); color:var(--amber); }
+.qa-warning:hover { background:var(--amber-soft); }
+.qa-content { flex:1; }
+.qa-label { display:block; font-size:.72rem; font-weight:700; color:var(--text-1); }
+.qa-desc { font-size:.62rem; color:var(--text-3); }
+.qa-arrow { color:var(--text-3); font-size:.65rem; }
+
+/* Notes */
+.notes-content { font-size:.75rem; line-height:1.6; color:var(--text-2); background:var(--surface-2); padding:12px; border-radius:8px; }
+.notes-content p { margin:0 0 8px; }
+.notes-content p:last-child { margin-bottom:0; }
+
+/* Navigation Card */
+.nav-card { background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); overflow:hidden; }
+.nc-link { display:flex; align-items:center; gap:8px; padding:12px 16px; font-size:.75rem; font-weight:600; color:var(--text-2); text-decoration:none; transition:all .2s; }
+.nc-link:hover { background:var(--surface-2); color:var(--primary); transform:translateX(-4px); }
+.nc-link i { font-size:.8rem; }
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width:1200px) {
+    .stats-grid { grid-template-columns:repeat(2, 1fr); }
+}
+
+@media (max-width:992px) {
+    :root { --page-padding: 1rem; }
+    
+    .fixed-layout { height: auto; min-height: 100vh; overflow: visible; }
+    .fixed-header { position: relative; }
+    .scroll-content-area { overflow: visible; }
+    .scroll-content-area > .row,
+    .scroll-content-area > .row > .col-lg-8,
+    .scroll-content-area > .row > .col-lg-4 { height: auto; }
+    .main-scroll-container, .sidebar-scroll-container { height: auto; overflow: visible; }
+    .table-scroll-container { max-height: 350px; }
+    .stats-grid { grid-template-columns:repeat(2, 1fr); }
+}
+
+@media (max-width:768px) {
+    .page-header { flex-direction:column; align-items:flex-start; }
+    .header-badges { width:100%; justify-content:flex-start; flex-wrap:wrap; }
+    .stats-grid { grid-template-columns:1fr; }
+    .custom-table th, .custom-table td { padding:8px 10px; font-size:.72rem; }
+    .tf-stats { flex-direction:column; gap:8px; }
+    .status-summary { grid-template-columns:repeat(3, 1fr); }
+    .cpc-actions { flex-wrap:wrap; }
+    .cpc-btn { flex:1 1 45%; }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize dropdowns
+    var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+    dropdownElementList.map(function (dropdownToggleEl) {
+        return new bootstrap.Dropdown(dropdownToggleEl);
+    });
+
+    // Animate stat cards on hover
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+
+    // Animate progress bars
+    setTimeout(() => {
+        document.querySelectorAll('.fs-bar-fill, .mini-progress-bar').forEach(bar => {
+            bar.style.transition = 'width 1s ease-out';
+        });
+    }, 300);
+
+    // Copy to clipboard functionality
+    document.querySelectorAll('.cpc-value').forEach(el => {
+        el.style.cursor = 'pointer';
+        el.title = 'Click to copy';
+        el.addEventListener('click', function() {
+            const text = this.textContent.trim();
+            navigator.clipboard.writeText(text).then(() => {
+                const original = this.textContent;
+                this.textContent = 'Copied!';
+                this.style.color = 'var(--emerald)';
+                setTimeout(() => {
+                    this.textContent = original;
+                    this.style.color = '';
+                }, 1000);
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

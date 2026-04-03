@@ -1,80 +1,1033 @@
+
+
+```html
 {% extends "billing/layouts/base.html" %}
+{% block title %}Upload Image | HomeDen{% endblock %}
+{% block page_title %}Upload Image{% endblock %}
+
 {% block content %}
+<div class="container-fluid master-page">
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 text-center">
-                    <div class="display-6 text-primary mb-2">
-                        <i class="bi bi-cloud-arrow-up"></i>
-                    </div>
-                    <h2 class="h4 fw-bold">Upload Image</h2>
-                    <p class="text-muted small">Add a new asset to your quotation library</p>
-                </div>
-
-                <div class="card-body p-4">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold small text-secondary">IMAGE NAME</label>
-                            <input type="text" name="name" 
-                                   class="form-control form-control-lg bg-light border-0 shadow-none fs-6" 
-                                   placeholder="e.g. Living Room Section A" 
-                                   required>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold small text-secondary">SELECT FILE</label>
-                            <input type="file" name="image" id="imageInput"
-                                   class="form-control bg-light border-0 shadow-none" 
-                                   accept="image/*"
-                                   required>
-                            <div class="form-text mt-2 small">Accepted formats: JPG, PNG, WebP</div>
-                        </div>
-
-                        <div id="previewContainer" class="mb-4 d-none">
-                            <label class="form-label fw-semibold small text-secondary">PREVIEW</label>
-                            <div class="rounded-3 border p-2 bg-light text-center">
-                                <img id="imagePreview" src="#" alt="Preview" class="img-fluid rounded-2" style="max-height: 200px;">
-                            </div>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm fw-bold">
-                                <i class="bi bi-upload me-2"></i>Upload Image
-                            </button>
-                            <a href="{% url 'image_index' %}" class="btn btn-primary text-white text-decoration-none small rounded-pill shadow-sm me-1 px-4 py-2">
-                                Cancel and Go Back
-                            </a>
-                        </div>
-                    </form>
-                </div>
+    <!-- ═══════════════════════════════════ -->
+    <!--  PAGE HEADER                       -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page-header fade-in fi-1">
+        <div class="page-header-left">
+            <a href="{% url 'image_index' %}" class="back-btn" title="Back to Library">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div class="page-icon-wrap pi-rose">
+                <i class="bi bi-cloud-arrow-up-fill"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Upload Image</h1>
+                <p class="page-subtitle">Add a new asset to your quotation library</p>
             </div>
         </div>
     </div>
+
+    <div class="row g-4">
+
+        <!-- ═══════════════════════════════════ -->
+        <!--  LEFT: UPLOAD FORM                 -->
+        <!-- ═══════════════════════════════════ -->
+        <div class="col-lg-7 col-xl-6">
+            <div class="form-card fade-in fi-2">
+                <form method="post" enctype="multipart/form-data" id="uploadForm">
+                    {% csrf_token %}
+
+                    <!-- Image Name -->
+                    <div class="form-section">
+                        <div class="fs-header">
+                            <div class="fs-icon fs-indigo">
+                                <i class="bi bi-type"></i>
+                            </div>
+                            <div>
+                                <h6 class="fs-title">Image Name</h6>
+                                <p class="fs-desc">Give a descriptive name for easy identification</p>
+                            </div>
+                        </div>
+                        <div class="field-wrap">
+                            <input type="text"
+                                   name="name"
+                                   id="imageName"
+                                   class="saas-input"
+                                   placeholder="e.g. Living Room Section A"
+                                   required
+                                   autocomplete="off">
+                            <div class="field-highlight"></div>
+                        </div>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="form-section">
+                        <div class="fs-header">
+                            <div class="fs-icon fs-emerald">
+                                <i class="bi bi-file-earmark-image"></i>
+                            </div>
+                            <div>
+                                <h6 class="fs-title">Select File</h6>
+                                <p class="fs-desc">JPG, PNG, WebP formats supported</p>
+                            </div>
+                        </div>
+
+                        <!-- Drop Zone -->
+                        <div class="drop-zone" id="dropZone">
+                            <input type="file"
+                                   name="image"
+                                   id="imageInput"
+                                   class="drop-zone-input"
+                                   accept="image/*"
+                                   required>
+                            <div class="dz-content" id="dzContent">
+                                <div class="dz-icon-wrap">
+                                    <i class="bi bi-cloud-arrow-up"></i>
+                                </div>
+                                <span class="dz-title">Drop your image here</span>
+                                <span class="dz-text">or <span class="dz-browse">browse files</span></span>
+                                <div class="dz-formats">
+                                    <span class="dz-format-tag">JPG</span>
+                                    <span class="dz-format-tag">PNG</span>
+                                    <span class="dz-format-tag">WEBP</span>
+                                </div>
+                            </div>
+
+                            <!-- Preview (shown after file select) -->
+                            <div class="dz-preview" id="dzPreview">
+                                <img id="imagePreview" src="#" alt="Preview">
+                                <div class="dz-preview-overlay">
+                                    <button type="button" class="dz-change-btn" id="changeFileBtn">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Change
+                                    </button>
+                                </div>
+                                <div class="dz-file-info" id="dzFileInfo">
+                                    <i class="bi bi-file-earmark-image"></i>
+                                    <span class="dz-filename" id="dzFilename"></span>
+                                    <span class="dz-filesize" id="dzFilesize"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="form-actions">
+                        <a href="{% url 'image_index' %}" class="btn-form-cancel">
+                            <i class="bi bi-x-lg me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn-form-submit" id="submitBtn">
+                            <i class="bi bi-cloud-arrow-up me-2"></i>
+                            <span>Upload Image</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════ -->
+        <!--  RIGHT: SIDEBAR                    -->
+        <!-- ═══════════════════════════════════ -->
+        <div class="col-lg-5 col-xl-4 fade-in fi-3">
+
+            <!-- Guidelines -->
+            <div class="info-card mb-3">
+                <div class="info-card-header">
+                    <div class="ich-icon ich-amber">
+                        <i class="bi bi-info-circle-fill"></i>
+                    </div>
+                    <h6 class="ich-title">Upload Guidelines</h6>
+                </div>
+                <div class="guideline-list">
+                    <div class="gl-item">
+                        <div class="gl-check gc-emerald">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div class="gl-text">
+                            <strong>High Resolution</strong>
+                            <span>Use 300+ DPI for technical drawings</span>
+                        </div>
+                    </div>
+                    <div class="gl-item">
+                        <div class="gl-check gc-emerald">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div class="gl-text">
+                            <strong>Descriptive Names</strong>
+                            <span>e.g. "Kitchen-Elevation-Plan"</span>
+                        </div>
+                    </div>
+                    <div class="gl-item">
+                        <div class="gl-check gc-emerald">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div class="gl-text">
+                            <strong>Accepted Formats</strong>
+                            <span>JPG, PNG, WebP images only</span>
+                        </div>
+                    </div>
+                    <div class="gl-item">
+                        <div class="gl-check gc-amber">
+                            <i class="bi bi-exclamation-lg"></i>
+                        </div>
+                        <div class="gl-text">
+                            <strong>Max File Size</strong>
+                            <span>Keep images under 10MB for best performance</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Naming Suggestions -->
+            <div class="info-card mb-3">
+                <div class="info-card-header">
+                    <div class="ich-icon ich-indigo">
+                        <i class="bi bi-lightbulb-fill"></i>
+                    </div>
+                    <h6 class="ich-title">Name Suggestions</h6>
+                </div>
+                <div class="suggestion-tags" id="nameSuggestions">
+                    <button type="button" class="sug-tag" data-value="Kitchen Elevation">
+                        <i class="bi bi-plus"></i> Kitchen Elevation
+                    </button>
+                    <button type="button" class="sug-tag" data-value="Living Room Plan">
+                        <i class="bi bi-plus"></i> Living Room Plan
+                    </button>
+                    <button type="button" class="sug-tag" data-value="Bedroom Section">
+                        <i class="bi bi-plus"></i> Bedroom Section
+                    </button>
+                    <button type="button" class="sug-tag" data-value="Bathroom Layout">
+                        <i class="bi bi-plus"></i> Bathroom Layout
+                    </button>
+                    <button type="button" class="sug-tag" data-value="Wardrobe Detail">
+                        <i class="bi bi-plus"></i> Wardrobe Detail
+                    </button>
+                    <button type="button" class="sug-tag" data-value="TV Unit Design">
+                        <i class="bi bi-plus"></i> TV Unit Design
+                    </button>
+                    <button type="button" class="sug-tag" data-value="False Ceiling Plan">
+                        <i class="bi bi-plus"></i> False Ceiling Plan
+                    </button>
+                    <button type="button" class="sug-tag" data-value="Entrance Foyer">
+                        <i class="bi bi-plus"></i> Entrance Foyer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pro Tip -->
+            <div class="tip-card">
+                <div class="tip-card-inner">
+                    <div class="tip-bg-pattern"></div>
+                    <div class="tip-content">
+                        <div class="tip-top">
+                            <span class="tip-emoji">📸</span>
+                            <span class="tip-label">Pro Tip</span>
+                        </div>
+                        <p class="tip-text">
+                            Organize your images with a <strong>consistent naming convention</strong>
+                            like <strong>"Room-Type-View"</strong> (e.g. Kitchen-Elevation-Front).
+                            This makes searching and quotation creation much faster.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
-<script>
-    document.getElementById('imageInput').onchange = function (evt) {
-        const [file] = this.files;
-        if (file) {
-            const previewContainer = document.getElementById('previewContainer');
-            const previewImage = document.getElementById('imagePreview');
-            
-            previewImage.src = URL.createObjectURL(file);
-            previewContainer.classList.remove('d-none');
-        }
-    }
-</script>
-
+<!-- ════════════════════════════════════════════ -->
+<!--  STYLES                                     -->
+<!-- ════════════════════════════════════════════ -->
 <style>
-    /* Focus effects for the inputs */
-    .form-control:focus {
-        background-color: #fff !important;
-        border: 1px solid #0d6efd !important;
+    :root {
+        --violet: #8b5cf6;
+        --violet-soft: rgba(139, 92, 246, 0.08);
+        --indigo: #6366f1;
+        --indigo-soft: rgba(99, 102, 241, 0.08);
+        --amber: #f59e0b;
+        --amber-soft: rgba(245, 158, 11, 0.08);
+        --emerald: #10b981;
+        --emerald-soft: rgba(16, 185, 129, 0.08);
+        --rose: #f43f5e;
+        --rose-soft: rgba(244, 63, 94, 0.08);
+        --sky: #0ea5e9;
+        --sky-soft: rgba(14, 165, 233, 0.08);
+        --text-1: #0f172a;
+        --text-2: #475569;
+        --text-3: #94a3b8;
+        --surface: #ffffff;
+        --surface-2: #f8fafc;
+        --border: #e2e8f0;
+        --border-light: #f1f5f9;
+        --radius: 16px;
+        --radius-sm: 10px;
+        --radius-xs: 8px;
+    }
+
+    .master-page {
+        padding: 1.5rem 2rem 3rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Animations */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(16px);
+        animation: fadeIn 0.45s ease forwards;
+    }
+    .fi-1 { animation-delay: 0.03s; }
+    .fi-2 { animation-delay: 0.08s; }
+    .fi-3 { animation-delay: 0.13s; }
+
+    @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════ */
+    /*  PAGE HEADER       */
+    /* ══════════════════ */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.75rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .back-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        border: 1px solid var(--border-light);
+        background: var(--surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-3);
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+        background: var(--surface-2);
+        color: var(--text-1);
+        border-color: var(--border);
+        transform: translateX(-2px);
+    }
+
+    .page-icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .pi-rose { background: var(--rose-soft); color: var(--rose); }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-1);
+        letter-spacing: -0.03em;
+        margin: 0;
+    }
+
+    .page-subtitle {
+        font-size: 0.82rem;
+        color: var(--text-3);
+        margin: 2px 0 0;
+    }
+
+    /* ══════════════════ */
+    /*  FORM CARD          */
+    /* ══════════════════ */
+    .form-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .form-section {
+        padding: 1.5rem 1.75rem;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .form-section:last-of-type {
+        border-bottom: none;
+    }
+
+    .fs-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .fs-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .fs-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .fs-emerald { background: var(--emerald-soft); color: var(--emerald); }
+
+    .fs-title {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin: 0 0 2px;
+    }
+
+    .fs-desc {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        margin: 0;
+    }
+
+    /* Input Field */
+    .field-wrap {
+        position: relative;
+    }
+
+    .saas-input {
+        width: 100%;
+        height: 48px;
+        padding: 0 16px;
+        border: 1.5px solid var(--border-light);
+        border-radius: 12px;
+        background: var(--surface-2);
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: var(--text-1);
+        font-family: inherit;
+        outline: none;
+        transition: all 0.25s;
+    }
+
+    .saas-input::placeholder {
+        color: var(--text-3);
+        font-weight: 400;
+    }
+
+    .saas-input:focus {
+        border-color: var(--indigo);
+        background: var(--surface);
+        box-shadow: 0 0 0 4px var(--indigo-soft);
+    }
+
+    .field-highlight {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background: var(--indigo);
+        border-radius: 100px;
+        transition: all 0.3s;
+        transform: translateX(-50%);
+    }
+
+    .saas-input:focus ~ .field-highlight {
+        width: calc(100% - 24px);
+    }
+
+    /* ══════════════════ */
+    /*  DROP ZONE          */
+    /* ══════════════════ */
+    .drop-zone {
+        position: relative;
+        border: 2px dashed var(--border);
+        border-radius: 14px;
+        min-height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+        cursor: pointer;
+        overflow: hidden;
+    }
+
+    .drop-zone.dragover {
+        border-color: var(--emerald);
+        background: var(--emerald-soft);
+        transform: scale(1.01);
+    }
+
+    .drop-zone:hover {
+        border-color: var(--text-3);
+        background: rgba(248, 250, 252, 0.8);
+    }
+
+    .drop-zone-input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .dz-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 2rem;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .dz-icon-wrap {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        background: var(--emerald-soft);
+        color: var(--emerald);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        transition: all 0.3s;
+    }
+
+    .drop-zone:hover .dz-icon-wrap {
+        background: var(--emerald);
+        color: #fff;
+        transform: scale(1.08) translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+    }
+
+    .dz-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .dz-text {
+        font-size: 0.78rem;
+        color: var(--text-3);
+    }
+
+    .dz-browse {
+        color: var(--emerald);
+        font-weight: 700;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .dz-formats {
+        display: flex;
+        gap: 6px;
+        margin-top: 4px;
+    }
+
+    .dz-format-tag {
+        padding: 3px 10px;
+        border-radius: 100px;
+        background: var(--border-light);
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: var(--text-3);
+        letter-spacing: 0.5px;
+    }
+
+    /* Preview State */
+    .dz-preview {
+        display: none;
+        position: relative;
+        width: 100%;
+        min-height: 220px;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-2);
+        z-index: 3;
+    }
+
+    .dz-preview.active {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dz-preview img {
+        max-width: 100%;
+        max-height: 200px;
+        object-fit: contain;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .dz-preview-overlay {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+    }
+
+    .dz-change-btn {
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: none;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(8px);
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-2);
+        cursor: pointer;
+        transition: all 0.2s;
+        z-index: 5;
+        position: relative;
+        font-family: inherit;
+    }
+
+    .dz-change-btn:hover {
+        background: var(--indigo);
+        color: #fff;
+    }
+
+    .dz-file-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: var(--surface);
+        border-top: 1px solid var(--border-light);
+        width: 100%;
+        font-size: 0.75rem;
+    }
+
+    .dz-file-info i {
+        color: var(--emerald);
+        font-size: 0.85rem;
+    }
+
+    .dz-filename {
+        font-weight: 700;
+        color: var(--text-1);
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .dz-filesize {
+        color: var(--text-3);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    /* ══════════════════ */
+    /*  FORM ACTIONS       */
+    /* ══════════════════ */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 1.25rem 1.75rem;
+        background: var(--surface-2);
+        border-top: 1px solid var(--border-light);
+    }
+
+    .btn-form-cancel {
+        padding: 10px 22px;
+        border-radius: 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text-2);
+        text-decoration: none;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.2s;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    .btn-form-cancel:hover {
+        background: var(--border-light);
+        color: var(--text-1);
+    }
+
+    .btn-form-submit {
+        padding: 10px 28px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #fff;
+        background: var(--rose);
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.25s;
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
+        font-family: inherit;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-form-submit::after {
+        content: "";
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+        transition: left 0.5s;
+    }
+
+    .btn-form-submit:hover {
+        background: #e11d48;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(244, 63, 94, 0.3);
+    }
+
+    .btn-form-submit:hover::after { left: 100%; }
+
+    .btn-form-submit:active {
+        transform: translateY(0);
+    }
+
+    /* ══════════════════ */
+    /*  RIGHT SIDEBAR      */
+    /* ══════════════════ */
+    .info-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 1.25rem;
+        transition: all 0.3s;
+    }
+
+    .info-card:hover {
+        box-shadow: 0 6px 20px -4px rgba(0, 0, 0, 0.06);
+    }
+
+    .info-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .ich-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+    }
+
+    .ich-amber { background: var(--amber-soft); color: var(--amber); }
+    .ich-indigo { background: var(--indigo-soft); color: var(--indigo); }
+
+    .ich-title {
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin: 0;
+    }
+
+    /* Guidelines */
+    .guideline-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .gl-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border-light);
+        transition: all 0.2s;
+    }
+
+    .gl-item:hover {
+        background: var(--surface-2);
+        transform: translateX(3px);
+    }
+
+    .gl-check {
+        width: 24px;
+        height: 24px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .gc-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .gc-amber { background: var(--amber-soft); color: var(--amber); }
+
+    .gl-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .gl-text strong {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .gl-text span {
+        font-size: 0.68rem;
+        color: var(--text-3);
+        margin-top: 1px;
+    }
+
+    /* Suggestion tags */
+    .suggestion-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .sug-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 12px;
+        border-radius: 100px;
+        border: 1px solid var(--border-light);
+        background: var(--surface);
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--text-2);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+
+    .sug-tag i { font-size: 0.65rem; color: var(--text-3); }
+
+    .sug-tag:hover {
+        background: var(--indigo-soft);
+        border-color: rgba(99, 102, 241, 0.2);
+        color: var(--indigo);
+    }
+
+    .sug-tag:hover i { color: var(--indigo); }
+
+    .sug-tag.selected {
+        background: var(--indigo);
+        color: #fff;
+        border-color: var(--indigo);
+    }
+
+    .sug-tag.selected i { color: #fff; }
+
+    /* Tip card */
+    .tip-card {
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+
+    .tip-card-inner {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tip-bg-pattern {
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(circle at 80% 20%, rgba(244, 63, 94, 0.12), transparent 50%),
+            radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.08), transparent 50%);
+    }
+
+    .tip-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .tip-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.75rem;
+    }
+
+    .tip-emoji { font-size: 1.15rem; }
+
+    .tip-label {
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .tip-text {
+        font-size: 0.82rem;
+        color: rgba(255, 255, 255, 0.55);
+        line-height: 1.65;
+        margin: 0;
+    }
+
+    .tip-text strong { color: #fff; }
+
+    /* ══════════════════ */
+    /*  RESPONSIVE         */
+    /* ══════════════════ */
+    @media (max-width: 992px) {
+        .master-page { padding: 1rem; }
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .form-section {
+            padding: 1.25rem;
+        }
+
+        .form-actions {
+            padding: 1rem 1.25rem;
+            flex-direction: column;
+        }
+
+        .btn-form-cancel,
+        .btn-form-submit {
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 
+<!-- ════════════════════════════════════════════ -->
+<!--  SCRIPTS                                    -->
+<!-- ════════════════════════════════════════════ -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('imageInput');
+    const dzContent = document.getElementById('dzContent');
+    const dzPreview = document.getElementById('dzPreview');
+    const imgPreview = document.getElementById('imagePreview');
+    const changeBtn = document.getElementById('changeFileBtn');
+    const dzFilename = document.getElementById('dzFilename');
+    const dzFilesize = document.getElementById('dzFilesize');
+    const nameInput = document.getElementById('imageName');
+
+    // ═══════════════════════════════
+    //  FILE SELECT / PREVIEW
+    // ═══════════════════════════════
+    function showPreview(file) {
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            imgPreview.src = e.target.result;
+            dzContent.style.display = 'none';
+            dzPreview.classList.add('active');
+
+            // File info
+            dzFilename.textContent = file.name;
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            dzFilesize.textContent = sizeMB + ' MB';
+
+            // Auto-fill name if empty
+            if (nameInput && !nameInput.value.trim()) {
+                const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+                nameInput.value = cleanName.replace(/\b\w/g, l => l.toUpperCase());
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    fileInput.addEventListener('change', function () {
+        if (this.files && this.files[0]) {
+            showPreview(this.files[0]);
+        }
+    });
+
+    // Change file button
+    changeBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        fileInput.value = '';
+        dzContent.style.display = '';
+        dzPreview.classList.remove('active');
+        fileInput.click();
+    });
+
+    // ═══════════════════════════════
+    //  DRAG & DROP
+    // ═══════════════════════════════
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropZone.addEventListener(evt, function (e) {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, function (e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        });
+    });
+
+    dropZone.addEventListener('drop', function (e) {
+        const files = e.dataTransfer.files;
+        if (files && files[0]) {
+            fileInput.files = files;
+            showPreview(files[0]);
+        }
+    });
+
+    // ═══════════════════════════════
+    //  NAME SUGGESTIONS
+    // ═══════════════════════════════
+    document.querySelectorAll('#nameSuggestions .sug-tag').forEach(tag => {
+        tag.addEventListener('click', function () {
+            const value = this.dataset.value;
+            if (nameInput) {
+                nameInput.value = value;
+                nameInput.focus();
+
+                // Visual feedback
+                document.querySelectorAll('#nameSuggestions .sug-tag').forEach(t => t.classList.remove('selected'));
+                this.classList.add('selected');
+
+                setTimeout(() => {
+                    this.classList.remove('selected');
+                }, 600);
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

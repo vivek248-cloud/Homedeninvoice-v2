@@ -1,132 +1,683 @@
+
+
+```html
 {% extends 'billing/layouts/base.html' %}
 {% block title %}Update Client | {{ client.name }}{% endblock %}
 {% block page_title %}Edit Client Profile{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            
-            <form method="POST" class="needs-validation" novalidate>
-                {% csrf_token %}
-                
-                <div class="row g-4">
-                    <div class="col-md-8">
-                        <div class="card border-0 shadow-sm mb-4">
-                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                                <h6 class="fw-bold mb-0"><i class="bi bi-person-gear me-2"></i>Personal & Contact Details</h6>
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">ID: #{{ client.id }}</span>
+<div class="container-fluid master-page">
+
+    <!-- Page Header -->
+    <div class="page-header fade-in fi-1">
+        <div class="page-header-left">
+            <a href="{% url 'client_list' %}" class="back-btn">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div class="page-icon-wrap pi-amber">
+                <i class="bi bi-person-gear"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Update Client</h1>
+                <p class="page-subtitle">Editing profile for {{ client.name }}</p>
+            </div>
+        </div>
+        <div class="header-badges">
+            <span class="client-id-badge">
+                <i class="bi bi-hash"></i> CL-{{ client.id|stringformat:"04d" }}
+            </span>
+            <div class="header-status" id="headerStatus">
+                <div class="hs-indicator hs-success"></div>
+                <span class="hs-text">Loaded</span>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" id="clientForm" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-4">
+
+            <!-- Left Side -->
+            <div class="col-lg-8">
+
+                <!-- Personal & Contact Details -->
+                <div class="form-card fade-in fi-2">
+                    <div class="fc-header">
+                        <div class="fc-header-left">
+                            <div class="fc-icon fc-indigo">
+                                <i class="bi bi-person-fill"></i>
                             </div>
-                            <div class="card-body p-4">
-                                <div class="row g-3">
-                                    <div class="col-12">
-                                        <label class="form-label fw-medium small">Full Name / Business Name <span class="text-danger">*</span></label>
-                                        <input type="text" name="name" value="{{ client.name }}" class="form-control form-control-lg" placeholder="e.g. John Doe" required>
-                                        <div class="invalid-feedback">Client name is required.</div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-medium small">Primary Mobile <span class="text-danger">*</span></label>
-                                        <div class="input-group has-validation">
-                                            <span class="input-group-text bg-light text-muted">+91</span>
-                                            <input type="text" name="mobile_1" value="{{ client.mobile_1 }}" class="form-control" placeholder="9876543210" required pattern="[0-9]{10}">
-                                            <div class="invalid-feedback">Valid 10-digit primary mobile is required.</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-medium small">Secondary Mobile <span class="text-danger">*</span></label>
-                                        <input type="text" name="mobile_2" value="{{ client.mobile_2 }}" class="form-control" placeholder="+91" required>
-                                        <div class="invalid-feedback">Secondary contact is mandatory.</div>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label class="form-label fw-medium small">Email Address <span class="text-danger">*</span></label>
-                                        <input type="email" name="email" value="{{ client.email }}" class="form-control" placeholder="client@example.com" required>
-                                        <div class="invalid-feedback">A valid email is required.</div>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label class="form-label fw-medium small">Billing Address <span class="text-danger">*</span></label>
-                                        <textarea name="address" class="form-control" rows="3" placeholder="Full Address..." required>{{ client.address }}</textarea>
-                                        <div class="invalid-feedback">Address cannot be empty.</div>
-                                    </div>
-                                </div>
+                            <div>
+                                <h6 class="fc-title">Personal & Contact Details</h6>
+                                <p class="fc-subtitle">Basic client information</p>
                             </div>
                         </div>
-
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-white py-3">
-                                <h6 class="fw-bold mb-0"><i class="bi bi-journal-text me-2"></i>Internal Notes <span class="text-danger">*</span></h6>
-                            </div>
-                            <div class="card-body p-4">
-                                <textarea name="notes" class="form-control" rows="4" placeholder="Enter notes here..." required>{{ client.notes }}</textarea>
-                                <div class="invalid-feedback">Please provide at least a brief note about the client.</div>
-                            </div>
+                        <div class="fc-header-right">
+                            <span class="edit-badge">
+                                <i class="bi bi-pencil"></i> Editing
+                            </span>
+                            <span class="required-tag">
+                                <i class="bi bi-asterisk"></i> Required
+                            </span>
                         </div>
                     </div>
+                    <div class="fc-body">
+                        <div class="form-grid">
 
-                    <div class="col-md-4">
-                        <div class="card border-0 shadow-sm mb-4">
-                            <div class="card-header bg-white py-3">
-                                <h6 class="fw-bold mb-0"><i class="bi bi-currency-exchange me-2"></i>Billing Setup</h6>
-                            </div>
-                            <div class="card-body p-4">
-                                <div class="mb-4">
-                                    <label class="form-label fw-medium small">GST Number <span class="text-danger">*</span></label>
-                                    <input type="text" name="gst_number" value="{{ client.gst_number }}" class="form-control text-uppercase" placeholder="GSTIN" required>
-                                    <div class="invalid-feedback">GST number is required.</div>
+                            <!-- Full Name -->
+                            <div class="form-group full-width">
+                                <label class="field-label">
+                                    Full Name / Business Name <span class="req">*</span>
+                                </label>
+                                <div class="input-wrap">
+                                    <div class="input-icon">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+                                    <input type="text"
+                                           name="name"
+                                           value="{{ client.name }}"
+                                           class="custom-input has-icon required-input"
+                                           placeholder="e.g. John Doe or Acme Corp"
+                                           required>
+                                    <span class="input-indicator"></span>
                                 </div>
+                                <div class="field-feedback">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    Client name is required
+                                </div>
+                            </div>
 
-                                <div class="mb-4">
-                                    <label class="form-label fw-medium small">Standard Discount (%) <span class="text-danger">*</span></label>
-                                    <div class="input-group has-validation">
-                                        <input type="number" step="0.01" name="discount" value="{{ client.discount }}" class="form-control" required min="0" max="100">
-                                        <span class="input-group-text bg-light text-muted">%</span>
-                                        <div class="invalid-feedback">Required (0-100).</div>
+                            <!-- Primary Mobile -->
+                            <div class="form-group">
+                                <label class="field-label">
+                                    Primary Mobile <span class="req">*</span>
+                                </label>
+                                <div class="input-group-inline">
+                                    <span class="input-prefix">+91</span>
+                                    <div class="input-wrap flex-1">
+                                        <input type="text"
+                                               name="mobile_1"
+                                               value="{{ client.mobile_1 }}"
+                                               class="custom-input required-input"
+                                               placeholder="9876543210"
+                                               pattern="[0-9]{10}"
+                                               maxlength="10"
+                                               required>
+                                        <span class="input-indicator"></span>
+                                    </div>
+                                </div>
+                                <div class="field-feedback">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    Enter a valid 10 digit mobile number
+                                </div>
+                            </div>
+
+                            <!-- Secondary Mobile -->
+                            <div class="form-group">
+                                <label class="field-label">
+                                    Secondary Mobile
+                                    <span class="optional-tag">Optional</span>
+                                </label>
+                                <div class="input-group-inline">
+                                    <span class="input-prefix">+91</span>
+                                    <div class="input-wrap flex-1">
+                                        <input type="text"
+                                               name="mobile_2"
+                                               value="{{ client.mobile_2 }}"
+                                               class="custom-input"
+                                               placeholder="9876543210"
+                                               pattern="[0-9]{10}"
+                                               maxlength="10">
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="card border-0 shadow-sm sticky-top" style="top: 100px; z-index: 10;">
-                            <div class="card-body p-4 text-center">
-                                <button type="submit" class="btn btn-primary w-100 mb-2 py-2 fw-bold shadow-sm">
-                                    <i class="bi bi-arrow-repeat me-1"></i> Update Profile
-                                </button>
-                                <a href="{% url 'client_list' %}" class="btn btn-secondary text-white w-100 text-decoration-none small">
-                                    Discard Changes
-                                </a>
-                                <hr class="my-4">
-                                <div class="alert alert-warning py-2 px-3 mb-0" style="font-size: 0.75rem;">
-                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> 
-                                    Changes will reflect on all future invoices immediately.
+                            <!-- Email -->
+                            <div class="form-group full-width">
+                                <label class="field-label">
+                                    Email Address
+                                    <span class="optional-tag">Optional</span>
+                                </label>
+                                <div class="input-wrap">
+                                    <div class="input-icon">
+                                        <i class="bi bi-envelope"></i>
+                                    </div>
+                                    <input type="email"
+                                           name="email"
+                                           value="{{ client.email }}"
+                                           class="custom-input has-icon"
+                                           placeholder="client@example.com">
                                 </div>
                             </div>
+
+                            <!-- Address -->
+                            <div class="form-group full-width">
+                                <label class="field-label">
+                                    Billing Address <span class="req">*</span>
+                                </label>
+                                <div class="input-wrap">
+                                    <textarea name="address"
+                                              class="custom-textarea required-input"
+                                              rows="3"
+                                              placeholder="Street, Area, City, State, PIN..."
+                                              required>{{ client.address }}</textarea>
+                                    <span class="input-indicator textarea-indicator"></span>
+                                </div>
+                                <div class="field-feedback">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    Billing address is required
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
-            </form>
+
+                <!-- Internal Notes -->
+                <div class="form-card fade-in fi-3">
+                    <div class="fc-header">
+                        <div class="fc-header-left">
+                            <div class="fc-icon fc-violet">
+                                <i class="bi bi-journal-text"></i>
+                            </div>
+                            <div>
+                                <h6 class="fc-title">Internal Notes</h6>
+                                <p class="fc-subtitle">Private notes for your team</p>
+                            </div>
+                        </div>
+                        <span class="optional-badge">
+                            <i class="bi bi-eye-slash"></i> Internal Only
+                        </span>
+                    </div>
+                    <div class="fc-body">
+                        <div class="input-wrap">
+                            <textarea name="notes"
+                                      class="custom-textarea"
+                                      rows="4"
+                                      placeholder="Mention site conditions, preferences, special requirements...">{{ client.notes }}</textarea>
+                        </div>
+                        <p class="field-hint">
+                            <i class="bi bi-info-circle"></i>
+                            These notes are only visible to your team, not on client invoices.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Side -->
+            <div class="col-lg-4">
+
+                <!-- Current Info Card -->
+
+
+                <!-- Billing Setup -->
+                <div class="form-card fade-in fi-3">
+                    <div class="fc-header">
+                        <div class="fc-header-left">
+                            <div class="fc-icon fc-emerald">
+                                <i class="bi bi-receipt"></i>
+                            </div>
+                            <div>
+                                <h6 class="fc-title">Billing Setup</h6>
+                                <p class="fc-subtitle">Tax and discount settings</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fc-body">
+
+                        <!-- GST Number -->
+                        <div class="form-group">
+                            <label class="field-label">
+                                GST Number
+                                <span class="optional-tag">Optional</span>
+                            </label>
+                            <div class="input-wrap">
+                                <div class="input-icon">
+                                    <i class="bi bi-building"></i>
+                                </div>
+                                <input type="text"
+                                       name="gst_number"
+                                       value="{{ client.gst_number }}"
+                                       class="custom-input has-icon text-uppercase"
+                                       placeholder="22AAAAA0000A1Z5"
+                                       maxlength="15">
+                            </div>
+                            <p class="field-hint">
+                                <i class="bi bi-info-circle"></i>
+                                Leave blank if not GST registered
+                            </p>
+                        </div>
+
+                        <!-- Discount -->
+                        <div class="form-group">
+                            <label class="field-label">
+                                Standard Discount <span class="req">*</span>
+                            </label>
+                            <div class="input-group-inline">
+                                <div class="input-wrap flex-1">
+                                    <input type="number"
+                                           step="0.01"
+                                           name="discount"
+                                           value="{{ client.discount }}"
+                                           class="custom-input required-input"
+                                           min="0"
+                                           max="100"
+                                           required>
+                                    <span class="input-indicator"></span>
+                                </div>
+                                <span class="input-suffix">%</span>
+                            </div>
+                            <div class="field-feedback">
+                                <i class="bi bi-exclamation-circle"></i>
+                                Discount must be between 0 and 100
+                            </div>
+                            <p class="field-hint">
+                                <i class="bi bi-info-circle"></i>
+                                Auto-applies to all invoices
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Action Card -->
+                <div class="action-card fade-in fi-4">
+                    <div class="ac-header">
+                        <div class="ac-icon">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </div>
+                        <h6 class="ac-title">Save Changes?</h6>
+                    </div>
+                    <div class="ac-body">
+                        <button type="submit" class="btn-submit btn-update" id="submitBtn">
+                            <i class="bi bi-check-lg"></i>
+                            <span>Update Client</span>
+                        </button>
+                        <a href="{% url 'client_list' %}" class="btn-discard">
+                            <i class="bi bi-x-lg"></i>
+                            <span>Discard Changes</span>
+                        </a>
+                    </div>
+                    <div class="ac-footer">
+                        <div class="ac-warning">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Changes will reflect on all future invoices immediately</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checklist Card -->
+                <div class="sidebar-card fade-in fi-4">
+                    <div class="sc-header">
+                        <div class="sc-icon sc-rose"><i class="bi bi-list-check"></i></div>
+                        <h6 class="sc-title">Required Fields</h6>
+                    </div>
+                    <div class="checklist">
+                        <div class="cl-item" id="cl-name">
+                            <div class="cl-check"><i class="bi bi-circle"></i></div>
+                            <span>Client name</span>
+                        </div>
+                        <div class="cl-item" id="cl-mobile">
+                            <div class="cl-check"><i class="bi bi-circle"></i></div>
+                            <span>Primary mobile</span>
+                        </div>
+                        <div class="cl-item" id="cl-address">
+                            <div class="cl-check"><i class="bi bi-circle"></i></div>
+                            <span>Billing address</span>
+                        </div>
+                        <div class="cl-item" id="cl-discount">
+                            <div class="cl-check"><i class="bi bi-circle"></i></div>
+                            <span>Discount set</span>
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="ps-label">Completion</div>
+                        <div class="progress-wrap">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <span class="progress-text" id="progressText">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pro Tip -->
+                <div class="pro-tip fade-in fi-4">
+                    <div class="pt-inner">
+                        <div class="pt-header">
+                            <span class="pt-emoji">✏️</span>
+                            <span class="pt-label">Edit Mode</span>
+                        </div>
+                        <p class="pt-text">
+                            You're editing <strong>{{ client.name }}</strong>'s profile.
+                            All changes are tracked and will apply to <strong>future invoices</strong> immediately.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
         </div>
-    </div>
+    </form>
 </div>
 
+<style>
+:root {
+    --primary: #6366f1;
+    --primary-soft: rgba(99,102,241,0.08);
+    --emerald: #10b981;
+    --emerald-soft: rgba(16,185,129,0.08);
+    --amber: #f59e0b;
+    --amber-soft: rgba(245,158,11,0.08);
+    --rose: #f43f5e;
+    --rose-soft: rgba(244,63,94,0.08);
+    --violet: #8b5cf6;
+    --violet-soft: rgba(139,92,246,0.08);
+    --sky: #0ea5e9;
+    --sky-soft: rgba(14,165,233,0.08);
+    --text-1: #0f172a;
+    --text-2: #475569;
+    --text-3: #94a3b8;
+    --surface: #fff;
+    --surface-2: #f8fafc;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --radius: 14px;
+    --radius-sm: 8px;
+}
+
+.master-page { padding: 1.5rem 2rem 3rem; max-width: 1300px; margin: 0 auto; }
+
+.fade-in { opacity: 0; transform: translateY(12px); animation: fadeIn 0.4s ease forwards; }
+.fi-1 { animation-delay: .02s; } .fi-2 { animation-delay: .05s; }
+.fi-3 { animation-delay: .08s; } .fi-4 { animation-delay: .11s; }
+@keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+/* ── Page Header ── */
+.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem; }
+.page-header-left { display:flex; align-items:center; gap:12px; }
+.back-btn { width:36px; height:36px; border-radius:10px; border:1px solid var(--border-light); background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--text-3); text-decoration:none; transition:all .2s; }
+.back-btn:hover { background:var(--surface-2); color:var(--text-1); transform:translateX(-2px); }
+.page-icon-wrap { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
+.pi-amber { background:var(--amber-soft); color:var(--amber); }
+.page-title { font-size:1.35rem; font-weight:800; color:var(--text-1); margin:0; letter-spacing:-.02em; }
+.page-subtitle { font-size:.75rem; color:var(--text-3); margin:2px 0 0; }
+
+.header-badges { display:flex; align-items:center; gap:10px; }
+.client-id-badge { display:flex; align-items:center; gap:4px; padding:6px 12px; background:var(--surface); border:1px solid var(--border-light); border-radius:100px; font-size:.7rem; font-weight:800; color:var(--text-2); font-variant-numeric:tabular-nums; }
+.client-id-badge i { color:var(--amber); }
+
+.header-status { display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--surface); border:1px solid var(--border-light); border-radius:100px; }
+.header-status.complete { background:var(--emerald-soft); border-color:rgba(16,185,129,.2); }
+.hs-indicator { width:8px; height:8px; border-radius:50%; animation:pulse 2s infinite; }
+.hs-warning { background:var(--amber); }
+.hs-success { background:var(--emerald); }
+.hs-text { font-size:.72rem; font-weight:700; color:var(--text-3); }
+.header-status.complete .hs-text { color:var(--emerald); }
+
+/* ── Form Card ── */
+.form-card { background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); overflow:hidden; margin-bottom:1rem; transition:all .3s; }
+.form-card.has-error { border-color:var(--rose); box-shadow:0 0 0 3px var(--rose-soft); }
+.fc-header { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:var(--surface-2); border-bottom:1px solid var(--border-light); flex-wrap:wrap; gap:10px; }
+.fc-header-left { display:flex; align-items:center; gap:10px; }
+.fc-header-right { display:flex; align-items:center; gap:8px; }
+.fc-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:.85rem; }
+.fc-indigo { background:var(--primary-soft); color:var(--primary); }
+.fc-amber { background:var(--amber-soft); color:var(--amber); }
+.fc-emerald { background:var(--emerald-soft); color:var(--emerald); }
+.fc-violet { background:var(--violet-soft); color:var(--violet); }
+.fc-title { font-size:.82rem; font-weight:800; color:var(--text-1); margin:0; }
+.fc-subtitle { font-size:.65rem; color:var(--text-3); margin:0; }
+.fc-body { padding:20px; }
+
+.required-tag { display:flex; align-items:center; gap:4px; padding:4px 10px; background:var(--rose-soft); color:var(--rose); border-radius:100px; font-size:.58rem; font-weight:700; text-transform:uppercase; }
+.required-tag i { font-size:.45rem; }
+
+.edit-badge { display:flex; align-items:center; gap:4px; padding:5px 10px; background:var(--amber-soft); color:var(--amber); border-radius:100px; font-size:.65rem; font-weight:700; }
+
+.optional-badge { display:flex; align-items:center; gap:4px; padding:4px 10px; background:var(--surface-2); color:var(--text-3); border-radius:100px; font-size:.58rem; font-weight:700; border:1px solid var(--border-light); }
+
+.optional-tag { font-size:.58rem; font-weight:600; color:var(--text-3); background:var(--surface-2); padding:2px 6px; border-radius:4px; margin-left:6px; }
+
+/* ── Form Grid ── */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.form-group { display:flex; flex-direction:column; margin-bottom:0; }
+.form-group.full-width { grid-column:span 2; }
+
+.field-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-3); margin-bottom:6px; display:flex; align-items:center; }
+.req { color:var(--rose); font-weight:900; margin-left:2px; }
+
+/* ── Input Styles ── */
+.input-wrap { position:relative; }
+.input-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-3); font-size:.85rem; z-index:1; }
+.custom-input { width:100%; height:44px; padding:0 36px 0 14px; border:1.5px solid var(--border-light); border-radius:10px; background:var(--surface-2); font-size:.85rem; font-weight:600; color:var(--text-1); font-family:inherit; outline:none; transition:all .2s; }
+.custom-input.has-icon { padding-left:40px; }
+.custom-input:focus { border-color:var(--primary); background:var(--surface); box-shadow:0 0 0 3px var(--primary-soft); }
+.custom-input.invalid { border-color:var(--rose); box-shadow:0 0 0 3px var(--rose-soft); animation:shake .4s; }
+.custom-input.valid { border-color:var(--emerald); }
+.custom-input::placeholder { color:var(--text-3); font-weight:400; }
+
+.custom-textarea { width:100%; padding:12px 36px 12px 14px; border:1.5px solid var(--border-light); border-radius:10px; background:var(--surface-2); font-size:.85rem; font-weight:500; color:var(--text-1); font-family:inherit; outline:none; resize:vertical; transition:all .2s; line-height:1.5; }
+.custom-textarea:focus { border-color:var(--primary); background:var(--surface); box-shadow:0 0 0 3px var(--primary-soft); }
+.custom-textarea.invalid { border-color:var(--rose); box-shadow:0 0 0 3px var(--rose-soft); }
+.custom-textarea.valid { border-color:var(--emerald); }
+.custom-textarea::placeholder { color:var(--text-3); font-weight:400; }
+
+.input-indicator { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:16px; height:16px; border-radius:50%; font-size:.55rem; display:none; align-items:center; justify-content:center; font-weight:700; }
+.input-indicator.valid { display:flex; background:var(--emerald); color:#fff; }
+.input-indicator.valid::after { content:"✓"; }
+.input-indicator.invalid { display:flex; background:var(--rose); color:#fff; }
+.input-indicator.invalid::after { content:"!"; }
+.textarea-indicator { top:16px; transform:none; }
+
+.input-group-inline { display:flex; align-items:stretch; gap:0; }
+.input-prefix { display:flex; align-items:center; padding:0 12px; background:var(--surface-2); border:1.5px solid var(--border-light); border-right:none; border-radius:10px 0 0 10px; font-size:.78rem; font-weight:700; color:var(--text-3); }
+.input-suffix { display:flex; align-items:center; padding:0 12px; background:var(--surface-2); border:1.5px solid var(--border-light); border-left:none; border-radius:0 10px 10px 0; font-size:.78rem; font-weight:700; color:var(--text-3); }
+.input-group-inline .input-wrap { flex:1; }
+.input-group-inline .custom-input { border-radius:0; }
+.input-group-inline .input-prefix + .input-wrap .custom-input { border-radius:0 10px 10px 0; }
+.flex-1 { flex:1; }
+
+.field-feedback { display:none; align-items:center; gap:5px; margin-top:5px; padding:5px 10px; background:var(--rose-soft); border-radius:6px; font-size:.65rem; font-weight:600; color:var(--rose); }
+.field-feedback.show { display:flex; }
+
+.field-hint { display:flex; align-items:center; gap:5px; margin-top:6px; font-size:.65rem; color:var(--text-3); }
+.field-hint i { font-size:.6rem; }
+
+/* ── Current Info Card ── */
+.current-info { display:flex; flex-direction:column; gap:6px; }
+.ci-item { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; background:var(--surface-2); border-radius:8px; }
+.ci-label { font-size:.62rem; font-weight:700; text-transform:uppercase; color:var(--text-3); }
+.ci-value { font-size:.75rem; font-weight:700; color:var(--text-1); }
+.ci-truncate { max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ci-highlight { color:var(--emerald); font-weight:800; }
+
+/* ── Action Card ── */
+.action-card { background:linear-gradient(135deg, #0f172a, #1e293b); border-radius:var(--radius); padding:20px; margin-bottom:1rem; position:relative; overflow:hidden; }
+.action-card::before { content:""; position:absolute; inset:0; background-image:radial-gradient(circle at 80% 20%, rgba(245,158,11,.12), transparent 50%), radial-gradient(circle at 20% 80%, rgba(99,102,241,.08), transparent 50%); }
+
+.ac-header { display:flex; align-items:center; gap:10px; margin-bottom:16px; position:relative; }
+.ac-icon { width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; font-size:1rem; color:#fff; }
+.ac-title { font-size:.85rem; font-weight:800; color:#fff; margin:0; }
+
+.ac-body { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; position:relative; }
+
+.btn-submit { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:12px 20px; border-radius:10px; border:none; color:#fff; font-size:.85rem; font-weight:700; cursor:pointer; transition:all .2s; font-family:inherit; }
+.btn-update { background:var(--amber); box-shadow:0 4px 12px rgba(245,158,11,.3); }
+.btn-update:hover { background:#d97706; transform:translateY(-1px); box-shadow:0 6px 18px rgba(245,158,11,.35); }
+
+.btn-discard { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; padding:10px 16px; border-radius:10px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.1); color:rgba(255,255,255,.7); font-size:.78rem; font-weight:600; text-decoration:none; transition:all .2s; }
+.btn-discard:hover { background:rgba(255,255,255,.15); color:#fff; }
+
+.ac-footer { position:relative; }
+.ac-warning { display:flex; align-items:flex-start; gap:8px; padding:10px 12px; background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.15); border-radius:8px; font-size:.68rem; color:rgba(255,255,255,.6); line-height:1.4; }
+.ac-warning i { color:var(--amber); font-size:.75rem; margin-top:1px; flex-shrink:0; }
+
+/* ── Sidebar Card ── */
+.sidebar-card { background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); padding:16px; transition:all .3s; }
+.sidebar-card:hover { box-shadow:0 5px 14px -3px rgba(0,0,0,.05); }
+.sc-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.sc-icon { width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:.75rem; }
+.sc-rose { background:var(--rose-soft); color:var(--rose); }
+.sc-sky { background:var(--sky-soft); color:var(--sky); }
+.sc-title { font-size:.78rem; font-weight:800; color:var(--text-1); margin:0; }
+
+.checklist { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.cl-item { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:7px; border:1px solid var(--border-light); transition:all .3s; }
+.cl-item.done { background:var(--emerald-soft); border-color:rgba(16,185,129,.15); }
+.cl-check { width:18px; height:18px; border-radius:5px; background:var(--border-light); color:var(--text-3); display:flex; align-items:center; justify-content:center; font-size:.55rem; transition:all .3s; }
+.cl-item.done .cl-check { background:var(--emerald); color:#fff; }
+.cl-item.done .cl-check i::before { content:"\F26B"; }
+.cl-item span { font-size:.7rem; font-weight:600; color:var(--text-3); }
+.cl-item.done span { color:var(--emerald); }
+
+.progress-section { padding-top:12px; border-top:1px solid var(--border-light); }
+.ps-label { font-size:.6rem; font-weight:700; text-transform:uppercase; color:var(--text-3); margin-bottom:6px; }
+.progress-wrap { display:flex; align-items:center; gap:8px; }
+.progress-bar { flex:1; height:6px; background:var(--border-light); border-radius:100px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--emerald); border-radius:100px; transition:width .5s; width:0; }
+.progress-text { font-size:.65rem; font-weight:800; color:var(--text-3); min-width:30px; }
+
+/* ── Pro Tip ── */
+.pro-tip { border-radius:var(--radius); overflow:hidden; }
+.pt-inner { background:linear-gradient(135deg, #0f172a, #1e293b); border-radius:var(--radius); padding:1.1rem; position:relative; overflow:hidden; }
+.pt-inner::before { content:""; position:absolute; inset:0; background-image:radial-gradient(circle at 80% 20%, rgba(245,158,11,.1), transparent 50%), radial-gradient(circle at 20% 80%, rgba(99,102,241,.06), transparent 50%); }
+.pt-header { display:flex; align-items:center; gap:6px; margin-bottom:.5rem; position:relative; }
+.pt-emoji { font-size:.9rem; }
+.pt-label { font-size:.55rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,.35); }
+.pt-text { font-size:.72rem; color:rgba(255,255,255,.5); line-height:1.5; margin:0; position:relative; }
+.pt-text strong { color:#fff; }
+
+/* ── Responsive ── */
+@media (max-width:992px) { .master-page { padding:1rem; } .form-grid { grid-template-columns:1fr; } .form-group.full-width { grid-column:span 1; } }
+@media (max-width:768px) { .page-header { flex-direction:column; align-items:flex-start; } .header-badges { width:100%; justify-content:space-between; } .header-status { display:none; } .fc-header { flex-direction:column; align-items:flex-start; } .fc-header-right { width:100%; justify-content:space-between; } }
+</style>
+
 <script>
-// Prevent form submission if there are invalid fields
-(function () {
-  'use strict'
-  var forms = document.querySelectorAll('.needs-validation')
-  Array.prototype.slice.call(forms)
-    .forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('clientForm');
+    const nameInput = document.querySelector('[name="name"]');
+    const mobileInput = document.querySelector('[name="mobile_1"]');
+    const addressInput = document.querySelector('[name="address"]');
+    const discountInput = document.querySelector('[name="discount"]');
+
+    function validateField(field) {
+        const value = field.value?.trim();
+        const isRequired = field.classList.contains('required-input');
+        const wrap = field.closest('.input-wrap');
+        const indicator = wrap?.querySelector('.input-indicator');
+        const feedback = field.closest('.form-group')?.querySelector('.field-feedback');
+        let isValid = true;
+
+        if (isRequired && !value) isValid = false;
+        if (field.name === 'mobile_1' && value && !/^[0-9]{10}$/.test(value)) isValid = false;
+        if (field.name === 'discount') {
+            const num = parseFloat(value);
+            if (isNaN(num) || num < 0 || num > 100) isValid = false;
         }
-        form.classList.add('was-validated')
-      }, false)
-    })
-})()
+
+        if (!isValid) {
+            field.classList.add('invalid');
+            field.classList.remove('valid');
+            if (indicator) { indicator.classList.remove('valid'); indicator.classList.add('invalid'); }
+            if (feedback) feedback.classList.add('show');
+            return false;
+        } else if (value) {
+            field.classList.remove('invalid');
+            field.classList.add('valid');
+            if (indicator) { indicator.classList.remove('invalid'); indicator.classList.add('valid'); }
+            if (feedback) feedback.classList.remove('show');
+            return true;
+        } else {
+            field.classList.remove('invalid', 'valid');
+            if (indicator) indicator.classList.remove('invalid', 'valid');
+            if (feedback) feedback.classList.remove('show');
+            return !isRequired;
+        }
+    }
+
+    function updateChecklist() {
+        toggleCheck('cl-name', !!nameInput?.value?.trim());
+        toggleCheck('cl-mobile', /^[0-9]{10}$/.test(mobileInput?.value?.trim() || ''));
+        toggleCheck('cl-address', !!addressInput?.value?.trim());
+        const d = parseFloat(discountInput?.value);
+        toggleCheck('cl-discount', !isNaN(d) && d >= 0 && d <= 100);
+    }
+
+    function toggleCheck(id, done) {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('done', done);
+    }
+
+    function updateProgress() {
+        let filled = 0;
+        if (nameInput?.value?.trim()) filled++;
+        if (/^[0-9]{10}$/.test(mobileInput?.value?.trim() || '')) filled++;
+        if (addressInput?.value?.trim()) filled++;
+        const d = parseFloat(discountInput?.value);
+        if (!isNaN(d) && d >= 0 && d <= 100) filled++;
+
+        const pct = Math.round((filled / 4) * 100);
+        const fill = document.getElementById('progressFill');
+        const text = document.getElementById('progressText');
+        if (fill) {
+            fill.style.width = pct + '%';
+            fill.style.background = pct === 100 ? 'var(--emerald)' : pct >= 50 ? 'var(--amber)' : 'var(--rose)';
+        }
+        if (text) text.textContent = pct + '%';
+
+        const status = document.getElementById('headerStatus');
+        const indicator = status?.querySelector('.hs-indicator');
+        const statusText = status?.querySelector('.hs-text');
+        if (pct === 100) {
+            status?.classList.add('complete');
+            indicator?.classList.remove('hs-warning'); indicator?.classList.add('hs-success');
+            if (statusText) statusText.textContent = 'Ready';
+        } else {
+            status?.classList.remove('complete');
+            indicator?.classList.remove('hs-success'); indicator?.classList.add('hs-warning');
+            if (statusText) statusText.textContent = 'Editing';
+        }
+    }
+
+    function validateAll() {
+        let v = true;
+        if (!validateField(nameInput)) v = false;
+        if (!validateField(mobileInput)) v = false;
+        if (!validateField(addressInput)) v = false;
+        if (!validateField(discountInput)) v = false;
+        return v;
+    }
+
+    document.querySelectorAll('.required-input, [name="mobile_1"], [name="discount"]').forEach(field => {
+        field.addEventListener('input', function() { validateField(this); updateChecklist(); updateProgress(); });
+        field.addEventListener('blur', function() { validateField(this); updateChecklist(); updateProgress(); });
+    });
+
+    mobileInput?.addEventListener('input', function() { this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10); });
+    document.querySelector('[name="gst_number"]')?.addEventListener('input', function() { this.value = this.value.toUpperCase(); });
+
+    form.addEventListener('submit', function(e) {
+        if (!validateAll()) {
+            e.preventDefault();
+            const firstInvalid = form.querySelector('.invalid');
+            if (firstInvalid) { firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' }); firstInvalid.focus(); }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'error', title: 'Missing Required Fields', text: 'Please fill in all required fields.', confirmButtonColor: '#f43f5e' });
+            }
+            return false;
+        }
+        const btn = document.getElementById('submitBtn');
+        if (btn) { btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Updating...'; btn.disabled = true; }
+    });
+
+    // Mark existing valid values on load
+    document.querySelectorAll('.required-input').forEach(f => { if (f.value?.trim()) validateField(f); });
+    updateChecklist();
+    updateProgress();
+});
 </script>
 {% endblock %}

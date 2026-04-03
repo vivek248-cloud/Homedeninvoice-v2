@@ -3,121 +3,751 @@
 {% block page_title %}Edit Project Details{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-4">
-                    <li class="breadcrumb-item"><a href="{% url 'project_list' %}" class="text-decoration-none">Projects</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'project_detail' project.id %}" class="text-decoration-none">{{ project.name }}</a></li>
-                    <li class="breadcrumb-item active">Edit</li>
-                </ol>
-            </nav>
+<div class="container-fluid master-page">
 
-            <form method="POST" class="needs-validation" novalidate>
-                {% csrf_token %}
-                
-                <div class="card border-0 shadow-sm mb-4 bg-primary text-white">
-                    <div class="card-body p-4">
-                        <div class="row align-items-center">
-                            <div class="col-md-7">
-                                <h4 class="fw-bold mb-1">Updating: {{ project.name }}</h4>
-                                <p class="mb-0 opacity-75 small">Account Managed for: <strong>{{ project.client.name }}</strong></p>
-                            </div>
-                            <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                                <div class="d-inline-block text-start me-4">
-                                    <small class="d-block opacity-75">Spent to date</small>
-                                    <span class="fw-bold h5 mb-0">₹ {{ project.total_spent }}</span>
-                                </div>
-                                <div class="d-inline-block text-start">
-                                    <small class="d-block opacity-75">Paid to date</small>
-                                    <span class="fw-bold h5 mb-0">₹ {{ project.total_paid }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-body p-4">
-                        <div class="row g-4">
-                            
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small text-uppercase text-muted">Client Account <span class="text-danger">*</span></label>
-                                <select name="client" class="form-select form-select-lg" required>
-                                    {% for client in clients %}
-                                    <option value="{{ client.id }}" {% if project.client.id == client.id %}selected{% endif %}>
-                                        {{ client.name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small text-uppercase text-muted">Project Title <span class="text-danger">*</span></label>
-                                <input type="text" name="name" value="{{ project.name }}" class="form-control form-control-lg" required>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small text-uppercase text-muted">Approved Budget <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-lg has-validation">
-                                    <span class="input-group-text bg-light fw-bold">₹</span>
-                                    <input type="number" step="0.01" name="budget" value="{{ project.budget }}" class="form-control" required min="0">
-                                </div>
-                                <div class="form-text small"><i class="bi bi-info-circle me-1"></i> Current balance yet to receive: <strong>₹ {{ project.yet_to_receive }}</strong></div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small text-uppercase text-muted">Project Milestone</label>
-                                <select name="status" class="form-select form-select-lg">
-                                    <option value="ongoing" {% if project.status == 'ongoing' %}selected{% endif %}>Ongoing</option>
-                                    <option value="completed" {% if project.status == 'completed' %}selected{% endif %}>Completed</option>
-                                    <option value="hold" {% if project.status == 'hold' %}selected{% endif %}>On Hold</option>
-                                </select>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                        <a href="{% url 'project_list' %}" class="btn btn-secondary  text-white text-decoration-none">
-                            <i class="bi bi-x-circle me-1"></i> Cancel Changes
-                        </a>
-                        <button type="submit" class="btn btn-success px-5 py-2 fw-bold shadow-sm">
-                            <i class="bi bi-check2-all me-2"></i>Apply Updates
-                        </button>
-                    </div>
-                </div>
-
-            </form>
+    <!-- Page Header -->
+    <div class="page-header fade-in fi-1">
+        <div class="page-header-left">
+            <a href="{% url 'project_detail' project.id %}" class="back-btn">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div class="page-icon-wrap pi-amber">
+                <i class="bi bi-briefcase-fill"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Update Project</h1>
+                <p class="page-subtitle">Editing {{ project.name }}</p>
+            </div>
+        </div>
+        <div class="header-badges">
+            <span class="project-id-badge">
+                <i class="bi bi-hash"></i> PRJ-{{ project.id|stringformat:"04d" }}
+            </span>
+            <span class="status-badge status-{{ project.status }}">
+                {% if project.status == 'ongoing' %}
+                    <i class="bi bi-play-circle-fill"></i> Ongoing
+                {% elif project.status == 'completed' %}
+                    <i class="bi bi-check-circle-fill"></i> Completed
+                {% else %}
+                    <i class="bi bi-pause-circle-fill"></i> On Hold
+                {% endif %}
+            </span>
+            <div class="header-status" id="headerStatus">
+                <div class="hs-indicator hs-success"></div>
+                <span class="hs-text">Loaded</span>
+            </div>
         </div>
     </div>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-wrap fade-in fi-1">
+        <a href="{% url 'project_list' %}" class="bc-link">
+            <i class="bi bi-folder"></i> Projects
+        </a>
+        <i class="bi bi-chevron-right bc-sep"></i>
+        <a href="{% url 'project_detail' project.id %}" class="bc-link">{{ project.name }}</a>
+        <i class="bi bi-chevron-right bc-sep"></i>
+        <span class="bc-current">Edit</span>
+    </div>
+
+    <form method="POST" id="projectForm" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-4">
+
+            <!-- Left Side - Main Form -->
+            <div class="col-lg-8">
+
+
+
+                <!-- Project Details Card -->
+                <div class="form-card fade-in fi-2">
+                    <div class="fc-header">
+                        <div class="fc-header-left">
+                            <div class="fc-icon fc-indigo">
+                                <i class="bi bi-folder-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="fc-title">Project Details</h6>
+                                <p class="fc-subtitle">Core project information</p>
+                            </div>
+                        </div>
+                        <div class="fc-header-right">
+                            <span class="edit-badge">
+                                <i class="bi bi-pencil"></i> Editing
+                            </span>
+                            <span class="required-tag">
+                                <i class="bi bi-asterisk"></i> Required
+                            </span>
+                        </div>
+                    </div>
+                    <div class="fc-body">
+                        <div class="form-grid">
+
+                            <!-- Client Selection -->
+                            <div class="form-group">
+                                <label class="field-label">
+                                    Client Account <span class="req">*</span>
+                                </label>
+                                <div class="input-wrap">
+                                    <div class="input-icon">
+                                        <i class="bi bi-person-badge"></i>
+                                    </div>
+                                    <select name="client" 
+                                            class="custom-select has-icon required-input" 
+                                            required>
+                                        {% for client in clients %}
+                                        <option value="{{ client.id }}" {% if project.client.id == client.id %}selected{% endif %}>
+                                            {{ client.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <span class="input-indicator"></span>
+                                </div>
+                                <div class="field-feedback">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    Please select a client
+                                </div>
+                            </div>
+
+                            <!-- Project Name -->
+                            <div class="form-group">
+                                <label class="field-label">
+                                    Project Title <span class="req">*</span>
+                                </label>
+                                <div class="input-wrap">
+                                    <div class="input-icon">
+                                        <i class="bi bi-tag"></i>
+                                    </div>
+                                    <input type="text"
+                                           name="name"
+                                           value="{{ project.name }}"
+                                           class="custom-input has-icon required-input"
+                                           placeholder="e.g. Villa Interior Design"
+                                           required>
+                                    <span class="input-indicator"></span>
+                                </div>
+                                <div class="field-feedback">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    Project title is required
+                                </div>
+                            </div>
+
+                            <!-- Budget -->
+                            <div class="form-group">
+                                <label class="field-label">
+                                    Approved Budget <span class="req">*</span>
+                                </label>
+                                <div class="input-group-inline">
+                                    <span class="input-prefix">₹</span>
+                                    <div class="input-wrap flex-1">
+                                        <input type="number"
+                                               step="0.01"
+                                               name="budget"
+                                               value="{{ project.budget }}"
+                                               class="custom-input required-input"
+                                               placeholder="0.00"
+                                               min="0"
+                                               required>
+                                        <span class="input-indicator"></span>
+                                    </div>
+                                </div>
+                                <div class="field-feedback">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    Please enter a valid budget amount
+                                </div>
+                                <p class="field-hint">
+                                    <i class="bi bi-wallet2"></i>
+                                    Balance yet to receive: <strong class="text-emerald">₹{{ project.yet_to_receive|floatformat:2|default:"0.00" }}</strong>
+                                </p>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="form-group">
+                                <label class="field-label">
+                                    Project Milestone
+                                </label>
+                                <div class="input-wrap">
+                                    <div class="input-icon">
+                                        <i class="bi bi-activity"></i>
+                                    </div>
+                                    <select name="status" class="custom-select has-icon">
+                                        <option value="ongoing" {% if project.status == 'ongoing' %}selected{% endif %}>
+                                            🟢 Ongoing
+                                        </option>
+                                        <option value="completed" {% if project.status == 'completed' %}selected{% endif %}>
+                                            ✅ Completed
+                                        </option>
+                                        <option value="hold" {% if project.status == 'hold' %}selected{% endif %}>
+                                            ⏸️ On Hold
+                                        </option>
+                                    </select>
+                                </div>
+                                <p class="field-hint">
+                                    <i class="bi bi-info-circle"></i>
+                                    Update status to reflect current project phase
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warning Note -->
+                <div class="warning-card fade-in fi-3">
+                    <div class="wc-icon">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="wc-content">
+                        <h6 class="wc-title">Important Notice</h6>
+                        <p class="wc-text">
+                            Changing the <strong>client</strong> will reassign all invoices and payments to the new client. 
+                            Budget changes will <strong>not</strong> affect existing invoices.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Side - Sidebar -->
+            <div class="col-lg-4">
+
+
+                <!-- Financial Summary -->
+                <div class="sidebar-card mb-3 fade-in fi-3">
+                    <div class="sc-header">
+                        <div class="sc-icon sc-emerald"><i class="bi bi-graph-up-arrow"></i></div>
+                        <h6 class="sc-title">Financial Summary</h6>
+                    </div>
+                    <div class="finance-grid">
+                        <div class="fg-item">
+                            <div class="fg-icon fg-spent"><i class="bi bi-arrow-up-right"></i></div>
+                            <div class="fg-data">
+                                <span class="fg-value">₹{{ project.total_spent|floatformat:0|default:"0" }}</span>
+                                <span class="fg-label">Total Spent</span>
+                            </div>
+                        </div>
+                        <div class="fg-item">
+                            <div class="fg-icon fg-received"><i class="bi bi-arrow-down-left"></i></div>
+                            <div class="fg-data">
+                                <span class="fg-value">₹{{ project.total_paid|floatformat:0|default:"0" }}</span>
+                                <span class="fg-label">Total Received</span>
+                            </div>
+                        </div>
+                        <div class="fg-item fg-full">
+                            <div class="fg-icon fg-pending"><i class="bi bi-hourglass-split"></i></div>
+                            <div class="fg-data">
+                                <span class="fg-value fg-highlight">₹{{ project.yet_to_receive|floatformat:0|default:"0" }}</span>
+                                <span class="fg-label">Yet to Receive</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Card -->
+                <div class="action-card fade-in fi-3">
+                    <div class="ac-header">
+                        <div class="ac-icon">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </div>
+                        <h6 class="ac-title">Save Changes?</h6>
+                    </div>
+                    <div class="ac-body">
+                        <button type="submit" class="btn-submit btn-update" id="submitBtn">
+                            <i class="bi bi-check2-all"></i>
+                            <span>Apply Updates</span>
+                        </button>
+                        <a href="{% url 'project_detail' project.id %}" class="btn-discard">
+                            <i class="bi bi-x-lg"></i>
+                            <span>Cancel Changes</span>
+                        </a>
+                    </div>
+                    <div class="ac-footer">
+                        <div class="ac-warning">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Changes will reflect immediately across all project reports</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checklist Card -->
+                <div class="sidebar-card fade-in fi-4">
+                    <div class="sc-header">
+                        <div class="sc-icon sc-rose"><i class="bi bi-list-check"></i></div>
+                        <h6 class="sc-title">Required Fields</h6>
+                    </div>
+                    <div class="checklist">
+                        <div class="cl-item" id="cl-client">
+                            <div class="cl-check"><i class="bi bi-circle"></i></div>
+                            <span>Client selected</span>
+                        </div>
+                        <div class="cl-item" id="cl-name">
+                            <div class="cl-check"><i class="bi bi-circle"></i></div>
+                            <span>Project title</span>
+                        </div>
+                        <div class="cl-item" id="cl-budget">
+                            <div class="cl-check"><i class="bi bi-circle"></i></div>
+                            <span>Budget set</span>
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="ps-label">Completion</div>
+                        <div class="progress-wrap">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <span class="progress-text" id="progressText">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="quick-links fade-in fi-4">
+                    <div class="ql-header">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                        <span>Quick Actions</span>
+                    </div>
+                    <div class="ql-list">
+                        <a href="{% url 'project_detail' project.id %}" class="ql-item">
+                            <i class="bi bi-eye"></i>
+                            <span>View Project</span>
+                        </a>
+                        <a href="{% url 'project_list' %}" class="ql-item">
+                            <i class="bi bi-grid"></i>
+                            <span>All Projects</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Pro Tip -->
+                <div class="pro-tip fade-in fi-4">
+                    <div class="pt-inner">
+                        <div class="pt-header">
+                            <span class="pt-emoji">✏️</span>
+                            <span class="pt-label">Edit Mode</span>
+                        </div>
+                        <p class="pt-text">
+                            You're editing <strong>{{ project.name }}</strong>. 
+                            All changes are tracked and will apply to <strong>reports & invoices</strong> immediately.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </form>
 </div>
 
-<script>
-// Prevent empty submissions
-(function () {
-  'use strict'
-  var forms = document.querySelectorAll('.needs-validation')
-  Array.prototype.slice.call(forms)
-    .forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
-        }
-        form.classList.add('was-validated')
-      }, false)
-    })
-})()
-</script>
-
 <style>
-    .form-control-lg, .form-select-lg { font-size: 1rem; }
-    .bg-primary { background: linear-gradient(45deg, #4361ee, #4895ef) !important; }
-    .breadcrumb-item { font-size: 0.85rem; }
+:root {
+    --primary: #6366f1;
+    --primary-soft: rgba(99,102,241,0.08);
+    --emerald: #10b981;
+    --emerald-soft: rgba(16,185,129,0.08);
+    --amber: #f59e0b;
+    --amber-soft: rgba(245,158,11,0.08);
+    --rose: #f43f5e;
+    --rose-soft: rgba(244,63,94,0.08);
+    --violet: #8b5cf6;
+    --violet-soft: rgba(139,92,246,0.08);
+    --sky: #0ea5e9;
+    --sky-soft: rgba(14,165,233,0.08);
+    --text-1: #0f172a;
+    --text-2: #475569;
+    --text-3: #94a3b8;
+    --surface: #fff;
+    --surface-2: #f8fafc;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --radius: 14px;
+    --radius-sm: 8px;
+}
+
+.master-page { padding: 1.5rem 2rem 3rem; max-width: 1300px; margin: 0 auto; }
+
+.fade-in { opacity: 0; transform: translateY(12px); animation: fadeIn 0.4s ease forwards; }
+.fi-1 { animation-delay: .02s; } .fi-2 { animation-delay: .05s; }
+.fi-3 { animation-delay: .08s; } .fi-4 { animation-delay: .11s; }
+@keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+/* ── Page Header ── */
+.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:1rem; }
+.page-header-left { display:flex; align-items:center; gap:12px; }
+.back-btn { width:36px; height:36px; border-radius:10px; border:1px solid var(--border-light); background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--text-3); text-decoration:none; transition:all .2s; }
+.back-btn:hover { background:var(--surface-2); color:var(--text-1); transform:translateX(-2px); }
+.page-icon-wrap { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
+.pi-amber { background:var(--amber-soft); color:var(--amber); }
+.page-title { font-size:1.35rem; font-weight:800; color:var(--text-1); margin:0; letter-spacing:-.02em; }
+.page-subtitle { font-size:.75rem; color:var(--text-3); margin:2px 0 0; }
+
+.header-badges { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.project-id-badge { display:flex; align-items:center; gap:4px; padding:6px 12px; background:var(--surface); border:1px solid var(--border-light); border-radius:100px; font-size:.7rem; font-weight:800; color:var(--text-2); font-variant-numeric:tabular-nums; }
+.project-id-badge i { color:var(--primary); }
+
+.status-badge { display:flex; align-items:center; gap:5px; padding:6px 12px; border-radius:100px; font-size:.68rem; font-weight:700; }
+.status-ongoing { background:var(--emerald-soft); color:var(--emerald); border:1px solid rgba(16,185,129,.15); }
+.status-completed { background:var(--primary-soft); color:var(--primary); border:1px solid rgba(99,102,241,.15); }
+.status-hold { background:var(--amber-soft); color:var(--amber); border:1px solid rgba(245,158,11,.15); }
+
+.header-status { display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--surface); border:1px solid var(--border-light); border-radius:100px; }
+.header-status.complete { background:var(--emerald-soft); border-color:rgba(16,185,129,.2); }
+.hs-indicator { width:8px; height:8px; border-radius:50%; animation:pulse 2s infinite; }
+.hs-warning { background:var(--amber); }
+.hs-success { background:var(--emerald); }
+.hs-text { font-size:.72rem; font-weight:700; color:var(--text-3); }
+.header-status.complete .hs-text { color:var(--emerald); }
+
+/* ── Breadcrumb ── */
+.breadcrumb-wrap { display:flex; align-items:center; gap:8px; margin-bottom:1.5rem; padding:10px 14px; background:var(--surface); border:1px solid var(--border-light); border-radius:10px; }
+.bc-link { font-size:.72rem; font-weight:600; color:var(--text-3); text-decoration:none; display:flex; align-items:center; gap:5px; transition:all .2s; }
+.bc-link:hover { color:var(--primary); }
+.bc-link i { font-size:.7rem; }
+.bc-sep { font-size:.55rem; color:var(--border); }
+.bc-current { font-size:.72rem; font-weight:700; color:var(--text-1); }
+
+/* ── Summary Banner ── */
+.summary-banner { position:relative; border-radius:var(--radius); overflow:hidden; margin-bottom:1rem; }
+.sb-background { position:absolute; inset:0; background:linear-gradient(135deg, #4f46e5, #7c3aed); }
+.sb-background::before { content:""; position:absolute; inset:0; background-image:radial-gradient(circle at 100% 0%, rgba(255,255,255,.15), transparent 50%), radial-gradient(circle at 0% 100%, rgba(0,0,0,.1), transparent 50%); }
+.sb-content { position:relative; padding:20px 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+.sb-left { display:flex; align-items:center; gap:14px; }
+.sb-icon { width:48px; height:48px; border-radius:12px; background:rgba(255,255,255,.15); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#fff; }
+.sb-title { font-size:1.15rem; font-weight:800; color:#fff; margin:0 0 4px; }
+.sb-subtitle { font-size:.75rem; color:rgba(255,255,255,.7); margin:0; display:flex; align-items:center; gap:5px; }
+.sb-subtitle i { font-size:.65rem; }
+.sb-right { display:flex; align-items:center; gap:16px; }
+.sb-stat { text-align:center; }
+.sb-stat-label { display:block; font-size:.6rem; font-weight:600; text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:2px; }
+.sb-stat-value { font-size:1.1rem; font-weight:800; color:#fff; }
+.sb-stat-value.sb-positive { color:#86efac; }
+.sb-stat-divider { width:1px; height:36px; background:rgba(255,255,255,.2); }
+
+/* ── Form Card ── */
+.form-card { background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); overflow:hidden; margin-bottom:1rem; transition:all .3s; }
+.form-card.has-error { border-color:var(--rose); box-shadow:0 0 0 3px var(--rose-soft); }
+.fc-header { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:var(--surface-2); border-bottom:1px solid var(--border-light); flex-wrap:wrap; gap:10px; }
+.fc-header-left { display:flex; align-items:center; gap:10px; }
+.fc-header-right { display:flex; align-items:center; gap:8px; }
+.fc-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:.85rem; }
+.fc-indigo { background:var(--primary-soft); color:var(--primary); }
+.fc-title { font-size:.82rem; font-weight:800; color:var(--text-1); margin:0; }
+.fc-subtitle { font-size:.65rem; color:var(--text-3); margin:0; }
+.fc-body { padding:20px; }
+
+.required-tag { display:flex; align-items:center; gap:4px; padding:4px 10px; background:var(--rose-soft); color:var(--rose); border-radius:100px; font-size:.58rem; font-weight:700; text-transform:uppercase; }
+.required-tag i { font-size:.45rem; }
+
+.edit-badge { display:flex; align-items:center; gap:4px; padding:5px 10px; background:var(--amber-soft); color:var(--amber); border-radius:100px; font-size:.65rem; font-weight:700; }
+
+/* ── Form Grid ── */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.form-group { display:flex; flex-direction:column; margin-bottom:0; }
+.form-group.full-width { grid-column:span 2; }
+
+.field-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-3); margin-bottom:6px; display:flex; align-items:center; }
+.req { color:var(--rose); font-weight:900; margin-left:2px; }
+
+/* ── Input Styles ── */
+.input-wrap { position:relative; }
+.input-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-3); font-size:.85rem; z-index:1; pointer-events:none; }
+.custom-input, .custom-select { width:100%; height:44px; padding:0 36px 0 14px; border:1.5px solid var(--border-light); border-radius:10px; background:var(--surface-2); font-size:.85rem; font-weight:600; color:var(--text-1); font-family:inherit; outline:none; transition:all .2s; }
+.custom-input.has-icon, .custom-select.has-icon { padding-left:40px; }
+.custom-input:focus, .custom-select:focus { border-color:var(--primary); background:var(--surface); box-shadow:0 0 0 3px var(--primary-soft); }
+.custom-input.invalid, .custom-select.invalid { border-color:var(--rose); box-shadow:0 0 0 3px var(--rose-soft); animation:shake .4s; }
+.custom-input.valid, .custom-select.valid { border-color:var(--emerald); }
+.custom-input::placeholder { color:var(--text-3); font-weight:400; }
+
+.custom-select { cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; }
+
+.input-indicator { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:16px; height:16px; border-radius:50%; font-size:.55rem; display:none; align-items:center; justify-content:center; font-weight:700; }
+.input-indicator.valid { display:flex; background:var(--emerald); color:#fff; }
+.input-indicator.valid::after { content:"✓"; }
+.input-indicator.invalid { display:flex; background:var(--rose); color:#fff; }
+.input-indicator.invalid::after { content:"!"; }
+
+.input-group-inline { display:flex; align-items:stretch; gap:0; }
+.input-prefix { display:flex; align-items:center; padding:0 12px; background:var(--surface-2); border:1.5px solid var(--border-light); border-right:none; border-radius:10px 0 0 10px; font-size:.85rem; font-weight:700; color:var(--text-2); }
+.input-group-inline .input-wrap { flex:1; }
+.input-group-inline .custom-input { border-radius:0 10px 10px 0; }
+.flex-1 { flex:1; }
+
+.field-feedback { display:none; align-items:center; gap:5px; margin-top:5px; padding:5px 10px; background:var(--rose-soft); border-radius:6px; font-size:.65rem; font-weight:600; color:var(--rose); }
+.field-feedback.show { display:flex; }
+
+.field-hint { display:flex; align-items:center; gap:5px; margin-top:6px; font-size:.65rem; color:var(--text-3); }
+.field-hint i { font-size:.6rem; }
+.field-hint strong { color:var(--emerald); }
+.text-emerald { color:var(--emerald) !important; }
+
+/* ── Warning Card ── */
+.warning-card { display:flex; align-items:flex-start; gap:14px; padding:16px 18px; background:var(--amber-soft); border:1px solid rgba(245,158,11,.15); border-radius:var(--radius); margin-bottom:1rem; }
+.wc-icon { width:36px; height:36px; border-radius:10px; background:var(--amber); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.95rem; flex-shrink:0; }
+.wc-content { flex:1; }
+.wc-title { font-size:.78rem; font-weight:800; color:var(--text-1); margin:0 0 4px; }
+.wc-text { font-size:.72rem; color:var(--text-2); line-height:1.5; margin:0; }
+.wc-text strong { color:var(--amber); }
+
+/* ── Sidebar Card ── */
+.sidebar-card { background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); padding:16px; transition:all .3s; }
+.sidebar-card:hover { box-shadow:0 5px 14px -3px rgba(0,0,0,.05); }
+.sc-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.sc-icon { width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:.75rem; }
+.sc-rose { background:var(--rose-soft); color:var(--rose); }
+.sc-sky { background:var(--sky-soft); color:var(--sky); }
+.sc-emerald { background:var(--emerald-soft); color:var(--emerald); }
+.sc-title { font-size:.78rem; font-weight:800; color:var(--text-1); margin:0; }
+
+/* ── Current Info ── */
+.current-info { display:flex; flex-direction:column; gap:6px; }
+.ci-item { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; background:var(--surface-2); border-radius:8px; }
+.ci-label { font-size:.62rem; font-weight:700; text-transform:uppercase; color:var(--text-3); }
+.ci-value { font-size:.75rem; font-weight:700; color:var(--text-1); }
+.ci-truncate { max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ci-highlight { color:var(--emerald); font-weight:800; }
+
+.mini-status { padding:3px 8px; border-radius:100px; font-size:.6rem; font-weight:700; }
+.mini-ongoing { background:var(--emerald-soft); color:var(--emerald); }
+.mini-completed { background:var(--primary-soft); color:var(--primary); }
+.mini-hold { background:var(--amber-soft); color:var(--amber); }
+
+/* ── Finance Grid ── */
+.finance-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.fg-item { display:flex; align-items:center; gap:10px; padding:12px; background:var(--surface-2); border-radius:10px; }
+.fg-item.fg-full { grid-column:span 2; }
+.fg-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.75rem; }
+.fg-spent { background:var(--rose-soft); color:var(--rose); }
+.fg-received { background:var(--emerald-soft); color:var(--emerald); }
+.fg-pending { background:var(--amber-soft); color:var(--amber); }
+.fg-data { display:flex; flex-direction:column; }
+.fg-value { font-size:.85rem; font-weight:800; color:var(--text-1); }
+.fg-value.fg-highlight { color:var(--amber); }
+.fg-label { font-size:.58rem; font-weight:600; text-transform:uppercase; color:var(--text-3); }
+
+/* ── Action Card ── */
+.action-card { background:linear-gradient(135deg, #0f172a, #1e293b); border-radius:var(--radius); padding:20px; margin-bottom:1rem; position:relative; overflow:hidden; }
+.action-card::before { content:""; position:absolute; inset:0; background-image:radial-gradient(circle at 80% 20%, rgba(245,158,11,.12), transparent 50%), radial-gradient(circle at 20% 80%, rgba(99,102,241,.08), transparent 50%); }
+
+.ac-header { display:flex; align-items:center; gap:10px; margin-bottom:16px; position:relative; }
+.ac-icon { width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; font-size:1rem; color:#fff; }
+.ac-title { font-size:.85rem; font-weight:800; color:#fff; margin:0; }
+
+.ac-body { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; position:relative; }
+
+.btn-submit { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:12px 20px; border-radius:10px; border:none; color:#fff; font-size:.85rem; font-weight:700; cursor:pointer; transition:all .2s; font-family:inherit; }
+.btn-update { background:var(--emerald); box-shadow:0 4px 12px rgba(16,185,129,.3); }
+.btn-update:hover { background:#059669; transform:translateY(-1px); box-shadow:0 6px 18px rgba(16,185,129,.35); }
+
+.btn-discard { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; padding:10px 16px; border-radius:10px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.1); color:rgba(255,255,255,.7); font-size:.78rem; font-weight:600; text-decoration:none; transition:all .2s; }
+.btn-discard:hover { background:rgba(255,255,255,.15); color:#fff; }
+
+.ac-footer { position:relative; }
+.ac-warning { display:flex; align-items:flex-start; gap:8px; padding:10px 12px; background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.15); border-radius:8px; font-size:.68rem; color:rgba(255,255,255,.6); line-height:1.4; }
+.ac-warning i { color:var(--amber); font-size:.75rem; margin-top:1px; flex-shrink:0; }
+
+/* ── Checklist ── */
+.checklist { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.cl-item { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:7px; border:1px solid var(--border-light); transition:all .3s; }
+.cl-item.done { background:var(--emerald-soft); border-color:rgba(16,185,129,.15); }
+.cl-check { width:18px; height:18px; border-radius:5px; background:var(--border-light); color:var(--text-3); display:flex; align-items:center; justify-content:center; font-size:.55rem; transition:all .3s; }
+.cl-item.done .cl-check { background:var(--emerald); color:#fff; }
+.cl-item.done .cl-check i::before { content:"\F26B"; }
+.cl-item span { font-size:.7rem; font-weight:600; color:var(--text-3); }
+.cl-item.done span { color:var(--emerald); }
+
+.progress-section { padding-top:12px; border-top:1px solid var(--border-light); }
+.ps-label { font-size:.6rem; font-weight:700; text-transform:uppercase; color:var(--text-3); margin-bottom:6px; }
+.progress-wrap { display:flex; align-items:center; gap:8px; }
+.progress-bar { flex:1; height:6px; background:var(--border-light); border-radius:100px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--emerald); border-radius:100px; transition:width .5s; width:0; }
+.progress-text { font-size:.65rem; font-weight:800; color:var(--text-3); min-width:30px; }
+
+/* ── Quick Links ── */
+.quick-links { background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); padding:16px; margin-bottom:1rem; }
+.ql-header { display:flex; align-items:center; gap:6px; font-size:.72rem; font-weight:800; color:var(--text-1); margin-bottom:10px; }
+.ql-header i { color:var(--amber); }
+.ql-list { display:flex; flex-direction:column; gap:6px; }
+.ql-item { display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--surface-2); border-radius:8px; font-size:.7rem; font-weight:600; color:var(--text-2); text-decoration:none; transition:all .2s; }
+.ql-item:hover { background:var(--primary-soft); color:var(--primary); transform:translateX(3px); }
+.ql-item i { font-size:.7rem; color:var(--text-3); }
+.ql-item:hover i { color:var(--primary); }
+
+/* ── Pro Tip ── */
+.pro-tip { border-radius:var(--radius); overflow:hidden; }
+.pt-inner { background:linear-gradient(135deg, #0f172a, #1e293b); border-radius:var(--radius); padding:1.1rem; position:relative; overflow:hidden; }
+.pt-inner::before { content:""; position:absolute; inset:0; background-image:radial-gradient(circle at 80% 20%, rgba(245,158,11,.1), transparent 50%), radial-gradient(circle at 20% 80%, rgba(99,102,241,.06), transparent 50%); }
+.pt-header { display:flex; align-items:center; gap:6px; margin-bottom:.5rem; position:relative; }
+.pt-emoji { font-size:.9rem; }
+.pt-label { font-size:.55rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,.35); }
+.pt-text { font-size:.72rem; color:rgba(255,255,255,.5); line-height:1.5; margin:0; position:relative; }
+.pt-text strong { color:#fff; }
+
+/* ── Responsive ── */
+@media (max-width:992px) { 
+    .master-page { padding:1rem; } 
+    .form-grid { grid-template-columns:1fr; } 
+    .form-group.full-width { grid-column:span 1; }
+    .sb-content { flex-direction:column; text-align:center; }
+    .sb-left { flex-direction:column; }
+    .sb-right { width:100%; justify-content:center; }
+}
+@media (max-width:768px) { 
+    .page-header { flex-direction:column; align-items:flex-start; } 
+    .header-badges { width:100%; justify-content:flex-start; flex-wrap:wrap; }
+    .header-status { display:none; }
+    .finance-grid { grid-template-columns:1fr; }
+    .fg-item.fg-full { grid-column:span 1; }
+    .breadcrumb-wrap { overflow-x:auto; white-space:nowrap; }
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('projectForm');
+    const clientSelect = document.querySelector('[name="client"]');
+    const nameInput = document.querySelector('[name="name"]');
+    const budgetInput = document.querySelector('[name="budget"]');
+
+    function validateField(field) {
+        const value = field.value?.trim();
+        const isRequired = field.classList.contains('required-input');
+        const wrap = field.closest('.input-wrap');
+        const indicator = wrap?.querySelector('.input-indicator');
+        const feedback = field.closest('.form-group')?.querySelector('.field-feedback');
+        let isValid = true;
+
+        if (isRequired && !value) isValid = false;
+        
+        if (field.name === 'budget' && value) {
+            const num = parseFloat(value);
+            if (isNaN(num) || num < 0) isValid = false;
+        }
+
+        if (!isValid) {
+            field.classList.add('invalid');
+            field.classList.remove('valid');
+            if (indicator) { indicator.classList.remove('valid'); indicator.classList.add('invalid'); }
+            if (feedback) feedback.classList.add('show');
+            return false;
+        } else if (value) {
+            field.classList.remove('invalid');
+            field.classList.add('valid');
+            if (indicator) { indicator.classList.remove('invalid'); indicator.classList.add('valid'); }
+            if (feedback) feedback.classList.remove('show');
+            return true;
+        } else {
+            field.classList.remove('invalid', 'valid');
+            if (indicator) indicator.classList.remove('invalid', 'valid');
+            if (feedback) feedback.classList.remove('show');
+            return !isRequired;
+        }
+    }
+
+    function updateChecklist() {
+        toggleCheck('cl-client', !!clientSelect?.value);
+        toggleCheck('cl-name', !!nameInput?.value?.trim());
+        const budget = parseFloat(budgetInput?.value);
+        toggleCheck('cl-budget', !isNaN(budget) && budget >= 0);
+    }
+
+    function toggleCheck(id, done) {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('done', done);
+    }
+
+    function updateProgress() {
+        let filled = 0;
+        if (clientSelect?.value) filled++;
+        if (nameInput?.value?.trim()) filled++;
+        const budget = parseFloat(budgetInput?.value);
+        if (!isNaN(budget) && budget >= 0) filled++;
+
+        const pct = Math.round((filled / 3) * 100);
+        const fill = document.getElementById('progressFill');
+        const text = document.getElementById('progressText');
+        if (fill) {
+            fill.style.width = pct + '%';
+            fill.style.background = pct === 100 ? 'var(--emerald)' : pct >= 50 ? 'var(--amber)' : 'var(--rose)';
+        }
+        if (text) text.textContent = pct + '%';
+
+        const status = document.getElementById('headerStatus');
+        const indicator = status?.querySelector('.hs-indicator');
+        const statusText = status?.querySelector('.hs-text');
+        if (pct === 100) {
+            status?.classList.add('complete');
+            indicator?.classList.remove('hs-warning'); indicator?.classList.add('hs-success');
+            if (statusText) statusText.textContent = 'Ready';
+        } else {
+            status?.classList.remove('complete');
+            indicator?.classList.remove('hs-success'); indicator?.classList.add('hs-warning');
+            if (statusText) statusText.textContent = 'Editing';
+        }
+    }
+
+    function validateAll() {
+        let v = true;
+        if (!validateField(clientSelect)) v = false;
+        if (!validateField(nameInput)) v = false;
+        if (!validateField(budgetInput)) v = false;
+        return v;
+    }
+
+    // Event listeners
+    [clientSelect, nameInput, budgetInput].forEach(field => {
+        if (field) {
+            field.addEventListener('input', function() { 
+                validateField(this); 
+                updateChecklist(); 
+                updateProgress(); 
+            });
+            field.addEventListener('change', function() { 
+                validateField(this); 
+                updateChecklist(); 
+                updateProgress(); 
+            });
+            field.addEventListener('blur', function() { 
+                validateField(this); 
+                updateChecklist(); 
+                updateProgress(); 
+            });
+        }
+    });
+
+    // Form submit
+    form.addEventListener('submit', function(e) {
+        if (!validateAll()) {
+            e.preventDefault();
+            const firstInvalid = form.querySelector('.invalid');
+            if (firstInvalid) { 
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+                firstInvalid.focus(); 
+            }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Missing Required Fields', 
+                    text: 'Please fill in all required fields.', 
+                    confirmButtonColor: '#f43f5e' 
+                });
+            }
+            return false;
+        }
+        const btn = document.getElementById('submitBtn');
+        if (btn) { 
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Updating...'; 
+            btn.disabled = true; 
+        }
+    });
+
+    // Mark existing valid values on load
+    document.querySelectorAll('.required-input').forEach(f => { 
+        if (f.value?.trim()) validateField(f); 
+    });
+    updateChecklist();
+    updateProgress();
+});
+</script>
 {% endblock %}

@@ -1,122 +1,1347 @@
+
+```html
 {% extends 'billing/layouts/base.html' %}
 {% block title %}Full/Semi Management | HomeDen{% endblock %}
 {% block page_title %}Service Type Rates{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
+<div class="container-fluid master-page">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="fw-bold mb-0">Full / Semi Types</h4>
-            <p class="text-muted small mb-0">Manage service classifications and their base rates</p>
+    <!-- ═══════════════════════════════════ -->
+    <!--  PAGE HEADER                       -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page-header fade-in fi-1">
+        <div class="page-header-left">
+            <div class="page-icon-wrap pi-indigo">
+                <i class="bi bi-layers-fill"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Full / Semi Types</h1>
+                <p class="page-subtitle">Manage service classifications and their base rates for billing</p>
+            </div>
         </div>
-        <a href="{% url 'fullsemi_create' %}" class="btn btn-primary shadow-sm">
-            <i class="bi bi-plus-circle-fill me-1"></i> Add New Type
-        </a>
+        <div class="page-header-right">
+            <span class="header-count-badge">
+                <i class="bi bi-database"></i>
+                {{ fullsemis|length }} records
+            </span>
+            <a href="{% url 'fullsemi_create' %}" class="btn-add-new">
+                <i class="bi bi-plus-lg"></i>
+                <span>Add Type</span>
+            </a>
+        </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-9 col-xl-7">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-0">
-                    <div class="table-responsive"  style="border-radius:19px;">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4 py-3 text-muted small fw-bold text-uppercase">Classification Name</th>
-                                    <th class="py-3 text-muted small fw-bold text-uppercase text-center">Base Rate</th>
-                                    <th class="py-3 text-muted small fw-bold text-uppercase text-end pe-4">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for fullsemi in fullsemis %}
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 38px; height: 38px;">
-                                                <i class="bi bi-tag-fill"></i>
-                                            </div>
-                                            <div>
-                                                <div class="fw-bold text-dark">{{ fullsemi.name }}</div>
-                                                <div class="text-muted small">Standard Service Type</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-dark px-3 py-2 fs-6 fw-medium">
-                                            ₹ {{ fullsemi.rate }}
-                                        </span>
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        <div class="btn-group">
-                                            <a href="{% url 'fullsemi_update' fullsemi.id %}" class="btn btn-sm btn-outline-light text-dark border shadow-sm me-2">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-light text-danger border shadow-sm" 
-                                                    data-bs-toggle="modal" data-bs-target="#deleteFullSemi{{ fullsemi.id }}">
-                                                <i class="bi bi-trash3"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+    <div class="row g-4">
 
-                                <div class="modal fade" id="deleteFullSemi{{ fullsemi.id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered modal-sm">
-                                        <div class="modal-content border-0 shadow-lg">
-                                            <div class="modal-body text-center p-4">
-                                                <div class="text-danger mb-3">
-                                                    <i class="bi bi-exclamation-circle fs-1"></i>
-                                                </div>
-                                                <h6 class="fw-bold">Delete Rate Type?</h6>
-                                                <p class="small text-muted mb-4">Removing <strong>{{ fullsemi.name }}</strong> might affect your auto-calculation for pending projects.</p>
-                                                <div class="d-flex justify-content-center gap-2">
-                                                    <button type="button" class="btn btn-light btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
-                                                    <a href="{% url 'fullsemi_delete' fullsemi.id %}" class="btn btn-danger btn-sm px-3">Delete</a>
-                                                </div>
-                                            </div>
+        <!-- ═══════════════════════════════════ -->
+        <!--  LEFT: TABLE                       -->
+        <!-- ═══════════════════════════════════ -->
+        <div class="col-lg-8 col-xl-7">
+
+            <!-- Search bar -->
+            <div class="mini-toolbar fade-in fi-2">
+                <div class="mini-search-wrap">
+                    <i class="bi bi-search mini-search-icon"></i>
+                    <input type="text"
+                           id="liveSearch"
+                           class="mini-search-input"
+                           placeholder="Search service types..."
+                           autocomplete="off">
+                </div>
+                <div class="mini-toolbar-right">
+                    <span class="mini-result-count">
+                        <span id="visibleCount">{{ fullsemis|length }}</span> items
+                    </span>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="master-table-card fade-in fi-3">
+                <div class="table-responsive">
+                    <table class="table master-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4" style="width: 50px;">#</th>
+                                <th>Classification Name</th>
+                                <th class="text-center" style="width: 140px;">Base Rate</th>
+                                <th class="text-center" style="width: 80px;">Status</th>
+                                <th class="text-end pe-4" style="width: 120px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="masterTableBody">
+                            {% for fullsemi in fullsemis %}
+                            <tr class="master-row" data-name="{{ fullsemi.name|lower }}">
+                                <!-- INDEX -->
+                                <td class="ps-4">
+                                    <span class="row-index">{{ forloop.counter }}</span>
+                                </td>
+
+                                <!-- NAME -->
+                                <td>
+                                    <div class="master-name-cell">
+                                        <div class="master-icon mi-{% cycle 'indigo' 'emerald' 'amber' 'sky' 'violet' 'rose' %}">
+                                            <i class="bi bi-layers-half"></i>
+                                        </div>
+                                        <div>
+                                            <div class="master-name">{{ fullsemi.name }}</div>
+                                            <div class="master-code">FS-{{ fullsemi.id|stringformat:"03d" }}</div>
                                         </div>
                                     </div>
-                                </div>
+                                </td>
 
-                                {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-center py-5">
-                                        <div class="opacity-50 mb-3">
-                                            <i class="bi bi-clipboard2-x fs-1"></i>
+                                <!-- RATE -->
+                                <td class="text-center">
+                                    <span class="rate-badge">
+                                        <span class="currency">₹</span>
+                                        <span class="amount">{{ fullsemi.rate }}</span>
+                                    </span>
+                                </td>
+
+                                <!-- STATUS INDICATOR -->
+                                <td class="text-center">
+                                    <span class="usage-dot ud-active" title="Active">
+                                        <i class="bi bi-check-lg"></i>
+                                    </span>
+                                </td>
+
+                                <!-- ACTIONS -->
+                                <td class="text-end pe-4">
+                                    <div class="action-group">
+                                        <a href="{% url 'fullsemi_update' fullsemi.id %}"
+                                           class="action-btn ab-edit" title="Edit">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a href="{% url 'fullsemi_delete' fullsemi.id %}"
+                                           class="action-btn ab-delete" title="Delete">
+                                            <i class="bi bi-trash3"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="empty-state">
+                                        <div class="empty-circle ec-indigo">
+                                            <i class="bi bi-layers"></i>
                                         </div>
-                                        <p class="text-muted">No Full/Semi types found.</p>
-                                        <a href="{% url 'fullsemi_create' %}" class="btn btn-sm btn-outline-primary">Define first type</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                        <h5 class="empty-title">No service types defined</h5>
+                                        <p class="empty-desc">Add Full/Semi classifications to use across your billing and quotations.</p>
+                                        <a href="{% url 'fullsemi_create' %}" class="btn-add-first bf-indigo">
+                                            <i class="bi bi-plus-lg me-2"></i> Add First Type
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════ -->
+        <!--  RIGHT: SIDEBAR INFO               -->
+        <!-- ═══════════════════════════════════ -->
+        <div class="col-lg-4 col-xl-5 fade-in fi-4">
+
+            <!-- Quick Stats -->
+            <div class="info-card mb-3">
+                <div class="info-card-header">
+                    <div class="ich-icon ich-indigo">
+                        <i class="bi bi-bar-chart-fill"></i>
+                    </div>
+                    <h6 class="ich-title">Quick Stats</h6>
+                </div>
+                <div class="info-stats-grid">
+                    <div class="info-stat">
+                        <span class="info-stat-value" data-count="{{ fullsemis|length }}">0</span>
+                        <span class="info-stat-label">Total Types</span>
+                    </div>
+                    <div class="info-stat">
+                        <span class="info-stat-value" id="activeTypes">0</span>
+                        <span class="info-stat-label">Active</span>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-4 p-3 bg-light rounded border-start border-primary border-4 shadow-sm">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-info-circle text-primary me-3 fs-4"></i>
-                    <p class="small text-muted mb-0">
-                        <strong>Billing Tip:</strong> "Full" and "Semi" types represent different levels of finishing or service. Rates defined here are used as the multiplier for area calculations in your invoices.
-                    </p>
+            <!-- Quick Add -->
+            <div class="info-card mb-3">
+                <div class="info-card-header">
+                    <div class="ich-icon ich-emerald">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                    </div>
+                    <h6 class="ich-title">Quick Add</h6>
+                </div>
+                <form method="POST" action="{% url 'fullsemi_create' %}" class="quick-add-form" id="quickAddForm">
+                    {% csrf_token %}
+                    <div class="qa-input-group">
+                        <div class="qa-field">
+                            <label class="qa-label">Type Name</label>
+                            <input type="text"
+                                   name="name"
+                                   class="qa-input"
+                                   placeholder="e.g. Full Furnished"
+                                   required
+                                   autocomplete="off">
+                        </div>
+                        <div class="qa-field-row">
+                            <div class="qa-field qa-field-rate">
+                                <label class="qa-label">Rate (₹)</label>
+                                <input type="number"
+                                       name="rate"
+                                       class="qa-input"
+                                       placeholder="0.00"
+                                       step="0.01"
+                                       required
+                                       autocomplete="off">
+                            </div>
+                            <button type="submit" class="qa-submit-btn">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="qa-hint">Fill both fields and click + to add quickly</p>
+                </form>
+            </div>
+
+            <!-- Common Suggestions -->
+            <div class="info-card mb-3">
+                <div class="info-card-header">
+                    <div class="ich-icon ich-amber">
+                        <i class="bi bi-lightbulb-fill"></i>
+                    </div>
+                    <h6 class="ich-title">Suggestions</h6>
+                </div>
+                <div class="suggestion-tags" id="suggestionTags">
+                    <button class="sug-tag" data-value="Full">
+                        <i class="bi bi-plus"></i> Full
+                    </button>
+                    <button class="sug-tag" data-value="Semi">
+                        <i class="bi bi-plus"></i> Semi
+                    </button>
+                    <button class="sug-tag" data-value="Full Furnished">
+                        <i class="bi bi-plus"></i> Full Furnished
+                    </button>
+                    <button class="sug-tag" data-value="Semi Furnished">
+                        <i class="bi bi-plus"></i> Semi Furnished
+                    </button>
+                    <button class="sug-tag" data-value="Premium Full">
+                        <i class="bi bi-plus"></i> Premium Full
+                    </button>
+                    <button class="sug-tag" data-value="Economy Semi">
+                        <i class="bi bi-plus"></i> Economy Semi
+                    </button>
+                    <button class="sug-tag" data-value="Luxury Full">
+                        <i class="bi bi-plus"></i> Luxury Full
+                    </button>
+                    <button class="sug-tag" data-value="Basic Semi">
+                        <i class="bi bi-plus"></i> Basic Semi
+                    </button>
+                    <button class="sug-tag" data-value="Modular Full">
+                        <i class="bi bi-plus"></i> Modular Full
+                    </button>
+                    <button class="sug-tag" data-value="Custom Full">
+                        <i class="bi bi-plus"></i> Custom Full
+                    </button>
+                </div>
+            </div>
+
+            <!-- Rate Overview Mini Chart -->
+            <div class="info-card mb-3">
+                <div class="info-card-header">
+                    <div class="ich-icon ich-sky">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h6 class="ich-title">Rate Overview</h6>
+                </div>
+                <div class="rate-overview-list" id="rateOverview">
+                    {% for fullsemi in fullsemis %}
+                    <div class="rate-bar-item">
+                        <div class="rate-bar-top">
+                            <span class="rate-bar-name">{{ fullsemi.name }}</span>
+                            <span class="rate-bar-value">₹{{ fullsemi.rate }}</span>
+                        </div>
+                        <div class="rate-bar-track">
+                            <div class="rate-bar-fill rbf-{% cycle 'indigo' 'emerald' 'amber' 'sky' 'violet' 'rose' %}" 
+                                 data-rate="{{ fullsemi.rate }}" 
+                                 style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-3">
+                        <p class="text-muted small mb-0">No rates to display</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Pro Tip -->
+            <div class="tip-card">
+                <div class="tip-card-inner">
+                    <div class="tip-bg-pattern"></div>
+                    <div class="tip-content">
+                        <div class="tip-top">
+                            <span class="tip-emoji">💡</span>
+                            <span class="tip-label">Pro Tip</span>
+                        </div>
+                        <p class="tip-text">
+                            <strong>"Full"</strong> and <strong>"Semi"</strong> types represent different finishing levels.
+                            Rates defined here act as <strong>multipliers</strong> for area-based invoice calculations.
+                            Keep rates updated to ensure accurate billing.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
+<!-- ════════════════════════════════════════════ -->
+<!--  STYLES                                     -->
+<!-- ════════════════════════════════════════════ -->
 <style>
-    .table-hover tbody tr:hover {
-        background-color: rgba(67, 97, 238, 0.03);
+    :root {
+        --violet: #8b5cf6;
+        --violet-soft: rgba(139, 92, 246, 0.08);
+        --indigo: #6366f1;
+        --indigo-soft: rgba(99, 102, 241, 0.08);
+        --amber: #f59e0b;
+        --amber-soft: rgba(245, 158, 11, 0.08);
+        --emerald: #10b981;
+        --emerald-soft: rgba(16, 185, 129, 0.08);
+        --rose: #f43f5e;
+        --rose-soft: rgba(244, 63, 94, 0.08);
+        --sky: #0ea5e9;
+        --sky-soft: rgba(14, 165, 233, 0.08);
+        --text-1: #0f172a;
+        --text-2: #475569;
+        --text-3: #94a3b8;
+        --surface: #ffffff;
+        --surface-2: #f8fafc;
+        --border: #e2e8f0;
+        --border-light: #f1f5f9;
+        --radius: 16px;
+        --radius-sm: 10px;
+        --radius-xs: 8px;
     }
-    .btn-outline-light:hover {
-        background-color: #f8f9fa;
-        border-color: #dee2e6 !important;
+
+    .master-page {
+        padding: 1.5rem 2rem 3rem;
+        max-width: 1400px;
+        margin: 0 auto;
     }
-    .badge.bg-dark {
+
+    /* Animations */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(16px);
+        animation: fadeIn 0.45s ease forwards;
+    }
+    .fi-1 { animation-delay: 0.03s; }
+    .fi-2 { animation-delay: 0.08s; }
+    .fi-3 { animation-delay: 0.13s; }
+    .fi-4 { animation-delay: 0.18s; }
+
+    @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════ */
+    /*  PAGE HEADER       */
+    /* ══════════════════ */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.75rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .pi-indigo { background: var(--indigo-soft); color: var(--indigo); }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-1);
+        letter-spacing: -0.03em;
+        margin: 0;
+    }
+
+    .page-subtitle {
+        font-size: 0.82rem;
+        color: var(--text-3);
+        margin: 2px 0 0;
+    }
+
+    .page-header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .header-count-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-3);
+    }
+
+    .header-count-badge i {
+        font-size: 0.8rem;
+        color: var(--indigo);
+    }
+
+    .btn-add-new {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        background: var(--indigo);
+        color: #fff;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-add-new::after {
+        content: "";
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+        transition: left 0.5s;
+    }
+
+    .btn-add-new:hover {
+        background: #4f46e5; color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-add-new:hover::after { left: 100%; }
+
+    /* ══════════════════ */
+    /*  MINI TOOLBAR       */
+    /* ══════════════════ */
+    .mini-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .mini-search-wrap {
+        position: relative;
+        flex: 1;
+        max-width: 320px;
+        min-width: 200px;
+    }
+
+    .mini-search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-3);
+        font-size: 0.82rem;
+        pointer-events: none;
+    }
+
+    .mini-search-input {
+        width: 100%;
+        height: 40px;
+        padding: 0 14px 0 36px;
+        border: 1.5px solid var(--border-light);
+        border-radius: var(--radius-xs);
+        background: var(--surface);
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: var(--text-1);
+        font-family: inherit;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+    .mini-search-input::placeholder { color: var(--text-3); font-weight: 400; }
+
+    .mini-search-input:focus {
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px var(--indigo-soft);
+    }
+
+    .mini-result-count {
+        font-size: 0.75rem;
+        color: var(--text-3);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .mini-result-count span {
+        color: var(--text-1);
+        font-weight: 800;
+    }
+
+    /* ══════════════════ */
+    /*  MASTER TABLE       */
+    /* ══════════════════ */
+    .master-table-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+
+    .master-table thead th {
+        background: var(--surface-2);
+        font-size: 0.64rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-3);
+        padding: 12px 16px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .master-table tbody tr {
+        border-bottom: 1px solid var(--border-light);
+        transition: all 0.2s;
+    }
+
+    .master-table tbody tr:last-child { border-bottom: none; }
+    .master-table tbody tr:hover { background: rgba(99, 102, 241, 0.02); }
+    .master-table tbody td { padding: 12px 16px; vertical-align: middle; }
+
+    .row-index {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-3);
+        background: var(--border-light);
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Name cell */
+    .master-name-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .master-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.88rem;
+        flex-shrink: 0;
+        transition: transform 0.2s;
+    }
+
+    tr:hover .master-icon { transform: scale(1.08); }
+
+    .mi-violet { background: var(--violet-soft); color: var(--violet); }
+    .mi-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .mi-sky { background: var(--sky-soft); color: var(--sky); }
+    .mi-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .mi-amber { background: var(--amber-soft); color: var(--amber); }
+    .mi-rose { background: var(--rose-soft); color: var(--rose); }
+
+    .master-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .master-code {
+        font-size: 0.65rem;
+        color: var(--text-3);
+        font-weight: 500;
+        margin-top: 1px;
+    }
+
+    /* Rate badge */
+    .rate-badge {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 2px;
+        background: var(--text-1);
+        color: #fff;
+        padding: 5px 14px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    .rate-badge .currency {
+        font-size: 0.65rem;
+        opacity: 0.6;
+        margin-right: 2px;
+    }
+
+    .rate-badge .amount {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Usage dot */
+    .usage-dot {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+    }
+
+    .ud-active { background: var(--emerald-soft); color: var(--emerald); }
+
+    /* Actions */
+    .action-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        justify-content: flex-end;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-xs);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border-light);
+        background: var(--surface);
+        color: var(--text-3);
+        cursor: pointer;
+        font-size: 0.78rem;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .ab-edit:hover {
+        background: var(--indigo);
+        color: #fff;
+        border-color: var(--indigo);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    }
+
+    .ab-delete:hover {
+        background: var(--rose);
+        color: #fff;
+        border-color: var(--rose);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
+    }
+
+    /* ══════════════════ */
+    /*  RIGHT SIDEBAR      */
+    /* ══════════════════ */
+    .info-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 1.25rem;
+        transition: all 0.3s;
+    }
+
+    .info-card:hover {
+        box-shadow: 0 6px 20px -4px rgba(0, 0, 0, 0.06);
+    }
+
+    .info-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .ich-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+    }
+
+    .ich-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .ich-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .ich-amber { background: var(--amber-soft); color: var(--amber); }
+    .ich-sky { background: var(--sky-soft); color: var(--sky); }
+
+    .ich-title {
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin: 0;
+    }
+
+    /* Stats grid */
+    .info-stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .info-stat {
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .info-stat-value {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: var(--text-1);
+        letter-spacing: -0.02em;
+        display: block;
+        line-height: 1;
+    }
+
+    .info-stat-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-3);
+        margin-top: 6px;
+        display: block;
+    }
+
+    /* Quick add */
+    .qa-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .qa-field {
+        flex: 1;
+    }
+
+    .qa-field-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+    }
+
+    .qa-field-rate {
+        flex: 1;
+    }
+
+    .qa-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
         letter-spacing: 0.5px;
+        color: var(--text-3);
+        margin-bottom: 5px;
+        display: block;
     }
+
+    .qa-input {
+        width: 100%;
+        height: 42px;
+        padding: 0 14px;
+        border: 1.5px solid var(--border-light);
+        border-radius: var(--radius-xs);
+        background: var(--surface-2);
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-1);
+        font-family: inherit;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+    .qa-input::placeholder { color: var(--text-3); font-weight: 400; }
+
+    .qa-input:focus {
+        border-color: var(--emerald);
+        box-shadow: 0 0 0 3px var(--emerald-soft);
+        background: var(--surface);
+    }
+
+    .qa-submit-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: var(--radius-xs);
+        background: var(--emerald);
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+
+    .qa-submit-btn:hover {
+        background: #059669;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .qa-hint {
+        font-size: 0.68rem;
+        color: var(--text-3);
+        margin: 8px 0 0;
+    }
+
+    /* Suggestion tags */
+    .suggestion-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .sug-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 12px;
+        border-radius: 100px;
+        border: 1px solid var(--border-light);
+        background: var(--surface);
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--text-2);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+
+    .sug-tag i { font-size: 0.65rem; color: var(--text-3); }
+
+    .sug-tag:hover {
+        background: var(--indigo-soft);
+        border-color: rgba(99, 102, 241, 0.2);
+        color: var(--indigo);
+    }
+
+    .sug-tag:hover i { color: var(--indigo); }
+
+    .sug-tag.used {
+        opacity: 0.4;
+        pointer-events: none;
+        text-decoration: line-through;
+    }
+
+    /* Rate Overview */
+    .rate-overview-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .rate-bar-item {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .rate-bar-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .rate-bar-name {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-2);
+    }
+
+    .rate-bar-value {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--text-1);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .rate-bar-track {
+        width: 100%;
+        height: 6px;
+        border-radius: 100px;
+        background: var(--border-light);
+        overflow: hidden;
+    }
+
+    .rate-bar-fill {
+        height: 100%;
+        border-radius: 100px;
+        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .rbf-indigo { background: var(--indigo); }
+    .rbf-emerald { background: var(--emerald); }
+    .rbf-amber { background: var(--amber); }
+    .rbf-sky { background: var(--sky); }
+    .rbf-violet { background: var(--violet); }
+    .rbf-rose { background: var(--rose); }
+
+    /* Tip card */
+    .tip-card {
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+
+    .tip-card-inner {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tip-bg-pattern {
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.12), transparent 50%),
+            radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.08), transparent 50%);
+    }
+
+    .tip-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .tip-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.75rem;
+    }
+
+    .tip-emoji { font-size: 1.15rem; }
+
+    .tip-label {
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .tip-text {
+        font-size: 0.82rem;
+        color: rgba(255, 255, 255, 0.55);
+        line-height: 1.65;
+        margin: 0;
+    }
+
+    .tip-text strong { color: #fff; }
+
+    /* ══════════════════ */
+    /*  DELETE MODAL       */
+    /* ══════════════════ */
+    .del-modal {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.2);
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .dm-header {
+        background: linear-gradient(135deg, #fef2f2, #fff1f2);
+        padding: 1.75rem;
+        text-align: center;
+    }
+
+    .dm-icon-wrap {
+        width: 52px;
+        height: 52px;
+        background: var(--rose-soft);
+        border: 4px solid #fff;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--rose);
+        box-shadow: 0 8px 16px rgba(244, 63, 94, 0.15);
+        animation: bounceIn 0.5s ease;
+    }
+
+    @keyframes bounceIn {
+        0% { transform: scale(0.5); opacity: 0; }
+        60% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .dm-body {
+        padding: 1.25rem 1.75rem;
+        text-align: center;
+    }
+
+    .dm-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin-bottom: 0.4rem;
+    }
+
+    .dm-desc {
+        font-size: 0.82rem;
+        color: var(--text-3);
+        line-height: 1.6;
+        margin-bottom: 1.15rem;
+    }
+
+    .dm-desc strong { color: var(--text-1); }
+
+    .dm-info-box {
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        text-align: left;
+    }
+
+    .dm-info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .dm-info-row:last-child { border-bottom: none; }
+
+    .dm-label {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        font-weight: 600;
+    }
+
+    .dm-val {
+        font-size: 0.75rem;
+        color: var(--text-1);
+        font-weight: 700;
+    }
+
+    .dm-warning { color: var(--amber); }
+
+    .dm-footer {
+        display: flex;
+        gap: 10px;
+        padding: 0 1.75rem 1.5rem;
+    }
+
+    .dm-btn {
+        flex: 1;
+        height: 42px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        font-family: inherit;
+    }
+
+    .dm-cancel {
+        background: var(--surface-2);
+        color: var(--text-2);
+        border: 1px solid var(--border);
+    }
+
+    .dm-cancel:hover { background: var(--border-light); }
+
+    .dm-delete {
+        background: var(--rose);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+    }
+
+    .dm-delete:hover {
+        background: #e11d48; color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(244, 63, 94, 0.35);
+    }
+
+    /* ══════════════════ */
+    /*  EMPTY STATE        */
+    /* ══════════════════ */
+    .empty-state { padding: 3rem 2rem; text-align: center; }
+
+    .empty-circle {
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        margin-bottom: 1.15rem;
+    }
+
+    .ec-indigo { background: var(--indigo-soft); color: var(--indigo); }
+
+    .empty-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin-bottom: 0.3rem;
+    }
+
+    .empty-desc {
+        font-size: 0.82rem;
+        color: var(--text-3);
+        margin-bottom: 1.15rem;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .btn-add-first {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 22px;
+        border-radius: 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .bf-indigo {
+        background: var(--indigo);
+        color: #fff;
+    }
+
+    .bf-indigo:hover {
+        background: #4f46e5; color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(99, 102, 241, 0.3);
+    }
+
+    /* ══════════════════ */
+    /*  RESPONSIVE         */
+    /* ══════════════════ */
+    @media (max-width: 992px) {
+        .master-page { padding: 1rem; }
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .page-header-right {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .mini-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .mini-search-wrap {
+            max-width: 100%;
+        }
+
+        .mini-toolbar-right {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .master-table thead th:nth-child(4),
+        .master-table tbody td:nth-child(4) {
+            display: none;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .info-stats-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .info-stat { padding: 0.75rem; }
+        .info-stat-value { font-size: 1.2rem; }
+
+        .qa-field-row {
+            flex-direction: column;
+        }
+
+        .qa-submit-btn {
+            width: 100%;
+        }
+    }
+
+    /* Scrollbar */
+    .table-responsive::-webkit-scrollbar { height: 4px; }
+    .table-responsive::-webkit-scrollbar-track { background: transparent; }
+    .table-responsive::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
 </style>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  SCRIPTS                                    -->
+<!-- ════════════════════════════════════════════ -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ═══════════════════════════════
+    //  LIVE SEARCH
+    // ═══════════════════════════════
+    const searchInput = document.getElementById('liveSearch');
+    const tableRows = document.querySelectorAll('.master-row');
+    const visibleCount = document.getElementById('visibleCount');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            const query = this.value.toLowerCase().trim();
+            let count = 0;
+
+            tableRows.forEach(row => {
+                const name = row.dataset.name || '';
+                const show = name.includes(query);
+                row.style.display = show ? '' : 'none';
+                if (show) count++;
+            });
+
+            if (visibleCount) visibleCount.textContent = count;
+        });
+    }
+
+    // ═══════════════════════════════
+    //  COUNTER ANIMATION
+    // ═══════════════════════════════
+    function animateCount(el, target) {
+        if (!el) return;
+        let current = 0;
+        const step = Math.max(1, Math.ceil(target / 25));
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) { current = target; clearInterval(timer); }
+            el.textContent = current;
+        }, 30);
+    }
+
+    document.querySelectorAll('.info-stat-value[data-count]').forEach(el => {
+        animateCount(el, parseInt(el.getAttribute('data-count')) || 0);
+    });
+
+    // Active types = total (all are active in master)
+    const activeEl = document.getElementById('activeTypes');
+    if (activeEl) animateCount(activeEl, tableRows.length);
+
+    // ═══════════════════════════════
+    //  RATE BAR ANIMATION
+    // ═══════════════════════════════
+    const rateBars = document.querySelectorAll('.rate-bar-fill');
+    if (rateBars.length > 0) {
+        let maxRate = 0;
+        rateBars.forEach(bar => {
+            const rate = parseFloat(bar.dataset.rate) || 0;
+            if (rate > maxRate) maxRate = rate;
+        });
+
+        setTimeout(() => {
+            rateBars.forEach(bar => {
+                const rate = parseFloat(bar.dataset.rate) || 0;
+                const pct = maxRate > 0 ? (rate / maxRate) * 100 : 0;
+                bar.style.width = Math.max(pct, 8) + '%';
+            });
+        }, 400);
+    }
+
+    // ═══════════════════════════════
+    //  SUGGESTION TAGS
+    // ═══════════════════════════════
+    const existingNames = new Set();
+    tableRows.forEach(row => {
+        existingNames.add(row.dataset.name);
+    });
+
+    document.querySelectorAll('.sug-tag').forEach(tag => {
+        const value = tag.dataset.value;
+        if (existingNames.has(value.toLowerCase())) {
+            tag.classList.add('used');
+            tag.innerHTML = `<i class="bi bi-check-lg"></i> ${value}`;
+        }
+
+        tag.addEventListener('click', function () {
+            if (this.classList.contains('used')) return;
+
+            const qaInput = document.querySelector('.qa-input');
+            if (qaInput) {
+                qaInput.value = value;
+                qaInput.focus();
+
+                // Visual feedback
+                this.style.background = 'var(--indigo)';
+                this.style.color = '#fff';
+                this.style.borderColor = 'var(--indigo)';
+
+                setTimeout(() => {
+                    this.style.background = '';
+                    this.style.color = '';
+                    this.style.borderColor = '';
+                }, 300);
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

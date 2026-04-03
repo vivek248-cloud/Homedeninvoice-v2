@@ -245,63 +245,14 @@
                                 <a href="{% url 'payment_invoice' payment.id %}" target="_blank" class="action-btn ab-pdf d-none d-md-inline-flex" title="Receipt">
                                     <i class="bi bi-file-pdf"></i>
                                 </a>
-                                <button type="button" class="action-btn ab-delete" title="Delete"
-                                        data-bs-toggle="modal" data-bs-target="#delPay{{ payment.id }}">
+                                <a href="{% url 'payment_delete' payment.id %}" class="action-btn ab-delete" title="Delete">
                                     <i class="bi bi-trash3"></i>
-                                </button>
+                                </a>
                             </div>
                         </td>
                     </tr>
 
-                    <!-- DELETE MODAL -->
-                    <div class="modal fade" id="delPay{{ payment.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content del-modal">
-                                <div class="modal-body p-0">
-                                    <div class="dm-header">
-                                        <div class="dm-icon-wrap">
-                                            <i class="bi bi-exclamation-triangle-fill"></i>
-                                        </div>
-                                    </div>
-                                    <div class="dm-body">
-                                        <h4 class="dm-title">Delete Payment Record</h4>
-                                        <p class="dm-desc">
-                                            Removing this payment will increase the outstanding balance for
-                                            <strong>{{ payment.project.name }}</strong>.
-                                        </p>
-                                        <div class="dm-info-box">
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Project</span>
-                                                <span class="dm-val">{{ payment.project.name }}</span>
-                                            </div>
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Client</span>
-                                                <span class="dm-val">{{ payment.project.client.name }}</span>
-                                            </div>
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Date</span>
-                                                <span class="dm-val">{{ payment.date|date:"d M, Y" }}</span>
-                                            </div>
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Mode</span>
-                                                <span class="dm-val">{{ payment.get_payment_mode_display }}</span>
-                                            </div>
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Amount</span>
-                                                <span class="dm-val dm-amount-danger">+ ₹{{ payment.amount }} to balance</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="dm-footer">
-                                        <button type="button" class="dm-btn dm-cancel" data-bs-dismiss="modal">Cancel</button>
-                                        <a href="{% url 'payment_delete' payment.id %}" class="dm-btn dm-delete">
-                                            <i class="bi bi-trash3 me-1"></i> Delete Payment
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    
 
                     {% empty %}
                     <tr>

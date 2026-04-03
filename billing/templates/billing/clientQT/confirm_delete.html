@@ -1,21 +1,342 @@
 {% extends 'billing/layouts/base.html' %}
 {% block content %}
 
-<h2>🗑 Delete Client</h2>
+<style>
+    .delete-client-page {
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 16px;
+        background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    }
 
-<p>
-Are you sure you want to delete client:
-<strong>{{ client.name }}</strong>?
-</p>
+    .delete-card {
+        width: 100%;
+        max-width: 720px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.10);
+        overflow: hidden;
+    }
 
-<p style="color:red;">
-This will remove all related quotations.
-</p>
+    .delete-card-header {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        padding: 28px 28px 20px;
+        border-bottom: 1px solid #eef2f7;
+    }
 
-<form method="post">
-    {% csrf_token %}
-    <button class="btn-danger">Yes, Delete</button>
-    <a href="{% url 'qtn_client_index' %}">Cancel</a>
-</form>
+    .delete-icon {
+        width: 56px;
+        height: 56px;
+        min-width: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        color: #dc2626;
+    }
+
+    .delete-eyebrow {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #dc2626;
+        margin-bottom: 8px;
+    }
+
+    .delete-title {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.2;
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .delete-subtitle {
+        margin: 10px 0 0;
+        color: #475569;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .delete-card-body {
+        padding: 24px 28px 28px;
+    }
+
+    .warning-box {
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        color: #9a3412;
+        border-radius: 16px;
+        padding: 16px 18px;
+        margin-bottom: 20px;
+    }
+
+    .warning-box strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+
+    .warning-box ul {
+        margin: 0;
+        padding-left: 18px;
+    }
+
+    .warning-box li {
+        margin-bottom: 6px;
+    }
+
+    .client-summary {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 18px;
+        margin-bottom: 20px;
+    }
+
+    .summary-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748b;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    .summary-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .confirm-group {
+        margin-top: 8px;
+        margin-bottom: 24px;
+    }
+
+    .confirm-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 10px;
+    }
+
+    .confirm-help {
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+
+    .confirm-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 14px 16px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        font-size: 15px;
+        outline: none;
+        transition: all 0.2s ease;
+        background: #fff;
+    }
+
+    .confirm-input:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+    }
+
+    .confirm-status {
+        margin-top: 10px;
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .confirm-status.ok {
+        color: #15803d;
+        font-weight: 600;
+    }
+
+    .confirm-status.error {
+        color: #dc2626;
+        font-weight: 600;
+    }
+
+    .delete-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        appearance: none;
+        border: none;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 18px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-secondary {
+        background: #ffffff;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+    }
+
+    .btn-secondary:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: #ffffff;
+        box-shadow: 0 10px 20px rgba(220, 38, 38, 0.18);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 24px rgba(220, 38, 38, 0.24);
+    }
+
+    .btn-danger:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    @media (max-width: 640px) {
+        .delete-card-header,
+        .delete-card-body {
+            padding: 20px;
+        }
+
+        .delete-title {
+            font-size: 24px;
+        }
+
+        .delete-actions {
+            flex-direction: column-reverse;
+        }
+
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="delete-client-page">
+    <div class="delete-card">
+        <div class="delete-card-header">
+            <div class="delete-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 7h2v8h-2v-8zm4 0h2v8h-2v-8zM7 10h2v8H7v-8zm-1 11h12a2 2 0 0 0 2-2V8H4v11a2 2 0 0 0 2 2z"
+                          fill="currentColor"/>
+                </svg>
+            </div>
+
+            <div>
+                <div class="delete-eyebrow">Danger Zone</div>
+                <h2 class="delete-title">Delete Client</h2>
+                <p class="delete-subtitle">
+                    You are about to permanently delete
+                    <strong>{{ client.name }}</strong>.
+                    This action is irreversible.
+                </p>
+            </div>
+        </div>
+
+        <div class="delete-card-body">
+            <div class="warning-box">
+                <strong>What will be removed?</strong>
+                <ul>
+                    <li>The selected client record</li>
+                    <li>All related quotations connected to this client</li>
+                    <li>Any associated references tied to those quotations</li>
+                </ul>
+            </div>
+
+            <div class="client-summary">
+                <div class="summary-label">Client selected</div>
+                <div class="summary-value">{{ client.name }}</div>
+            </div>
+
+            <form method="post" id="deleteForm">
+                {% csrf_token %}
+
+                <div class="confirm-group">
+                    <label for="confirm_name" class="confirm-label">
+                        Type <strong>{{ client.name }}</strong> to confirm deletion
+                    </label>
+                    <div class="confirm-help">
+                        This extra step helps prevent accidental deletion.
+                    </div>
+                    <input
+                        type="text"
+                        id="confirm_name"
+                        class="confirm-input"
+                        placeholder="Enter client name exactly"
+                        autocomplete="off"
+                    >
+                    <div id="confirmStatus" class="confirm-status">
+                        Confirmation required before deleting.
+                    </div>
+                </div>
+
+                <div class="delete-actions">
+                    <a href="{% url 'qtn_client_index' %}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger" id="deleteBtn" disabled>
+                        Yes, Delete Client
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const expectedName = "{{ client.name|escapejs }}";
+        const input = document.getElementById("confirm_name");
+        const button = document.getElementById("deleteBtn");
+        const status = document.getElementById("confirmStatus");
+
+        function validateInput() {
+            const value = input.value.trim();
+
+            if (value === expectedName) {
+                button.disabled = false;
+                status.textContent = "Confirmation matched. You can now delete this client.";
+                status.className = "confirm-status ok";
+            } else if (value.length > 0) {
+                button.disabled = true;
+                status.textContent = "Name does not match. Please type it exactly.";
+                status.className = "confirm-status error";
+            } else {
+                button.disabled = true;
+                status.textContent = "Confirmation required before deleting.";
+                status.className = "confirm-status";
+            }
+        }
+
+        input.addEventListener("input", validateInput);
+    })();
+</script>
 
 {% endblock %}

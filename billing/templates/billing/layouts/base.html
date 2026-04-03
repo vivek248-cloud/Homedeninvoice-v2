@@ -1598,7 +1598,7 @@
     // ═══════════════════════════════
     //  SESSION TIMEOUT
     // ═══════════════════════════════
-    (function () {
+    {% comment %} (function () {
         const IDLE_LIMIT = 15 * 60 * 1000;
         const WARNING_TIME = 60 * 1000;
         const LOGIN_URL = "{% url 'logout' %}";
@@ -1654,7 +1654,7 @@
 
         stayBtn.addEventListener('click', stayLoggedIn);
         resetTimers();
-    })();
+    })(); {% endcomment %}
 </script>
 
 </body>

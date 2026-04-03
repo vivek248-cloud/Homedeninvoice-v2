@@ -1,221 +1,1131 @@
 {% extends 'billing/layouts/base.html' %}
 {% block title %}Project Detail | {{ project.name }}{% endblock %}
+{% block page_title %}Project Overview{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center gap-2">
-            <a href="{% url 'project_update' project.id %}" 
-            class="btn btn-danger border-0 shadow-sm px-3 rounded-3 text-white fw-semibold d-flex align-items-center"
-            style="height: 44px; ">
-                <i class="bi bi-pencil-square me-2"></i> Edit
-            </a>
+<div class="fixed-layout">
 
-            <div class="btn-group">
-
-                <!-- Main Button -->
-                <a href="{% url 'spend_create' %}?project={{ project.id }}"
-                class="btn btn-primary">
-                    <i class="bi bi-plus-lg me-2"></i> New Entry
+    <!-- Fixed Header Section -->
+    <div class="fixed-header">
+        
+        <!-- Page Header -->
+        <div class="page-header fade-in fi-1">
+            <div class="page-header-left">
+                <a href="{% url 'project_list' %}" class="back-btn bg-primary text-white">
+                    <i class="bi bi-arrow-left"></i>
                 </a>
-
-                <!-- Split Toggle -->
-                <button type="button"
-                        class="btn btn-primary dropdown-toggle dropdown-toggle-split"
-                        data-bs-toggle="dropdown"
-                        data-bs-auto-close="true"
-                        aria-expanded="false">
-                    <span class="visually-hidden">Toggle Dropdown</span>
-                </button>
-
-                <!-- Dropdown Menu -->
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                        <a class="dropdown-item"
-                        href="{% url 'spend_create' %}?project={{ project.id }}">
-                            Add Spend
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item"
-                        href="{% url 'payment_create' %}?project={{ project.id }}">
-                            Add Payment
-                        </a>
-                    </li>
-                </ul>
-
+                <div class="page-icon-wrap pi-primary">
+                    <i class="bi bi-briefcase-fill"></i>
+                </div>
+                <div>
+                    <h1 class="page-title">{{ project.name }}</h1>
+                    <p class="page-subtitle">
+                        <i class="bi bi-person-fill"></i> {{ project.client.name }}
+                    </p>
+                </div>
             </div>
-
+            <div class="header-badges">
+                <span class="project-id-badge">
+                    <i class="bi bi-hash"></i> PRJ-{{ project.id|stringformat:"04d" }}
+                </span>
+                <span class="status-badge status-{{ project.status }}">
+                    {% if project.status == 'ongoing' %}
+                        <i class="bi bi-play-circle-fill"></i> Ongoing
+                    {% elif project.status == 'completed' %}
+                        <i class="bi bi-check-circle-fill"></i> Completed
+                    {% else %}
+                        <i class="bi bi-pause-circle-fill"></i> On Hold
+                    {% endif %}
+                </span>
+            </div>
         </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar fade-in fi-1">
+            <div class="ab-left">
+                <a href="{% url 'project_update' project.id %}" class="ab-btn ab-btn-warning">
+                    <i class="bi bi-pencil-square"></i>
+                    <span>Edit Project</span>
+                </a>
+            </div>
+            <div class="ab-right">
+                <div class="ab-dropdown">
+                    <a href="{% url 'spend_create' %}?project={{ project.id }}" class="ab-btn ab-btn-primary">
+                        <i class="bi bi-plus-lg"></i>
+                        <span>New Entry</span>
+                    </a>
+                    <button type="button" class="ab-btn ab-btn-primary ab-split" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end ab-menu">
+                        <li>
+                            <a class="dropdown-item ab-menu-item" href="{% url 'spend_create' %}?project={{ project.id }}">
+                                <i class="bi bi-cart-plus"></i>
+                                <span>Add Spend</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item ab-menu-item" href="{% url 'payment_create' %}?project={{ project.id }}">
+                                <i class="bi bi-wallet2"></i>
+                                <span>Add Payment</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid fade-in fi-2">
+            <div class="stat-card sc-budget">
+                <div class="sc-icon-wrap">
+                    <i class="bi bi-bank"></i>
+                </div>
+                <div class="sc-content">
+                    <span class="sc-label">Total Budget</span>
+                    <span class="sc-value">₹{{ project.budget|floatformat:0 }}</span>
+                </div>
+                <div class="sc-accent"></div>
+            </div>
+            <div class="stat-card sc-spent">
+                <div class="sc-icon-wrap">
+                    <i class="bi bi-arrow-up-right"></i>
+                </div>
+                <div class="sc-content">
+                    <span class="sc-label">Total Spend</span>
+                    <span class="sc-value">₹{{ total_spent|floatformat:0 }}</span>
+                </div>
+                <div class="sc-progress">
+                    <div class="sc-progress-bar" style="width: {% widthratio total_spent project.budget 100 %}%"></div>
+                </div>
+            </div>
+            <div class="stat-card sc-paid">
+                <div class="sc-icon-wrap">
+                    <i class="bi bi-arrow-down-left"></i>
+                </div>
+                <div class="sc-content">
+                    <span class="sc-label">Collection (Paid)</span>
+                    <span class="sc-value sc-positive">₹{{ total_paid|floatformat:0 }}</span>
+                </div>
+            </div>
+            <div class="stat-card sc-balance">
+                <div class="sc-icon-wrap">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="sc-content">
+                    <span class="sc-label">Outstanding Balance</span>
+                    <span class="sc-value {% if balance > 0 %}sc-negative{% else %}sc-positive{% endif %}">
+                        ₹{{ balance|floatformat:0 }}
+                    </span>
+                </div>
+                <div class="sc-accent sc-accent-right"></div>
+            </div>
+        </div>
+
     </div>
 
-    <div class="row g-3 mb-5">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100 border-start border-primary border-4">
-                <div class="card-body">
-                    <small class="text-muted fw-bold text-uppercase ls-1">Total Budget</small>
-                    <h3 class="fw-bold mt-1 mb-0">₹ {{ project.budget }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <small class="text-muted fw-bold text-uppercase ls-1">Total Spend</small>
-                    <h3 class="fw-bold mt-1 mb-0 text-dark">₹ {{ total_spent }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <small class="text-muted fw-bold text-uppercase ls-1">Collection (Paid)</small>
-                    <h3 class="fw-bold mt-1 mb-0 text-success">₹ {{ total_paid }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100 border-end border-danger border-4">
-                <div class="card-body">
-                    <small class="text-muted fw-bold text-uppercase ls-1">Outstanding Balance</small>
-                    <h3 class="fw-bold mt-1 mb-0 {% if balance > 0 %}text-danger{% else %}text-success{% endif %}">
-                        ₹ {{ balance }}
-                    </h3>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Scrollable Content Area -->
+    <div class="scroll-content-area">
+        <div class="row g-4">
 
-    <div class="card border-0 shadow-sm mb-5">
-        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-hammer me-2"></i>Work Breakdown & Spend</h5>
-            <span class="badge bg-light text-dark border">{{ spends|length }} Items</span>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive"  style="border-radius:19px;">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4">Location (Floor/Room)</th>
-                            <th>Type</th>
-                            <th class="text-center">Qty</th>
-                            <th>Area/Size</th>
-                            <th>Rate</th>
-                            <th class="text-end pe-4">Total Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for spend in spends %}
-                        <tr>
-                            <td class="ps-4">
-                                <span class="fw-bold text-dark">{{ spend.room.name|default:"General" }}</span>
-                                <div class="small text-muted">{{ spend.floor.name|default:"-" }}</div>
-                            </td>
-                            <td><span class="badge bg-info-subtle text-info border border-info-subtle">{{ spend.fullsemi.name|default:"-" }}</span></td>
-                            <td class="text-center">{{ spend.qty }}</td>
-                            <td>{{ spend.area|default:"-" }} <small class="text-muted">{{ spend.unit }}</small></td>
-                            <td>₹ {{ spend.rate }}</td>
-                            <td class="text-end pe-4 fw-bold text-dark">₹ {{ spend.total_amount }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">No spend records linked to this project.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+            <!-- Main Content - Scrollable -->
+            <div class="col-lg-8">
+                <div class="main-scroll-container" id="mainScrollContainer">
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold mb-0"><i class="bi bi-cash-stack me-2 text-success"></i>Payment History (Ledger)</h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive"  style="border-radius:19px;">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="ps-4">Date</th>
-                            <th>Previous Paid</th>
-                            <th>Transaction</th>
-                            <th>Accumulated</th>
-                            <th>Balance After</th>
-                            <th>Mode</th>
-                            <th class="text-end pe-4">Whatsapp</th>
-                            <th class="text-end pe-4">Receipt</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in payment_rows %}
-                        <tr>
-                            <td class="ps-4 text-muted">{{ row.date }}</td>
-                            <td>₹ {{ row.previous_paid }}</td>
-                            <td class="fw-bold text-success">+ ₹ {{ row.now_paid }}</td>
-                            <td class="fw-bold text-dark">₹ {{ row.total_paid }}</td>
-                            <td>
-                                <span class="fw-bold 
-                                    {% if row.balance_after == 0 %}text-success
-                                    {% elif row.balance_after < 0 %}text-danger
-                                    {% else %}text-primary{% endif %}">
-                                    ₹ {{ row.balance_after }}
+                    <!-- Work Breakdown Table -->
+                    <div class="data-card fade-in fi-2">
+                        <div class="dc-header dc-header-sticky">
+                            <div class="dc-header-left">
+                                <div class="dc-icon dc-indigo">
+                                    <i class="bi bi-hammer"></i>
+                                </div>
+                                <div>
+                                    <h6 class="dc-title">Work Breakdown & Spend</h6>
+                                    <p class="dc-subtitle">Detailed cost allocation</p>
+                                </div>
+                            </div>
+                            <div class="dc-header-right">
+                                <span class="count-badge">
+                                    <i class="bi bi-layers"></i> {{ spends|length }} Items
                                 </span>
-                            </td>
-                            <td><span class="small border px-2 py-1 rounded bg-light">{{ row.mode }}</span></td>
-
-                            <td class="text-end pe-4">
-                                <a href="{{ row.whatsapp_url }}"
-                                target="_blank"
-                                class="btn btn-success btn-sm">
-                                    <i class="bi bi-whatsapp"></i>
+                            </div>
+                        </div>
+                        <div class="dc-body">
+                            {% if spends %}
+                            <div class="table-scroll-container">
+                                <table class="custom-table">
+                                    <thead class="sticky-thead">
+                                        <tr>
+                                            <th class="th-location">Location</th>
+                                            <th class="th-type">Type</th>
+                                            <th class="th-center">Qty</th>
+                                            <th>Area/Size</th>
+                                            <th>Rate</th>
+                                            <th class="th-right">Amount</th>
+                                            <th class="th-action">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for spend in spends %}
+                                        <tr class="tr-hover">
+                                            <td class="td-location">
+                                                <div class="loc-primary">{{ spend.room.name|default:"General" }}</div>
+                                                <div class="loc-secondary">{{ spend.floor.name|default:"-" }}</div>
+                                                <div class="loc-secondary text-primary">{{ spend.elements|default:"-" }}</div>
+                                            </td>
+                                            <td>
+                                                <span class="type-badge">{{ spend.fullsemi.name|default:"-" }}</span>
+                                            </td>
+                                            <td class="td-center">
+                                                <span class="qty-badge">{{ spend.qty }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="area-value">{{ spend.area|default:"-" }}</span>
+                                                <span class="area-unit">{{ spend.unit }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="rate-value">₹{{ spend.rate }}</span>
+                                            </td>
+                                            <td class="td-right">
+                                                <span class="amount-value">₹{{ spend.total_amount|floatformat:0 }}</span>
+                                            </td>
+                                            <td class="td-action">
+                                                <a href="{% url 'spend_update' spend.id %}" class="action-link al-edit" title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="table-footer-sticky">
+                                <div class="tf-label">Total Spend</div>
+                                <div class="tf-value">₹{{ total_spent|floatformat:0 }}</div>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <div class="es-icon">
+                                    <i class="bi bi-inbox"></i>
+                                </div>
+                                <h6 class="es-title">No Spend Records</h6>
+                                <p class="es-text">No spend records linked to this project yet.</p>
+                                <a href="{% url 'spend_create' %}?project={{ project.id }}" class="es-btn">
+                                    <i class="bi bi-plus-lg"></i> Add First Spend
                                 </a>
-                            </td>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
 
-
-                            <td class="text-end pe-4">
-                                <a href="{% url 'payment_invoice' row.id %}" class="btn btn-sm btn-danger" target="_blank">
-                                    <i class="bi bi-file-earmark-pdf"></i>
+                    <!-- Payment History Table -->
+                    <div class="data-card fade-in fi-3">
+                        <div class="dc-header dc-header-dark dc-header-sticky">
+                            <div class="dc-header-left">
+                                <div class="dc-icon dc-emerald">
+                                    <i class="bi bi-cash-stack"></i>
+                                </div>
+                                <div>
+                                    <h6 class="dc-title">Payment History</h6>
+                                    <p class="dc-subtitle">Transaction ledger & receipts</p>
+                                </div>
+                            </div>
+                            <div class="dc-header-right">
+                                <span class="count-badge cb-dark">
+                                    <i class="bi bi-receipt"></i> {{ payment_rows|length }} Payments
+                                </span>
+                            </div>
+                        </div>
+                        <div class="dc-body">
+                            {% if payment_rows %}
+                            <div class="table-scroll-container">
+                                <table class="custom-table">
+                                    <thead class="sticky-thead">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Previous</th>
+                                            <th>Transaction</th>
+                                            <th>Accumulated</th>
+                                            <th>Balance</th>
+                                            <th>Mode</th>
+                                            <th class="th-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in payment_rows %}
+                                        <tr class="tr-hover">
+                                            <td>
+                                                <span class="date-value">{{ row.date }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="money-muted">₹{{ row.previous_paid|floatformat:0 }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="money-positive">+ ₹{{ row.now_paid|floatformat:0 }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="money-bold">₹{{ row.total_paid|floatformat:0 }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="balance-chip {% if row.balance_after == 0 %}bc-success{% elif row.balance_after < 0 %}bc-danger{% else %}bc-warning{% endif %}">
+                                                    ₹{{ row.balance_after|floatformat:0 }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="mode-badge">{{ row.mode }}</span>
+                                            </td>
+                                            <td class="td-center">
+                                                <div class="action-group">
+                                                    <a href="{{ row.whatsapp_url }}" target="_blank" class="action-link al-whatsapp" title="Share on WhatsApp">
+                                                        <i class="bi bi-whatsapp"></i>
+                                                    </a>
+                                                    <a href="{% url 'payment_invoice' row.id %}" target="_blank" class="action-link al-pdf" title="Download Receipt">
+                                                        <i class="bi bi-file-earmark-pdf"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <div class="es-icon es-icon-success">
+                                    <i class="bi bi-wallet2"></i>
+                                </div>
+                                <h6 class="es-title">No Payments Yet</h6>
+                                <p class="es-text">No payments have been recorded for this project.</p>
+                                <a href="{% url 'payment_create' %}?project={{ project.id }}" class="es-btn es-btn-success">
+                                    <i class="bi bi-plus-lg"></i> Record Payment
                                 </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">No payments recorded yet.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
             </div>
+
+            <!-- Sidebar - Scrollable -->
+            <div class="col-lg-4">
+                <div class="sidebar-scroll-container" id="sidebarScrollContainer">
+
+                    <!-- Project Info Card -->
+                    <div class="sidebar-card fade-in fi-2">
+                        <div class="sbc-header">
+                            <div class="sbc-icon sbc-sky"><i class="bi bi-info-circle"></i></div>
+                            <h6 class="sbc-title">Project Information</h6>
+                        </div>
+                        <div class="info-list">
+                            <div class="il-item">
+                                <span class="il-label">Project ID</span>
+                                <span class="il-value">PRJ-{{ project.id|stringformat:"04d" }}</span>
+                            </div>
+                            <div class="il-item">
+                                <span class="il-label">Project Name</span>
+                                <span class="il-value il-truncate">{{ project.name }}</span>
+                            </div>
+                            <div class="il-item">
+                                <span class="il-label">Client</span>
+                                <span class="il-value">
+                                    <a href="{% url 'client_detail' project.client.id %}" class="il-link">
+                                        {{ project.client.name }}
+                                    </a>
+                                </span>
+                            </div>
+                            <div class="il-item">
+                                <span class="il-label">Status</span>
+                                <span class="il-value">
+                                    <span class="mini-status mini-{{ project.status }}">
+                                        {{ project.status|title }}
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="il-item">
+                                <span class="il-label">Created</span>
+                                <span class="il-value">{{ project.created_at|date:"d M Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Summary -->
+                    <div class="sidebar-card fade-in fi-3">
+                        <div class="sbc-header">
+                            <div class="sbc-icon sbc-emerald"><i class="bi bi-pie-chart"></i></div>
+                            <h6 class="sbc-title">Financial Overview</h6>
+                        </div>
+                        <div class="finance-summary">
+                            <div class="fs-item">
+                                <div class="fs-bar">
+                                    <div class="fs-bar-fill fs-budget" style="width: 100%"></div>
+                                </div>
+                                <div class="fs-data">
+                                    <span class="fs-label">Budget</span>
+                                    <span class="fs-value">₹{{ project.budget|floatformat:0 }}</span>
+                                </div>
+                            </div>
+                            <div class="fs-item">
+                                <div class="fs-bar">
+                                    <div class="fs-bar-fill fs-spent" style="width: {% widthratio total_spent project.budget 100 %}%"></div>
+                                </div>
+                                <div class="fs-data">
+                                    <span class="fs-label">Spent</span>
+                                    <span class="fs-value">₹{{ total_spent|floatformat:0 }}</span>
+                                </div>
+                            </div>
+                            <div class="fs-item">
+                                <div class="fs-bar">
+                                    <div class="fs-bar-fill fs-paid" style="width: {% widthratio total_paid project.budget 100 %}%"></div>
+                                </div>
+                                <div class="fs-data">
+                                    <span class="fs-label">Collected</span>
+                                    <span class="fs-value fs-positive">₹{{ total_paid|floatformat:0 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fs-footer">
+                            <div class="fs-balance">
+                                <span class="fs-balance-label">Outstanding</span>
+                                <span class="fs-balance-value {% if balance > 0 %}fs-negative{% else %}fs-positive{% endif %}">
+                                    ₹{{ balance|floatformat:0 }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="sidebar-card fade-in fi-3">
+                        <div class="sbc-header">
+                            <div class="sbc-icon sbc-amber"><i class="bi bi-lightning-charge-fill"></i></div>
+                            <h6 class="sbc-title">Quick Actions</h6>
+                        </div>
+                        <div class="quick-actions">
+                            <a href="{% url 'spend_create' %}?project={{ project.id }}" class="qa-item qa-primary">
+                                <div class="qa-icon"><i class="bi bi-cart-plus"></i></div>
+                                <div class="qa-content">
+                                    <span class="qa-label">Add Spend</span>
+                                    <span class="qa-desc">Record new expense</span>
+                                </div>
+                                <i class="bi bi-chevron-right qa-arrow"></i>
+                            </a>
+                            <a href="{% url 'payment_create' %}?project={{ project.id }}" class="qa-item qa-success">
+                                <div class="qa-icon"><i class="bi bi-wallet2"></i></div>
+                                <div class="qa-content">
+                                    <span class="qa-label">Add Payment</span>
+                                    <span class="qa-desc">Record client payment</span>
+                                </div>
+                                <i class="bi bi-chevron-right qa-arrow"></i>
+                            </a>
+                            <a href="{% url 'project_update' project.id %}" class="qa-item qa-warning">
+                                <div class="qa-icon"><i class="bi bi-pencil-square"></i></div>
+                                <div class="qa-content">
+                                    <span class="qa-label">Edit Project</span>
+                                    <span class="qa-desc">Update details</span>
+                                </div>
+                                <i class="bi bi-chevron-right qa-arrow"></i>
+                            </a>
+                            <a href="{% url 'client_detail' project.client.id %}" class="qa-item qa-sky">
+                                <div class="qa-icon"><i class="bi bi-person"></i></div>
+                                <div class="qa-content">
+                                    <span class="qa-label">View Client</span>
+                                    <span class="qa-desc">{{ project.client.name }}</span>
+                                </div>
+                                <i class="bi bi-chevron-right qa-arrow"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Client Contact Card -->
+                    <div class="sidebar-card fade-in fi-4">
+                        <div class="sbc-header">
+                            <div class="sbc-icon sbc-violet"><i class="bi bi-telephone"></i></div>
+                            <h6 class="sbc-title">Client Contact</h6>
+                        </div>
+                        <div class="contact-info">
+                            <div class="ci-avatar">
+                                {{ project.client.name|slice:":1"|upper }}
+                            </div>
+                            <div class="ci-details">
+                                <h6 class="ci-name">{{ project.client.name }}</h6>
+                                <p class="ci-phone">
+                                    <i class="bi bi-phone"></i> +91 {{ project.client.mobile_1 }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="ci-actions">
+                            <a href="tel:+91{{ project.client.mobile_1 }}" class="ci-btn ci-call">
+                                <i class="bi bi-telephone-fill"></i> Call
+                            </a>
+                            <a href="https://wa.me/91{{ project.client.mobile_1 }}" target="_blank" class="ci-btn ci-whatsapp">
+                                <i class="bi bi-whatsapp"></i> WhatsApp
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="nav-card fade-in fi-4">
+                        <a href="{% url 'project_list' %}" class="nc-link bg-primary text-white">
+                            <i class="bi bi-arrow-left"></i>
+                            <span>Back to Projects</span>
+                        </a>
+                    </div>
+
+                    <!-- Scroll Indicator -->
+                    <div class="scroll-indicator" id="sidebarScrollIndicator">
+                        <i class="bi bi-chevron-double-down"></i>
+                        <span>Scroll for more</span>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <div class="mb-5">
-        <a href="{% url 'project_list' %}" class="btn btn-secondary border">
-            <i class="bi bi-arrow-left me-1"></i> Back to Projects
-        </a>
-    </div>
 </div>
 
 <style>
-    .ls-1 { letter-spacing: 0.5px; }
-    .bg-info-subtle { background-color: #e0f7fa !important; }
-    .table thead th { font-size: 0.75rem; text-uppercase; color: #6c757d; }
-    .breadcrumb-item { font-size: 0.85rem; }
+:root {
+    --primary: #6366f1;
+    --primary-soft: rgba(99,102,241,0.08);
+    --emerald: #10b981;
+    --emerald-soft: rgba(16,185,129,0.08);
+    --amber: #f59e0b;
+    --amber-soft: rgba(245,158,11,0.08);
+    --rose: #f43f5e;
+    --rose-soft: rgba(244,63,94,0.08);
+    --violet: #8b5cf6;
+    --violet-soft: rgba(139,92,246,0.08);
+    --sky: #0ea5e9;
+    --sky-soft: rgba(14,165,233,0.08);
+    --text-1: #0f172a;
+    --text-2: #475569;
+    --text-3: #94a3b8;
+    --surface: #fff;
+    --surface-2: #f8fafc;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --radius: 14px;
+    --radius-sm: 8px;
+    
+    /* Fixed Layout Heights */
+    --header-height: 220px;
+    --page-padding: 1.5rem;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIXED LAYOUT STRUCTURE
+   ══════════════════════════════════════════════════════════════ */
+
+.fixed-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--surface-2);
+}
+
+.fixed-header {
+    flex-shrink: 0;
+    padding: var(--page-padding) var(--page-padding) 0;
+    background: var(--surface-2);
+    z-index: 100;
+}
+
+.scroll-content-area {
+    flex: 1;
+    overflow: hidden;
+    padding: 1rem var(--page-padding) var(--page-padding);
+}
+
+.scroll-content-area > .row {
+    height: 100%;
+}
+
+.scroll-content-area > .row > .col-lg-8,
+.scroll-content-area > .row > .col-lg-4 {
+    height: 100%;
+}
+
+/* Main Content Scroll Container */
+.main-scroll-container {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+    scroll-behavior: smooth;
+}
+
+/* Sidebar Scroll Container */
+.sidebar-scroll-container {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+    scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar Styles */
+.main-scroll-container::-webkit-scrollbar,
+.sidebar-scroll-container::-webkit-scrollbar,
+.table-scroll-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.main-scroll-container::-webkit-scrollbar-track,
+.sidebar-scroll-container::-webkit-scrollbar-track,
+.table-scroll-container::-webkit-scrollbar-track {
+    background: var(--border-light);
+    border-radius: 10px;
+}
+
+.main-scroll-container::-webkit-scrollbar-thumb,
+.sidebar-scroll-container::-webkit-scrollbar-thumb,
+.table-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+    transition: all .2s;
+}
+
+.main-scroll-container::-webkit-scrollbar-thumb:hover,
+.sidebar-scroll-container::-webkit-scrollbar-thumb:hover,
+.table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-3);
+}
+
+/* Table Scroll Container */
+.table-scroll-container {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+/* Sticky Table Header */
+.sticky-thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--surface-2);
+}
+
+.sticky-thead::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--border);
+}
+
+/* Sticky Card Header */
+.dc-header-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 11;
+}
+
+/* Table Footer Sticky */
+.table-footer-sticky {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, var(--surface-2), var(--surface));
+    border-top: 1px solid var(--border-light);
+    position: sticky;
+    bottom: 0;
+}
+
+.tf-label {
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--text-2);
+    text-transform: uppercase;
+}
+
+.tf-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+/* Scroll Indicator */
+.scroll-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    margin-top: 8px;
+    background: linear-gradient(135deg, var(--primary-soft), var(--violet-soft));
+    border-radius: var(--radius);
+    font-size: .68rem;
+    font-weight: 600;
+    color: var(--primary);
+    animation: bounce 2s infinite;
+    opacity: 0.8;
+    transition: opacity .3s;
+}
+
+.scroll-indicator.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.scroll-indicator i {
+    font-size: .8rem;
+    animation: bounceArrow 1.5s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
+@keyframes bounceArrow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ══════════════════════════════════════════════════════════════ */
+
+.fade-in { opacity: 0; transform: translateY(12px); animation: fadeIn 0.4s ease forwards; }
+.fi-1 { animation-delay: .02s; } .fi-2 { animation-delay: .05s; }
+.fi-3 { animation-delay: .08s; } .fi-4 { animation-delay: .11s; }
+@keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+/* ══════════════════════════════════════════════════════════════
+   PAGE HEADER
+   ══════════════════════════════════════════════════════════════ */
+
+.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:1rem; }
+.page-header-left { display:flex; align-items:center; gap:12px; }
+.back-btn { width:36px; height:36px; border-radius:10px; border:1px solid var(--border-light); background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--text-3); text-decoration:none; transition:all .2s; }
+.back-btn:hover { background:var(--surface-2); color:var(--text-1); transform:translateX(-2px); }
+.page-icon-wrap { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+.pi-primary { background:var(--primary-soft); color:var(--primary); }
+.page-title { font-size:1.4rem; font-weight:800; color:var(--text-1); margin:0; letter-spacing:-.02em; }
+.page-subtitle { font-size:.75rem; color:var(--text-3); margin:3px 0 0; display:flex; align-items:center; gap:5px; }
+.page-subtitle i { font-size:.65rem; }
+
+.header-badges { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.project-id-badge { display:flex; align-items:center; gap:4px; padding:6px 12px; background:var(--surface); border:1px solid var(--border-light); border-radius:100px; font-size:.7rem; font-weight:800; color:var(--text-2); font-variant-numeric:tabular-nums; }
+.project-id-badge i { color:var(--primary); }
+
+.status-badge { display:flex; align-items:center; gap:5px; padding:6px 12px; border-radius:100px; font-size:.68rem; font-weight:700; }
+.status-ongoing { background:var(--emerald-soft); color:var(--emerald); border:1px solid rgba(16,185,129,.15); }
+.status-completed { background:var(--primary-soft); color:var(--primary); border:1px solid rgba(99,102,241,.15); }
+.status-hold { background:var(--amber-soft); color:var(--amber); border:1px solid rgba(245,158,11,.15); }
+
+/* ══════════════════════════════════════════════════════════════
+   ACTION BAR
+   ══════════════════════════════════════════════════════════════ */
+
+.action-bar { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); margin-bottom:1rem; }
+.ab-left, .ab-right { display:flex; align-items:center; gap:10px; }
+.ab-btn { display:flex; align-items:center; gap:6px; padding:7px 12px; border-radius:8px; font-size:.75rem; font-weight:600; text-decoration:none; transition:all .2s; border:none; cursor:pointer; }
+.ab-btn i { font-size:.75rem; }
+.ab-btn-primary { background:var(--primary); color:#fff; }
+.ab-btn-primary:hover { background:#4f46e5; transform:translateY(-1px); }
+.ab-btn-warning { background:var(--amber); color:#fff; }
+.ab-btn-warning:hover { background:#d97706; }
+.ab-split { padding:7px 8px; border-left:1px solid rgba(255,255,255,.2); border-radius:0 8px 8px 0; margin-left:-1px; }
+.ab-dropdown { display:flex; position:relative; }
+.ab-menu { border:1px solid var(--border-light); border-radius:10px; box-shadow:0 10px 40px -10px rgba(0,0,0,.15); padding:6px; min-width:180px; }
+.ab-menu-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:6px; font-size:.78rem; font-weight:600; color:var(--text-2); transition:all .2s; }
+.ab-menu-item:hover { background:var(--primary-soft); color:var(--primary); }
+.ab-menu-item i { font-size:.85rem; }
+
+/* ══════════════════════════════════════════════════════════════
+   STATS GRID
+   ══════════════════════════════════════════════════════════════ */
+
+.stats-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:0; }
+.stat-card { position:relative; background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); padding:14px 16px; display:flex; align-items:center; gap:12px; overflow:hidden; transition:all .3s; }
+.stat-card:hover { box-shadow:0 8px 24px -8px rgba(0,0,0,.08); transform:translateY(-2px); }
+.sc-icon-wrap { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:.9rem; flex-shrink:0; }
+.sc-budget .sc-icon-wrap { background:var(--primary-soft); color:var(--primary); }
+.sc-spent .sc-icon-wrap { background:var(--amber-soft); color:var(--amber); }
+.sc-paid .sc-icon-wrap { background:var(--emerald-soft); color:var(--emerald); }
+.sc-balance .sc-icon-wrap { background:var(--rose-soft); color:var(--rose); }
+.sc-content { flex:1; }
+.sc-label { display:block; font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-3); margin-bottom:2px; }
+.sc-value { font-size:1.1rem; font-weight:800; color:var(--text-1); }
+.sc-value.sc-positive { color:var(--emerald); }
+.sc-value.sc-negative { color:var(--rose); }
+.sc-accent { position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--primary); }
+.sc-accent-right { left:auto; right:0; background:var(--rose); }
+.sc-progress { position:absolute; bottom:0; left:0; right:0; height:3px; background:var(--border-light); }
+.sc-progress-bar { height:100%; background:var(--amber); transition:width .5s; }
+
+/* ══════════════════════════════════════════════════════════════
+   DATA CARD
+   ══════════════════════════════════════════════════════════════ */
+
+.data-card { background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); overflow:hidden; margin-bottom:1rem; }
+.dc-header { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:var(--surface-2); border-bottom:1px solid var(--border-light); }
+.dc-header-dark { background:linear-gradient(135deg, #0f172a, #1e293b); border-bottom:none; }
+.dc-header-dark .dc-title { color:#fff; }
+.dc-header-dark .dc-subtitle { color:rgba(255,255,255,.5); }
+.dc-header-left { display:flex; align-items:center; gap:10px; }
+.dc-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.85rem; }
+.dc-indigo { background:var(--primary-soft); color:var(--primary); }
+.dc-emerald { background:var(--emerald-soft); color:var(--emerald); }
+.dc-title { font-size:.82rem; font-weight:800; color:var(--text-1); margin:0; }
+.dc-subtitle { font-size:.62rem; color:var(--text-3); margin:0; }
+.dc-body { padding:0; }
+.count-badge { display:flex; align-items:center; gap:5px; padding:5px 10px; background:var(--surface); border:1px solid var(--border-light); border-radius:100px; font-size:.65rem; font-weight:700; color:var(--text-2); }
+.count-badge i { font-size:.65rem; color:var(--primary); }
+.cb-dark { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.1); color:rgba(255,255,255,.7); }
+.cb-dark i { color:var(--emerald); }
+
+/* ══════════════════════════════════════════════════════════════
+   CUSTOM TABLE
+   ══════════════════════════════════════════════════════════════ */
+
+.custom-table { width:100%; border-collapse:collapse; }
+.custom-table thead { background:var(--surface-2); }
+.custom-table th { padding:10px 14px; font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-3); text-align:left; border-bottom:1px solid var(--border-light); white-space:nowrap; }
+.th-location { padding-left:18px; }
+.th-center { text-align:center; }
+.th-right { text-align:right; }
+.th-action { text-align:center; width:50px; }
+.custom-table td { padding:12px 14px; font-size:.78rem; color:var(--text-2); border-bottom:1px solid var(--border-light); vertical-align:middle; }
+.tr-hover { transition:all .2s; }
+.tr-hover:hover { background:var(--surface-2); }
+.td-location { padding-left:18px; }
+.loc-primary { font-weight:700; color:var(--text-1); font-size:.78rem; }
+.loc-secondary { font-size:.65rem; color:var(--text-3); margin-top:2px; }
+.type-badge { padding:3px 8px; background:var(--sky-soft); color:var(--sky); border:1px solid rgba(14,165,233,.15); border-radius:100px; font-size:.6rem; font-weight:700; white-space:nowrap; }
+.td-center { text-align:center; }
+.qty-badge { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; background:var(--surface-2); border-radius:6px; font-size:.72rem; font-weight:700; color:var(--text-1); }
+.area-value { font-weight:600; color:var(--text-1); }
+.area-unit { font-size:.65rem; color:var(--text-3); margin-left:3px; }
+.rate-value { font-weight:600; color:var(--text-2); }
+.td-right { text-align:right; }
+.amount-value { font-weight:800; color:var(--text-1); }
+.td-action { text-align:center; }
+.action-link { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition:all .2s; text-decoration:none; }
+.al-edit { background:var(--amber-soft); color:var(--amber); }
+.al-edit:hover { background:var(--amber); color:#fff; }
+
+/* Payment Table Specific */
+.date-value { font-weight:600; color:var(--text-2); font-size:.75rem; }
+.money-muted { color:var(--text-3); font-size:.75rem; }
+.money-positive { font-weight:700; color:var(--emerald); font-size:.75rem; }
+.money-bold { font-weight:700; color:var(--text-1); font-size:.75rem; }
+.balance-chip { padding:3px 8px; border-radius:100px; font-size:.65rem; font-weight:700; white-space:nowrap; }
+.bc-success { background:var(--emerald-soft); color:var(--emerald); }
+.bc-warning { background:var(--amber-soft); color:var(--amber); }
+.bc-danger { background:var(--rose-soft); color:var(--rose); }
+.mode-badge { padding:3px 8px; background:var(--surface-2); border:1px solid var(--border-light); border-radius:6px; font-size:.65rem; font-weight:600; color:var(--text-2); white-space:nowrap; }
+.action-group { display:flex; align-items:center; justify-content:center; gap:5px; }
+.al-whatsapp { background:rgba(37,211,102,.1); color:#25d366; }
+.al-whatsapp:hover { background:#25d366; color:#fff; }
+.al-pdf { background:var(--rose-soft); color:var(--rose); }
+.al-pdf:hover { background:var(--rose); color:#fff; }
+
+/* ══════════════════════════════════════════════════════════════
+   EMPTY STATE
+   ══════════════════════════════════════════════════════════════ */
+
+.empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; }
+.es-icon { width:56px; height:56px; border-radius:14px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:var(--text-3); margin-bottom:14px; }
+.es-icon-success { background:var(--emerald-soft); color:var(--emerald); }
+.es-title { font-size:.85rem; font-weight:800; color:var(--text-1); margin:0 0 5px; }
+.es-text { font-size:.75rem; color:var(--text-3); margin:0 0 16px; }
+.es-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; background:var(--primary); color:#fff; border-radius:8px; font-size:.75rem; font-weight:600; text-decoration:none; transition:all .2s; }
+.es-btn:hover { background:#4f46e5; transform:translateY(-1px); color:#fff; }
+.es-btn-success { background:var(--emerald); }
+.es-btn-success:hover { background:#059669; }
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR CARDS
+   ══════════════════════════════════════════════════════════════ */
+
+.sidebar-card { background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); padding:16px; margin-bottom:.75rem; transition:all .3s; }
+.sidebar-card:hover { box-shadow:0 8px 24px -8px rgba(0,0,0,.06); }
+.sbc-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.sbc-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.75rem; }
+.sbc-sky { background:var(--sky-soft); color:var(--sky); }
+.sbc-emerald { background:var(--emerald-soft); color:var(--emerald); }
+.sbc-amber { background:var(--amber-soft); color:var(--amber); }
+.sbc-violet { background:var(--violet-soft); color:var(--violet); }
+.sbc-title { font-size:.78rem; font-weight:800; color:var(--text-1); margin:0; }
+
+/* Info List */
+.info-list { display:flex; flex-direction:column; gap:6px; }
+.il-item { display:flex; justify-content:space-between; align-items:center; padding:9px 11px; background:var(--surface-2); border-radius:8px; }
+.il-label { font-size:.58rem; font-weight:700; text-transform:uppercase; color:var(--text-3); }
+.il-value { font-size:.75rem; font-weight:700; color:var(--text-1); }
+.il-truncate { max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.il-link { color:var(--primary); text-decoration:none; }
+.il-link:hover { text-decoration:underline; }
+.mini-status { padding:3px 7px; border-radius:100px; font-size:.58rem; font-weight:700; }
+.mini-ongoing { background:var(--emerald-soft); color:var(--emerald); }
+.mini-completed { background:var(--primary-soft); color:var(--primary); }
+.mini-hold { background:var(--amber-soft); color:var(--amber); }
+
+/* Financial Summary */
+.finance-summary { display:flex; flex-direction:column; gap:10px; }
+.fs-item { display:flex; flex-direction:column; gap:5px; }
+.fs-bar { height:6px; background:var(--border-light); border-radius:100px; overflow:hidden; }
+.fs-bar-fill { height:100%; border-radius:100px; transition:width .5s; }
+.fs-budget { background:var(--primary); }
+.fs-spent { background:var(--amber); }
+.fs-paid { background:var(--emerald); }
+.fs-data { display:flex; justify-content:space-between; align-items:center; }
+.fs-label { font-size:.62rem; font-weight:600; color:var(--text-3); }
+.fs-value { font-size:.75rem; font-weight:700; color:var(--text-1); }
+.fs-value.fs-positive { color:var(--emerald); }
+.fs-footer { margin-top:12px; padding-top:12px; border-top:1px solid var(--border-light); }
+.fs-balance { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--surface-2); border-radius:8px; }
+.fs-balance-label { font-size:.65rem; font-weight:700; text-transform:uppercase; color:var(--text-3); }
+.fs-balance-value { font-size:.95rem; font-weight:800; }
+.fs-balance-value.fs-positive { color:var(--emerald); }
+.fs-balance-value.fs-negative { color:var(--rose); }
+
+/* Quick Actions */
+.quick-actions { display:flex; flex-direction:column; gap:6px; }
+.qa-item { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface-2); border-radius:10px; text-decoration:none; transition:all .2s; }
+.qa-item:hover { transform:translateX(4px); }
+.qa-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.8rem; }
+.qa-primary .qa-icon { background:var(--primary-soft); color:var(--primary); }
+.qa-primary:hover { background:var(--primary-soft); }
+.qa-success .qa-icon { background:var(--emerald-soft); color:var(--emerald); }
+.qa-success:hover { background:var(--emerald-soft); }
+.qa-warning .qa-icon { background:var(--amber-soft); color:var(--amber); }
+.qa-warning:hover { background:var(--amber-soft); }
+.qa-sky .qa-icon { background:var(--sky-soft); color:var(--sky); }
+.qa-sky:hover { background:var(--sky-soft); }
+.qa-content { flex:1; }
+.qa-label { display:block; font-size:.72rem; font-weight:700; color:var(--text-1); }
+.qa-desc { font-size:.62rem; color:var(--text-3); }
+.qa-arrow { color:var(--text-3); font-size:.65rem; }
+
+/* Contact Info */
+.contact-info { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.ci-avatar { width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, var(--violet), var(--primary)); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:800; }
+.ci-details { flex:1; }
+.ci-name { font-size:.8rem; font-weight:700; color:var(--text-1); margin:0 0 2px; }
+.ci-phone { font-size:.68rem; color:var(--text-3); margin:0; display:flex; align-items:center; gap:4px; }
+.ci-phone i { font-size:.6rem; }
+.ci-actions { display:flex; gap:6px; }
+.ci-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:9px; border-radius:8px; font-size:.68rem; font-weight:600; text-decoration:none; transition:all .2s; }
+.ci-call { background:var(--primary-soft); color:var(--primary); }
+.ci-call:hover { background:var(--primary); color:#fff; }
+.ci-whatsapp { background:rgba(37,211,102,.1); color:#25d366; }
+.ci-whatsapp:hover { background:#25d366; color:#fff; }
+
+/* Navigation Card */
+.nav-card { background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius); overflow:hidden; }
+.nc-link { display:flex; align-items:center; gap:8px; padding:12px 16px; font-size:.75rem; font-weight:600; color:var(--text-2); text-decoration:none; transition:all .2s; }
+.nc-link:hover { background:var(--surface-2); color:var(--primary); transform:translateX(-4px); }
+.nc-link i { font-size:.8rem; }
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE DESIGN
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width:1200px) {
+    .stats-grid { grid-template-columns:repeat(2, 1fr); }
+}
+
+@media (max-width:992px) {
+    :root {
+        --page-padding: 1rem;
+    }
+    
+    .fixed-layout {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+    
+    .fixed-header {
+        position: relative;
+    }
+    
+    .scroll-content-area {
+        overflow: visible;
+    }
+    
+    .scroll-content-area > .row,
+    .scroll-content-area > .row > .col-lg-8,
+    .scroll-content-area > .row > .col-lg-4 {
+        height: auto;
+    }
+    
+    .main-scroll-container,
+    .sidebar-scroll-container {
+        height: auto;
+        overflow: visible;
+    }
+    
+    .table-scroll-container {
+        max-height: 400px;
+    }
+    
+    .stats-grid { grid-template-columns:repeat(2, 1fr); }
+}
+
+@media (max-width:768px) {
+    .page-header { flex-direction:column; align-items:flex-start; }
+    .header-badges { width:100%; justify-content:flex-start; }
+    .stats-grid { grid-template-columns:1fr; }
+    .action-bar { flex-direction:column; gap:10px; }
+    .ab-left, .ab-right { width:100%; justify-content:center; }
+    .custom-table th, .custom-table td { padding:8px 10px; font-size:.72rem; }
+    .scroll-indicator { display:none; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ══════════════════════════════════════════════════════════════ */
+
+.shadow-scroll {
+    box-shadow: inset 0 -20px 20px -20px rgba(0,0,0,0.1);
+}
+
+.has-scroll-top {
+    box-shadow: inset 0 20px 20px -20px rgba(0,0,0,0.1);
+}
+
+.has-scroll-both {
+    box-shadow: 
+        inset 0 20px 20px -20px rgba(0,0,0,0.1),
+        inset 0 -20px 20px -20px rgba(0,0,0,0.1);
+}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+    // Initialize all dropdowns
+    var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
     dropdownElementList.map(function (dropdownToggleEl) {
-        return new bootstrap.Dropdown(dropdownToggleEl)
-    })
-})
+        return new bootstrap.Dropdown(dropdownToggleEl);
+    });
+
+    // Get scroll containers
+    const mainContainer = document.getElementById('mainScrollContainer');
+    const sidebarContainer = document.getElementById('sidebarScrollContainer');
+    const sidebarIndicator = document.getElementById('sidebarScrollIndicator');
+
+    // Handle scroll indicator visibility
+    function checkScrollIndicator() {
+        if (sidebarContainer && sidebarIndicator) {
+            const isScrollable = sidebarContainer.scrollHeight > sidebarContainer.clientHeight;
+            const isAtBottom = sidebarContainer.scrollTop + sidebarContainer.clientHeight >= sidebarContainer.scrollHeight - 20;
+            
+            if (!isScrollable || isAtBottom) {
+                sidebarIndicator.classList.add('hidden');
+            } else {
+                sidebarIndicator.classList.remove('hidden');
+            }
+        }
+    }
+
+    // Add scroll shadows
+    function handleScrollShadows(container) {
+        if (!container) return;
+        
+        const scrollTop = container.scrollTop;
+        const scrollHeight = container.scrollHeight;
+        const clientHeight = container.clientHeight;
+        
+        container.classList.remove('shadow-scroll', 'has-scroll-top', 'has-scroll-both');
+        
+        if (scrollTop > 10 && scrollTop + clientHeight < scrollHeight - 10) {
+            container.classList.add('has-scroll-both');
+        } else if (scrollTop > 10) {
+            container.classList.add('has-scroll-top');
+        } else if (scrollTop + clientHeight < scrollHeight - 10) {
+            container.classList.add('shadow-scroll');
+        }
+    }
+
+    // Event listeners
+    if (sidebarContainer) {
+        sidebarContainer.addEventListener('scroll', function() {
+            checkScrollIndicator();
+            handleScrollShadows(this);
+        });
+        
+        // Initial check
+        setTimeout(checkScrollIndicator, 500);
+    }
+
+    if (mainContainer) {
+        mainContainer.addEventListener('scroll', function() {
+            handleScrollShadows(this);
+        });
+    }
+
+    // Add hover effects to stat cards
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+
+    // Animate progress bars on load
+    setTimeout(() => {
+        document.querySelectorAll('.sc-progress-bar, .fs-bar-fill').forEach(bar => {
+            bar.style.transition = 'width 1s ease-out';
+        });
+    }, 300);
+
+    // Sync scroll between containers (optional - uncomment if needed)
+    /*
+    let isSyncing = false;
+    function syncScroll(source, target) {
+        if (isSyncing) return;
+        isSyncing = true;
+        
+        const scrollPercent = source.scrollTop / (source.scrollHeight - source.clientHeight);
+        target.scrollTop = scrollPercent * (target.scrollHeight - target.clientHeight);
+        
+        setTimeout(() => { isSyncing = false; }, 50);
+    }
+    
+    if (mainContainer && sidebarContainer) {
+        mainContainer.addEventListener('scroll', () => syncScroll(mainContainer, sidebarContainer));
+        sidebarContainer.addEventListener('scroll', () => syncScroll(sidebarContainer, mainContainer));
+    }
+    */
+
+    // Handle window resize
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            checkScrollIndicator();
+            handleScrollShadows(mainContainer);
+            handleScrollShadows(sidebarContainer);
+        }, 250);
+    });
+
+    // Keyboard navigation for tables
+    document.querySelectorAll('.table-scroll-container').forEach(container => {
+        container.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowDown') {
+                this.scrollTop += 50;
+                e.preventDefault();
+            } else if (e.key === 'ArrowUp') {
+                this.scrollTop -= 50;
+                e.preventDefault();
+            }
+        });
+    });
+});
 </script>
-
-
 {% endblock %}

@@ -1,718 +1,1177 @@
+
+
+```html
 {% extends 'billing/layouts/base.html' %}
 {% block title %}Update Entry | {{ spend.elements }}{% endblock %}
 {% block page_title %}Edit Spend Record{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
-<div class="row justify-content-center">
-<div class="col-lg-10">
+<div class="container-fluid master-page">
 
-<form method="POST" class="needs-validation" novalidate>
-{% csrf_token %}
+    <!-- Page Header -->
+    <div class="page-header fade-in fi-1">
+        <div class="page-header-left">
+            <a href="{% url 'spend_list' %}" class="back-btn">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div class="page-icon-wrap pi-amber">
+                <i class="bi bi-pencil-square"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Update Work Entry</h1>
+                <p class="page-subtitle">Editing: {{ spend.elements }}</p>
+            </div>
+        </div>
+        <div class="header-badges">
+            <span class="entry-id-badge">
+                <i class="bi bi-hash"></i> SP-{{ spend.id|stringformat:"04d" }}
+            </span>
+            <div class="header-status" id="headerStatus">
+                <div class="hs-indicator hs-success"></div>
+                <span class="hs-text">Loaded</span>
+            </div>
+        </div>
+    </div>
 
-<div class="card border-0 shadow-sm mb-4">
+    <form method="POST" id="spendForm" novalidate>
+        {% csrf_token %}
 
-<div class="card-header bg-white py-3">
-<h6 class="fw-bold mb-0 text-primary">
-<i class="bi bi-geo-alt me-2"></i>Project & Location
-</h6>
+        <div class="row g-4">
+            <!-- Main Content -->
+            <div class="col-xl-9 col-lg-8">
+
+                <!-- Project Selection Card -->
+                <div class="form-card fade-in fi-2" id="projectCard">
+                    <div class="fc-header">
+                        <div class="fc-header-left">
+                            <div class="fc-icon fc-indigo">
+                                <i class="bi bi-folder-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="fc-title">Project Selection</h6>
+                                <p class="fc-subtitle">Choose the target project</p>
+                            </div>
+                        </div>
+                        <span class="required-tag">
+                            <i class="bi bi-asterisk"></i> Required
+                        </span>
+                    </div>
+                    <div class="fc-body">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-7">
+                                <div class="field-group" id="projectFieldGroup">
+                                    <label class="field-label">
+                                        Target Project <span class="req">*</span>
+                                    </label>
+                                    <div class="select-wrapper">
+                                        <select name="project" id="projectSelect" class="custom-select required-input" required>
+                                            {% for project in projects %}
+                                            <option value="{{ project.id }}" {% if spend.project.id == project.id %}selected{% endif %}>
+                                                {{ project.name }} ({{ project.client.name }})
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <i class="bi bi-chevron-down select-icon"></i>
+                                    </div>
+                                    <div class="field-feedback">
+                                        <i class="bi bi-exclamation-circle"></i>
+                                        Please select a project
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="total-display">
+                                    <div class="td-header">
+                                        <span class="td-dot"></span>
+                                        <span class="td-label">Line Total</span>
+                                    </div>
+                                    <div class="td-value">
+                                        ₹ <span id="grandTotal">{{ spend.total_amount|default:"0.00" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Measurements Card -->
+                <div class="form-card fade-in fi-3" id="measurementsCard">
+                    <div class="fc-header">
+                        <div class="fc-header-left">
+                            <div class="fc-icon fc-violet">
+                                <i class="bi bi-rulers"></i>
+                            </div>
+                            <div>
+                                <h6 class="fc-title">Measurements & Elements</h6>
+                                <p class="fc-subtitle">Edit item details and dimensions</p>
+                            </div>
+                        </div>
+                        <div class="fc-header-right">
+                            <span class="edit-badge">
+                                <i class="bi bi-pencil"></i> Editing
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Validation Alert -->
+                    <div class="validation-alert hidden" id="validationAlert">
+                        <div class="va-icon">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        </div>
+                        <div class="va-content">
+                            <strong>Missing Required Fields</strong>
+                            <span id="validationMsg">Please fill all required fields marked with *</span>
+                        </div>
+                        <button type="button" class="va-close" onclick="hideValidationAlert()">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+
+                    <div class="fc-body p-0">
+                        <div class="table-responsive">
+                            <table class="spend-table" id="spendTable">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">Floor / Room <span class="th-req">*</span></th>
+                                        <th>Element <span class="th-req">*</span></th>
+                                        <th>Series / Rate <span class="th-req">*</span></th>
+                                        <th class="text-center">Spec</th>
+                                        <th>Dimensions <span class="th-req">*</span></th>
+                                        <th class="text-center">Qty <span class="th-req">*</span></th>
+                                        <th class="text-center">Total</th>
+                                        <th class="text-center pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody">
+                                    <tr class="spend-row" data-row="1">
+                                        <!-- Floor / Room -->
+                                        <td class="ps-4">
+                                            <div class="cell-stack">
+                                                <div class="input-wrap">
+                                                    <select name="floor[]" class="mini-select required-input" required>
+                                                        <option value="">Floor *</option>
+                                                        {% for floor in floors %}
+                                                        <option value="{{ floor.id }}" {% if spend.floor and spend.floor.id == floor.id %}selected{% endif %}>
+                                                            {{ floor.name }}
+                                                        </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <span class="input-indicator"></span>
+                                                </div>
+                                                <select name="room[]" class="mini-select mini-select-light">
+                                                    <option value="">Room (optional)</option>
+                                                    {% for room in rooms %}
+                                                    <option value="{{ room.id }}" {% if spend.room and spend.room.id == room.id %}selected{% endif %}>
+                                                        {{ room.name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </td>
+
+                                        <!-- Element -->
+                                        <td>
+                                            <div class="cell-stack">
+                                                <div class="input-wrap">
+                                                    <input name="elements[]" class="mini-input required-input" placeholder="e.g. Wardrobe *" value="{{ spend.elements }}" required>
+                                                    <span class="input-indicator"></span>
+                                                </div>
+                                                <input name="unit[]" value="{{ spend.unit }}" class="mini-input mini-input-light" placeholder="Unit">
+                                            </div>
+                                        </td>
+
+                                        <!-- Series / Rate -->
+                                        <td>
+                                            <div class="cell-stack">
+                                                <div class="input-wrap">
+                                                    <select name="fullsemi[]" class="mini-select fullsemi required-input" required>
+                                                        <option value="">Series *</option>
+                                                        {% for fs in fullsemis %}
+                                                        <option value="{{ fs.id }}" data-rate="{{ fs.rate }}" {% if spend.fullsemi and spend.fullsemi.id == fs.id %}selected{% endif %}>
+                                                            {{ fs.name }} (₹{{ fs.rate }})
+                                                        </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <span class="input-indicator"></span>
+                                                </div>
+                                                <div class="input-wrap">
+                                                    <input name="rate[]" class="mini-input rate required-input" placeholder="Rate *" value="{{ spend.rate }}" required>
+                                                    <span class="input-indicator"></span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Spec -->
+                                        <td class="text-center">
+                                            <button type="button" class="spec-btn {% if spend.description %}has-spec{% endif %}" onclick="openSpecModal(this)">
+                                                <i class="bi bi-file-text"></i>
+                                            </button>
+                                            <textarea name="description[]" class="d-none spec-text">{{ spend.description }}</textarea>
+                                        </td>
+
+                                        <!-- Dimensions -->
+                                        <td>
+                                            <div class="dim-group">
+                                                <div class="dim-inputs">
+                                                    <div class="input-wrap dim-wrap">
+                                                        <input name="length[]" class="dim-input length required-input" placeholder="L *" value="{{ spend.length }}" required>
+                                                        <span class="input-indicator"></span>
+                                                    </div>
+                                                    <span class="dim-x">×</span>
+                                                    <div class="input-wrap dim-wrap">
+                                                        <input name="width[]" class="dim-input width required-input" placeholder="W *" value="{{ spend.width }}" required>
+                                                        <span class="input-indicator"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="area-display">
+                                                    <i class="bi bi-grid-3x3"></i>
+                                                    <span class="area">{{ spend.area }}</span> sqft
+                                                    <input type="hidden" name="area[]" class="area-input" value="{{ spend.area }}">
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Qty -->
+                                        <td class="text-center">
+                                            <div class="input-wrap qty-wrap">
+                                                <input name="qty[]" value="{{ spend.qty }}" class="qty-input qty required-input" min="1" required>
+                                                <span class="input-indicator"></span>
+                                            </div>
+                                        </td>
+
+                                        <!-- Total -->
+                                        <td class="text-center">
+                                            <div class="line-total has-value">
+                                                <span class="lt-currency">₹</span>
+                                                <span class="total">{{ spend.total_amount }}</span>
+                                            </div>
+                                            <input type="hidden" name="total_amount[]" class="total-input" value="{{ spend.total_amount }}">
+                                        </td>
+
+                                        <!-- Actions -->
+                                        <td class="text-center pe-4">
+                                            <div class="row-actions">
+                                                <button type="button" class="ra-btn ra-copy" onclick="duplicateRow(this)" title="Duplicate">
+                                                    <i class="bi bi-files"></i>
+                                                </button>
+                                                <button type="button" class="ra-btn ra-delete" onclick="removeRow(this)" title="Delete">
+                                                    <i class="bi bi-trash3"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="table-footer">
+                        <button type="button" class="tf-add-btn" onclick="addRow()">
+                            <i class="bi bi-plus-circle"></i> Add Line Item
+                        </button>
+                        <div class="tf-total">
+                            <span class="tf-label">Total:</span>
+                            <span class="tf-value">₹ <span id="footerTotal">{{ spend.total_amount }}</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions fade-in fi-4">
+                    <a href="{% url 'spend_list' %}" class="btn-cancel">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
+                    <div class="fa-right">
+                        <button type="button" class="btn-validate" onclick="validateAllFields()">
+                            <i class="bi bi-shield-check"></i> Validate
+                        </button>
+                        <button type="submit" class="btn-submit btn-update" id="submitBtn">
+                            <i class="bi bi-arrow-repeat"></i> Update Entry
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-xl-3 col-lg-4 fade-in fi-4">
+                
+                <!-- Entry Info -->
+                <div class="sidebar-card mb-3">
+                    <div class="sc-header">
+                        <div class="sc-icon sc-amber"><i class="bi bi-info-circle"></i></div>
+                        <h6 class="sc-title">Entry Details</h6>
+                    </div>
+                    <div class="entry-info-list">
+                        <div class="ei-item">
+                            <span class="ei-label">Entry ID</span>
+                            <span class="ei-value">SP-{{ spend.id|stringformat:"04d" }}</span>
+                        </div>
+                        <div class="ei-item">
+                            <span class="ei-label">Project</span>
+                            <span class="ei-value ei-truncate">{{ spend.project.name }}</span>
+                        </div>
+                        <div class="ei-item">
+                            <span class="ei-label">Element</span>
+                            <span class="ei-value ei-truncate">{{ spend.elements }}</span>
+                        </div>
+                        <div class="ei-item">
+                            <span class="ei-label">Current Total</span>
+                            <span class="ei-value ei-highlight">₹{{ spend.total_amount }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Summary -->
+                <div class="sidebar-card mb-3">
+                    <div class="sc-header">
+                        <div class="sc-icon sc-emerald"><i class="bi bi-speedometer2"></i></div>
+                        <h6 class="sc-title">Live Summary</h6>
+                    </div>
+                    <div class="summary-grid">
+                        <div class="sg-item">
+                            <span class="sg-label">Items</span>
+                            <span class="sg-value" id="summaryItems">1</span>
+                        </div>
+                        <div class="sg-item">
+                            <span class="sg-label">Area</span>
+                            <span class="sg-value" id="summaryArea">{{ spend.area }}</span>
+                        </div>
+                        <div class="sg-item sg-full">
+                            <span class="sg-label">Progress</span>
+                            <div class="progress-wrap">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill" style="width: 100%;"></div>
+                                </div>
+                                <span class="progress-text" id="progressText">100%</span>
+                            </div>
+                        </div>
+                        <div class="sg-item sg-full sg-total">
+                            <span class="sg-label">Updated Total</span>
+                            <span class="sg-value">₹ <span id="summaryTotal">{{ spend.total_amount }}</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checklist Card -->
+                <div class="sidebar-card mb-3">
+                    <div class="sc-header">
+                        <div class="sc-icon sc-rose"><i class="bi bi-list-check"></i></div>
+                        <h6 class="sc-title">Required Fields</h6>
+                    </div>
+                    <div class="checklist">
+                        <div class="cl-item done" id="cl-project">
+                            <div class="cl-check"><i class="bi bi-check-lg"></i></div>
+                            <span>Project selected</span>
+                        </div>
+                        <div class="cl-item done" id="cl-floor">
+                            <div class="cl-check"><i class="bi bi-check-lg"></i></div>
+                            <span>Floor assigned</span>
+                        </div>
+                        <div class="cl-item done" id="cl-element">
+                            <div class="cl-check"><i class="bi bi-check-lg"></i></div>
+                            <span>Element named</span>
+                        </div>
+                        <div class="cl-item done" id="cl-series">
+                            <div class="cl-check"><i class="bi bi-check-lg"></i></div>
+                            <span>Series selected</span>
+                        </div>
+                        <div class="cl-item done" id="cl-rate">
+                            <div class="cl-check"><i class="bi bi-check-lg"></i></div>
+                            <span>Rate entered</span>
+                        </div>
+                        <div class="cl-item done" id="cl-dimensions">
+                            <div class="cl-check"><i class="bi bi-check-lg"></i></div>
+                            <span>Dimensions set</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pro Tip -->
+                <div class="pro-tip">
+                    <div class="pt-inner">
+                        <div class="pt-header">
+                            <span class="pt-emoji">✏️</span>
+                            <span class="pt-label">Edit Mode</span>
+                        </div>
+                        <p class="pt-text">You're editing an existing entry. Changes will be saved when you click <strong>Update Entry</strong>. Use the <strong>Validate</strong> button to check for errors.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
 
-<div class="card-body p-4">
-
-<div class="row g-3 align-items-end">
-
-<div class="col-md-6">
-
-<label class="form-label small fw-bold text-uppercase">
-Target Project
-</label>
-
-<select name="project" class="form-select" required>
-
-{% for project in projects %}
-<option value="{{ project.id }}"
-{% if spend.project.id == project.id %}selected{% endif %}>
-{{ project.name }} ({{ project.client.name }})
-</option>
-{% endfor %}
-
-</select>
-
-</div>
-
-<div class="col-md-6 text-end">
-
-<label class="form-label small fw-bold text-uppercase">
-Total Project Spend
-</label>
-
-<h4 class="fw-bold text-primary mb-0">
-₹ <span id="grandTotal">{{ spend.total_amount|default:"0.00" }}</span>
-</h4>
-
-</div>
-
-</div>
-</div>
-</div>
-
-
-<div class="card border-0 shadow-sm mb-4">
-
-<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-
-<h6 class="fw-bold mb-0 text-primary">
-<i class="bi bi-rulers me-2"></i>Measurements & Elements
-</h6>
-
-<button type="button" class="btn btn-sm btn-dark rounded-pill" onclick="addRow()">
-+ Add New Item
-</button>
-
-</div>
-
-
-<div class="card-body p-0">
-
-<div class="table-responsive">
-
-<table class="table align-middle mb-0" id="spendTable">
-
-<thead class="table-light">
-
-<tr>
-<th style="width:220px">FLOOR / LOCATION</th>
-<th style="width:240px">ELEMENT DETAILS</th>
-<th style="width:200px">SERIES</th>
-<th style="width:160px">SPEC</th>
-<th style="width:220px">DIMENSIONS</th>
-<th style="width:80px">QTY</th>
-<th style="width:140px" class="text-center bg-primary text-white">LINE TOTAL</th>
-<th style="width:120px">ACTION</th>
-</tr>
-
-</thead>
-
-
-<tbody>
-
-<tr class="spend-row">
-
-<td>
-
-<select name="floor[]" class="form-select form-select-sm mb-1 bg-light border-0">
-
-<option value="" disabled selected class="text-muted">
-Select Floor
-</option>
-
-{% for floor in floors %}
-<option value="{{ floor.id }}"
-{% if spend.floor and spend.floor.id == floor.id %}selected{% endif %}>
-{{ floor.name }}
-</option>
-{% endfor %}
-
-</select>
-
-
-<select name="room[]" class="form-select form-select-sm bg-light border-0">
-
-<option value="" disabled selected class="text-muted">
-Select Location
-</option>
-
-{% for room in rooms %}
-<option value="{{ room.id }}"
-{% if spend.room and spend.room.id == room.id %}selected{% endif %}>
-{{ room.name }}
-</option>
-{% endfor %}
-
-</select>
-
-</td>
-
-
-
-<td>
-
-<input
-name="elements[]"
-value="{{ spend.elements }}"
-class="form-control form-control-sm mb-1"
-required
->
-
-<input
-name="unit[]"
-value="{{ spend.unit }}"
-class="form-control form-control-sm"
-required
->
-
-</td>
-
-
-
-<td>
-
-<select name="fullsemi[]" class="form-select form-select-sm fullsemi mb-1 bg-light border-0" required>
-
-<option value="" disabled selected class="text-muted">
-Select Series
-</option>
-
-{% for fs in fullsemis %}
-<option value="{{ fs.id }}"
-data-rate="{{ fs.rate }}"
-{% if spend.fullsemi and spend.fullsemi.id == fs.id %}selected{% endif %} required>
-{{ fs.name }} (₹{{ fs.rate }})
-</option>
-{% endfor %}
-
-</select>
-
-<input
-name="rate[]"
-value="{{ spend.rate }}"
-class="form-control form-control-sm rate"
-
->
-
-</td>
-
-
-
-<td class="text-center">
-
-<button type="button"
-class="btn btn-sm btn-outline-secondary rounded-pill spec-btn"
-onclick="openSpecModal(this)">
-Specs
-</button>
-
-<textarea
-name="description[]"
-class="d-none spec-text">{{ spend.description }}</textarea>
-
-</td>
-
-
-
-<td>
-
-<div class="d-flex bg-light rounded-pill p-1">
-
-<input
-class="form-control form-control-sm border-0 bg-transparent length text-center"
-name="length[]"
-value="{{ spend.length }}"
-required
->
-
-<span class="mx-1">×</span>
-
-<input
-class="form-control form-control-sm border-0 bg-transparent width text-center"
-name="width[]"
-value="{{ spend.width }}"
-required
->
-
-</div>
-
-<div class="text-center small mt-1">
-Area:
-<span class="area">{{ spend.area }}</span>
-
-<input type="hidden" name="area[]" class="area-input" value="{{ spend.area }}">
-</div>
-
-</td>
-
-
-
-<td>
-
-<input
-name="qty[]"
-value="{{ spend.qty }}"
-class="form-control form-control-sm text-center qty"
-required
->
-
-</td>
-
-
-
-<td class="text-center bg-primary-subtle">
-
-<div class="fw-bold text-primary total">
-{{ spend.total_amount }}
-</div>
-
-<input type="hidden"
-name="total_amount[]"
-class="total-input"
-value="{{ spend.total_amount }}">
-
-</td>
-
-
-
-<td class="text-center">
-
-<div class="d-flex justify-content-center gap-2">
-
-<button
-type="button"
-class="btn btn-light btn-sm text-info"
-onclick="duplicateRow(this)">
-<i class="bi bi-files"></i>
-</button>
-
-<button
-type="button"
-class="btn btn-light btn-sm text-danger"
-onclick="removeRow(this)">
-<i class="bi bi-x-lg"></i>
-</button>
-
-</div>
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-</div>
-</div>
-
-
-<div class="d-flex justify-content-between align-items-center mb-5">
-
-<a href="{% url 'spend_list' %}"
-class="btn btn-secondary text-white text-decoration-none">
-<i class="bi bi-arrow-left me-1"></i> Back to List
-</a>
-
-<button type="submit"
-class="btn btn-primary px-5 py-2 fw-bold shadow-sm rounded-pill">
-<i class="bi bi-arrow-repeat me-2"></i>Update Work Entry
-</button>
-
-</div>
-
-</form>
-</div>
-</div>
-</div>
-
-
+<!-- Spec Modal -->
 <div class="modal fade" id="specModal" tabindex="-1">
-<div class="modal-dialog modal-lg">
-<div class="modal-content">
-
-<div class="modal-header">
-<h5 class="modal-title">Item Specifications</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content spec-modal">
+            <div class="sm-header">
+                <div class="sm-header-left">
+                    <div class="sm-icon"><i class="bi bi-file-earmark-text"></i></div>
+                    <div>
+                        <h6 class="sm-title">Specifications</h6>
+                        <p class="sm-subtitle">Add item details</p>
+                    </div>
+                </div>
+                <button type="button" class="sm-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="sm-body">
+                <textarea id="specEditor" class="spec-editor" rows="10" placeholder="Enter specifications...&#10;&#10;Example:&#10;- Material: Marine Plywood&#10;- Finish: Laminate&#10;- Hardware: Hettich"></textarea>
+            </div>
+            <div class="sm-footer">
+                <div class="sm-footer-left">
+                    <button type="button" class="sm-btn" onclick="copySpec()"><i class="bi bi-clipboard"></i> Copy</button>
+                    <button type="button" class="sm-btn" onclick="pasteSpec()"><i class="bi bi-clipboard-check"></i> Paste</button>
+                </div>
+                <div class="sm-footer-right">
+                    <button type="button" class="sm-btn sm-cancel" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="sm-btn sm-save" onclick="saveSpec()"><i class="bi bi-check-lg"></i> Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="modal-body">
+<style>
+:root {
+    --primary: #6366f1;
+    --primary-soft: rgba(99,102,241,0.08);
+    --emerald: #10b981;
+    --emerald-soft: rgba(16,185,129,0.08);
+    --amber: #f59e0b;
+    --amber-soft: rgba(245,158,11,0.08);
+    --rose: #f43f5e;
+    --rose-soft: rgba(244,63,94,0.08);
+    --violet: #8b5cf6;
+    --violet-soft: rgba(139,92,246,0.08);
+    --sky: #0ea5e9;
+    --text-1: #0f172a;
+    --text-2: #475569;
+    --text-3: #94a3b8;
+    --surface: #fff;
+    --surface-2: #f8fafc;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --radius: 14px;
+    --radius-sm: 8px;
+}
 
-<textarea id="specEditor"
-class="form-control"
-rows="10"
-placeholder="Enter specifications here..."></textarea>
+.master-page { padding: 1.5rem 2rem 3rem; max-width: 1500px; margin: 0 auto; }
 
-</div>
+.fade-in { opacity: 0; transform: translateY(12px); animation: fadeIn 0.4s ease forwards; }
+.fi-1 { animation-delay: 0.02s; }
+.fi-2 { animation-delay: 0.05s; }
+.fi-3 { animation-delay: 0.08s; }
+.fi-4 { animation-delay: 0.11s; }
+@keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
 
-<div class="modal-footer">
+/* Page Header */
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+.page-header-left { display: flex; align-items: center; gap: 12px; }
+.back-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border-light); background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text-3); text-decoration: none; transition: all .2s; }
+.back-btn:hover { background: var(--surface-2); color: var(--text-1); transform: translateX(-2px); }
+.page-icon-wrap { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.pi-amber { background: var(--amber-soft); color: var(--amber); }
+.page-title { font-size: 1.35rem; font-weight: 800; color: var(--text-1); margin: 0; letter-spacing: -.02em; }
+.page-subtitle { font-size: .75rem; color: var(--text-3); margin: 2px 0 0; }
 
-<button type="button"
-class="btn btn-secondary"
-onclick="copySpec()">
-<i class="bi bi-clipboard"></i> Copy
-</button>
+.header-badges { display: flex; align-items: center; gap: 10px; }
+.entry-id-badge { display: flex; align-items: center; gap: 4px; padding: 6px 12px; background: var(--surface); border: 1px solid var(--border-light); border-radius: 100px; font-size: .7rem; font-weight: 800; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.entry-id-badge i { color: var(--amber); }
 
-<button type="button"
-class="btn btn-secondary"
-onclick="pasteSpec()">Paste</button>
+.header-status { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--surface); border: 1px solid var(--border-light); border-radius: 100px; }
+.header-status.complete { background: var(--emerald-soft); border-color: rgba(16,185,129,.2); }
+.hs-indicator { width: 8px; height: 8px; border-radius: 50%; animation: pulse 2s infinite; }
+.hs-warning { background: var(--amber); }
+.hs-success { background: var(--emerald); }
+.hs-text { font-size: .72rem; font-weight: 700; color: var(--text-3); }
+.header-status.complete .hs-text { color: var(--emerald); }
 
-<button type="button"
-class="btn btn-primary"
-onclick="saveSpec()">Save</button>
+/* Form Card */
+.form-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem; transition: all .3s; }
+.form-card.has-error { border-color: var(--rose); box-shadow: 0 0 0 3px var(--rose-soft); }
+.fc-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: var(--surface-2); border-bottom: 1px solid var(--border-light); flex-wrap: wrap; gap: 10px; }
+.fc-header-left { display: flex; align-items: center; gap: 10px; }
+.fc-header-right { display: flex; align-items: center; gap: 8px; }
+.fc-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: .85rem; }
+.fc-indigo { background: var(--primary-soft); color: var(--primary); }
+.fc-violet { background: var(--violet-soft); color: var(--violet); }
+.fc-title { font-size: .82rem; font-weight: 800; color: var(--text-1); margin: 0; }
+.fc-subtitle { font-size: .65rem; color: var(--text-3); margin: 0; }
+.fc-body { padding: 18px; }
 
-<button type="button"
-class="btn btn-dark"
-data-bs-dismiss="modal">Close</button>
+.required-tag { display: flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--rose-soft); color: var(--rose); border-radius: 100px; font-size: .58rem; font-weight: 700; text-transform: uppercase; }
+.required-tag i { font-size: .45rem; }
 
-</div>
+.edit-badge { display: flex; align-items: center; gap: 4px; padding: 5px 10px; background: var(--amber-soft); color: var(--amber); border-radius: 100px; font-size: .65rem; font-weight: 700; }
+.edit-badge i { font-size: .6rem; }
 
-</div>
-</div>
-</div>
+/* Fields */
+.field-group { margin-bottom: 0; }
+.field-label { font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-3); margin-bottom: 5px; display: flex; align-items: center; gap: 4px; }
+.req { color: var(--rose); font-weight: 900; }
+.th-req { color: var(--rose); font-size: .45rem; margin-left: 1px; }
 
+.select-wrapper { position: relative; }
+.custom-select { width: 100%; height: 44px; padding: 0 36px 0 14px; border: 1.5px solid var(--border-light); border-radius: 10px; background: var(--surface-2); font-size: .82rem; font-weight: 600; color: var(--text-1); font-family: inherit; outline: none; appearance: none; cursor: pointer; transition: all .2s; }
+.custom-select:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px var(--primary-soft); }
+.custom-select.invalid { border-color: var(--rose); box-shadow: 0 0 0 3px var(--rose-soft); animation: shake .4s; }
+.custom-select.valid { border-color: var(--emerald); }
+.select-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: .7rem; pointer-events: none; }
 
+.field-feedback { display: none; align-items: center; gap: 5px; margin-top: 5px; padding: 5px 10px; background: var(--rose-soft); border-radius: 6px; font-size: .65rem; font-weight: 600; color: var(--rose); }
+.field-feedback.show { display: flex; }
+
+/* Total Display */
+.total-display { background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 12px; padding: 14px 18px; text-align: right; }
+.td-header { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-bottom: 4px; }
+.td-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); animation: pulse 2s infinite; }
+.td-label { font-size: .58rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: rgba(255,255,255,.4); }
+.td-value { font-size: 1.4rem; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
+
+/* Validation Alert */
+.validation-alert { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: linear-gradient(135deg, #fef2f2, #fff7ed); border-bottom: 1px solid rgba(244,63,94,.15); }
+.validation-alert.hidden { display: none; }
+.va-icon { width: 28px; height: 28px; border-radius: 8px; background: var(--rose-soft); color: var(--rose); display: flex; align-items: center; justify-content: center; font-size: .8rem; }
+.va-content { flex: 1; }
+.va-content strong { font-size: .75rem; color: var(--rose); display: block; }
+.va-content span { font-size: .65rem; color: var(--text-2); }
+.va-close { width: 24px; height: 24px; border-radius: 6px; border: none; background: rgba(244,63,94,.1); color: var(--rose); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: .75rem; }
+
+/* Table */
+.spend-table { width: 100%; border-collapse: collapse; }
+.spend-table thead th { background: var(--surface-2); font-size: .55rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-3); padding: 10px 8px; border: none; white-space: nowrap; position: sticky; top: 0; z-index: 5; }
+.spend-table tbody tr { border-bottom: 1px solid var(--border-light); transition: all .2s; }
+.spend-table tbody tr:last-child { border-bottom: none; }
+.spend-table tbody tr:hover { background: rgba(99,102,241,.02); }
+.spend-table tbody tr.row-error { background: rgba(244,63,94,.03); }
+.spend-table tbody td { padding: 10px 8px; vertical-align: top; border: none; }
+
+.cell-stack { display: flex; flex-direction: column; gap: 4px; }
+
+/* Input Wrap with Indicator */
+.input-wrap { position: relative; }
+.input-indicator { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; border-radius: 50%; font-size: .5rem; display: none; align-items: center; justify-content: center; font-weight: 700; }
+.input-indicator.valid { display: flex; background: var(--emerald); color: #fff; }
+.input-indicator.valid::after { content: "✓"; }
+.input-indicator.invalid { display: flex; background: var(--rose); color: #fff; }
+.input-indicator.invalid::after { content: "!"; }
+
+.mini-select, .mini-input { width: 100%; height: 32px; padding: 0 24px 0 8px; border: 1.5px solid var(--border-light); border-radius: 6px; background: var(--surface-2); font-size: .72rem; font-weight: 600; color: var(--text-1); font-family: inherit; outline: none; appearance: none; transition: all .2s; }
+.mini-select:focus, .mini-input:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 2px var(--primary-soft); }
+.mini-select.invalid, .mini-input.invalid { border-color: var(--rose); background: rgba(244,63,94,.02); animation: shake .35s; }
+.mini-select.valid, .mini-input.valid { border-color: var(--emerald); }
+.mini-input::placeholder { color: var(--text-3); font-weight: 400; }
+.mini-select-light, .mini-input-light { background: var(--border-light); border-color: transparent; font-size: .68rem; color: var(--text-2); height: 28px; }
+
+/* Spec Button */
+.spec-btn { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--border-light); background: var(--surface); color: var(--text-3); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; font-size: .8rem; }
+.spec-btn:hover { border-color: var(--violet); color: var(--violet); background: var(--violet-soft); }
+.spec-btn.has-spec { background: var(--emerald); color: #fff; border-color: var(--emerald); }
+
+/* Dimensions */
+.dim-group { display: flex; flex-direction: column; gap: 3px; }
+.dim-inputs { display: flex; align-items: center; gap: 3px; }
+.dim-wrap { flex: 1; }
+.dim-input { width: 100%; height: 32px; padding: 0 18px 0 6px; border: 1.5px solid var(--border-light); border-radius: 6px; background: var(--surface-2); font-size: .75rem; font-weight: 700; color: var(--text-1); text-align: center; font-family: inherit; outline: none; transition: all .2s; }
+.dim-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
+.dim-input.invalid { border-color: var(--rose); animation: shake .35s; }
+.dim-input.valid { border-color: var(--emerald); }
+.dim-input::placeholder { color: var(--text-3); font-weight: 400; font-size: .65rem; }
+.dim-x { color: var(--text-3); font-size: .7rem; font-weight: 700; }
+.area-display { display: flex; align-items: center; justify-content: center; gap: 3px; font-size: .58rem; color: var(--text-3); }
+.area-display i { font-size: .5rem; }
+.area-display .area { font-weight: 800; color: var(--text-1); }
+
+/* Qty */
+.qty-wrap { width: 44px; margin: 0 auto; }
+.qty-input { width: 100%; height: 32px; padding: 0 14px 0 4px; border: 1.5px solid var(--border-light); border-radius: 6px; background: var(--surface-2); font-size: .75rem; font-weight: 700; color: var(--text-1); text-align: center; font-family: inherit; outline: none; transition: all .2s; }
+.qty-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
+.qty-input.invalid { border-color: var(--rose); }
+
+/* Line Total */
+.line-total { display: inline-flex; align-items: baseline; gap: 2px; padding: 6px 10px; background: var(--emerald-soft); border-radius: 7px; min-width: 75px; justify-content: center; }
+.line-total.has-value { background: linear-gradient(135deg, rgba(16,185,129,.1), rgba(16,185,129,.18)); }
+.lt-currency { font-size: .58rem; font-weight: 600; color: var(--emerald); }
+.total { font-size: .78rem; font-weight: 800; color: var(--emerald); font-variant-numeric: tabular-nums; }
+
+/* Row Actions */
+.row-actions { display: flex; gap: 3px; justify-content: center; }
+.ra-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--surface); color: var(--text-3); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: .68rem; transition: all .2s; }
+.ra-copy:hover { background: var(--sky); color: #fff; border-color: var(--sky); transform: scale(1.05); }
+.ra-delete:hover { background: var(--rose); color: #fff; border-color: var(--rose); transform: scale(1.05); }
+
+/* Table Footer */
+.table-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--surface-2); border-top: 1px solid var(--border-light); flex-wrap: wrap; gap: 10px; }
+.tf-add-btn { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border: 1.5px dashed var(--border); border-radius: 8px; background: transparent; font-size: .68rem; font-weight: 700; color: var(--text-3); cursor: pointer; transition: all .2s; font-family: inherit; }
+.tf-add-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+.tf-total { display: flex; align-items: baseline; gap: 6px; }
+.tf-label { font-size: .65rem; font-weight: 700; color: var(--text-3); text-transform: uppercase; }
+.tf-value { font-size: 1rem; font-weight: 900; color: var(--text-1); }
+
+/* Form Actions */
+.form-actions { display: flex; justify-content: space-between; align-items: center; padding: .5rem 0; flex-wrap: wrap; gap: 10px; }
+.fa-right { display: flex; gap: 8px; }
+.btn-cancel { display: flex; align-items: center; gap: 5px; padding: 9px 16px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); color: var(--text-2); font-size: .78rem; font-weight: 700; text-decoration: none; transition: all .2s; }
+.btn-cancel:hover { background: var(--surface-2); color: var(--text-1); }
+.btn-validate { display: flex; align-items: center; gap: 5px; padding: 9px 16px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); color: var(--text-2); font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; }
+.btn-validate:hover { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
+.btn-submit { display: flex; align-items: center; gap: 6px; padding: 10px 24px; border-radius: 9px; background: var(--emerald); border: none; color: #fff; font-size: .82rem; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; box-shadow: 0 3px 10px rgba(16,185,129,.25); }
+.btn-submit:hover { background: #059669; transform: translateY(-1px); box-shadow: 0 5px 15px rgba(16,185,129,.3); }
+.btn-update { background: var(--amber); box-shadow: 0 3px 10px rgba(245,158,11,.25); }
+.btn-update:hover { background: #d97706; box-shadow: 0 5px 15px rgba(245,158,11,.3); }
+
+/* Sidebar */
+.sidebar-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 1rem; transition: all .3s; }
+.sidebar-card:hover { box-shadow: 0 5px 14px -3px rgba(0,0,0,.05); }
+.sc-header { display: flex; align-items: center; gap: 8px; margin-bottom: .8rem; }
+.sc-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: .75rem; }
+.sc-emerald { background: var(--emerald-soft); color: var(--emerald); }
+.sc-rose { background: var(--rose-soft); color: var(--rose); }
+.sc-amber { background: var(--amber-soft); color: var(--amber); }
+.sc-title { font-size: .78rem; font-weight: 800; color: var(--text-1); margin: 0; }
+
+/* Entry Info */
+.entry-info-list { display: flex; flex-direction: column; gap: 8px; }
+.ei-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--surface-2); border-radius: 8px; }
+.ei-label { font-size: .62rem; font-weight: 700; text-transform: uppercase; color: var(--text-3); }
+.ei-value { font-size: .75rem; font-weight: 700; color: var(--text-1); }
+.ei-truncate { max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ei-highlight { color: var(--emerald); font-weight: 800; }
+
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sg-item { background: var(--surface-2); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; }
+.sg-full { grid-column: span 2; }
+.sg-label { font-size: .58rem; font-weight: 700; text-transform: uppercase; color: var(--text-3); margin-bottom: 3px; }
+.sg-value { font-size: .9rem; font-weight: 800; color: var(--text-1); }
+.sg-total { background: linear-gradient(135deg, var(--emerald-soft), rgba(16,185,129,.12)); }
+.sg-total .sg-value { color: var(--emerald); font-size: 1.1rem; }
+
+.progress-wrap { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+.progress-bar { flex: 1; height: 5px; background: var(--border-light); border-radius: 100px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--emerald); border-radius: 100px; transition: width .5s; }
+.progress-text { font-size: .6rem; font-weight: 800; color: var(--text-3); min-width: 28px; }
+
+.checklist { display: flex; flex-direction: column; gap: 5px; }
+.cl-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border-light); transition: all .3s; }
+.cl-item.done { background: var(--emerald-soft); border-color: rgba(16,185,129,.15); }
+.cl-check { width: 16px; height: 16px; border-radius: 4px; background: var(--border-light); color: var(--text-3); display: flex; align-items: center; justify-content: center; font-size: .5rem; transition: all .3s; }
+.cl-item.done .cl-check { background: var(--emerald); color: #fff; }
+.cl-item span { font-size: .68rem; font-weight: 600; color: var(--text-3); }
+.cl-item.done span { color: var(--emerald); }
+
+.pro-tip { border-radius: var(--radius); overflow: hidden; }
+.pt-inner { background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: var(--radius); padding: 1.1rem; position: relative; overflow: hidden; }
+.pt-inner::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle at 80% 20%, rgba(245,158,11,.1), transparent 50%), radial-gradient(circle at 20% 80%, rgba(99,102,241,.06), transparent 50%); }
+.pt-header { display: flex; align-items: center; gap: 6px; margin-bottom: .5rem; position: relative; }
+.pt-emoji { font-size: .9rem; }
+.pt-label { font-size: .55rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,.35); }
+.pt-text { font-size: .72rem; color: rgba(255,255,255,.5); line-height: 1.5; margin: 0; position: relative; }
+.pt-text strong { color: #fff; }
+
+/* Spec Modal */
+.spec-modal { border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px -10px rgba(0,0,0,.2); }
+.sm-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: var(--surface-2); border-bottom: 1px solid var(--border-light); }
+.sm-header-left { display: flex; align-items: center; gap: 10px; }
+.sm-icon { width: 34px; height: 34px; border-radius: 9px; background: var(--violet-soft); color: var(--violet); display: flex; align-items: center; justify-content: center; font-size: .9rem; }
+.sm-title { font-size: .88rem; font-weight: 800; color: var(--text-1); margin: 0; }
+.sm-subtitle { font-size: .65rem; color: var(--text-3); margin: 0; }
+.sm-close { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border-light); background: var(--surface); color: var(--text-3); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; }
+.sm-close:hover { background: var(--rose-soft); color: var(--rose); border-color: var(--rose); }
+.sm-body { padding: 18px; }
+.spec-editor { width: 100%; padding: 12px; border: 1.5px solid var(--border-light); border-radius: 10px; background: var(--surface-2); font-size: .8rem; font-weight: 500; color: var(--text-1); font-family: 'Courier New', monospace; line-height: 1.6; resize: vertical; outline: none; transition: all .2s; }
+.spec-editor:focus { border-color: var(--violet); background: var(--surface); box-shadow: 0 0 0 3px var(--violet-soft); }
+.spec-editor::placeholder { color: var(--text-3); }
+.sm-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: var(--surface-2); border-top: 1px solid var(--border-light); flex-wrap: wrap; gap: 8px; }
+.sm-footer-left, .sm-footer-right { display: flex; gap: 6px; }
+.sm-btn { display: flex; align-items: center; gap: 4px; padding: 7px 12px; border-radius: 7px; font-size: .72rem; font-weight: 700; cursor: pointer; transition: all .2s; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font-family: inherit; }
+.sm-btn:hover { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); }
+.sm-cancel:hover { background: var(--border-light); color: var(--text-1); border-color: var(--border); }
+.sm-save { background: var(--violet); color: #fff; border-color: var(--violet); box-shadow: 0 2px 8px rgba(139,92,246,.25); }
+.sm-save:hover { background: #7c3aed; transform: translateY(-1px); }
+
+/* Responsive */
+@media (max-width: 992px) { .master-page { padding: 1rem; } }
+@media (max-width: 768px) {
+    .page-header { flex-direction: column; align-items: flex-start; }
+    .header-badges { width: 100%; justify-content: space-between; }
+    .fc-header { flex-direction: column; align-items: flex-start; }
+    .fc-header-right { width: 100%; justify-content: space-between; }
+    .form-actions { flex-direction: column; }
+    .fa-right { width: 100%; flex-direction: column; }
+    .btn-cancel, .btn-validate, .btn-submit { width: 100%; justify-content: center; }
+}
+.table-responsive::-webkit-scrollbar { height: 4px; }
+.table-responsive::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
+</style>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    document.querySelector("form").addEventListener("submit", function(e){
+// Validation Functions
+function validateField(field) {
+    const value = field.value?.trim();
+    const isRequired = field.classList.contains('required-input');
+    const wrap = field.closest('.input-wrap') || field.closest('.qty-wrap') || field.closest('.dim-wrap');
+    const indicator = wrap?.querySelector('.input-indicator');
+    
+    if (isRequired && !value) {
+        field.classList.add('invalid');
+        field.classList.remove('valid');
+        if (indicator) { indicator.classList.remove('valid'); indicator.classList.add('invalid'); }
+        return false;
+    } else if (value) {
+        field.classList.remove('invalid');
+        field.classList.add('valid');
+        if (indicator) { indicator.classList.remove('invalid'); indicator.classList.add('valid'); }
+        return true;
+    } else {
+        field.classList.remove('invalid', 'valid');
+        if (indicator) indicator.classList.remove('invalid', 'valid');
+        return true;
+    }
+}
 
-    e.preventDefault();
+function validateRow(row) {
+    let valid = true;
+    row.querySelectorAll('.required-input').forEach(f => { if (!validateField(f)) valid = false; });
+    
+    const length = row.querySelector('.length');
+    const width = row.querySelector('.width');
+    if (length && width) {
+        const l = parseFloat(length.value) || 0;
+        const w = parseFloat(width.value) || 0;
+        if (l <= 0) { length.classList.add('invalid'); valid = false; }
+        if (w <= 0) { width.classList.add('invalid'); valid = false; }
+    }
+    
+    const qty = row.querySelector('.qty');
+    if (qty && (parseFloat(qty.value) || 0) < 1) { qty.classList.add('invalid'); valid = false; }
+    
+    row.classList.toggle('row-error', !valid);
+    return valid;
+}
 
-    const form = this;
-
-    const project = form.querySelector("[name='project']").value;
-
-    let rows = [];
-
-    document.querySelectorAll(".spend-row").forEach(row => {
-
-        rows.push({
-            floor: row.querySelector("[name='floor[]']").value,
-            room: row.querySelector("[name='room[]']").value,
-            elements: row.querySelector("[name='elements[]']").value,
-            length: row.querySelector("[name='length[]']").value,
-            width: row.querySelector("[name='width[]']").value
+function validateAllFields() {
+    let valid = true;
+    const errors = [];
+    
+    // Project
+    const project = document.getElementById('projectSelect');
+    const projectGroup = document.getElementById('projectFieldGroup');
+    const projectFeedback = projectGroup?.querySelector('.field-feedback');
+    
+    if (!project.value) {
+        project.classList.add('invalid');
+        if (projectFeedback) projectFeedback.classList.add('show');
+        document.getElementById('projectCard')?.classList.add('has-error');
+        valid = false;
+        errors.push('Project');
+    } else {
+        project.classList.remove('invalid');
+        project.classList.add('valid');
+        if (projectFeedback) projectFeedback.classList.remove('show');
+        document.getElementById('projectCard')?.classList.remove('has-error');
+    }
+    
+    // Rows
+    let rowErrors = 0;
+    document.querySelectorAll('.spend-row').forEach((row, i) => {
+        if (!validateRow(row)) { rowErrors++; valid = false; }
+    });
+    if (rowErrors > 0) errors.push(`${rowErrors} row(s)`);
+    
+    // Alert
+    const alert = document.getElementById('validationAlert');
+    const alertMsg = document.getElementById('validationMsg');
+    if (!valid) {
+        alert?.classList.remove('hidden');
+        if (alertMsg) alertMsg.textContent = `Missing fields in: ${errors.join(', ')}`;
+        document.getElementById('measurementsCard')?.classList.add('has-error');
+    } else {
+        alert?.classList.add('hidden');
+        document.getElementById('measurementsCard')?.classList.remove('has-error');
+    }
+    
+    updateStatus(valid);
+    updateChecklist();
+    updateProgress();
+    
+    if (!valid) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Missing Required Fields',
+            html: `<p style="color:#64748b;font-size:.9rem;">Please fill all fields marked with <strong style="color:#f43f5e;">*</strong></p>`,
+            confirmButtonText: 'Fix Now',
+            confirmButtonColor: '#f59e0b'
         });
+        const firstInvalid = document.querySelector('.invalid');
+        firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstInvalid?.focus();
+    } else {
+        Swal.fire({
+            icon: 'success',
+            title: 'All Fields Valid',
+            text: 'Ready to update!',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+    
+    return valid;
+}
 
-    });
+function hideValidationAlert() { document.getElementById('validationAlert')?.classList.add('hidden'); }
 
-    fetch("{% url 'check_duplicate_spend' %}",{
+function updateStatus(valid) {
+    const status = document.getElementById('headerStatus');
+    const indicator = status?.querySelector('.hs-indicator');
+    const text = status?.querySelector('.hs-text');
+    
+    if (valid) {
+        status?.classList.add('complete');
+        indicator?.classList.remove('hs-warning');
+        indicator?.classList.add('hs-success');
+        if (text) text.textContent = 'Ready';
+    } else {
+        status?.classList.remove('complete');
+        indicator?.classList.remove('hs-success');
+        indicator?.classList.add('hs-warning');
+        if (text) text.textContent = 'Incomplete';
+    }
+}
 
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json",
-            "X-CSRFToken":"{{ csrf_token }}"
-        },
+function updateChecklist() {
+    const project = document.getElementById('projectSelect');
+    const row = document.querySelector('.spend-row');
+    if (!row) return;
+    
+    toggleCheck('cl-project', !!project?.value);
+    toggleCheck('cl-floor', !!row.querySelector('[name="floor[]"]')?.value);
+    toggleCheck('cl-element', !!row.querySelector('[name="elements[]"]')?.value?.trim());
+    toggleCheck('cl-series', !!row.querySelector('[name="fullsemi[]"]')?.value);
+    toggleCheck('cl-rate', !!row.querySelector('[name="rate[]"]')?.value?.trim());
+    
+    const l = parseFloat(row.querySelector('.length')?.value) || 0;
+    const w = parseFloat(row.querySelector('.width')?.value) || 0;
+    toggleCheck('cl-dimensions', l > 0 && w > 0);
+}
 
-        body:JSON.stringify({
-            project:project,
-            rows:rows
-        })
+function toggleCheck(id, done) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('done', done);
+}
 
-    })
-    .then(res=>res.json())
-    .then(data=>{
+function updateProgress() {
+    const fields = document.querySelectorAll('.required-input, #projectSelect');
+    let filled = 0;
+    fields.forEach(f => { if (f.value?.trim()) filled++; });
+    
+    const pct = fields.length > 0 ? Math.round((filled / fields.length) * 100) : 0;
+    const fill = document.getElementById('progressFill');
+    const text = document.getElementById('progressText');
+    
+    if (fill) {
+        fill.style.width = pct + '%';
+        fill.style.background = pct === 100 ? 'var(--emerald)' : pct >= 50 ? 'var(--amber)' : 'var(--rose)';
+    }
+    if (text) text.textContent = pct + '%';
+}
 
-        if(data.duplicates.length > 0){
-
-            let list = data.duplicates.map(d=>`
-                ${d.element} ( ${d.floor} / ${d.room} )
-            `).join("<br>");
-
-            Swal.fire({
-                icon:"warning",
-                title:"Duplicate Spend Found",
-                html:`These items already exist:<br><br>${list}`,
-                showCancelButton:true,
-                confirmButtonText:"Save Anyway",
-                cancelButtonText:"Cancel"
-            })
-            .then(result=>{
-
-                if(result.isConfirmed){
-                    form.submit();
-                }
-
-            });
-
-        }else{
-
-            form.submit();
-
-        }
-
-    });
-
-});
-
-</script>
-
-
-<script>
-
+// Spec Modal
 let currentSpecField = null;
 
-
-/* --------------------------
-SPEC BUTTON COLOR
--------------------------- */
-
-function updateSpecButton(row){
-
-    const textarea = row.querySelector(".spec-text");
-    const button = row.querySelector(".spec-btn");
-
-    if(!textarea || !button) return;
-
-    if(textarea.value.trim() !== ""){
-
-        button.classList.remove("btn-outline-secondary");
-        button.classList.add("btn-success");
-
-    }else{
-
-        button.classList.remove("btn-success");
-        button.classList.add("btn-outline-secondary");
-
-    }
+function updateSpecButton(row) {
+    const textarea = row.querySelector('.spec-text');
+    const btn = row.querySelector('.spec-btn');
+    if (textarea && btn) btn.classList.toggle('has-spec', !!textarea.value.trim());
 }
 
-
-/* --------------------------
-OPEN SPEC MODAL
--------------------------- */
-
-function openSpecModal(btn){
-
-    const row = btn.closest("tr");
-
-    currentSpecField = row.querySelector(".spec-text");
-
-    const editor = document.getElementById("specEditor");
-
-    editor.value = currentSpecField.value || "";
-
-    const modal = new bootstrap.Modal(document.getElementById("specModal"));
-    modal.show();
+function openSpecModal(btn) {
+    const row = btn.closest('tr');
+    currentSpecField = row.querySelector('.spec-text');
+    document.getElementById('specEditor').value = currentSpecField?.value || '';
+    new bootstrap.Modal(document.getElementById('specModal')).show();
 }
 
-
-/* --------------------------
-SAVE SPEC
--------------------------- */
-
-function saveSpec(){
-
-    if(!currentSpecField) return;
-
-    const editor = document.getElementById("specEditor");
-
-    currentSpecField.value = editor.value;
-
-    const row = currentSpecField.closest("tr");
-
-    updateSpecButton(row);
-
-    bootstrap.Modal
-        .getInstance(document.getElementById("specModal"))
-        .hide();
-
+function saveSpec() {
+    if (!currentSpecField) return;
+    currentSpecField.value = document.getElementById('specEditor').value;
+    updateSpecButton(currentSpecField.closest('tr'));
+    bootstrap.Modal.getInstance(document.getElementById('specModal')).hide();
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Saved!', showConfirmButton: false, timer: 800 });
 }
 
-
-/* --------------------------
-COPY SPEC
--------------------------- */
-
-function copySpec(){
-
-    const editor = document.getElementById("specEditor");
-
-    navigator.clipboard.writeText(editor.value)
-    .then(()=>{
-
-        Swal.fire({
-            toast:true,
-            position:"top-end",
-            icon:"success",
-            title:"Specification copied",
-            showConfirmButton:false,
-            timer:1200
-        });
-
-    });
-
+function copySpec() {
+    navigator.clipboard.writeText(document.getElementById('specEditor').value)
+        .then(() => Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Copied!', showConfirmButton: false, timer: 700 }));
 }
 
-
-/* --------------------------
-PASTE SPEC
--------------------------- */
-
-async function pasteSpec(){
-
+async function pasteSpec() {
     const text = await navigator.clipboard.readText();
-
-    document.getElementById("specEditor").value = text;
-
+    document.getElementById('specEditor').value = text;
 }
 
-</script>
-
-
-<script>
-
-document.addEventListener("DOMContentLoaded", function(){
-
-
-/* --------------------------
-ROW CALCULATION
--------------------------- */
-
-function calculateRow(row){
-
-    const length = parseFloat(row.querySelector(".length")?.value) || 0;
-    const width  = parseFloat(row.querySelector(".width")?.value) || 0;
-    const qty    = parseFloat(row.querySelector(".qty")?.value) || 1;
-    const rate   = parseFloat(row.querySelector(".rate")?.value) || 0;
-
-    const area = length * width;
-
-    const areaText  = row.querySelector(".area");
-    const areaInput = row.querySelector(".area-input");
-
-    if(areaText)  areaText.innerText  = area.toFixed(2);
-    if(areaInput) areaInput.value     = area.toFixed(2);
-
-    const total = area * rate * qty;
-
-    const totalText  = row.querySelector(".total");
-    const totalInput = row.querySelector(".total-input");
-
-    if(totalText)  totalText.innerText = total.toFixed(2);
-    if(totalInput) totalInput.value    = total.toFixed(2);
-
-    updateGrandTotal();
+// Calculations
+function calculateRow(row) {
+    const l = parseFloat(row.querySelector('.length')?.value) || 0;
+    const w = parseFloat(row.querySelector('.width')?.value) || 0;
+    const q = parseFloat(row.querySelector('.qty')?.value) || 1;
+    const r = parseFloat(row.querySelector('.rate')?.value) || 0;
+    const area = l * w;
+    
+    const areaText = row.querySelector('.area');
+    const areaInput = row.querySelector('.area-input');
+    if (areaText) areaText.textContent = area.toFixed(2);
+    if (areaInput) areaInput.value = area.toFixed(2);
+    
+    const total = area * r * q;
+    const totalText = row.querySelector('.total');
+    const totalInput = row.querySelector('.total-input');
+    const totalWrap = row.querySelector('.line-total');
+    
+    if (totalText) totalText.textContent = total.toFixed(2);
+    if (totalInput) totalInput.value = total.toFixed(2);
+    if (totalWrap) totalWrap.classList.toggle('has-value', total > 0);
+    
+    updateTotals();
+    updateSidebar();
 }
 
-
-/* --------------------------
-GRAND TOTAL
--------------------------- */
-
-function updateGrandTotal(){
-
+function updateTotals() {
     let total = 0;
-
-    document.querySelectorAll(".total-input").forEach(input=>{
-        total += parseFloat(input.value) || 0;
+    document.querySelectorAll('.total-input').forEach(i => total += parseFloat(i.value) || 0);
+    const formatted = total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    ['grandTotal', 'footerTotal', 'summaryTotal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = formatted;
     });
-
-    const grand = document.getElementById("grandTotal");
-
-    if(grand){
-        grand.innerText = total.toLocaleString("en-IN",{minimumFractionDigits:2});
-    }
-
 }
 
+function updateSidebar() {
+    const rows = document.querySelectorAll('.spend-row');
+    document.getElementById('summaryItems').textContent = rows.length;
+    
+    let totalArea = 0;
+    document.querySelectorAll('.area-input').forEach(i => totalArea += parseFloat(i.value) || 0);
+    document.getElementById('summaryArea').textContent = totalArea.toFixed(2);
+    
+    updateChecklist();
+    updateProgress();
+}
 
-/* --------------------------
-INPUT LISTENER
--------------------------- */
+// Row Management
+function addRow() {
+    const tbody = document.getElementById('tableBody');
+    const first = tbody.querySelector('.spend-row');
+    if (!first) return;
+    
+    const clone = first.cloneNode(true);
+    
+    clone.querySelectorAll('input').forEach(i => {
+        if (i.name === 'qty[]') i.value = '1';
+        else if (i.name === 'unit[]') i.value = 'sqft';
+        else if (i.type !== 'hidden') i.value = '';
+        else i.value = '';
+        i.classList.remove('invalid', 'valid');
+    });
+    clone.querySelectorAll('select').forEach(s => { s.selectedIndex = 0; s.classList.remove('invalid', 'valid'); });
+    clone.querySelectorAll('textarea').forEach(t => t.value = '');
+    clone.querySelectorAll('.input-indicator').forEach(i => i.classList.remove('invalid', 'valid'));
+    clone.querySelector('.spec-btn')?.classList.remove('has-spec');
+    clone.querySelector('.area').textContent = '0.00';
+    clone.querySelector('.total').textContent = '0.00';
+    clone.querySelector('.line-total')?.classList.remove('has-value');
+    clone.classList.remove('row-error');
+    
+    tbody.appendChild(clone);
+    updateSidebar();
+    
+    clone.style.opacity = '0';
+    clone.style.transform = 'translateY(8px)';
+    requestAnimationFrame(() => {
+        clone.style.transition = 'all .3s';
+        clone.style.opacity = '1';
+        clone.style.transform = 'translateY(0)';
+    });
+    
+    setTimeout(() => {
+        clone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        clone.querySelector('[name="floor[]"]')?.focus();
+    }, 300);
+}
 
-document.addEventListener("input", function(e){
-
-    if(
-        e.target.classList.contains("length") ||
-        e.target.classList.contains("width") ||
-        e.target.classList.contains("qty") ||
-        e.target.classList.contains("rate")
-    ){
-
-        const row = e.target.closest("tr");
-        calculateRow(row);
-
-    }
-
-});
-
-
-/* --------------------------
-FULLSEMI RATE AUTO SET
--------------------------- */
-
-document.addEventListener("change", function(e){
-
-    if(e.target.classList.contains("fullsemi")){
-
-        const row = e.target.closest("tr");
-
-        const selected = e.target.options[e.target.selectedIndex];
-
-        const rate = parseFloat(selected.dataset.rate) || 0;
-
-        const rateInput = row.querySelector(".rate");
-
-        if(rateInput){
-            rateInput.value = rate.toFixed(2);
-        }
-
-        calculateRow(row);
-
-    }
-
-});
-
-
-/* --------------------------
-DUPLICATE ROW
--------------------------- */
-
-window.duplicateRow = function(btn){
-
-    const row = btn.closest("tr");
-
+function duplicateRow(btn) {
+    const row = btn.closest('tr');
     const clone = row.cloneNode(true);
-
+    clone.classList.remove('row-error');
+    clone.querySelectorAll('.input-indicator').forEach(i => i.classList.remove('invalid', 'valid'));
     row.parentNode.insertBefore(clone, row.nextSibling);
-
     calculateRow(clone);
+    updateSidebar();
+    
+    clone.style.opacity = '0';
+    clone.style.transform = 'translateY(8px)';
+    requestAnimationFrame(() => {
+        clone.style.transition = 'all .3s';
+        clone.style.opacity = '1';
+        clone.style.transform = 'translateY(0)';
+    });
+}
 
-    updateSpecButton(clone);
-
-};
-
-
-/* --------------------------
-REMOVE ROW
--------------------------- */
-
-window.removeRow = function(btn){
-
-    const row = btn.closest("tr");
+function removeRow(btn) {
+    const row = btn.closest('tr');
     const tbody = row.parentNode;
-
-    if(tbody.rows.length === 1){
-        alert("At least one row is required.");
+    
+    if (tbody.querySelectorAll('.spend-row').length === 1) {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'At least one row required', showConfirmButton: false, timer: 1200 });
         return;
     }
+    
+    row.style.transition = 'all .25s';
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(15px)';
+    setTimeout(() => { row.remove(); updateTotals(); updateSidebar(); }, 250);
+}
 
-    row.remove();
-
-    updateGrandTotal();
-
-};
-
-
-/* --------------------------
-INITIAL LOAD (IMPORTANT)
--------------------------- */
-
-document.querySelectorAll(".spend-row").forEach(row=>{
-    calculateRow(row);
-    updateSpecButton(row);
+// Event Listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Input calculation listeners
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('length') || e.target.classList.contains('width') || e.target.classList.contains('qty') || e.target.classList.contains('rate')) {
+            calculateRow(e.target.closest('tr'));
+        }
+        
+        // Real-time validation clearing
+        if (e.target.classList.contains('required-input') && e.target.value?.trim()) {
+            e.target.classList.remove('invalid');
+            e.target.classList.add('valid');
+            const indicator = e.target.closest('.input-wrap')?.querySelector('.input-indicator');
+            if (indicator) { indicator.classList.remove('invalid'); indicator.classList.add('valid'); }
+            updateChecklist();
+            updateProgress();
+        }
+    });
+    
+    document.addEventListener('change', function(e) {
+        // Fullsemi rate auto-fill
+        if (e.target.classList.contains('fullsemi')) {
+            const row = e.target.closest('tr');
+            const rate = parseFloat(e.target.options[e.target.selectedIndex]?.dataset.rate) || 0;
+            const rateInput = row.querySelector('.rate');
+            if (rateInput) {
+                rateInput.value = rate.toFixed(2);
+                rateInput.classList.remove('invalid');
+                rateInput.classList.add('valid');
+                const indicator = rateInput.closest('.input-wrap')?.querySelector('.input-indicator');
+                if (indicator) { indicator.classList.remove('invalid'); indicator.classList.add('valid'); }
+            }
+            calculateRow(row);
+        }
+        
+        // Select validation
+        if (e.target.classList.contains('required-input') && e.target.value) {
+            e.target.classList.remove('invalid');
+            e.target.classList.add('valid');
+            const indicator = e.target.closest('.input-wrap')?.querySelector('.input-indicator');
+            if (indicator) { indicator.classList.remove('invalid'); indicator.classList.add('valid'); }
+            updateChecklist();
+            updateProgress();
+        }
+        
+        // Project select
+        if (e.target.id === 'projectSelect') {
+            const feedback = document.querySelector('#projectFieldGroup .field-feedback');
+            if (e.target.value) {
+                e.target.classList.remove('invalid');
+                e.target.classList.add('valid');
+                if (feedback) feedback.classList.remove('show');
+                document.getElementById('projectCard')?.classList.remove('has-error');
+            }
+            updateChecklist();
+            updateProgress();
+        }
+    });
+    
+    // Form submission
+    document.getElementById('spendForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!validateAllFields()) return;
+        
+        const form = this;
+        const project = form.querySelector('[name="project"]').value;
+        let rows = [];
+        
+        document.querySelectorAll('.spend-row').forEach(row => {
+            rows.push({
+                floor: row.querySelector('[name="floor[]"]').value,
+                room: row.querySelector('[name="room[]"]').value,
+                elements: row.querySelector('[name="elements[]"]').value,
+                length: row.querySelector('[name="length[]"]').value,
+                width: row.querySelector('[name="width[]"]').value
+            });
+        });
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const origHTML = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Updating...';
+        submitBtn.disabled = true;
+        
+        fetch("{% url 'check_duplicate_spend' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ project, rows })
+        })
+        .then(res => res.json())
+        .then(data => {
+            submitBtn.innerHTML = origHTML;
+            submitBtn.disabled = false;
+            
+            if (data.duplicates?.length > 0) {
+                const list = data.duplicates.map(d => `<div style="padding:3px 0;"><strong>${d.element}</strong> (${d.floor}/${d.room})</div>`).join('');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Duplicates Found',
+                    html: `<div style="text-align:left;max-height:150px;overflow:auto;">${list}</div>`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Update Anyway',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#f59e0b'
+                }).then(r => { if (r.isConfirmed) form.submit(); });
+            } else {
+                form.submit();
+            }
+        })
+        .catch(() => { submitBtn.innerHTML = origHTML; submitBtn.disabled = false; form.submit(); });
+    });
+    
+    // Initial setup
+    document.querySelectorAll('.spend-row').forEach(row => {
+        updateSpecButton(row);
+        calculateRow(row);
+        
+        // Mark existing valid values
+        row.querySelectorAll('.required-input').forEach(f => {
+            if (f.value?.trim()) {
+                f.classList.add('valid');
+                const indicator = f.closest('.input-wrap')?.querySelector('.input-indicator');
+                if (indicator) indicator.classList.add('valid');
+            }
+        });
+    });
+    
+    // Initial project validation
+    const projectSelect = document.getElementById('projectSelect');
+    if (projectSelect?.value) {
+        projectSelect.classList.add('valid');
+    }
+    
+    updateSidebar();
+    updateChecklist();
+    updateProgress();
 });
-
-updateGrandTotal();
-
-
-});
-
 </script>
-
-<style>
-    .border-primary-subtle { border-color: #cfe2ff !important; }
-    .bg-light { background-color: #f8f9fa !important; }
-</style>
 {% endblock %}

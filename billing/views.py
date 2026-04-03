@@ -440,6 +440,143 @@ def client_update(request, pk):
 
     return render(request, 'billing/client/update.html', {'client': client})
 
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Sum, F, DecimalField
+from django.db.models.functions import Coalesce
+from .models import Client, Project, Payment, Spend
+from decimal import Decimal
+
+def client_detail(request, pk):
+    """
+    Client detail view showing all client information,
+    associated projects, payments, and financial summary.
+    """
+    client = get_object_or_404(Client, pk=pk)
+    
+    # Get all projects for this client
+    projects = Project.objects.filter(client=client).order_by('-created_at')
+    
+    # Calculate project statistics
+    project_stats = []
+    total_budget = Decimal('0')
+    total_spent = Decimal('0')
+    total_paid = Decimal('0')
+    
+    for project in projects:
+        # Calculate spent for this project
+        # Option 1: If total_amount is a property, calculate manually
+        spends = Spend.objects.filter(project=project)
+        
+        # Calculate total - adjust based on your model structure
+        # If total is qty * rate:
+        spent = spends.aggregate(
+            total=Sum(F('qty') * F('rate'), output_field=DecimalField())
+        )['total'] or Decimal('0')
+        
+        # OR if total is area * rate:
+        # spent = spends.aggregate(
+        #     total=Sum(F('area') * F('rate'), output_field=DecimalField())
+        # )['total'] or Decimal('0')
+        
+        # OR if you have a property method, loop through:
+        # spent = sum(Decimal(str(s.total_amount)) for s in spends)
+        
+        # Calculate paid for this project
+        paid = Payment.objects.filter(project=project).aggregate(
+            total=Sum('amount')
+        )['total'] or Decimal('0')
+        
+        # Balance for this project
+        balance = spent - paid
+        
+        # Progress percentage
+        if project.budget and project.budget > 0:
+            progress = min(int((spent / project.budget) * 100), 100)
+        else:
+            progress = 0
+        
+        project_stats.append({
+            'project': project,
+            'spent': spent,
+            'paid': paid,
+            'balance': balance,
+            'progress': progress,
+        })
+        
+        total_budget += project.budget or Decimal('0')
+        total_spent += spent
+        total_paid += paid
+    
+    total_balance = total_spent - total_paid
+    
+    # Get recent payments across all client's projects
+    recent_payments = Payment.objects.filter(
+        project__client=client
+    ).select_related('project').order_by('-date', '-id')[:10]
+    
+    # Payment rows with running balance calculation
+    payment_rows = []
+    for payment in recent_payments:
+        payment_rows.append({
+            'id': payment.id,
+            'date': payment.date.strftime('%d %b %Y') if payment.date else '-',
+            'project': payment.project.name,
+            'project_id': payment.project.id,
+            'amount': payment.amount,
+            'mode': getattr(payment, 'mode', None) or 'Cash',
+            'whatsapp_url': generate_whatsapp_url(client, payment),
+        })
+    
+    # Project count by status
+    status_counts = {
+        'ongoing': projects.filter(status='ongoing').count(),
+        'completed': projects.filter(status='completed').count(),
+        'hold': projects.filter(status='hold').count(),
+    }
+    
+    context = {
+        'client': client,
+        'projects': projects,
+        'project_stats': project_stats,
+        'recent_payments': payment_rows,
+        'total_budget': total_budget,
+        'total_spent': total_spent,
+        'total_paid': total_paid,
+        'total_balance': total_balance,
+        'status_counts': status_counts,
+        'project_count': projects.count(),
+        'payment_count': Payment.objects.filter(project__client=client).count(),
+    }
+    
+    return render(request, 'billing/client/client_detail.html', context)
+
+
+def generate_whatsapp_url(client, payment):
+    """Generate WhatsApp share URL for payment receipt"""
+    phone = client.mobile_1 or ''
+    # Remove any non-digit characters
+    phone = ''.join(filter(str.isdigit, str(phone)))
+    
+    message = f"""🏠 *HomeDen Payment Receipt*
+
+Dear {client.name},
+
+Thank you for your payment!
+
+📋 *Project:* {payment.project.name}
+💰 *Amount:* ₹{payment.amount:,.2f}
+📅 *Date:* {payment.date.strftime('%d %b %Y') if payment.date else '-'}
+
+Thank you for your trust in HomeDen!
+"""
+    
+    import urllib.parse
+    encoded_message = urllib.parse.quote(message)
+    return f"https://wa.me/91{phone}?text={encoded_message}"
+
+
+
+
 
 # 📌 Delete
 def client_delete(request, pk):

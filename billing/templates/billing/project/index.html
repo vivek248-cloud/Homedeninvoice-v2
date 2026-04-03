@@ -103,38 +103,46 @@
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════ -->
-    <!--  SEARCH + FILTER BAR              -->
-    <!-- ═══════════════════════════════════ -->
-    <div class="toolbar-card fade-in fi-6">
-        <div class="toolbar-left">
-            <div class="search-wrap">
-                <i class="bi bi-search search-icon"></i>
-                <input
-                    type="text"
-                    id="liveSearch"
-                    value="{{ query|default:'' }}"
-                    class="search-input"
-                    placeholder="Search projects, clients..."
-                    autocomplete="off"
-                >
-                <kbd class="search-kbd">⌘K</kbd>
-            </div>
+<!-- ═══════════════════════════════════ -->
+<!--  SEARCH + FILTER BAR              -->
+<!-- ═══════════════════════════════════ -->
+<div class="toolbar-card fade-in fi-6">
 
+    <!-- Search Row -->
+    <div class="toolbar-search-row">
+        <div class="search-wrap">
+            <i class="bi bi-search search-icon"></i>
+            <input
+                type="text"
+                id="liveSearch"
+                value="{{ query|default:'' }}"
+                class="search-input"
+                placeholder="Search projects, clients..."
+                autocomplete="off"
+            >
+            <kbd class="search-kbd">⌘K</kbd>
+        </div>
+    </div>
+
+    <!-- Filter + Meta Row -->
+    <div class="toolbar-filter-row">
+        <div class="toolbar-left">
             <!-- Status Filter Pills -->
-            <div class="filter-pills">
-                <button class="fp-btn active" data-filter="all">
-                    All <span class="fp-count" id="filterAll">{{ projects.count }}</span>
-                </button>
-                <button class="fp-btn" data-filter="ongoing">
-                    <span class="fp-dot dot-blue"></span> Ongoing
-                </button>
-                <button class="fp-btn" data-filter="completed">
-                    <span class="fp-dot dot-green"></span> Completed
-                </button>
-                <button class="fp-btn" data-filter="on_hold">
-                    <span class="fp-dot dot-amber"></span> On Hold
-                </button>
+            <div class="filter-pills-scroll">
+                <div class="filter-pills">
+                    <button class="fp-btn active" data-filter="all">
+                        All <span class="fp-count" id="filterAll">{{ projects.count }}</span>
+                    </button>
+                    <button class="fp-btn" data-filter="ongoing">
+                        <span class="fp-dot dot-blue"></span> Ongoing
+                    </button>
+                    <button class="fp-btn" data-filter="completed">
+                        <span class="fp-dot dot-green"></span> Completed
+                    </button>
+                    <button class="fp-btn" data-filter="on_hold">
+                        <span class="fp-dot dot-amber"></span> On Hold
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -152,6 +160,8 @@
             </div>
         </div>
     </div>
+
+</div>
 
     <!-- ═══════════════════════════════════ -->
     <!--  TABLE VIEW                        -->
@@ -276,65 +286,15 @@
                                    class="action-btn ab-edit" title="Edit">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                <button type="button"
-                                        class="action-btn ab-delete"
-                                        title="Delete"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#delModal{{ project.id }}">
+                                <a href="{% url 'project_delete' project.id %}"
+                                   class="action-btn ab-delete" title="Delete">
                                     <i class="bi bi-trash3"></i>
-                                </button>
+                                </a>
                             </div>
                         </td>
                     </tr>
 
-                    <!-- ── DELETE MODAL ── -->
-                    <div class="modal fade" id="delModal{{ project.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content del-modal">
-                                <div class="modal-body p-0">
-                                    <div class="dm-header">
-                                        <div class="dm-icon-wrap">
-                                            <i class="bi bi-exclamation-triangle-fill"></i>
-                                        </div>
-                                    </div>
-                                    <div class="dm-body">
-                                        <h4 class="dm-title">Delete Project</h4>
-                                        <p class="dm-desc">
-                                            Are you sure you want to permanently delete
-                                            <strong>{{ project.name }}</strong>?
-                                            All associated data will be removed.
-                                        </p>
-                                        <div class="dm-info-box">
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Project</span>
-                                                <span class="dm-value">{{ project.name }}</span>
-                                            </div>
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Client</span>
-                                                <span class="dm-value">{{ project.client.name }}</span>
-                                            </div>
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Budget</span>
-                                                <span class="dm-value">₹{{ project.budget }}</span>
-                                            </div>
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Status</span>
-                                                <span class="dm-value" style="text-transform:capitalize;">{{ project.status }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="dm-footer">
-                                        <button type="button" class="dm-btn dm-cancel" data-bs-dismiss="modal">
-                                            Cancel
-                                        </button>
-                                        <a href="{% url 'project_delete' project.id %}" class="dm-btn dm-delete">
-                                            <i class="bi bi-trash3 me-1"></i> Delete Project
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    
 
                     {% empty %}
                     <tr>
@@ -686,185 +646,7 @@
     .sc-rose .sc-bar-fill { background: linear-gradient(90deg, var(--rose), #fb7185); }
     .sc-rose:hover { border-color: rgba(244, 63, 94, 0.15); }
 
-    /* ══════════════════ */
-    /*  TOOLBAR            */
-    /* ══════════════════ */
-    .toolbar-card {
-        background: var(--surface);
-        border: 1px solid var(--border-light);
-        border-radius: 14px;
-        padding: 0.85rem 1.25rem;
-        margin-bottom: 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .toolbar-left {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        flex: 1;
-        flex-wrap: wrap;
-    }
-
-    .search-wrap {
-        position: relative;
-        min-width: 240px;
-        flex: 1;
-        max-width: 360px;
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-3);
-        font-size: 0.9rem;
-        pointer-events: none;
-    }
-
-    .search-input {
-        width: 100%;
-        height: 42px;
-        padding: 0 56px 0 40px;
-        border: 1.5px solid var(--border-light);
-        border-radius: var(--radius-sm);
-        background: var(--surface-2);
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: var(--text-1);
-        font-family: inherit;
-        outline: none;
-        transition: all 0.2s;
-    }
-
-    .search-input::placeholder { color: var(--text-3); font-weight: 400; }
-
-    .search-input:focus {
-        background: var(--surface);
-        border-color: var(--indigo);
-        box-shadow: 0 0 0 3px var(--indigo-soft);
-    }
-
-    .search-kbd {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 5px;
-        padding: 1px 7px;
-        font-size: 0.62rem;
-        font-weight: 700;
-        color: var(--text-3);
-        pointer-events: none;
-        font-family: inherit;
-    }
-
-    /* Filter pills */
-    .filter-pills {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-    }
-
-    .fp-btn {
-        padding: 6px 14px;
-        border-radius: 100px;
-        border: 1px solid var(--border-light);
-        background: var(--surface);
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: var(--text-3);
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-family: inherit;
-    }
-
-    .fp-btn:hover {
-        border-color: var(--border);
-        color: var(--text-2);
-        background: var(--surface-2);
-    }
-
-    .fp-btn.active {
-        background: var(--text-1);
-        color: #fff;
-        border-color: var(--text-1);
-    }
-
-    .fp-count {
-        background: rgba(255,255,255,0.2);
-        padding: 1px 7px;
-        border-radius: 100px;
-        font-size: 0.65rem;
-    }
-
-    .fp-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-    }
-
-    .dot-blue { background: var(--indigo); }
-    .dot-green { background: var(--emerald); }
-    .dot-amber { background: var(--amber); }
-
-    .toolbar-right {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-    }
-
-    .result-count {
-        font-size: 0.78rem;
-        color: var(--text-3);
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    .result-count span {
-        color: var(--text-1);
-        font-weight: 800;
-    }
-
-    .view-toggle {
-        display: flex;
-        background: var(--surface-2);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-xs);
-        overflow: hidden;
-    }
-
-    .vt-btn {
-        width: 36px;
-        height: 34px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: none;
-        border: none;
-        color: var(--text-3);
-        cursor: pointer;
-        font-size: 0.85rem;
-        transition: all 0.2s;
-    }
-
-    .vt-btn.active {
-        background: var(--surface);
-        color: var(--indigo);
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
-
-    .vt-btn:hover:not(.active) { color: var(--text-2); }
+   
 
     /* ══════════════════ */
     /*  TABLE              */
@@ -1487,7 +1269,7 @@
     @media (max-width: 768px) {
         .project-page { padding: 1rem; }
         .page-header { flex-direction: column; align-items: flex-start; }
-        .toolbar-card { flex-direction: column; align-items: stretch; }
+        
         .toolbar-right { justify-content: space-between; }
         .filter-pills { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
         .search-kbd { display: none; }
@@ -1514,6 +1296,362 @@
     .table-responsive::-webkit-scrollbar { height: 4px; }
     .table-responsive::-webkit-scrollbar-track { background: transparent; }
     .table-responsive::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
+
+    /* ══════════════════════════════════ */
+/*  TOOLBAR                           */
+/* ══════════════════════════════════ */
+.toolbar-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* ── Search Row ── */
+.toolbar-search-row {
+    width: 100%;
+}
+
+.search-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-3);
+    font-size: 0.9rem;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.search-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 56px 0 42px;
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-1);
+    font-family: inherit;
+    outline: none;
+    transition: all 0.25s ease;
+}
+
+.search-input::placeholder {
+    color: var(--text-3);
+    font-weight: 400;
+}
+
+.search-input:focus {
+    background: var(--surface);
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 3px var(--indigo-soft);
+}
+
+.search-kbd {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--text-3);
+    pointer-events: none;
+    font-family: inherit;
+    line-height: 1.4;
+}
+
+/* ── Filter + Meta Row ── */
+.toolbar-filter-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.toolbar-left {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Filter pills scroll wrapper */
+.filter-pills-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 0 -0.25rem;
+    padding: 0 0.25rem;
+    /* Hide scrollbar but keep scroll */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.filter-pills-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.filter-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+    width: max-content;
+}
+
+.fp-btn {
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border-light);
+    background: var(--surface);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.fp-btn:hover {
+    border-color: var(--border);
+    color: var(--text-2);
+    background: var(--surface-2);
+}
+
+.fp-btn.active {
+    background: var(--text-1);
+    color: #fff;
+    border-color: var(--text-1);
+}
+
+.fp-count {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 1px 7px;
+    border-radius: 100px;
+    font-size: 0.65rem;
+    line-height: 1.4;
+}
+
+.fp-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dot-blue { background: var(--indigo); }
+.dot-green { background: var(--emerald); }
+.dot-amber { background: var(--amber); }
+
+/* ── Right section ── */
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.result-count {
+    font-size: 0.78rem;
+    color: var(--text-3);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.result-count span {
+    color: var(--text-1);
+    font-weight: 800;
+}
+
+.view-toggle {
+    display: flex;
+    background: var(--surface-2);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+}
+
+.vt-btn {
+    width: 34px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    font-size: 0.82rem;
+    transition: all 0.2s;
+}
+
+.vt-btn.active {
+    background: var(--surface);
+    color: var(--indigo);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.vt-btn:hover:not(.active) {
+    color: var(--text-2);
+}
+
+/* ══════════════════════════════════ */
+/*  DESKTOP: Side by side layout      */
+/* ══════════════════════════════════ */
+@media (min-width: 1024px) {
+    .toolbar-card {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .toolbar-search-row {
+        flex: 1;
+        max-width: 420px;
+    }
+
+    .toolbar-filter-row {
+        flex: 1;
+    }
+}
+
+/* ══════════════════════════════════ */
+/*  TABLET                            */
+/* ══════════════════════════════════ */
+@media (max-width: 1023px) and (min-width: 769px) {
+    .toolbar-card {
+        gap: 0.75rem;
+    }
+
+    .search-wrap {
+        max-width: 100%;
+    }
+
+    .toolbar-filter-row {
+        gap: 0.75rem;
+    }
+}
+
+/* ══════════════════════════════════ */
+/*  MOBILE                            */
+/* ══════════════════════════════════ */
+@media (max-width: 768px) {
+    .toolbar-card {
+        padding: 0.75rem;
+        border-radius: 12px;
+        gap: 0.65rem;
+    }
+
+    .search-wrap {
+        max-width: 100%;
+    }
+
+    .search-input {
+        height: 42px;
+        font-size: 0.82rem;
+    }
+
+    .search-kbd {
+        display: none;
+    }
+
+    .toolbar-filter-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+    }
+
+    .toolbar-right {
+        justify-content: space-between;
+        padding-top: 0.25rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    /* Fade edges on scroll */
+    .filter-pills-scroll {
+        position: relative;
+        mask-image: linear-gradient(
+            to right,
+            black calc(100% - 30px),
+            transparent 100%
+        );
+        -webkit-mask-image: linear-gradient(
+            to right,
+            black calc(100% - 30px),
+            transparent 100%
+        );
+    }
+
+    .fp-btn {
+        padding: 5px 12px;
+        font-size: 0.72rem;
+    }
+
+    .fp-count {
+        font-size: 0.6rem;
+        padding: 1px 6px;
+    }
+
+    .result-count {
+        font-size: 0.72rem;
+    }
+
+    .vt-btn {
+        width: 32px;
+        height: 30px;
+        font-size: 0.78rem;
+    }
+}
+
+/* ══════════════════════════════════ */
+/*  VERY SMALL MOBILE                 */
+/* ══════════════════════════════════ */
+@media (max-width: 380px) {
+    .toolbar-card {
+        padding: 0.6rem;
+    }
+
+    .search-input {
+        height: 40px;
+        font-size: 0.8rem;
+        padding-left: 38px;
+    }
+
+    .search-icon {
+        left: 12px;
+        font-size: 0.82rem;
+    }
+
+    .fp-btn {
+        padding: 4px 10px;
+        font-size: 0.68rem;
+        gap: 4px;
+    }
+
+    .fp-dot {
+        width: 6px;
+        height: 6px;
+    }
+}
 </style>
 
 <!-- ════════════════════════════════════════════ -->
