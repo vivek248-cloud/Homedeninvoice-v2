@@ -56,12 +56,15 @@
             <form method="GET" class="client-filter-form">
                 <div class="client-select-wrap">
                     <i class="bi bi-person-fill cs-icon"></i>
-                    <select name="client" class="client-select" onchange="this.form.submit()">
-                        <option value="">Select Client</option>
-                        {% for client in clients %}
-                        <option value="{{ client.id }}"
-                            {% if client.id|stringformat:"s" == selected_client %}selected{% endif %}>
-                            {{ client.name }} — {{ client.address|truncatewords:4 }}
+                    <select name="project" class="client-select" onchange="this.form.submit()">
+                        <option value="">Select Project</option>
+
+                        {% for project in projects %}
+                        <option value="{{ project.id }}"
+                            {% if project.id|stringformat:"s" == selected_project %}selected{% endif %}>
+                            
+                            {{ project.name }} {{ project.client.name }} ({{ project.client.address|truncatewords:4 }})
+
                         </option>
                         {% endfor %}
                     </select>
@@ -84,10 +87,10 @@
                     <span class="fp-dot dot-amber"></span> Cash
                 </button>
                 <button class="fp-btn" data-filter="bank">
-                    <span class="fp-dot dot-blue"></span> Bank
+                    <span class="fp-dot dot-blue"></span> BANK
                 </button>
-                <button class="fp-btn" data-filter="online">
-                    <span class="fp-dot dot-violet"></span> Online
+                <button class="fp-btn" data-filter="upi">
+                    <span class="fp-dot dot-violet"></span> Online/UPI
                 </button>
                 <button class="fp-btn" data-filter="cheque">
                     <span class="fp-dot dot-emerald"></span> Cheque
@@ -213,8 +216,8 @@
                         <!-- PAYMENT MODE -->
                         <td>
                             {% with mode=payment.get_payment_mode_display %}
-                            <span class="mode-pill mp-{% if 'Cash' in mode or 'cash' in mode %}amber{% elif 'Bank' in mode or 'bank' in mode %}indigo{% elif 'Online' in mode or 'online' in mode %}violet{% elif 'Cheque' in mode or 'cheque' in mode %}emerald{% else %}sky{% endif %}">
-                                <i class="bi {% if 'Cash' in mode %}bi-cash{% elif 'Bank' in mode %}bi-bank{% elif 'Online' in mode %}bi-globe{% elif 'Cheque' in mode %}bi-file-earmark-text{% else %}bi-credit-card{% endif %}"></i>
+                            <span class="mode-pill mp-{% if 'Cash' in mode or 'cash' in mode %}amber{% elif 'bank' in mode or 'bank' in mode %}indigo{% elif 'upi' in mode or 'online' in mode %}violet{% elif 'Cheque' in mode or 'cheque' in mode %}emerald{% else %}sky{% endif %}">
+                                <i class="bi {% if 'Cash' in mode %}bi-cash{% elif 'bank' in mode %}bi-bank{% elif 'upi' in mode %}bi-globe{% elif 'Cheque' in mode %}bi-file-earmark-text{% else %}bi-credit-card{% endif %}"></i>
                                 {{ mode }}
                             </span>
                             {% endwith %}
@@ -619,36 +622,44 @@
     .btn-add-new:hover::after { left: 100%; }
 
     /* ══════════════════ */
-    /*  TOOLBAR            */
-    /* ══════════════════ */
-    .toolbar-card {
-        background: var(--surface);
-        border: 1px solid var(--border-light);
-        border-radius: 14px;
-        padding: 0.85rem 1.25rem;
-        margin-bottom: 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
+/*  TOOLBAR (FIXED)   */
+/* ══════════════════ */
+.toolbar-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 14px;
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    overflow: hidden;                    /* ← FIX 1: contain children */
+}
 
-    .toolbar-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex: 1;
-        flex-wrap: wrap;
-    }
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1 1 0%;                        /* ← FIX 2: allow shrinking */
+    flex-wrap: wrap;
+    min-width: 0;                        /* ← FIX 3: allow flex truncation */
+    overflow: hidden;                    /* ← FIX 4: clip any remaining overflow */
+}
 
-    .client-filter-form { flex-shrink: 0; }
+.client-filter-form {
+    flex: 0 1 auto;                      /* ← FIX 5: allow shrinking */
+    min-width: 0;
+}
 
-    .client-select-wrap {
-        position: relative;
-        min-width: 220px;
-    }
 
+.client-select-wrap {
+    position: relative;
+    min-width: 0;                        /* ← FIX 6: was 0px (ok), ensure no implicit min */
+    max-width: 220px;
+    width: 100%;                         /* ← FIX 7: fill available space */
+}
     .cs-icon {
         position: absolute;
         left: 14px; top: 50%;
@@ -659,22 +670,25 @@
         z-index: 2;
     }
 
-    .client-select {
-        width: 100%;
-        height: 42px;
-        padding: 0 36px 0 38px;
-        border: 1.5px solid var(--border-light);
-        border-radius: var(--radius-sm);
-        background: var(--surface-2);
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: var(--text-1);
-        font-family: inherit;
-        appearance: none;
-        outline: none;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
+.client-select {
+    width: 100%;
+    height: 42px;
+    padding: 0 36px 0 38px;
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-1);
+    font-family: inherit;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-overflow: ellipsis;             /* ← FIX 8: truncate long names */
+    overflow: hidden;
+    white-space: nowrap;
+}
 
     .client-select:focus {
         border-color: var(--emerald);
@@ -691,12 +705,13 @@
         pointer-events: none;
     }
 
-    .search-wrap {
-        position: relative;
-        min-width: 200px;
-        flex: 1;
-        max-width: 280px;
-    }
+.search-wrap {
+    position: relative;
+    min-width: 0;                        /* ← FIX 9: was 200px — THIS WAS THE MAIN CULPRIT */
+    flex: 1 1 180px;                     /* ← FIX 10: grow/shrink with 180px base */
+    max-width: 150px;
+}
+
 
     .search-icon {
         position: absolute;
@@ -720,7 +735,9 @@
         font-family: inherit;
         outline: none;
         transition: all 0.2s;
+        box-sizing: border-box;             /* ← FIX 11: ensure padding is included */
     }
+
 
     .search-input::placeholder { color: var(--text-3); font-weight: 400; }
 
@@ -746,27 +763,42 @@
     }
 
     /* Filter pills */
-    .filter-pills {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-    }
+.filter-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;                   /* ← FIX 12: prevent wrapping, scroll instead */
+    overflow-x: auto;                   /* ← FIX 13: horizontal scroll when needed */
+    overflow-y: hidden;
+    flex: 1 1 0%;                        /* ← FIX 14: fill remaining toolbar space */
+    min-width: 0;                        /* ← FIX 15: allow shrinking below content */
+    max-width: 100%;
+    padding-bottom: 2px;                /* ← space for scrollbar */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;              /* ← FIX 16: hide scrollbar (Firefox) */
+}
 
-    .fp-btn {
-        padding: 6px 14px;
-        border-radius: 100px;
-        border: 1px solid var(--border-light);
-        background: var(--surface);
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: var(--text-3);
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-family: inherit;
-    }
+
+.filter-pills::-webkit-scrollbar {     /* ← FIX 17: hide scrollbar (Chrome/Safari) */
+    display: none;
+}
+
+.fp-btn {
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border-light);
+    background: var(--surface);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    white-space: nowrap;                /* ← FIX 18: prevent text wrapping in pills */
+    flex-shrink: 0;                     /* ← FIX 19: pills don't compress */
+}
 
     .fp-btn:hover {
         border-color: var(--border);
@@ -791,6 +823,81 @@
         width: 7px; height: 7px;
         border-radius: 50%;
     }
+
+
+/* ══════════════════════ */
+/*  RESPONSIVE (FIXED)    */
+/* ══════════════════════ */
+@media (max-width: 1024px) {
+    .toolbar-left {
+        flex-direction: column;
+        align-items: stretch;
+        overflow: visible;              /* ← allow children to show fully when stacked */
+    }
+    .search-wrap {
+        max-width: 100%;                /* ← full width when stacked */
+        flex-basis: auto;
+    }
+    .client-select-wrap {
+        max-width: 100%;                /* ← full width when stacked */
+    }
+    .filter-pills {
+        max-width: 100%;
+        flex: 0 1 auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .payments-page { padding: 1rem; }
+    .page-header { flex-direction: column; align-items: flex-start; }
+    .toolbar-card {
+        flex-direction: column;
+        align-items: stretch;
+        overflow: visible;              /* ← let stacked content breathe */
+    }
+    .toolbar-left {
+        flex-direction: column;
+        align-items: stretch;
+        overflow: visible;
+    }
+    .toolbar-right { justify-content: space-between; }
+    .filter-pills {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 4px;
+    }
+    .search-kbd { display: none; }
+    .search-wrap {
+        min-width: 0;
+        max-width: 100%;
+    }
+    .select-prompt { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .sp-arrow { display: none; }
+
+    .saas-table thead th:nth-child(5),
+    .saas-table tbody td:nth-child(5) {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .saas-table thead th:nth-child(3),
+    .saas-table tbody td:nth-child(3) {
+        display: none;
+    }
+    .sc-value { font-size: 1.15rem; }
+    .stat-card { padding: 1rem; }
+    .sp-icon-box { display: none; }
+    .fp-btn {
+        padding: 5px 10px;             /* ← smaller pills on mobile */
+        font-size: 0.7rem;
+    }
+    .client-select {
+        font-size: 0.78rem;
+        padding: 0 30px 0 34px;
+    }
+}
+
 
     .dot-amber { background: var(--amber); }
     .dot-blue { background: var(--indigo); }

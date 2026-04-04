@@ -67,7 +67,7 @@
                                         <select name="project" id="projectSelect" class="custom-select required-input" required>
                                             {% for project in projects %}
                                             <option value="{{ project.id }}" {% if spend.project.id == project.id %}selected{% endif %}>
-                                                {{ project.name }} ({{ project.client.name }})
+                                                {{ project.name }} {{ project.client.name }} ({{project.client.address}})
                                             </option>
                                             {% endfor %}
                                         </select>

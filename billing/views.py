@@ -1194,34 +1194,28 @@ def spend_delete(request, pk):
 
 
 
-# 📌 Payment List
-from django.db.models import Q
-from .models import Payment, Client  # adjust if needed
+from .models import Project
 
 def payment_list(request):
-    client_id = request.GET.get('client')
+    project_id = request.GET.get('project')
 
-    # 👇 Default empty
     payments = Payment.objects.none()
 
-    # 👇 Load only when client selected
-    if client_id:
+    if project_id:
         payments = (
             Payment.objects
             .select_related('project__client')
-            .filter(project__client_id=client_id)
+            .filter(project_id=project_id)
             .order_by('-id')
         )
 
-    clients = Client.objects.all()
+    projects = Project.objects.select_related('client')
 
-    context = {
+    return render(request, 'billing/payment/index.html', {
         'payments': payments,
-        'clients': clients,
-        'selected_client': client_id,
-    }
-
-    return render(request, 'billing/payment/index.html', context)
+        'projects': projects,
+        'selected_project': project_id,
+    })
 
 
 

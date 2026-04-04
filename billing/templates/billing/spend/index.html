@@ -62,7 +62,7 @@
                         {% for client in clients %}
                         <option value="{{ client.id }}"
                             {% if client.id|stringformat:"s" == selected_client %}selected{% endif %}>
-                            {{ client.name }} — {{ client.address|truncatewords:4 }}
+                             {{ client.name }} ({{ client.address|truncatewords:4 }})
                         </option>
                         {% endfor %}
                     </select>

@@ -62,7 +62,7 @@
                                         <select name="project" id="projectSelect" class="custom-select required-input" required>
                                             <option value="">Select Project...</option>
                                             {% for project in projects %}
-                                            <option value="{{ project.id }}">{{ project.name }} ({{ project.client.name }})</option>
+                                            <option value="{{ project.id }}">{{ project.name }} {{ project.client.name }} ({{project.client.address}})</option>
                                             {% endfor %}
                                         </select>
                                         <i class="bi bi-chevron-down select-icon"></i>
