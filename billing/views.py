@@ -694,7 +694,7 @@ def project_detail(request, pk):
     total_spent = spends.aggregate(
         total=Sum(
             ExpressionWrapper(
-                F('qty') * F('rate'),
+                F('qty') * F('rate') * F('length') * F('width'),
                 output_field=DecimalField()
             )
         )
