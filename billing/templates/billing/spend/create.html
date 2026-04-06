@@ -178,7 +178,7 @@
                                         <td>
                                             <div class="cell-stack">
                                                 <div class="input-wrap">
-                                                    <select name="fullsemi[]" class="mini-select fullsemi required-input" required>
+                                                    <select name="fullsemi[]" class="mini-select fullsemi " >
                                                         <option value="">Series *</option>
                                                         {% for fs in fullsemis %}
                                                         <option value="{{ fs.id }}" data-rate="{{ fs.rate }}">{{ fs.name }} (₹{{ fs.rate }})</option>
@@ -785,6 +785,15 @@ function validateAllFields() {
         firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         firstInvalid?.focus();
     }
+     else {
+        Swal.fire({
+            icon: 'success',
+            title: 'All Fields Valid',
+            text: 'Ready to update!',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
     
     return valid;
 }
@@ -995,12 +1004,59 @@ function addRow() {
 function duplicateRow(btn) {
     const row = btn.closest('tr');
     const clone = row.cloneNode(true);
+    
+    // ═══════════════════════════════════════════
+    // FIX: Copy all SELECT values from original to clone
+    // ═══════════════════════════════════════════
+    const originalSelects = row.querySelectorAll('select');
+    const cloneSelects = clone.querySelectorAll('select');
+    
+    originalSelects.forEach((originalSelect, index) => {
+        if (cloneSelects[index]) {
+            cloneSelects[index].value = originalSelect.value;
+        }
+    });
+    
+    // ═══════════════════════════════════════════
+    // FIX: Copy all INPUT values from original to clone
+    // ═══════════════════════════════════════════
+    const originalInputs = row.querySelectorAll('input');
+    const cloneInputs = clone.querySelectorAll('input');
+    
+    originalInputs.forEach((originalInput, index) => {
+        if (cloneInputs[index]) {
+            cloneInputs[index].value = originalInput.value;
+        }
+    });
+    
+    // ═══════════════════════════════════════════
+    // FIX: Copy TEXTAREA values if any
+    // ═══════════════════════════════════════════
+    const originalTextareas = row.querySelectorAll('textarea');
+    const cloneTextareas = clone.querySelectorAll('textarea');
+    
+    originalTextareas.forEach((originalTextarea, index) => {
+        if (cloneTextareas[index]) {
+            cloneTextareas[index].value = originalTextarea.value;
+        }
+    });
+    
+    // Reset visual states
     clone.classList.remove('row-error');
     clone.querySelectorAll('.input-indicator').forEach(i => i.classList.remove('invalid', 'valid'));
+    
+    // Update row number attribute
+    const rowCount = document.querySelectorAll('.spend-row').length + 1;
+    clone.setAttribute('data-row', rowCount);
+    
+    // Insert the clone
     row.parentNode.insertBefore(clone, row.nextSibling);
+    
+    // Recalculate and update
     calculateRow(clone);
     updateSidebar();
     
+    // Animate in
     clone.style.opacity = '0';
     clone.style.transform = 'translateY(8px)';
     requestAnimationFrame(() => {

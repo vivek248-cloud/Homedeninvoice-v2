@@ -184,7 +184,7 @@
                                         <td>
                                             <div class="cell-stack">
                                                 <div class="input-wrap">
-                                                    <select name="fullsemi[]" class="mini-select fullsemi required-input" required>
+                                                    <select name="fullsemi[]" class="mini-select fullsemi " >
                                                         <option value="">Series *</option>
                                                         {% for fs in fullsemis %}
                                                         <option value="{{ fs.id }}" data-rate="{{ fs.rate }}" {% if spend.fullsemi and spend.fullsemi.id == fs.id %}selected{% endif %}>
