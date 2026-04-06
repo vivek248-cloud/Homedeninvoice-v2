@@ -886,30 +886,47 @@ function calculateRow(row) {
     const w = parseFloat(row.querySelector('.width')?.value) || 0;
     const q = parseFloat(row.querySelector('.qty')?.value) || 1;
     const r = parseFloat(row.querySelector('.rate')?.value) || 0;
+
+    // ✅ AREA (2 decimal fixed)
     const area = l * w;
-    
+    const areaFixed = area.toFixed(2);
+
     const areaText = row.querySelector('.area');
     const areaInput = row.querySelector('.area-input');
-    if (areaText) areaText.textContent = area.toFixed(2);
-    if (areaInput) areaInput.value = area.toFixed(2);
-    
-    const total = area * r * q;
+
+    if (areaText) areaText.textContent = areaFixed;
+    if (areaInput) areaInput.value = areaFixed;
+
+    // ✅ TOTAL (round OFF like billing)
+    const rawTotal = area * r * q;
+    const roundedTotal = Math.round(rawTotal); // 🔥 KEY CHANGE
+
     const totalText = row.querySelector('.total');
     const totalInput = row.querySelector('.total-input');
     const totalWrap = row.querySelector('.line-total');
-    
-    if (totalText) totalText.textContent = total.toFixed(2);
-    if (totalInput) totalInput.value = total.toFixed(2);
-    if (totalWrap) totalWrap.classList.toggle('has-value', total > 0);
-    
+
+    // ✅ Indian number format
+    const formattedTotal = roundedTotal.toLocaleString('en-IN');
+
+    if (totalText) totalText.textContent = formattedTotal;
+    if (totalInput) totalInput.value = roundedTotal;
+
+    if (totalWrap) totalWrap.classList.toggle('has-value', roundedTotal > 0);
+
     updateTotals();
     updateSidebar();
 }
 
 function updateTotals() {
     let total = 0;
-    document.querySelectorAll('.total-input').forEach(i => total += parseFloat(i.value) || 0);
-    const formatted = total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+    document.querySelectorAll('.total-input').forEach(i => {
+        total += parseFloat(i.value) || 0;
+    });
+
+    const rounded = Math.round(total); // 🔥 round final total
+    const formatted = rounded.toLocaleString('en-IN');
+
     ['grandTotal', 'footerTotal', 'summaryTotal'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = formatted;
@@ -918,13 +935,18 @@ function updateTotals() {
 
 function updateSidebar() {
     const rows = document.querySelectorAll('.spend-row');
+
     document.getElementById('summaryItems').textContent = rows.length;
     document.getElementById('rowCount').textContent = rows.length;
-    
+
     let totalArea = 0;
-    document.querySelectorAll('.area-input').forEach(i => totalArea += parseFloat(i.value) || 0);
+    document.querySelectorAll('.area-input').forEach(i => {
+        totalArea += parseFloat(i.value) || 0;
+    });
+
+    // ✅ Keep 2 decimal for area
     document.getElementById('summaryArea').textContent = totalArea.toFixed(2);
-    
+
     updateChecklist();
     updateProgress();
 }

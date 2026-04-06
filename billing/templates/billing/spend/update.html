@@ -914,36 +914,53 @@ async function pasteSpec() {
     document.getElementById('specEditor').value = text;
 }
 
-// Calculations
+
+// ═══════════════════════════════
+//  CALCULATIONS
+// ═══════════════════════════════
 function calculateRow(row) {
     const l = parseFloat(row.querySelector('.length')?.value) || 0;
     const w = parseFloat(row.querySelector('.width')?.value) || 0;
     const q = parseFloat(row.querySelector('.qty')?.value) || 1;
     const r = parseFloat(row.querySelector('.rate')?.value) || 0;
+
+    // ✅ AREA (2 decimal)
     const area = l * w;
-    
+    const areaFixed = area.toFixed(2);
+
     const areaText = row.querySelector('.area');
     const areaInput = row.querySelector('.area-input');
-    if (areaText) areaText.textContent = area.toFixed(2);
-    if (areaInput) areaInput.value = area.toFixed(2);
-    
-    const total = area * r * q;
+
+    if (areaText) areaText.textContent = areaFixed;
+    if (areaInput) areaInput.value = areaFixed;
+
+    // ✅ TOTAL (ROUND OFF)
+    const rawTotal = area * r * q;
+    const roundedTotal = Math.round(rawTotal); // 🔥 main change
+
     const totalText = row.querySelector('.total');
     const totalInput = row.querySelector('.total-input');
     const totalWrap = row.querySelector('.line-total');
-    
-    if (totalText) totalText.textContent = total.toFixed(2);
-    if (totalInput) totalInput.value = total.toFixed(2);
-    if (totalWrap) totalWrap.classList.toggle('has-value', total > 0);
-    
+
+    if (totalText) totalText.textContent = roundedTotal.toLocaleString('en-IN');
+    if (totalInput) totalInput.value = roundedTotal;
+
+    if (totalWrap) totalWrap.classList.toggle('has-value', roundedTotal > 0);
+
     updateTotals();
     updateSidebar();
 }
 
 function updateTotals() {
     let total = 0;
-    document.querySelectorAll('.total-input').forEach(i => total += parseFloat(i.value) || 0);
-    const formatted = total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+    document.querySelectorAll('.total-input').forEach(i => {
+        total += parseFloat(i.value) || 0;
+    });
+
+    const roundedTotal = Math.round(total); // 🔥 round final
+    const formatted = roundedTotal.toLocaleString('en-IN');
+
     ['grandTotal', 'footerTotal', 'summaryTotal'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = formatted;
@@ -952,15 +969,24 @@ function updateTotals() {
 
 function updateSidebar() {
     const rows = document.querySelectorAll('.spend-row');
-    document.getElementById('summaryItems').textContent = rows.length;
-    
+
+    // ✅ Count
+    const countEl = document.getElementById('summaryItems');
+    if (countEl) countEl.textContent = rows.length;
+
+    // ✅ Area total (NOT rounded)
     let totalArea = 0;
-    document.querySelectorAll('.area-input').forEach(i => totalArea += parseFloat(i.value) || 0);
-    document.getElementById('summaryArea').textContent = totalArea.toFixed(2);
-    
+    document.querySelectorAll('.area-input').forEach(i => {
+        totalArea += parseFloat(i.value) || 0;
+    });
+
+    const areaEl = document.getElementById('summaryArea');
+    if (areaEl) areaEl.textContent = totalArea.toFixed(2);
+
     updateChecklist();
     updateProgress();
 }
+
 
 // Row Management
 function addRow() {
