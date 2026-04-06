@@ -98,7 +98,7 @@ table {
     border-collapse: collapse;
     margin-top: 12px;
     font-size: 13.5px;
-    table-layout: auto;   /* 🔥 REMOVE fixed */
+    table-layout: auto;
 }
 
 
@@ -263,7 +263,7 @@ th {
     /* ========================= */
 
     .footer {
-        margin-top: auto;   /* 🔥 PUSH TO BOTTOM */
+        margin-top: auto;
         text-align: center;
         font-size: 12px;
         padding-top: 10px;
@@ -351,6 +351,167 @@ th {
 }
 
 
+/* ========================= */
+/* TD SELECTION STYLES */
+/* ========================= */
+
+.selectable-amount {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.selectable-amount:hover {
+    background: #fff9c4 !important;
+}
+
+.td-selected {
+    background: #ffeb3b !important;
+    box-shadow: inset 0 0 0 3px #f57c00;
+    position: relative;
+}
+
+.td-selected::after {
+    content: "✓";
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 10px;
+    color: #e65100;
+    font-weight: bold;
+}
+
+/* ========================= */
+/* FLOATING TOTAL DISPLAY */
+/* ========================= */
+
+.selected-total-display {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #2ba58b 0%, #1e7e6a 100%);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 6px 20px rgba(43, 165, 139, 0.4);
+    z-index: 9999;
+    min-width: 200px;
+    text-align: center;
+    animation: slideIn 0.3s ease;
+}
+
+.selected-total-display .count {
+    font-size: 12px;
+    opacity: 0.9;
+    margin-bottom: 5px;
+}
+
+.selected-total-display .amount {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.selected-total-display .hint {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.3);
+    padding-top: 8px;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+
+/* ========================= */
+/* COPY/PASTE ROW STYLES */
+/* ========================= */
+
+.row-copied {
+    background: #bbdefb !important;
+    position: relative;
+}
+
+.row-copied::before {
+    content: "📋";
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+}
+
+.row-selected-for-copy {
+    background: #c8e6c9 !important;
+    outline: 2px dashed #2e7d32;
+    outline-offset: -2px;
+}
+
+/* Insertion point indicator */
+.insert-point {
+    position: relative;
+}
+
+.insert-point::after {
+    content: "";
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #f57c00;
+    border-radius: 2px;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Clipboard indicator */
+.clipboard-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(25, 118, 210, 0.4);
+    z-index: 9999;
+    display: none;
+}
+
+.clipboard-indicator.active {
+    display: block;
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+
     @media print {
 
         body {
@@ -399,24 +560,37 @@ th {
             size: A4;
             margin: 3mm;
         }
+
+        /* Hide selection styles on print */
+        .selected-total-display,
+        .clipboard-indicator {
+            display: none !important;
+        }
+
+        .td-selected,
+        .row-copied,
+        .row-selected-for-copy,
+        .insert-point {
+            background: inherit !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        .td-selected::after,
+        .row-copied::before,
+        .insert-point::after {
+            display: none !important;
+        }
     }
 
 
     @media print {
 
-    /* 🔥 Prevent entire table from breaking */
-    {% comment %} table {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-    } {% endcomment %}
-
-    /* 🔥 Prevent rows from splitting */
     tr {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
     }
 
-    /* 🔥 If not enough space, move entire section */
     .totals-section,
     .payment-section {
         page-break-before: auto;
@@ -482,7 +656,7 @@ body.public-invoice .no-print {
     <!-- BRAND -->
     <div class="brand">
         <img src="{% static 'billing/images/full-logo.webp' %}" class="brand-logo">
-        <small>We don’t just design spaces — we create experiences.</small>
+        <small>We don't just design spaces — we create experiences.</small>
     </div>
 
     <h3>INVOICE</h3>
@@ -522,7 +696,7 @@ body.public-invoice .no-print {
         {% regroup spends by floor as floor_list %}
 
         {% for floor in floor_list %}
-            <tr class="floor-row draggable-row selectable">
+            <tr class="floor-row draggable-row selectable copyable-row">
                 <td colspan="7">
                     {{ floor.grouper.name|default:"General" }}
                 </td>
@@ -531,7 +705,7 @@ body.public-invoice .no-print {
             {% regroup floor.list by room as room_list %}
 
             {% for room in room_list %}
-                <tr class="room-row draggable-row selectable">
+                <tr class="room-row draggable-row selectable copyable-row">
                     <td colspan="7">
                         {{ room.grouper.name|default:"Room" }}
                     </td>
@@ -547,7 +721,7 @@ body.public-invoice .no-print {
                     <td>{{ spend.area|floatformat:2 }}</td>
                     <td>{{ spend.unit|upper }}</td>
                     <td>₹{{ spend.rate|floatformat:2 }}</td>
-                    <td class="right">₹{{ spend.total_amount }}</td>
+                    <td class="right selectable-amount" data-amount="{{ spend.total_amount }}">₹{{ spend.total_amount }}</td>
                 </tr>
                 {% endfor %}
 
@@ -746,6 +920,10 @@ body.public-invoice .no-print {
 
 </div>
 
+<!-- Clipboard Indicator -->
+<div class="clipboard-indicator" id="clipboardIndicator">
+    📋 <span id="clipboardText">0 rows copied</span>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -756,25 +934,94 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const tableBody = document.querySelector(".summary-table tbody");
 
-    let selected = [];
+    // ==================================
+    // ROW DRAG & DROP VARIABLES
+    // ==================================
+    let selectedRows = [];
     let undoStack = [];
     let redoStack = [];
     const HISTORY_LIMIT = 30;
 
+    // ==================================
+    // TD SELECTION VARIABLES
+    // ==================================
+    let selectedTds = [];
+
+    // ==================================
+    // COPY/PASTE VARIABLES
+    // ==================================
+    let copiedRows = [];
+    let insertionPoint = null;
+
+    const clipboardIndicator = document.getElementById('clipboardIndicator');
+    const clipboardText = document.getElementById('clipboardText');
+
+    // ==================================
+    // CREATE FLOATING TOTAL DISPLAY
+    // ==================================
+    const totalDisplay = document.createElement('div');
+    totalDisplay.id = 'selectedTotalDisplay';
+    totalDisplay.className = 'selected-total-display';
+    totalDisplay.style.display = 'none';
+    totalDisplay.innerHTML = `
+        <div class="count">0 items selected</div>
+        <div class="amount">₹ 0.00</div>
+        <div class="hint">
+            Backspace: Remove last<br>
+            Ctrl+Backspace: Clear all
+        </div>
+    `;
+    document.body.appendChild(totalDisplay);
+
+    // ==================================
+    // UPDATE CLIPBOARD INDICATOR
+    // ==================================
+    function updateClipboardIndicator() {
+        if (copiedRows.length > 0) {
+            clipboardText.textContent = `${copiedRows.length} row${copiedRows.length > 1 ? 's' : ''} copied`;
+            clipboardIndicator.classList.add('active');
+        } else {
+            clipboardIndicator.classList.remove('active');
+        }
+    }
+
+    // ==================================
+    // UPDATE SELECTED TOTAL DISPLAY
+    // ==================================
+    function updateSelectedTotal() {
+        let total = 0;
+
+        selectedTds.forEach(td => {
+            let value = parseFloat(td.dataset.amount);
+            
+            if (isNaN(value)) {
+                const text = td.textContent.replace(/[₹,\s]/g, '');
+                value = parseFloat(text) || 0;
+            }
+            
+            total += value;
+        });
+
+        const countEl = totalDisplay.querySelector('.count');
+        const amountEl = totalDisplay.querySelector('.amount');
+
+        countEl.textContent = `${selectedTds.length} item${selectedTds.length !== 1 ? 's' : ''} selected`;
+        amountEl.textContent = `₹ ${total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        totalDisplay.style.display = selectedTds.length > 0 ? 'block' : 'none';
+    }
+
     // ---------------------------
-    // Save table state
+    // Save table state (for undo/redo)
     // ---------------------------
     function saveState() {
-
         const rows = Array.from(tableBody.children);
-
-        undoStack.push(rows);
+        undoStack.push(rows.map(r => r.cloneNode(true)));
 
         if (undoStack.length > HISTORY_LIMIT) {
             undoStack.shift();
         }
 
-        // clear redo when new action happens
         redoStack = [];
     }
 
@@ -782,10 +1029,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // Restore state
     // ---------------------------
     function restoreState(stackFrom, stackTo) {
-
         if (stackFrom.length === 0) return;
 
-        const current = Array.from(tableBody.children);
+        const current = Array.from(tableBody.children).map(r => r.cloneNode(true));
         stackTo.push(current);
 
         const state = stackFrom.pop();
@@ -793,41 +1039,118 @@ document.addEventListener("DOMContentLoaded", function () {
         tableBody.innerHTML = "";
 
         state.forEach(row => {
-            tableBody.appendChild(row);
+            tableBody.appendChild(row.cloneNode(true));
         });
+
+        // Re-attach event listeners by re-selecting elements
+        clearAllSelections();
     }
 
+    // ---------------------------
+    // Clear all selections
+    // ---------------------------
+    function clearAllSelections() {
+        // Clear TD selections
+        document.querySelectorAll('.td-selected').forEach(td => td.classList.remove('td-selected'));
+        selectedTds = [];
+        updateSelectedTotal();
 
-    // ---------------------------
-    // CTRL + CLICK selection
-    // ---------------------------
+        // Clear row selections
+        document.querySelectorAll('.selected, .row-selected-for-copy').forEach(r => {
+            r.classList.remove('selected', 'row-selected-for-copy');
+        });
+        selectedRows = [];
+
+        // Clear insertion point
+        if (insertionPoint) {
+            insertionPoint.classList.remove('insert-point');
+            insertionPoint = null;
+        }
+    }
+
+    // ==================================
+    // CLICK HANDLER FOR TD & ROW SELECTION
+    // ==================================
     tableBody.addEventListener("click", function(e) {
 
+        // ---------------------------
+        // CTRL + CLICK on Amount TD
+        // ---------------------------
+        const amountTd = e.target.closest(".selectable-amount");
+        
+        if (amountTd && e.ctrlKey) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            amountTd.classList.toggle("td-selected");
+
+            if (amountTd.classList.contains("td-selected")) {
+                selectedTds.push(amountTd);
+            } else {
+                selectedTds = selectedTds.filter(td => td !== amountTd);
+            }
+
+            updateSelectedTotal();
+            return;
+        }
+
+        // ---------------------------
+        // Row Selection
+        // ---------------------------
         const row = e.target.closest(".selectable");
         if (!row) return;
 
+        // Skip if clicking on amount TD without Ctrl
+        if (amountTd && !e.ctrlKey) return;
+
+        // CTRL + Click: Select for copy
         if (e.ctrlKey) {
+            e.preventDefault();
 
-            row.classList.toggle("selected");
+            row.classList.toggle("row-selected-for-copy");
 
-            if (row.classList.contains("selected")) {
-                selected.push(row);
+            if (row.classList.contains("row-selected-for-copy")) {
+                selectedRows.push(row);
             } else {
-                selected = selected.filter(r => r !== row);
+                selectedRows = selectedRows.filter(r => r !== row);
             }
 
+        // ALT + Click: Set insertion point
+        } else if (e.altKey) {
+            e.preventDefault();
+
+            // Clear previous insertion point
+            if (insertionPoint) {
+                insertionPoint.classList.remove('insert-point');
+            }
+
+            insertionPoint = row;
+            row.classList.add('insert-point');
+
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'info',
+                title: 'Insertion point set',
+                text: 'Press Ctrl+V to paste here',
+                showConfirmButton: false,
+                timer: 1500
+            });
+
+        // Regular Click: Clear selections
         } else {
-
-            selected.forEach(r => r.classList.remove("selected"));
-            selected = [];
+            // Don't clear if clicking a copyable row (allow selection)
+            if (!row.classList.contains('copyable-row')) {
+                selectedRows.forEach(r => r.classList.remove("selected", "row-selected-for-copy"));
+                selectedRows = [];
+            }
         }
-
     });
 
 
-    // ---------------------------
-    // Sortable
-    // ---------------------------
+    // ==================================
+    // SORTABLE FOR ROW DRAGGING
+    // ==================================
     new Sortable(tableBody, {
 
         animation: 150,
@@ -835,37 +1158,33 @@ document.addEventListener("DOMContentLoaded", function () {
         draggable: ".draggable-row",
 
         onStart: function(evt) {
-
             saveState();
 
             const dragged = evt.item;
 
-            if (!dragged.classList.contains("selected")) {
-                selected = [dragged];
+            if (!dragged.classList.contains("selected") && !dragged.classList.contains("row-selected-for-copy")) {
+                selectedRows = [dragged];
                 dragged.classList.add("selected");
             }
-
         },
 
         onEnd: function(evt) {
-
             const newIndex = evt.newIndex;
 
-            selected.forEach((row, i) => {
+            selectedRows.forEach((row, i) => {
                 tableBody.insertBefore(row, tableBody.children[newIndex + i]);
             });
 
-            selected.forEach(r => r.classList.remove("selected"));
-            selected = [];
-
+            selectedRows.forEach(r => r.classList.remove("selected"));
+            selectedRows = [];
         }
 
     });
 
 
-    // ---------------------------
-    // Keyboard shortcuts
-    // ---------------------------
+    // ==================================
+    // KEYBOARD SHORTCUTS
+    // ==================================
     document.addEventListener("keydown", function(e) {
 
         const active = document.activeElement;
@@ -875,30 +1194,184 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // CTRL + Z (UNDO MOVE)
-        if (e.ctrlKey && e.key.toLowerCase() === "z") {
+        // ---------------------------
+        // CTRL + C → Copy selected rows
+        // ---------------------------
+        if (e.ctrlKey && e.key.toLowerCase() === "c") {
+            
+            // Only handle if we have selected rows
+            if (selectedRows.length > 0) {
+                e.preventDefault();
 
+                // Clear previous copied state
+                document.querySelectorAll('.row-copied').forEach(r => r.classList.remove('row-copied'));
+
+                // Clone selected rows
+                copiedRows = selectedRows.map(row => row.cloneNode(true));
+
+                // Mark as copied
+                selectedRows.forEach(row => {
+                    row.classList.add('row-copied');
+                    row.classList.remove('row-selected-for-copy');
+                });
+
+                selectedRows = [];
+
+                updateClipboardIndicator();
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: `${copiedRows.length} row${copiedRows.length > 1 ? 's' : ''} copied`,
+                    text: 'Alt+Click to set paste location, Ctrl+V to paste',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
+
+            return;
+        }
+
+        // ---------------------------
+        // CTRL + V → Paste copied rows
+        // ---------------------------
+        if (e.ctrlKey && e.key.toLowerCase() === "v") {
+
+            if (copiedRows.length > 0) {
+                e.preventDefault();
+
+                saveState();
+
+                // Determine where to paste
+                let pasteAfter = insertionPoint || tableBody.lastElementChild;
+
+                // Clone and insert each copied row
+                copiedRows.forEach(row => {
+                    const newRow = row.cloneNode(true);
+                    newRow.classList.remove('row-copied', 'row-selected-for-copy');
+                    
+                    // Add copyable-row class if it's a floor or room row
+                    if (newRow.classList.contains('floor-row') || newRow.classList.contains('room-row')) {
+                        newRow.classList.add('copyable-row');
+                    }
+
+                    if (pasteAfter && pasteAfter.nextSibling) {
+                        tableBody.insertBefore(newRow, pasteAfter.nextSibling);
+                        pasteAfter = newRow;
+                    } else {
+                        tableBody.appendChild(newRow);
+                        pasteAfter = newRow;
+                    }
+                });
+
+                // Clear insertion point
+                if (insertionPoint) {
+                    insertionPoint.classList.remove('insert-point');
+                    insertionPoint = null;
+                }
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: `${copiedRows.length} row${copiedRows.length > 1 ? 's' : ''} pasted`,
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+
+            return;
+        }
+
+        // ---------------------------
+        // CTRL + BACKSPACE → Clear ALL selected TDs
+        // ---------------------------
+        if (e.ctrlKey && e.key === "Backspace") {
+            e.preventDefault();
+
+            if (selectedTds.length > 0) {
+                selectedTds.forEach(td => td.classList.remove("td-selected"));
+                selectedTds = [];
+                updateSelectedTotal();
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'info',
+                    title: 'All TD selections cleared',
+                    showConfirmButton: false,
+                    timer: 1000
+                });
+            }
+            return;
+        }
+
+        // ---------------------------
+        // BACKSPACE → Remove LAST selected TD
+        // ---------------------------
+        if (e.key === "Backspace") {
+            e.preventDefault();
+
+            if (selectedTds.length > 0) {
+                const lastTd = selectedTds.pop();
+                lastTd.classList.remove("td-selected");
+                updateSelectedTotal();
+            } else if (selectedRows.length > 0) {
+                // Remove last selected row from selection
+                const lastRow = selectedRows.pop();
+                lastRow.classList.remove("selected", "row-selected-for-copy");
+            }
+            return;
+        }
+
+        // ---------------------------
+        // DELETE → Clear copied rows from clipboard
+        // ---------------------------
+        if (e.key === "Delete") {
+            e.preventDefault();
+
+            document.querySelectorAll('.row-copied').forEach(r => r.classList.remove('row-copied'));
+            copiedRows = [];
+            updateClipboardIndicator();
+
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'info',
+                title: 'Clipboard cleared',
+                showConfirmButton: false,
+                timer: 1000
+            });
+
+            return;
+        }
+
+        // ---------------------------
+        // CTRL + Z (UNDO)
+        // ---------------------------
+        if (e.ctrlKey && e.key.toLowerCase() === "z") {
             e.preventDefault();
             restoreState(undoStack, redoStack);
         }
 
-        // CTRL + Y (REDO MOVE)
+        // ---------------------------
+        // CTRL + Y (REDO)
+        // ---------------------------
         if (e.ctrlKey && e.key.toLowerCase() === "y") {
-
             e.preventDefault();
             restoreState(redoStack, undoStack);
         }
 
-        // BACKSPACE → UNSELECT rows
-        if (e.key === "Backspace") {
-
-            if (selected.length === 0) return;
-
+        // ---------------------------
+        // ESCAPE → Clear all selections
+        // ---------------------------
+        if (e.key === "Escape") {
             e.preventDefault();
+            clearAllSelections();
 
-            selected.forEach(row => row.classList.remove("selected"));
-
-            selected = [];
+            // Also clear copied indicator
+            document.querySelectorAll('.row-copied').forEach(r => r.classList.remove('row-copied'));
         }
 
     });
