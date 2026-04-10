@@ -1,140 +1,1470 @@
 {% extends 'billing/layouts/base.html' %}
 {% block content %}
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-xl-8">
-            
-            <div class="d-flex align-items-center mb-5">
-                <div class="bg-success rounded-4 p-3 shadow-success-grow me-4">
-                    <i class="bi bi-pencil-square text-white fs-2"></i>
-                </div>
-                <div>
-                    <h2 class="fw-bold mb-0">Edit Client Profile</h2>
-                    <p class="text-muted mb-0 small">Modify details for <strong>{{ client.name }}</strong>. Update project parameters below.</p>
-                </div>
-            </div>
-
-            <form method="post">
-                {% csrf_token %}
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4 p-md-5">
-                        <div class="d-flex align-items-center mb-4">
-                            <span class="badge rounded-pill bg-primary-subtle text-primary me-2">1</span>
-                            <h5 class="fw-bold mb-0">Personal Details</h5>
-                        </div>
-
-                        <div class="form-floating mb-4">
-                            <input type="text" name="name" value="{{ client.name }}" class="form-control border-0 bg-light rounded-3" id="nameInput" placeholder="Name" required>
-                            <label for="nameInput" class="text-muted">Full Client Name</label>
-                        </div>
-
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" name="phone1" value="{{ client.phone1 }}" class="form-control border-0 bg-light rounded-3" id="phone1" placeholder="Phone" required>
-                                    <label for="phone1" class="text-muted">Primary Contact</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" name="phone2" value="{{ client.phone2 }}" class="form-control border-0 bg-light rounded-3" id="phone2" placeholder="Secondary Phone">
-                                    <label for="phone2" class="text-muted">Secondary Contact</label>
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="form-floating">
-                                    <input type="email" name="email" value="{{ client.email }}" class="form-control border-0 bg-light rounded-3" id="email" placeholder="Email">
-                                    <label for="email" class="text-muted">Email Address</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4 p-md-5">
-                        <div class="d-flex align-items-center mb-4">
-                            <span class="badge rounded-pill bg-primary-subtle text-primary me-2">2</span>
-                            <h5 class="fw-bold mb-0">Project Metadata & Timeline</h5>
-                        </div>
-
-                        <div class="form-floating mb-4">
-                            <input type="text" name="location" value="{{ client.location }}" class="form-control border-0 bg-light rounded-3" id="locInput" placeholder="Location" required>
-                            <label for="locInput" class="text-muted">Site Location / Address</label>
-                        </div>
-
-                        
-
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" name="GST" value="{{ client.GST }}" class="form-control border-0 bg-light rounded-3" id="gstInput" placeholder="GST">
-                                    <label for="gstInput" class="text-muted">GST Number</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="number" name="discount" value="{{ client.discount }}" class="form-control border-0 bg-light rounded-3" id="discInput" placeholder="0">
-                                    <label for="discInput" class="text-muted">Default Discount (%)</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-5">
-                    <div class="card-body p-4 p-md-5">
-                        <div class="d-flex align-items-center mb-4">
-                            <span class="badge rounded-pill bg-primary-subtle text-primary me-2">3</span>
-                            <h5 class="fw-bold mb-0">Additional Context</h5>
-                        </div>
-                        <div class="form-floating">
-                            <textarea name="notes" class="form-control border-0 bg-light rounded-3" placeholder="Notes" id="notesArea" style="height: 120px">{{ client.notes }}</textarea>
-                            <label for="notesArea" class="text-muted">Client Preferences or Notes...</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="d-flex gap-3 mb-5">
-                    <button type="submit" class="btn btn-success px-5 py-3 rounded-4 fw-bold shadow flex-grow-1">
-                        Save Changes <i class="bi bi-check-circle ms-2"></i>
-                    </button>
-                    <a href="{% url 'qtn_client_index' %}" class="btn btn-light px-4 py-3 rounded-4 fw-bold text-muted border">
-                        Cancel
+<div class="client-edit-page">
+    <div class="container py-4 py-lg-5">
+        <div class="row justify-content-center">
+            <div class="col-xl-8 col-lg-10">
+                
+                <!-- Page Header -->
+                <div class="page-header">
+                    <a href="{% url 'qtn_client_index' %}" class="back-btn bg-danger text-white">
+                        <i class="bi bi-arrow-left"></i>
                     </a>
+                    <div class="header-content">
+                        <div class="header-icon">
+                            <i class="bi bi-pencil-square"></i>
+                            <span class="icon-check">
+                                <i class="bi bi-check2"></i>
+                            </span>
+                        </div>
+                        <div class="header-text">
+                            <div class="title-row">
+                                <h1>Edit Client Profile</h1>
+                                <span class="edit-badge">
+                                    <i class="bi bi-clock-history"></i>
+                                    Editing
+                                </span>
+                            </div>
+                            <p>Modify details for <strong>{{ client.name }}</strong></p>
+                        </div>
+                    </div>
                 </div>
-            </form>
+
+                <!-- Client Quick Info -->
+                <div class="client-info-strip">
+                    <div class="info-item">
+                        <i class="bi bi-person-circle"></i>
+                        <span>{{ client.name }}</span>
+                    </div>
+                    <div class="info-divider"></div>
+                    <div class="info-item">
+                        <i class="bi bi-telephone"></i>
+                        <span>{{ client.phone1 }}</span>
+                    </div>
+                    {% if client.email %}
+                    <div class="info-divider"></div>
+                    <div class="info-item">
+                        <i class="bi bi-envelope"></i>
+                        <span>{{ client.email }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Form -->
+                <form method="post" id="editForm">
+                    {% csrf_token %}
+
+                    <!-- Section 1: Personal Details -->
+                    <div class="form-card">
+                        <div class="card-header-section">
+                            <span class="step-badge">1</span>
+                            <div class="step-text">
+                                <h3>Personal Details</h3>
+                                <p>Basic contact information</p>
+                            </div>
+                            <i class="bi bi-person section-icon"></i>
+                        </div>
+
+                        <div class="card-body-section">
+                            <!-- Name Field -->
+                            <div class="form-floating mb-4">
+                                <input type="text" 
+                                       name="name" 
+                                       value="{{ client.name }}"
+                                       class="form-control" 
+                                       id="nameInput" 
+                                       placeholder="Name" 
+                                       required
+                                       data-original="{{ client.name }}">
+                                <label for="nameInput">
+                                    <i class="bi bi-person me-2"></i>Full Client Name
+                                </label>
+                                <span class="change-badge">Modified</span>
+                            </div>
+
+                            <div class="row g-3 g-md-4">
+                                <!-- Phone 1 -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" 
+                                               name="phone1" 
+                                               value="{{ client.phone1 }}"
+                                               class="form-control" 
+                                               id="phone1" 
+                                               placeholder="Phone" 
+                                               required
+                                               data-original="{{ client.phone1 }}">
+                                        <label for="phone1">
+                                            <i class="bi bi-telephone me-2"></i>Primary Contact
+                                        </label>
+                                        <span class="change-badge">Modified</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Phone 2 -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" 
+                                               name="phone2" 
+                                               value="{{ client.phone2 }}"
+                                               class="form-control" 
+                                               id="phone2" 
+                                               placeholder="Secondary Phone"
+                                               data-original="{{ client.phone2 }}">
+                                        <label for="phone2">
+                                            <i class="bi bi-telephone-plus me-2"></i>Secondary Contact
+                                        </label>
+                                        <span class="change-badge">Modified</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Email -->
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input type="email" 
+                                               name="email" 
+                                               value="{{ client.email }}"
+                                               class="form-control" 
+                                               id="email" 
+                                               placeholder="Email"
+                                               data-original="{{ client.email }}">
+                                        <label for="email">
+                                            <i class="bi bi-envelope me-2"></i>Email Address
+                                        </label>
+                                        <span class="change-badge">Modified</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Project Metadata & Timeline -->
+                    <div class="form-card">
+                        <div class="card-header-section">
+                            <span class="step-badge">2</span>
+                            <div class="step-text">
+                                <h3>Project Metadata & Timeline</h3>
+                                <p>Location and financial details</p>
+                            </div>
+                            <i class="bi bi-geo-alt section-icon"></i>
+                        </div>
+
+                        <div class="card-body-section">
+                            <!-- Location -->
+                            <div class="form-floating mb-4">
+                                <input type="text" 
+                                       name="location" 
+                                       value="{{ client.location }}"
+                                       class="form-control" 
+                                       id="locInput" 
+                                       placeholder="Location" 
+                                       required
+                                       data-original="{{ client.location }}">
+                                <label for="locInput">
+                                    <i class="bi bi-geo-alt me-2"></i>Site Location / Address
+                                </label>
+                                <span class="change-badge">Modified</span>
+                            </div>
+
+                            <div class="row g-3 g-md-4">
+                                <!-- GST -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" 
+                                               name="GST" 
+                                               value="{{ client.GST }}"
+                                               class="form-control text-uppercase" 
+                                               id="gstInput" 
+                                               placeholder="GST"
+                                               maxlength="15"
+                                               data-original="{{ client.GST }}">
+                                        <label for="gstInput">
+                                            <i class="bi bi-receipt me-2"></i>GST Number
+                                        </label>
+                                        <span class="change-badge">Modified</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Discount -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="number" 
+                                               name="discount" 
+                                               value="{{ client.discount }}"
+                                               class="form-control" 
+                                               id="discInput" 
+                                               placeholder="0"
+                                               min="0"
+                                               max="100"
+                                               data-original="{{ client.discount }}">
+                                        <label for="discInput">
+                                            <i class="bi bi-percent me-2"></i>Default Discount (%)
+                                        </label>
+                                        <span class="change-badge">Modified</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Additional Context -->
+                    <div class="form-card">
+                        <div class="card-header-section">
+                            <span class="step-badge">3</span>
+                            <div class="step-text">
+                                <h3>Additional Context</h3>
+                                <p>Notes and preferences</p>
+                            </div>
+                            <i class="bi bi-journal-text section-icon"></i>
+                        </div>
+
+                        <div class="card-body-section">
+                            <!-- Notes -->
+                            <div class="form-floating">
+                                <textarea name="notes" 
+                                          class="form-control" 
+                                          placeholder="Notes" 
+                                          id="notesArea" 
+                                          style="height: 140px"
+                                          maxlength="1000"
+                                          data-original="{{ client.notes }}">{{ client.notes }}</textarea>
+                                <label for="notesArea">
+                                    <i class="bi bi-chat-left-text me-2"></i>Client Preferences or Notes...
+                                </label>
+                                <span class="change-badge textarea-badge">Modified</span>
+                                <div class="textarea-footer">
+                                    <span class="hint-text">
+                                        <i class="bi bi-lightbulb"></i>
+                                        Include design preferences, budget, or special requirements
+                                    </span>
+                                    <span class="char-count">
+                                        <span id="charCount">{{ client.notes|length }}</span>/1000
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Unsaved Changes Alert -->
+                    <div class="changes-alert" id="changesAlert">
+                        <div class="alert-content">
+                            <i class="bi bi-exclamation-circle"></i>
+                            <span>You have <strong id="changesCount">0</strong> unsaved changes</span>
+                        </div>
+                        <button type="button" class="reset-link" onclick="resetAllChanges()">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            Reset All
+                        </button>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <a href="{% url 'qtn_client_index' %}" class="btn-cancel">
+                            <i class="bi bi-x-lg"></i>
+                            <span>Cancel</span>
+                        </a>
+                        <div class="action-buttons">
+                            <button type="button" class="btn-reset" id="resetBtn" onclick="resetAllChanges()">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                            <button type="submit" class="btn-submit" id="submitBtn">
+                                <span class="btn-text">
+                                    <span>Save Changes</span>
+                                    <i class="bi bi-check-circle"></i>
+                                </span>
+                                <span class="btn-loading">
+                                    <span class="spinner"></span>
+                                    <span>Saving...</span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Danger Zone -->
+                <div class="danger-zone">
+                    <div class="danger-header">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <div>
+                            <h4>Danger Zone</h4>
+                            <p>Irreversible actions</p>
+                        </div>
+                    </div>
+                    <div class="danger-body">
+                        <div class="danger-action">
+                            <div class="action-info">
+                                <h5>Delete this client</h5>
+                                <p>Once deleted, all data associated with this client will be permanently removed.</p>
+                            </div>
+                            <button type="button" class="btn-danger-action" onclick="confirmDelete()">
+                                <i class="bi bi-trash3"></i>
+                                Delete Client
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <div class="modal-icon">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <h3>Delete Client?</h3>
+        <p>Are you sure you want to delete <strong>{{ client.name }}</strong>? This action cannot be undone.</p>
+        <div class="modal-warning">
+            <i class="bi bi-info-circle"></i>
+            All quotations and data will be permanently deleted.
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+            <a href="{% url 'qtn_client_delete' client.id %}" class="modal-btn-delete">
+                <i class="bi bi-trash3"></i>
+                Delete
+            </a>
         </div>
     </div>
 </div>
 
 <style>
-    /* Success glow for Edit mode */
-    .shadow-success-grow {
-        box-shadow: 0 10px 20px -5px rgba(25, 135, 84, 0.4);
+    /* ===== CSS Variables ===== */
+    :root {
+        --primary: #10b981;
+        --primary-dark: #059669;
+        --primary-light: #d1fae5;
+        --primary-glow: rgba(16, 185, 129, 0.35);
+        
+        --accent: #6366f1;
+        --accent-light: #eef2ff;
+        
+        --warning: #f59e0b;
+        --warning-light: #fef3c7;
+        
+        --danger: #ef4444;
+        --danger-light: #fee2e2;
+        
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        
+        --radius: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        
+        --transition: all 0.2s ease;
+    }
+
+    /* ===== Page Layout ===== */
+    .client-edit-page {
+        min-height: 100vh;
+        background: linear-gradient(135deg, var(--primary-light) 0%, var(--gray-50) 30%, #fff 100%);
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    .client-edit-page::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 40%;
+        height: 250px;
+        background: linear-gradient(135deg, var(--primary-light) 0%, transparent 70%);
+        border-radius: 0 0 0 100%;
+        z-index: 0;
+    }
+
+    .container {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* ===== Page Header ===== */
+    .page-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .back-btn {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        color: var(--gray-600);
+        text-decoration: none;
+        transition: var(--transition);
+        flex-shrink: 0;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .back-btn:hover {
+        background: var(--gray-50);
+        border-color: var(--gray-300);
+        color: var(--gray-800);
+        transform: translateX(-3px);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex: 1;
+    }
+
+    .header-icon {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 8px 24px -8px var(--primary-glow);
+    }
+
+    .icon-check {
+        position: absolute;
+        bottom: -4px;
+        right: -4px;
+        width: 22px;
+        height: 22px;
+        background: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 11px;
+        box-shadow: var(--shadow);
+    }
+
+    .title-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .header-text h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    .edit-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        background: var(--warning-light);
+        color: #b45309;
+        font-size: 0.7rem;
+        font-weight: 600;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .header-text p {
+        font-size: 0.9rem;
+        color: var(--gray-500);
+        margin: 4px 0 0 0;
+    }
+
+    .header-text p strong {
+        color: var(--gray-700);
+    }
+
+    /* ===== Client Info Strip ===== */
+    .client-info-strip {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 14px 20px;
+        background: #fff;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        margin-bottom: 24px;
+        box-shadow: var(--shadow-sm);
+        flex-wrap: wrap;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--gray-600);
+        font-size: 0.85rem;
+    }
+
+    .info-item i {
+        color: var(--gray-400);
+    }
+
+    .info-divider {
+        width: 1px;
+        height: 20px;
+        background: var(--gray-200);
+    }
+
+    /* ===== Form Card ===== */
+    .form-card {
+        background: #fff;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        margin-bottom: 20px;
+        overflow: hidden;
+        border: 1px solid var(--gray-100);
+        transition: var(--transition);
+    }
+
+    .form-card:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+    }
+
+    .form-card.has-changes {
+        border-color: var(--warning);
+    }
+
+    .card-header-section {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 18px 24px;
+        background: linear-gradient(to right, var(--gray-50), #fff);
+        border-bottom: 1px solid var(--gray-100);
+        position: relative;
+    }
+
+    .step-badge {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 700;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px -4px var(--primary-glow);
+    }
+
+    .step-text {
+        flex: 1;
+    }
+
+    .step-text h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin: 0 0 2px 0;
+    }
+
+    .step-text p {
+        font-size: 0.78rem;
+        color: var(--gray-400);
+        margin: 0;
+    }
+
+    .section-icon {
+        font-size: 1.4rem;
+        color: var(--gray-200);
+        position: absolute;
+        right: 24px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .card-body-section {
+        padding: 24px;
+    }
+
+    /* ===== Form Controls ===== */
+    .form-floating {
+        position: relative;
     }
 
     .form-floating > .form-control {
-        padding-top: 1.625rem;
-        padding-bottom: 0.625rem;
+        height: 58px;
+        padding: 1.5rem 1rem 0.5rem 1rem;
+        font-size: 0.95rem;
+        border: 2px solid var(--gray-200);
+        border-radius: var(--radius);
+        background: var(--gray-50);
+        color: var(--gray-800);
+        transition: var(--transition);
     }
-    
-    .form-control:focus, .input-group-text:focus {
-        background-color: #ffffff !important;
-        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1) !important;
-        border: 1px solid #0d6efd !important;
+
+    .form-floating > .form-control:hover {
+        border-color: var(--gray-300);
+        background: #fff;
+    }
+
+    .form-floating > .form-control:focus {
+        background: #fff;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px var(--primary-light);
         outline: none;
     }
 
-    .bg-primary-subtle { background-color: #e7f0ff !important; }
+    .form-floating > .form-control.modified {
+        border-color: var(--warning);
+        background: linear-gradient(to right, var(--warning-light), #fff);
+    }
 
-    .card { transition: transform 0.3s ease; }
-    .card:hover { transform: translateY(-5px); }
+    .form-floating > .form-control::placeholder {
+        color: transparent;
+    }
 
-    /* For date visibility in Edit mode */
-    input[type="date"] { color: #444; }
+    .form-floating > label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        padding: 1rem;
+        pointer-events: none;
+        border: 1px solid transparent;
+        transform-origin: 0 0;
+        transition: var(--transition);
+        color: var(--gray-500);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-floating > label i {
+        color: var(--gray-400);
+        transition: var(--transition);
+    }
+
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        opacity: 0.85;
+        transform: scale(0.8) translateY(-0.6rem) translateX(0.15rem);
+        background: #fff;
+        padding: 0 6px;
+        height: auto;
+        color: var(--primary);
+    }
+
+    .form-floating > .form-control:focus ~ label i {
+        color: var(--primary);
+    }
+
+    .form-floating > .form-control.modified ~ label {
+        color: var(--warning);
+    }
+
+    .form-floating > .form-control.modified ~ label i {
+        color: var(--warning);
+    }
+
+    /* Change Badge */
+    .change-badge {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--warning);
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--transition);
+    }
+
+    .form-floating > .form-control.modified ~ .change-badge {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .change-badge.textarea-badge {
+        top: 16px;
+        transform: none;
+    }
+
+    /* Textarea specific */
+    .form-floating > textarea.form-control {
+        height: auto;
+        min-height: 140px;
+        padding-top: 1.625rem;
+        padding-bottom: 50px;
+    }
+
+    .textarea-footer {
+        position: absolute;
+        bottom: 12px;
+        left: 14px;
+        right: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        pointer-events: none;
+    }
+
+    .hint-text {
+        font-size: 0.72rem;
+        color: var(--gray-400);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .hint-text i {
+        color: var(--warning);
+        font-size: 0.8rem;
+    }
+
+    .char-count {
+        font-size: 0.72rem;
+        color: var(--gray-400);
+        font-weight: 500;
+    }
+
+    /* ===== Changes Alert ===== */
+    .changes-alert {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        background: var(--warning-light);
+        border: 2px solid var(--warning);
+        border-radius: var(--radius);
+        margin-bottom: 20px;
+        animation: slideDown 0.3s ease;
+    }
+
+    .changes-alert.show {
+        display: flex;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .alert-content {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #92400e;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .alert-content i {
+        font-size: 1.1rem;
+    }
+
+    .reset-link {
+        background: none;
+        border: none;
+        color: #92400e;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: var(--transition);
+    }
+
+    .reset-link:hover {
+        background: rgba(0,0,0,0.05);
+    }
+
+    /* ===== Form Actions ===== */
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding-top: 8px;
+        margin-bottom: 40px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 14px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border-radius: var(--radius);
+        border: 2px solid var(--gray-200);
+        background: #fff;
+        color: var(--gray-600);
+        text-decoration: none;
+        transition: var(--transition);
+        cursor: pointer;
+    }
+
+    .btn-cancel:hover {
+        background: var(--gray-50);
+        border-color: var(--gray-300);
+        color: var(--gray-700);
+    }
+
+    .btn-reset {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gray-100);
+        border: 2px solid var(--gray-200);
+        border-radius: var(--radius);
+        color: var(--gray-500);
+        cursor: pointer;
+        transition: var(--transition);
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .btn-reset.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .btn-reset:hover {
+        background: var(--gray-200);
+        color: var(--gray-700);
+    }
+
+    .btn-submit {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 32px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border-radius: var(--radius);
+        border: none;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: #fff;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: 0 4px 14px -4px var(--primary-glow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: 0.5s;
+    }
+
+    .btn-submit:hover::before {
+        left: 100%;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px -6px var(--primary-glow);
+    }
+
+    .btn-text {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-loading {
+        display: none;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-submit.loading .btn-text {
+        display: none;
+    }
+
+    .btn-submit.loading .btn-loading {
+        display: inline-flex;
+    }
+
+    .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* ===== Danger Zone ===== */
+    .danger-zone {
+        background: #fff;
+        border: 2px solid var(--danger-light);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .danger-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 20px;
+        background: var(--danger-light);
+    }
+
+    .danger-header i {
+        font-size: 1.3rem;
+        color: var(--danger);
+    }
+
+    .danger-header h4 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--danger);
+        margin: 0;
+    }
+
+    .danger-header p {
+        font-size: 0.75rem;
+        color: #b91c1c;
+        margin: 2px 0 0 0;
+        opacity: 0.8;
+    }
+
+    .danger-body {
+        padding: 20px;
+    }
+
+    .danger-action {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .action-info h5 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin: 0 0 4px 0;
+    }
+
+    .action-info p {
+        font-size: 0.8rem;
+        color: var(--gray-500);
+        margin: 0;
+    }
+
+    .btn-danger-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: #fff;
+        border: 2px solid var(--danger);
+        border-radius: var(--radius);
+        color: var(--danger);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        white-space: nowrap;
+    }
+
+    .btn-danger-action:hover {
+        background: var(--danger);
+        color: #fff;
+    }
+
+    /* ===== Modal ===== */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
+    }
+
+    .modal-overlay.show {
+        display: flex;
+    }
+
+    .modal-box {
+        background: #fff;
+        border-radius: var(--radius-xl);
+        padding: 32px;
+        max-width: 400px;
+        width: 100%;
+        text-align: center;
+        animation: modalPop 0.3s ease;
+    }
+
+    @keyframes modalPop {
+        from { opacity: 0; transform: scale(0.9) translateY(20px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-icon {
+        width: 64px;
+        height: 64px;
+        background: var(--danger-light);
+        color: var(--danger);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin: 0 auto 20px;
+    }
+
+    .modal-box h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 8px;
+    }
+
+    .modal-box > p {
+        font-size: 0.9rem;
+        color: var(--gray-500);
+        margin-bottom: 16px;
+    }
+
+    .modal-warning {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: var(--danger-light);
+        border-radius: var(--radius);
+        font-size: 0.8rem;
+        color: var(--danger);
+        text-align: left;
+        margin-bottom: 24px;
+    }
+
+    .modal-warning i {
+        flex-shrink: 0;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .modal-btn-cancel,
+    .modal-btn-delete {
+        flex: 1;
+        padding: 12px 20px;
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        border: none;
+    }
+
+    .modal-btn-cancel {
+        background: var(--gray-100);
+        color: var(--gray-700);
+    }
+
+    .modal-btn-cancel:hover {
+        background: var(--gray-200);
+    }
+
+    .modal-btn-delete {
+        background: var(--danger);
+        color: #fff;
+    }
+
+    .modal-btn-delete:hover {
+        background: #dc2626;
+    }
+
+    /* ===== Animations ===== */
+    .form-card {
+        animation: fadeInUp 0.4s ease both;
+    }
+
+    .form-card:nth-child(1) { animation-delay: 0.1s; }
+    .form-card:nth-child(2) { animation-delay: 0.2s; }
+    .form-card:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 16px;
+            left: 12px;
+        }
+
+        .container {
+            padding-top: 60px !important;
+        }
+
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .title-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .header-text h1 {
+            font-size: 1.35rem;
+        }
+
+        .client-info-strip {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .info-divider {
+            display: none;
+        }
+
+        .card-body-section {
+            padding: 20px 16px;
+        }
+
+        .card-header-section {
+            padding: 14px 18px;
+        }
+
+        .section-icon {
+            display: none;
+        }
+
+        .form-actions {
+            flex-direction: column-reverse;
+            gap: 10px;
+        }
+
+        .action-buttons {
+            width: 100%;
+        }
+
+        .btn-cancel,
+        .btn-submit {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-reset {
+            display: none !important;
+        }
+
+        .danger-action {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .btn-danger-action {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .modal-actions {
+            flex-direction: column;
+        }
+
+        .changes-alert {
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .textarea-footer {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+    }
+
+    /* ===== Text Transform ===== */
+    .text-uppercase {
+        text-transform: uppercase;
+    }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const changesAlert = document.getElementById('changesAlert');
+    const changesCount = document.getElementById('changesCount');
+    const notesArea = document.getElementById('notesArea');
+    const charCount = document.getElementById('charCount');
+    const gstInput = document.getElementById('gstInput');
+    
+    // All tracked inputs
+    const trackedInputs = form.querySelectorAll('[data-original]');
+    let modifiedCount = 0;
+    
+    // Initialize character count
+    if (notesArea && charCount) {
+        charCount.textContent = notesArea.value.length;
+        
+        notesArea.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+            
+            if (this.value.length > 900) {
+                charCount.style.color = '#f59e0b';
+            } else if (this.value.length >= 1000) {
+                charCount.style.color = '#ef4444';
+            } else {
+                charCount.style.color = '#9ca3af';
+            }
+        });
+    }
+    
+    // GST uppercase
+    if (gstInput) {
+        gstInput.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+    
+    // Track changes
+    trackedInputs.forEach(input => {
+        input.addEventListener('input', checkChanges);
+        input.addEventListener('change', checkChanges);
+    });
+    
+    function checkChanges() {
+        modifiedCount = 0;
+        
+        trackedInputs.forEach(input => {
+            const original = input.dataset.original || '';
+            const current = input.value || '';
+            
+            if (original.trim() !== current.trim()) {
+                input.classList.add('modified');
+                modifiedCount++;
+            } else {
+                input.classList.remove('modified');
+            }
+        });
+        
+        updateUI();
+    }
+    
+    function updateUI() {
+        if (modifiedCount > 0) {
+            changesAlert.classList.add('show');
+            changesCount.textContent = modifiedCount;
+            resetBtn.classList.add('show');
+        } else {
+            changesAlert.classList.remove('show');
+            resetBtn.classList.remove('show');
+        }
+    }
+    
+    // Reset all changes
+    window.resetAllChanges = function() {
+        trackedInputs.forEach(input => {
+            input.value = input.dataset.original || '';
+            input.classList.remove('modified');
+        });
+        
+        modifiedCount = 0;
+        updateUI();
+        
+        // Update char count
+        if (charCount && notesArea) {
+            charCount.textContent = notesArea.value.length;
+        }
+        
+        showToast('All changes have been reset', 'success');
+    };
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        const requiredInputs = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredInputs.forEach(input => {
+            if (!input.value.trim()) {
+                isValid = false;
+                input.classList.add('is-invalid');
+            } else {
+                input.classList.remove('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            showToast('Please fill in all required fields', 'error');
+            
+            const firstInvalid = form.querySelector('.is-invalid');
+            if (firstInvalid) {
+                firstInvalid.focus();
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
+        }
+        
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+    });
+    
+    // Delete modal
+    window.confirmDelete = function() {
+        document.getElementById('deleteModal').classList.add('show');
+    };
+    
+    window.closeModal = function() {
+        document.getElementById('deleteModal').classList.remove('show');
+    };
+    
+    // Close modal on outside click
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+    
+    // Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeModal();
+    });
+    
+    // Toast notification
+    function showToast(message, type = 'success') {
+        document.querySelectorAll('.toast-notification').forEach(t => t.remove());
+        
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: ${type === 'success' ? '#10b981' : '#ef4444'};
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 10000;
+            animation: toastSlide 0.3s ease;
+        `;
+        
+        toast.innerHTML = `
+            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'toastSlideOut 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+    
+    // Toast animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes toastSlide {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes toastSlideOut {
+            from { opacity: 1; transform: translateX(-50%) translateY(0); }
+            to { opacity: 0; transform: translateX(-50%) translateY(20px); }
+        }
+        .form-control.is-invalid {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1) !important;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Initial check
+    checkChanges();
+});
+</script>
 
 {% endblock %}
