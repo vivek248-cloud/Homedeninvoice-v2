@@ -99,6 +99,11 @@ urlpatterns = [
         name="save_quotation_order"
     ),
 
+    path("quotation/convert/<int:client_id>/", views.convert_qtn_page, name="convert_qtn_page"),
+    path("quotation/convert/save/", views.convert_qtn_to_spend, name="convert_qtn_to_spend"),
+    path('quotation/draft/save/', views.quotation_draft_save, name='quotation_draft_save'),
+    path('keep-alive/', views.keep_alive, name='keep_alive'),
+    path('get-csrf-token/', views.get_csrf_token, name='get_csrf_token'),
 
     # 🔐 Client auth
     path("client/login/", views.client_login, name="client_login"),
@@ -112,15 +117,16 @@ urlpatterns = [
     path("quotation/create/", views.quotation_create, name="quotation_create"),
     path("quotation/client/<int:id>/edit/", views.quotation_update, name="quotation_update"),
     path("quotation/<int:id>/delete/", views.quotation_delete, name="quotation_delete"),
-    path("quotation/<int:client_id>/pdf/", views.quotation_pdf, name="quotation_pdf"),
+   
 
     path("quotation/<int:client_id>/save-totals/", views.save_quotation_totals, name="save_quotation_totals"),
 
     path("quotation/<int:client_id>/view/", views.quotation_detail, name="quotation_detail"),
 
-    path("quotation/<int:client_id>/preview/", views.quotation_preview, name="quotation_preview"),
-    path("quotation/<int:client_id>/pdf/", views.quotation_pdf, name="quotation_pdf"),
-    path("quotation/<int:client_id>/save-order/", views.save_quotation_order, name="save_quotation_order"),
+    
+    path('quotation/<int:client_id>/pdf/', views.quotation_pdf, name='quotation_pdf'),
+
+    path('quotation/<int:client_id>/save-order/', views.save_quotation_order, name='save_quotation_order'),
 
     path("quotation/clients/", views.qtn_client_index, name="qtn_client_index"),
     path("quotation/clients/create/", views.qtn_client_create, name="qtn_client_create"),

@@ -212,6 +212,10 @@
                                    class="action-btn ab-view" title="View Details">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                <a href="{% url 'convert_qtn_page' q.client__id %}"
+                                   class="action-btn ab-convert" title="Convert to Spend">
+                                    <i class="bi bi-repeat"></i>
+                                </a>
                                 <a href="{% url 'quotation_update' q.client__id %}"
                                    class="action-btn ab-edit" title="Edit">
                                     <i class="bi bi-pencil-square"></i>
@@ -1012,6 +1016,12 @@
         box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
     }
 
+    .ab-convert:hover {
+        background: var(--amber); color: #fff;
+        border-color: var(--amber);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+    }
     .ab-edit:hover {
         background: var(--indigo); color: #fff;
         border-color: var(--indigo);

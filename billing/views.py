@@ -1688,6 +1688,12 @@ from django.shortcuts import render, redirect
 from .models import QtnClient, QuotationItem, Image, FullSemi
 
 
+from decimal import Decimal, InvalidOperation
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .models import QtnClient, QuotationItem, Image, FullSemi
+
+
 @login_required
 def quotation_create(request):
 
@@ -1698,12 +1704,14 @@ def quotation_create(request):
         start_date = request.POST.get("estimate_start_date")
         end_date = request.POST.get("estimate_end_date")
 
-        # update quotation client dates
-        QtnClient.objects.filter(id=client_id).update(
-            estimate_start_date=start_date,
-            estimate_end_date=end_date,
-        )
+        # ✅ Update client dates
+        if client_id:
+            QtnClient.objects.filter(id=client_id).update(
+                estimate_start_date=start_date,
+                estimate_end_date=end_date,
+            )
 
+        # 🔥 GET ALL LIST DATA
         floors = request.POST.getlist("floor[]")
         locations = request.POST.getlist("location[]")
         elements = request.POST.getlist("element[]")
@@ -1721,6 +1729,14 @@ def quotation_create(request):
         widths = request.POST.getlist("width[]")
         qtys = request.POST.getlist("qty[]")
 
+        # 🔥 IMPORTANT (manual rate)
+        rate_inputs = request.POST.getlist("rate[]")
+
+        # 🔥 preload fullsemi rates (performance)
+        fullsemi_rates = {
+            f.id: f.rate for f in FullSemi.objects.all()
+        }
+
         quotation_rows = []
 
         for i in range(len(elements)):
@@ -1728,23 +1744,33 @@ def quotation_create(request):
             if not elements[i]:
                 continue
 
-            length = Decimal(lengths[i] or 0)
-            width = Decimal(widths[i] or 0)
-            qty = int(qtys[i] or 1)
+            # ✅ SAFE DECIMAL PARSE
+            try:
+                length = Decimal(lengths[i] or 0)
+                width = Decimal(widths[i] or 0)
+                qty = Decimal(qtys[i] or 1)
+            except InvalidOperation:
+                continue
 
             area = length * width
 
-            price = Decimal("0.00")
+            # 🔥 RATE LOGIC (FIXED 🔥)
+            try:
+                price = Decimal(rate_inputs[i] or 0)
+            except (InvalidOperation, IndexError):
+                price = Decimal("0.00")
+
             fullsemi_id = fullsemis[i] if i < len(fullsemis) else None
 
-            if fullsemi_id:
-                try:
-                    fullsemi = FullSemi.objects.get(id=fullsemi_id)
-                    price = fullsemi.rate
-                except FullSemi.DoesNotExist:
-                    price = Decimal("0.00")
+            # fallback to preset
+            if price <= 0 and fullsemi_id:
+                price = fullsemi_rates.get(int(fullsemi_id), Decimal("0.00"))
 
-            # Correct checkbox reading
+            # optional: skip invalid rows
+            if price <= 0:
+                continue
+
+            # checkbox
             end_floor = request.POST.get(f"floor_end_{i}") == "1"
 
             total = area * price * qty
@@ -1765,21 +1791,23 @@ def quotation_create(request):
                     brand=brands[i] if i < len(brands) else "",
                     specification=specifications[i] if i < len(specifications) else "",
 
-                    unit=units[i] if i < len(units) else "",
+                    unit=units[i] if i < len(units) else "sqft",
 
                     length=length,
                     width=width,
                     area=area,
 
-                    price=price,
+                    price=price,   # ✅ FIXED
                     qty=qty,
                     total=total,
+
                     end=end_floor,
                 )
             )
 
+        # 🔥 BULK CREATE
         if quotation_rows:
-            QuotationItem.objects.bulk_create(quotation_rows)
+            QuotationItem.objects.bulk_create(quotation_rows, batch_size=500)
 
         return redirect("quotation_index")
 
@@ -1804,6 +1832,13 @@ from django.shortcuts import render, redirect
 from .models import QtnClient, QuotationItem, Image, FullSemi
 
 
+from decimal import Decimal, InvalidOperation
+from django.db import transaction
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .models import QtnClient, QuotationItem, Image, FullSemi
+
+
 @login_required
 def quotation_update(request, id):
 
@@ -1819,12 +1854,13 @@ def quotation_update(request, id):
         start_date = request.POST.get("estimate_start_date")
         end_date = request.POST.get("estimate_end_date")
 
-        # update quotation client dates
+        # ✅ update client dates
         QtnClient.objects.filter(id=client_id).update(
             estimate_start_date=start_date,
             estimate_end_date=end_date,
         )
 
+        # 🔥 GET ALL LISTS
         floors = request.POST.getlist("floor[]")
         locations = request.POST.getlist("location[]")
         elements = request.POST.getlist("element[]")
@@ -1841,30 +1877,47 @@ def quotation_update(request, id):
         lengths = request.POST.getlist("length[]")
         widths = request.POST.getlist("width[]")
         qtys = request.POST.getlist("qty[]")
-        floor_ends = request.POST.getlist("floor_end[]")
-        quotation_rows = []
 
-        # preload rates (fast)
+        # 🔥 IMPORTANT (manual rate)
+        rate_inputs = request.POST.getlist("rate[]")
+
+        # 🔥 preload rates
         fullsemi_rates = {f.id: f.rate for f in FullSemi.objects.all()}
+
+        quotation_rows = []
 
         for i in range(len(elements)):
 
             if not elements[i]:
                 continue
 
-            length = Decimal(lengths[i] or 0)
-            width = Decimal(widths[i] or 0)
-            qty = int(qtys[i] or 1)
+            # ✅ SAFE PARSE
+            try:
+                length = Decimal(lengths[i] or 0)
+                width = Decimal(widths[i] or 0)
+                qty = Decimal(qtys[i] or 1)
+            except InvalidOperation:
+                continue
 
             area = length * width
 
-            fullsemi_id = fullsemis[i] if i < len(fullsemis) else None
-            price = Decimal("0.00")
+            # 🔥 RATE FIX (CRITICAL 🔥)
+            try:
+                price = Decimal(rate_inputs[i] or 0)
+            except (InvalidOperation, IndexError):
+                price = Decimal("0.00")
 
-            if fullsemi_id:
+            fullsemi_id = fullsemis[i] if i < len(fullsemis) else None
+
+            # fallback to preset
+            if price <= 0 and fullsemi_id:
                 price = fullsemi_rates.get(int(fullsemi_id), Decimal("0.00"))
 
-            # Correct checkbox reading
+            # optional skip invalid
+            if price <= 0:
+                continue
+
+            # checkbox
             end_floor = request.POST.get(f"floor_end_{i}") == "1"
 
             total = area * price * qty
@@ -1885,24 +1938,25 @@ def quotation_update(request, id):
                     brand=brands[i] if i < len(brands) else "",
                     specification=specifications[i] if i < len(specifications) else "",
 
-                    unit=units[i] if i < len(units) else "",
+                    unit=units[i] if i < len(units) else "sqft",
 
                     length=length,
                     width=width,
                     area=area,
 
-                    price=price,
+                    price=price,  # ✅ FIXED
                     qty=qty,
                     total=total,
+
                     end=end_floor,
                 )
             )
 
-        # replace old quotation rows safely
+        # 🔥 REPLACE OLD DATA SAFELY
         with transaction.atomic():
             rows.delete()
             if quotation_rows:
-                QuotationItem.objects.bulk_create(quotation_rows)
+                QuotationItem.objects.bulk_create(quotation_rows, batch_size=500)
 
         return redirect("quotation_index")
 
@@ -1918,6 +1972,9 @@ def quotation_update(request, id):
             .distinct()[:200]
         )
     })
+
+
+
 
 
 @login_required
@@ -2032,76 +2089,76 @@ def quotation_detail(request, client_id):
 
 
 
-@login_required
-def quotation_preview(request, client_id):
+# @login_required
+# def quotation_preview(request, client_id):
 
-    client = get_object_or_404(QtnClient, id=client_id)
+#     client = get_object_or_404(QtnClient, id=client_id)
 
-    rows = QuotationItem.objects.filter(
-        client_id=client_id
-    ).order_by("id")
+#     rows = QuotationItem.objects.filter(
+#         client_id=client_id
+#     ).order_by("id")
 
-    subtotal = sum(r.total for r in rows)
+#     subtotal = sum(r.total for r in rows)
 
-    gst_rate = Decimal(client.gst or 0)
-    gst_amount = (subtotal * gst_rate) / Decimal("100")
+#     gst_rate = Decimal(client.gst or 0)
+#     gst_amount = (subtotal * gst_rate) / Decimal("100")
 
-    total_with_gst = subtotal + gst_amount
+#     total_with_gst = subtotal + gst_amount
 
-    discount = client.discount_amount or Decimal("0.00")
+#     discount = client.discount_amount or Decimal("0.00")
 
-    grand_total = total_with_gst - discount
+#     grand_total = total_with_gst - discount
 
-    return render(
-        request,
-        "billing/quotation/pdf.html",
-        {
-            "client": client,
-            "rows": rows,
-            "subtotal": subtotal,
-            "gst_rate": gst_rate,
-            "gst_amount": gst_amount,
-            "grand_total": grand_total,
-            "preview": True
-        }
-    )
+#     return render(
+#         request,
+#         "billing/quotation/pdf.html",
+#         {
+#             "client": client,
+#             "rows": rows,
+#             "subtotal": subtotal,
+#             "gst_rate": gst_rate,
+#             "gst_amount": gst_amount,
+#             "grand_total": grand_total,
+#             "preview": True
+#         }
+#     )
 
 
 
-import json
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
+# import json
+# from django.http import JsonResponse
+# from django.views.decorators.http import require_POST
+# from django.contrib.auth.decorators import login_required
 
-@require_POST
-@login_required
-def save_quotation_order(request, client_id):
+# @require_POST
+# @login_required
+# def save_quotation_order(request, client_id):
 
-    try:
-        data = json.loads(request.body.decode("utf-8"))
+#     try:
+#         data = json.loads(request.body.decode("utf-8"))
 
-        order = data.get("order", [])
+#         order = data.get("order", [])
 
-        for index, item_id in enumerate(order):
+#         for index, item_id in enumerate(order):
 
-            QuotationItem.objects.filter(
-                id=int(item_id),
-                client_id=client_id
-            ).update(sort_order=index)
+#             QuotationItem.objects.filter(
+#                 id=int(item_id),
+#                 client_id=client_id
+#             ).update(sort_order=index)
 
-        return JsonResponse({
-            "status": "success",
-            "message": "Order saved"
-        })
+#         return JsonResponse({
+#             "status": "success",
+#             "message": "Order saved"
+#         })
 
-    except Exception as e:
+#     except Exception as e:
 
-        print("ORDER SAVE ERROR:", e)   # ← IMPORTANT DEBUG
+#         print("ORDER SAVE ERROR:", e)   # ← IMPORTANT DEBUG
 
-        return JsonResponse({
-            "status": "error",
-            "message": str(e)
-        }, status=400)
+#         return JsonResponse({
+#             "status": "error",
+#             "message": str(e)
+#         }, status=400)
 
 
 
@@ -2118,115 +2175,6 @@ from django.db.models import Case, When, Value, IntegerField
 
 
 
-# @login_required
-# def quotation_pdf(request, client_id):
-
-#     client = QtnClient.objects.get(id=client_id)
-
-#     rows = (
-#         QuotationItem.objects
-#         .filter(client_id=client_id)
-#         .annotate(
-#             floor_lower=Lower("floor"),
-#             location_lower=Lower("location"),
-#             end_priority=Case(
-#                 When(element__iexact="FLASE CEILING - PLAIN", then=Value(1)),
-#                 When(element__iexact="ELECTRICAL LABOUR", then=Value(1)),
-#                 default=Value(0),
-#                 output_field=IntegerField(),
-#             )
-#         )
-#         .order_by("floor_lower", "location_lower", "end_priority", "id")
-#     )
-
-#     # -------------------------
-#     # Subtotal
-#     # -------------------------
-#     subtotal = sum((r.total for r in rows), Decimal("0.00"))
-
-#     gst_rate = Decimal(client.gst or 0)
-#     gst_amount = (subtotal * gst_rate) / Decimal("100")
-
-#     total_with_gst = subtotal + gst_amount
-
-#     # Discount
-#     if client.discount_mode == "percent":
-#         percent = Decimal(client.discount_percent or 0)
-#         discount_amount = (subtotal * percent) / Decimal("100")
-#     else:
-#         discount_amount = Decimal(client.discount_amount or 0)
-
-#     grand_total = max(
-#         total_with_gst - discount_amount,
-#         Decimal("0.00")
-#     )
-
-#     quotation_number = f"QTN-{client.id}-{date.today().strftime('%m%y')}"
-
-#     # Render HTML
-#     template = get_template("billing/quotation/pdf.html")
-
-#     html = template.render({
-#         "client": client,
-#         "rows": rows,
-
-#         "total_amount": subtotal,
-#         "gst_rate": gst_rate,
-#         "gst_amount": gst_amount,
-
-#         "discount": discount_amount,
-#         "grand_total": grand_total,
-
-#         "quotation_number": quotation_number,
-#         "total_with_gst": total_with_gst,
-#         "today": date.today(),
-#     })
-
-#     quotation_buffer = BytesIO()
-
-#     pisa_status = pisa.CreatePDF(
-#         html,
-#         dest=quotation_buffer,
-#         link_callback=fetch_resources
-#     )
-
-#     if pisa_status.err:
-#         return HttpResponse("PDF generation error", status=500)
-
-#     quotation_buffer.seek(0)
-
-#     # Static PDFs
-#     front_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "front.pdf")
-#     back_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "back.pdf")
-
-#     merger = PdfMerger()
-
-#     if os.path.exists(front_pdf):
-#         merger.append(front_pdf)
-
-#     merger.append(quotation_buffer)
-
-#     if os.path.exists(back_pdf):
-#         merger.append(back_pdf)
-
-#     final_buffer = BytesIO()
-
-#     merger.write(final_buffer)
-#     merger.close()
-
-#     final_buffer.seek(0)
-
-#     response = HttpResponse(
-#         final_buffer.read(),
-#         content_type="application/pdf"
-#     )
-
-#     response["Content-Disposition"] = (
-#         f'inline; filename="QTN_{client.name}_{date.today().strftime("%Y%m%d")}.pdf"'
-#     )
-
-#     return response
-
 from decimal import Decimal
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
@@ -2240,57 +2188,101 @@ from PyPDF2 import PdfMerger
 from xhtml2pdf import pisa
 
 
+
+
+from decimal import Decimal
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, JsonResponse
+from django.template.loader import get_template
+from django.db.models import Max
+from django.db.models.functions import Lower
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from datetime import date
+from io import BytesIO
+import os
+import json
+from PyPDF2 import PdfMerger
+from xhtml2pdf import pisa
+
+
+def fetch_resources(uri, rel):
+    """Callback to allow xhtml2pdf to access local files"""
+    if uri.startswith(settings.MEDIA_URL):
+        path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
+    elif uri.startswith(settings.STATIC_URL):
+        path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
+    else:
+        path = uri
+    return path
+
+
 @login_required
 def quotation_pdf(request, client_id):
-
+    """
+    GET: Preview/Edit page with drag & drop
+    POST: Generate merged PDF with custom order
+    """
+    
     client = get_object_or_404(QtnClient, id=client_id)
-
-    # -------------------------
+    
+    # Check if custom order is provided (POST request)
+    custom_order = None
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            custom_order = data.get("order", [])
+        except:
+            custom_order = request.POST.getlist("order[]")
+    
     # Get rows
-    # -------------------------
-    rows = (
+    rows = list(
         QuotationItem.objects
         .filter(client_id=client_id)
         .annotate(
             floor_lower=Lower("floor"),
             location_lower=Lower("location"),
-
-            # if any row of floor has end=True → whole floor becomes end
             floor_end=Max("end")
         )
         .order_by(
-            "floor_end",      # normal floors first
+            "floor_end",
             "floor_lower",
             "location_lower",
             "sort_order",
             "id"
         )
     )
-
-    # -------------------------
-    # Totals
-    # -------------------------
+    
+    # Reorder rows if custom order provided
+    if custom_order:
+        rows_dict = {str(r.id): r for r in rows}
+        ordered_rows = []
+        for item_id in custom_order:
+            if str(item_id) in rows_dict:
+                ordered_rows.append(rows_dict[str(item_id)])
+        # Add any remaining rows not in the order
+        for r in rows:
+            if r not in ordered_rows:
+                ordered_rows.append(r)
+        rows = ordered_rows
+    
+    # Calculate totals
     subtotal = sum((r.total for r in rows), Decimal("0.00"))
-
     gst_rate = Decimal(client.gst or 0)
     gst_amount = (subtotal * gst_rate) / Decimal("100")
-
     total_with_gst = subtotal + gst_amount
-
+    
     # Discount
     if client.discount_mode == "percent":
         percent = Decimal(client.discount_percent or 0)
         discount_amount = (subtotal * percent) / Decimal("100")
     else:
         discount_amount = Decimal(client.discount_amount or 0)
-
-    grand_total = max(
-        total_with_gst - discount_amount,
-        Decimal("0.00")
-    )
-
+    
+    grand_total = max(total_with_gst - discount_amount, Decimal("0.00"))
     quotation_number = f"QTN-{client.id}-{date.today().strftime('%m%y')}"
-
+    
     context = {
         "client": client,
         "rows": rows,
@@ -2303,65 +2295,91 @@ def quotation_pdf(request, client_id):
         "total_with_gst": total_with_gst,
         "today": date.today(),
     }
-
-    # -------------------------
-    # PREVIEW MODE
-    # -------------------------
-    if request.GET.get("preview") == "1":
-        return render(request, "billing/quotation/pdf.html", context)
-
-    # -------------------------
-    # PDF GENERATION
-    # -------------------------
-    template = get_template("billing/quotation/pdf.html")
+    
+    # If preview mode (GET with preview=1 or just GET)
+    if request.method == "GET":
+        if request.GET.get("print") == "1":
+            # Return clean print version
+            context["print_mode"] = True
+            return render(request, "billing/quotation/pdf_print.html", context)
+        else:
+            # Return editable preview
+            context["edit_mode"] = True
+            return render(request, "billing/quotation/pdf.html", context)
+    
+    # POST: Generate PDF with merged front/back
+    # Use print template (clean, no editing UI)
+    template = get_template("billing/quotation/pdf_print.html")
     html = template.render(context)
-
+    
+    # Generate quotation PDF
     quotation_buffer = BytesIO()
-
     pisa_status = pisa.CreatePDF(
         html,
         dest=quotation_buffer,
         link_callback=fetch_resources
     )
-
+    
     if pisa_status.err:
-        return HttpResponse("PDF generation error", status=500)
-
+        return JsonResponse({"error": "PDF generation failed"}, status=500)
+    
     quotation_buffer.seek(0)
-
-    # -------------------------
-    # Merge with front/back PDFs
-    # -------------------------
+    
+    # Merge PDFs
     front_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "front.pdf")
     back_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "back.pdf")
-
+    
     merger = PdfMerger()
-
+    
+    # Add front page if exists
     if os.path.exists(front_pdf):
         merger.append(front_pdf)
-
+    
+    # Add quotation
     merger.append(quotation_buffer)
-
+    
+    # Add back page if exists
     if os.path.exists(back_pdf):
         merger.append(back_pdf)
-
+    
+    # Write final PDF
     final_buffer = BytesIO()
-
     merger.write(final_buffer)
     merger.close()
-
     final_buffer.seek(0)
-
+    
+    # Return PDF response
     response = HttpResponse(
         final_buffer.read(),
         content_type="application/pdf"
     )
-
-    response["Content-Disposition"] = (
-        f'inline; filename="QTN_{client.name}_{date.today().strftime("%Y%m%d")}.pdf"'
-    )
-
+    
+    filename = f"QTN_{client.name}_{date.today().strftime('%Y%m%d')}.pdf"
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    
     return response
+
+
+@login_required
+@require_POST
+def save_quotation_order(request, client_id):
+    """Save the reordered items to database"""
+    
+    try:
+        data = json.loads(request.body)
+        order = data.get("order", [])
+        
+        for index, item_id in enumerate(order):
+            QuotationItem.objects.filter(
+                id=item_id,
+                client_id=client_id
+            ).update(sort_order=index)
+        
+        return JsonResponse({"status": "success"})
+    
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
 
 
 @login_required
@@ -2371,36 +2389,32 @@ def save_quotation_totals(request, client_id):
 
     if request.method == "POST":
 
-        def safe_float(val):
+        def safe_decimal(val):
             try:
-                return float(val)
-            except (TypeError, ValueError):
-                return 0
+                return Decimal(val)
+            except:
+                return Decimal("0.00")
 
-        gst_percent = safe_float(request.POST.get("gst_percent"))
-        discount_value = safe_float(request.POST.get("discount_value"))
+        gst_percent = safe_decimal(request.POST.get("gst_percent"))
+        discount_value = safe_decimal(request.POST.get("discount_value"))
         discount_type = request.POST.get("discount_type") or "amount"
 
-        # Save GST
-        client.GST = gst_percent
+        # ✅ FIXED GST
+        client.gst = gst_percent
 
+        # ✅ FIXED MODEL
         subtotal = sum(
-            r.total for r in Quotation.objects.filter(client_id=client_id)
+            (r.total for r in QuotationItem.objects.filter(client_id=client_id)),
+            Decimal("0.00")
         )
 
-        # Save discount correctly
         if discount_type == "percent":
-
             client.discount_percent = discount_value
-            client.discount_amount = round(subtotal * discount_value / 100, 2)
-
+            client.discount_amount = (subtotal * discount_value) / Decimal("100")
             client.discount_mode = "percent"
-
         else:
-
             client.discount_amount = discount_value
-            client.discount_percent = 0
-
+            client.discount_percent = Decimal("0.00")
             client.discount_mode = "amount"
 
         client.save()
@@ -2510,6 +2524,220 @@ def image_delete(request, id):
     return render(request, "billing/image/confirm_delete.html", {
         "image": obj
     })
+
+
+
+
+# convert all quotations of a client to a spend 
+
+@login_required
+def convert_qtn_page(request, client_id):
+
+    items = QuotationItem.objects.filter(client_id=client_id)
+
+    return render(request, "billing/quotation/convert.html", {
+        "items": items,
+        "clients": Client.objects.all(),
+        "projects": Project.objects.all(),
+    })
+
+
+
+
+from decimal import Decimal
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+
+from decimal import Decimal
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+
+@login_required
+def convert_qtn_to_spend(request):
+
+    if request.method == "POST":
+
+        project_id = request.POST.get("project")
+        selected_items = request.POST.getlist("items")
+
+        # ✅ VALIDATION
+        if not project_id:
+            messages.error(request, "Project is required.")
+            return redirect(request.META.get('HTTP_REFERER'))
+
+        if not selected_items:
+            messages.error(request, "Please select at least one item.")
+            return redirect(request.META.get('HTTP_REFERER'))
+
+        # 🔥 BULK FETCH (IMPORTANT)
+        items = QuotationItem.objects.select_related('full_semi').filter(id__in=selected_items)
+
+        if not items.exists():
+            messages.error(request, "No valid items found.")
+            return redirect(request.META.get('HTTP_REFERER'))
+
+        # 🔥 PRELOAD (performance boost)
+        floors = {f.name.lower(): f for f in FloorType.objects.all()}
+        rooms = list(RoomType.objects.all())
+
+        rows = []
+
+        for item in items:
+
+            # 🔥 FLOOR MATCH (fast dict lookup)
+            floor_obj = floors.get(item.floor.lower()) if item.floor else None
+
+            # 🔥 ROOM MATCH (smart reverse match)
+            room_obj = None
+            if item.location:
+                loc = item.location.lower()
+                for r in rooms:
+                    if r.name.lower() in loc:
+                        room_obj = r
+                        break
+
+            # 🔥 DESCRIPTION FIX
+            desc = (item.specification or "").strip()
+            if not desc:
+                desc = item.element
+
+            # 🔥 RATE FIX (IMPORTANT 🔥)
+            rate = item.price or Decimal("0.00")
+
+            # fallback to fullsemi if price missing
+            if rate == 0 and item.full_semi:
+                rate = item.full_semi.rate
+
+            # 🔥 CREATE OBJECT
+            rows.append(
+                Spend(
+                    project_id=project_id,
+
+                    floor=floor_obj,
+                    room=room_obj,
+                    fullsemi=item.full_semi,
+
+                    elements=item.element,
+                    description=desc,
+
+                    length=item.length,
+                    width=item.width,
+                    area=item.area,
+
+                    rate=rate,
+                    qty=item.qty or Decimal("1"),
+                )
+            )
+
+        if rows:
+            with transaction.atomic():
+
+                # 🔥 BULK INSERT
+                Spend.objects.bulk_create(rows, batch_size=500)
+
+                # 🔥 FAST TOTAL CALCULATION
+                total_amount = sum(
+                    (r.area or Decimal("0")) * (r.rate or Decimal("0")) * (r.qty or Decimal("0"))
+                    for r in rows
+                )
+
+                # 🔥 UPDATE PROJECT
+                project = Project.objects.select_for_update().get(id=project_id)
+                project.budget += total_amount
+                project.save(update_fields=["budget"])
+
+            messages.success(request, f"{len(rows)} items converted successfully.")
+        else:
+            messages.error(request, "No valid items to convert.")
+
+        return redirect("spend_list")
+
+
+
+# views.py
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.contrib.auth.decorators import login_required
+import json
+
+from django.utils.timezone import now
+from datetime import timedelta
+from django.db import transaction
+import time
+
+@login_required
+@require_POST
+def quotation_draft_save(request):
+
+    try:
+        data = json.loads(request.body)
+        draft_data = data.get('draft_data', {})
+        timestamp = data.get('timestamp')
+        quotation_id = draft_data.get('quotation_id')  # 🔥 IMPORTANT
+
+        # 🔥 RUN CLEANUP ONLY OCCASIONALLY (every 10 mins)
+        last_cleanup = request.session.get("last_draft_cleanup", 0)
+        current_time = time.time()
+
+        if current_time - last_cleanup > 600:  # 10 minutes
+            cutoff_time = now() - timedelta(days=1)
+
+            QuotationDraft.objects.filter(
+                updated_at__lt=cutoff_time
+            ).delete()
+
+            request.session["last_draft_cleanup"] = current_time
+
+        # 🔥 SAVE DRAFT
+        quotation_id = draft_data.get('quotation_id')
+        
+        with transaction.atomic():
+            QuotationDraft.objects.update_or_create(
+                user=request.user,
+                quotation_id=quotation_id,   # ✅ IMPORTANT
+                defaults={
+                    'data': draft_data,
+                    'timestamp': timestamp,
+                }
+            )
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Draft saved successfully',
+            'timestamp': timestamp
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+    
+
+
+@login_required
+@require_POST
+def keep_alive(request):
+    """Keep session alive"""
+    request.session.modified = True
+    return JsonResponse({'success': True})
+
+
+@ensure_csrf_cookie
+@require_GET
+def get_csrf_token(request):
+    """Return a fresh CSRF token"""
+    from django.middleware.csrf import get_token
+    token = get_token(request)
+    return JsonResponse({'token': token})
+
+
+
+
 
 
 

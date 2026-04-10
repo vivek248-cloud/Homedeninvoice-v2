@@ -1,354 +1,1567 @@
 {% extends "billing/layouts/base.html" %}
 {% block content %}
 
-<div class="container-fluid py-4" style="background-color: #f8fafc; min-height: 100vh;">
-    <nav aria-label="breadcrumb" class="mb-4 px-3">
-        <ol class="breadcrumb small text-uppercase fw-bold mb-0">
-            <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">Quotations</a></li>
-            <li class="breadcrumb-item active text-primary">Preview & Adjust</li>
-        </ol>
-    </nav>
-
-    <div class="row g-4">
-        <div class="col-xl-9 col-lg-8">
-            <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
-                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
-                    <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-list-check me-2 text-primary"></i>Itemized Estimate</h5>
+<div class="quote-preview-wrapper">
+    <!-- Top Action Bar -->
+    <div class="top-action-bar">
+        <div class="container-fluid px-4">
+            <div class="d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{% url 'quotation_index' %}" class="btn btn-icon btn-ghost">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h1 class="page-title mb-0">Quotation Preview</h1>
+                        <div class="page-subtitle">
+                            <span class="status-badge status-draft">Draft</span>
+                            <span class="text-muted">• {{ rows|length }} items</span>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="table-responsive custom-scrollbar">
-                    <table class="table align-middle mb-0" id="mainQuoteTable">
-                        <thead class="bg-light text-muted small text-uppercase">
-                            <tr>
-                                <th class="ps-4">Item / Spec</th>
-                                <th class="text-center">Image</th>
-                                <th>Materials</th>
-                                <th class="text-center">Area / Qty</th>
-                                <th class="text-end">Unit Price</th>
-                                <th class="text-end">Line Total</th>
-                                <th class="text-center" style="width: 80px;">Order</th>
-                            </tr>
-                        </thead>
-                        <tbody class="border-top-0">
-                            {% for r in rows %}
-                            <tr>
-                                <td class="ps-4">
-                                    <div class="fw-bold text-dark">{{ r.element }}</div>
-                                    <div class="small text-muted mb-1">{{ r.floor }} | {{ r.location }}</div>
-                                    <div class="small text-muted bg-light p-2 rounded" style="max-width: 300px; font-size: 0.8rem;">
-                                        {{ r.specification|truncatewords:20 }}
-                                    </div>
-                                </td>
-                                <td class="text-center">
-                                    {% if r.image %}
-                                    <img src="{{ r.image.image.url }}" style="width:50px;height:50px;object-fit:cover" class="rounded shadow-sm border">
-                                    {% else %}
-                                    <div class="bg-light rounded border d-flex align-items-center justify-content-center mx-auto" style="width:50px;height:50px;">
-                                        <i class="bi bi-image text-muted"></i>
-                                    </div>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="small"><strong>Core:</strong> {{ r.core_material }}</div>
-                                    <div class="small"><strong>Finish:</strong> {{ r.finish_material }}</div>
-                                    <div class="small text-primary fw-bold">{{ r.brand }}</div>
-                                </td>
-                                <td class="text-center">
-                                    <div class="fw-bold">{{ r.area }} <span class="small fw-normal text-muted">{{ r.unit }}</span></div>
-                                    <div class="badge bg-secondary-subtle text-secondary rounded-pill">Qty: {{ r.qty }}</div>
-                                </td>
-                                <td class="text-end text-muted">₹ {{ r.price }}</td>
-                                <td class="text-end">
-                                    <div class="fw-bold text-primary line-total-value">₹ {{ r.total }}</div>
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group-vertical btn-group-sm rounded shadow-sm border overflow-hidden">
-                                        <button type="button" class="btn btn-white py-1 px-2 border-0" onclick="moveUp(this)"><i class="bi bi-chevron-up"></i></button>
-                                        <button type="button" class="btn btn-white py-1 px-2 border-0" onclick="moveDown(this)"><i class="bi bi-chevron-down"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="autosave-indicator" id="autosaveIndicator">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>All changes saved</span>
+                    </div>
+                    <div class="btn-group">
+                        <a href="{% url 'quotation_pdf' client.id %}?preview=1" class="btn btn-warning btn-sm">
+                            <i class="bi bi-eye me-1"></i> Preview
+                        </a>
+                        <a href="{% url 'quotation_pdf' client.id %}" target="_blank" class="btn btn-danger btn-sm">
+                            <i class="bi bi-download me-1"></i> PDF
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="col-xl-3 col-lg-4">
-            <div class="sticky-top" style="top: 80px; z-index: 10;">
+    <div class="container-fluid px-4 py-4">
+        <div class="row g-4">
+            <!-- Main Content -->
+            <div class="col-xl-8 col-lg-7">
                 
-                <div class="card shadow-sm border-0 rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h6 class="text-uppercase small fw-bold text-muted mb-3">Client Overview</h6>
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-primary-subtle rounded-circle p-3 me-3">
-                                <i class="bi bi-person text-primary h4 mb-0"></i>
+                <!-- Client Info Card (Collapsible on mobile) -->
+                <div class="client-info-card mb-4" id="clientCard">
+                    <div class="d-flex align-items-center justify-content-between" data-bs-toggle="collapse" data-bs-target="#clientDetails" aria-expanded="true">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="client-avatar">
+                                {{ client.name|slice:":1"|upper }}
                             </div>
                             <div>
-                                <h6 class="mb-0 fw-bold">{{ client.name }}</h6>
+                                <h6 class="mb-0 fw-semibold">{{ client.name }}</h6>
                                 <small class="text-muted">{{ client.phone1 }}</small>
                             </div>
                         </div>
-                        <div class="small text-muted">
-                            <i class="bi bi-calendar-event me-2"></i>{{ client.estimate_start_date }} — {{ client.estimate_end_date }}
+                        <button class="btn btn-icon btn-ghost d-lg-none">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="collapse show" id="clientDetails">
+                        <div class="client-meta mt-3 pt-3 border-top">
+                            <div class="row g-3">
+                                <div class="col-auto">
+                                    <div class="meta-item">
+                                        <i class="bi bi-calendar3"></i>
+                                        <span>{{ client.estimate_start_date|date:"M d" }} - {{ client.estimate_end_date|date:"M d, Y" }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="meta-item">
+                                        <i class="bi bi-geo-alt"></i>
+                                        <span>{{ client.address|default:"No address" }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card shadow-lg border-0 rounded-4">
-                    <div class="card-body p-4">
-                        <h5 class="fw-bold mb-4">Pricing Summary</h5>
+                <!-- Items Table -->
+                <div class="items-card">
+                    <div class="items-header">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-ul me-2 text-primary"></i>
+                                Line Items
+                            </h5>
+                            <div class="d-flex gap-2">
+                                <div class="search-box">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" placeholder="Search items..." id="searchItems" class="form-control form-control-sm">
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-ghost btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="bi bi-funnel"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" data-filter="all">All Items</a></li>
+                                        <li><a class="dropdown-item" href="#" data-filter="floor">Group by Floor</a></li>
+                                        <li><a class="dropdown-item" href="#" data-filter="category">Group by Category</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="items-body" id="itemsContainer">
+                        {% for r in rows %}
+                        <div class="item-row" data-id="{{ r.id }}" data-floor="{{ r.floor }}" data-element="{{ r.element }}">
+                            <div class="item-drag-handle">
+                                <i class="bi bi-grip-vertical"></i>
+                            </div>
+                            
+                            <div class="item-image">
+                                {% if r.image %}
+                                <img src="{{ r.image.image.url }}" alt="{{ r.element }}" class="img-thumbnail">
+                                {% else %}
+                                <div class="img-placeholder">
+                                    <i class="bi bi-image"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="item-details">
+                                <div class="item-header">
+                                    <h6 class="item-title">{{ r.element }}</h6>
+                                    <div class="item-location">
+                                        <span class="badge badge-floor">{{ r.floor }}</span>
+                                        <span class="badge badge-location">{{ r.location }}</span>
+                                    </div>
+                                </div>
+                                <p class="item-spec">{{ r.specification|truncatewords:15 }}</p>
+                                <div class="item-materials">
+                                    <span class="material-tag">
+                                        <i class="bi bi-layers"></i> {{ r.core_material }}
+                                    </span>
+                                    <span class="material-tag">
+                                        <i class="bi bi-palette"></i> {{ r.finish_material }}
+                                    </span>
+                                    {% if r.brand %}
+                                    <span class="material-tag brand">{{ r.brand }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="item-quantity">
+                                <div class="qty-display">
+                                    <span class="qty-value">{{ r.area }}</span>
+                                    <span class="qty-unit">{{ r.unit }}</span>
+                                </div>
+                                <div class="qty-count">× {{ r.qty }}</div>
+                            </div>
+                            
+                            <div class="item-pricing">
+                                <div class="unit-price">₹{{ r.price|floatformat:0 }}</div>
+                                <div class="line-total" data-amount="{{ r.total }}">₹{{ r.total|floatformat:0 }}</div>
+                            </div>
+                            
+                            <div class="item-actions">
+                                <div class="dropdown">
+                                    <button class="btn btn-icon btn-ghost" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-pencil me-2"></i>Edit</a></li>
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-files me-2"></i>Duplicate</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Remove</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <h6>No items added yet</h6>
+                            <p>Add items to your quotation to see them here</p>
+                            <a href="{% url 'quotation_update' client.id %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus me-1"></i> Add Items
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-xl-4 col-lg-5">
+                <div class="sidebar-sticky">
+                    
+                    <!-- Pricing Summary Card -->
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h5 class="mb-0">Summary</h5>
+                        </div>
                         
-                        <div class="mb-3 d-flex justify-content-between align-items-center">
-                            <span class="text-muted">Subtotal</span>
-                            <span class="fw-bold text-dark" id="subtotal">₹ {{ subtotal }}</span>
-                        </div>
+                        <div class="pricing-body">
+                            <!-- Subtotal -->
+                            <div class="summary-row">
+                                <span class="summary-label">Subtotal</span>
+                                <span class="summary-value" id="subtotal">₹{{ subtotal|floatformat:2 }}</span>
+                            </div>
+                            
+                            <!-- Tax Section -->
+                            <div class="config-section">
+                                <div class="config-header" data-bs-toggle="collapse" data-bs-target="#taxSection">
+                                    <span>
+                                        <i class="bi bi-receipt me-2"></i>
+                                        Tax (GST)
+                                    </span>
+                                    <span class="config-value" id="taxDisplay">+₹0.00</span>
+                                </div>
 
-                        <div class="mb-4">
-                            <label class="small fw-bold text-muted mb-1 text-uppercase">Tax (GST)</label>
-                            <div class="input-group">
-                            <input type="number"
-                                id="gst"
-                                value="{{ client.GST|default:0 }}"
-                                min="0"
-                                max="28"
-                                step="0.1"
-                                class="form-control border-0 bg-light shadow-none text-center fw-bold">
-                                <span class="input-group-text border-0 bg-light">%</span>
+                                <div class="collapse show" id="taxSection">
+                                    <div class="config-body">
+
+                                        <div class="slider-input">
+
+                                            <!-- ✅ SLIDER -->
+                                            <input type="range"
+                                                id="gstSlider"
+                                                min="0" max="28" step="0.5"
+                                                value="{{ client.gst|default:0 }}"
+                                                class="form-range">
+
+                                            <div class="slider-value">
+
+                                                <!-- ✅ INPUT (IMPORTANT NAME FIX) -->
+                                                <input type="number"
+                                                    id="gst"
+                                                    name="gst_percent"
+                                                    value="{{ client.gst|default:0 }}"
+                                                    min="0" max="28" step="0.1"
+                                                    class="form-control form-control-sm">
+
+                                                <span>%</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- ✅ PRESETS -->
+                                        <div class="tax-presets">
+                                            <button type="button" class="preset-btn" data-value="0">0%</button>
+                                            <button type="button" class="preset-btn" data-value="5">5%</button>
+                                            <button type="button" class="preset-btn" data-value="12">12%</button>
+                                            <button type="button" class="preset-btn" data-value="18">18%</button>
+                                            <button type="button" class="preset-btn" data-value="28">28%</button>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Discount Section -->
+                            <div class="config-section">
+                                <div class="config-header" data-bs-toggle="collapse" data-bs-target="#discountSection">
+                                    <span>
+                                        <i class="bi bi-tag me-2"></i>
+                                        Discount
+                                    </span>
+                                    <span class="config-value text-danger" id="discountDisplay">-₹0.00</span>
+                                </div>
+                                <div class="collapse show" id="discountSection">
+                                    <div class="config-body">
+                                        <div class="discount-type-toggle">
+                                            <input type="radio" class="btn-check" name="discountType" 
+                                                   id="typePerc" value="percent" 
+                                                   {% if discount_mode == "percent" %}checked{% endif %}>
+                                            <label class="toggle-btn" for="typePerc">
+                                                <i class="bi bi-percent"></i> Percentage
+                                            </label>
+                                            
+                                            <input type="radio" class="btn-check" name="discountType" 
+                                                   id="typeAmt" value="amount" 
+                                                   {% if discount_mode == "amount" %}checked{% endif %}>
+                                            <label class="toggle-btn" for="typeAmt">
+                                                <i class="bi bi-currency-rupee"></i> Fixed
+                                            </label>
+                                        </div>
+                                        
+                                        <div class="discount-input-wrapper">
+                                            <span class="input-symbol" id="discountSymbol">
+                                                {% if discount_mode == "percent" %}%{% else %}₹{% endif %}
+                                            </span>
+                                            <input type="number" id="discount" 
+                                                   value="{% if discount_mode == 'percent' %}{{ discount_percent }}{% else %}{{ discount_amount }}{% endif %}"
+                                                   class="form-control" placeholder="Enter value">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr class="summary-divider">
+                            
+                            <!-- Grand Total -->
+                            <div class="grand-total-section">
+                                <div class="grand-total-row">
+                                    <span class="grand-label">Grand Total</span>
+                                    <span class="grand-value" id="grandTotal">₹{{ grand_total|floatformat:2 }}</span>
+                                </div>
+                                <div class="savings-badge" id="savingsBadge" style="display: none;">
+                                    <i class="bi bi-piggy-bank"></i>
+                                    <span>You save <strong id="savingsAmount">₹0</strong></span>
+                                </div>
                             </div>
                         </div>
-
-                        <div class="mb-4">
-                            <label class="small fw-bold text-muted mb-1 text-uppercase">Discount Configuration</label>
-
-                            <div class="d-flex bg-light p-1 rounded-pill mb-2">
-
-                            <input type="radio"
-                            class="btn-check"
-                            name="discountType"
-                            id="typePerc"
-                            value="percent"
-                            {% if discount_mode == "percent" %}checked{% endif %}>
-
-                            <label class="btn btn-sm btn-outline-primary border-0 rounded-pill flex-fill"
-                            for="typePerc">
-                            Percentage (%)
-                            </label>
-
-
-                            <input type="radio"
-                            class="btn-check"
-                            name="discountType"
-                            id="typeAmt"
-                            value="amount"
-                            {% if discount_mode == "amount" %}checked{% endif %}>
-
-                            <label class="btn btn-sm btn-outline-primary border-0 rounded-pill flex-fill"
-                            for="typeAmt">
-                            Fixed (₹)
-                            </label>
-
-                            </div>
-
-
-                            <div class="input-group">
-
-                            <span class="input-group-text border-0 bg-light" id="discountSymbol">
-                            {% if discount_mode == "percent" %}%{% else %}₹{% endif %}
-                            </span>
-
-                            <input type="number"
-                            id="discount"
-                            value="{% if discount_mode == 'percent' %}{{ discount_percent }}{% else %}{{ discount_amount }}{% endif %}"
-                            class="form-control border-0 bg-light shadow-none fw-bold">
-
-                            </div>
-
-                            <div class="mt-2 text-center">
-                            <small class="text-muted">
-                            Total Savings:
-                            <span class="text-danger fw-bold" id="discountAmount">₹ 0.00</span>
-                            </small>
-                            </div>
-                        </div>
-
-                        <hr class="opacity-10">
-
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <span class="h6 fw-bold mb-0">Grand Total</span>
-                            <span class="h4 fw-extrabold text-primary mb-0" id="grandTotal">₹ {{ grand_total }}</span>
-                        </div>
-
-                        <form method="post" action="{% url 'save_quotation_totals' client.id %}">
+                        
+                        <div class="pricing-footer">
+                            <form method="POST" action="{% url 'save_quotation_totals' client.id %}">
                             {% csrf_token %}
-                            <input type="hidden" name="gst_percent" id="gst_hidden">
-                            <input type="hidden" name="discount_value" id="discount_hidden">
-                            <input type="hidden" name="discount_type" id="discount_type_hidden">
-                            <input type="hidden" name="grand_total" id="grand_total_hidden">
-
-                            <button class="btn btn-primary btn-lg w-100 rounded-pill shadow fw-bold transition-btn">
-                                <i class="bi bi-cloud-check me-2"></i> Save Changes
-                            </button>
-                        </form>
-                        <a href="{% url 'quotation_update' client.id %}"  class="btn btn-warning btn-sm rounded-pill px-3 py-4 mt-3 w-50">
-                            <i class="bi bi-pencil-square"></i> Edit
-                        </a>
-                        <a href="{% url 'quotation_pdf' client.id %}?preview=1"
-                        class="btn btn-primary btn-sm rounded-pill px-3 py-4 mt-3">
-                            <i class="bi bi-file-pdf me-1"></i> Preview PDF
-                        </a>
-                        <a href="{% url 'quotation_pdf' client.id %}" target="_blank" class="btn btn-danger btn-sm rounded-pill px-3 py-4 mt-3 w-100">
-                            <i class="bi bi-file-pdf me-1"></i> Download PDF
-                        </a>
+                                <input type="hidden" name="gst_percent" id="gst_hidden">
+                                <input type="hidden" name="discount_value" id="discount_hidden">
+                                <input type="hidden" name="discount_type" id="discount_type_hidden">
+                                <input type="hidden" name="grand_total" id="grand_total_hidden">
+                                <input type="hidden" name="item_order" id="item_order_hidden">
+                                
+                                <button type="submit" class="btn btn-primary btn-lg w-100" id="saveBtn">
+                                    <span class="btn-text">
+                                        <i class="bi bi-check2-circle me-2"></i>Save Quotation
+                                    </span>
+                                    <span class="btn-loader" style="display: none;">
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                        Saving...
+                                    </span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions-card mt-3">
+                        <h6 class="quick-actions-title">Quick Actions</h6>
+                        <div class="action-buttons">
+                            <a href="{% url 'quotation_update' client.id %}" class="action-btn">
+                                <i class="bi bi-pencil-square"></i>
+                                <span>Edit Items</span>
+                            </a>
+                            <a href="{% url 'convert_qtn_page' client.id %}" class="action-btn action-convert">
+                                <i class="bi bi-arrow-right-circle"></i>
+                                <span>Convert to Spend</span>
+                            </a>
+                            <button type="button" class="action-btn" onclick="shareQuotation()">
+                                <i class="bi bi-share"></i>
+                                <span>Share</span>
+                            </button>
+                            <button type="button" class="action-btn" onclick="duplicateQuotation()">
+                                <i class="bi bi-files"></i>
+                                <span>Duplicate</span>
+                            </button>
+                        </div>
+                    </div>
+                    
                 </div>
-                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Bottom Bar -->
+<div class="mobile-bottom-bar d-lg-none">
+    <div class="mobile-total">
+        <span class="mobile-label">Total</span>
+        <span class="mobile-value" id="mobileGrandTotal">₹{{ grand_total|floatformat:2 }}</span>
+    </div>
+    <button type="button" class="btn btn-primary flex-grow-1" onclick="document.getElementById('quotationForm').submit()">
+        <i class="bi bi-check2-circle me-2"></i>Save
+    </button>
+    <div class="dropdown">
+        <button class="btn btn-outline-secondary" data-bs-toggle="dropdown">
+            <i class="bi bi-three-dots"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'quotation_update' client.id %}"><i class="bi bi-pencil me-2"></i>Edit</a></li>
+            <li><a class="dropdown-item" href="{% url 'quotation_pdf' client.id %}"><i class="bi bi-file-pdf me-2"></i>Download PDF</a></li>
+            <li><a class="dropdown-item" href="{% url 'convert_qtn_page' client.id %}"><i class="bi bi-arrow-right-circle me-2"></i>Convert</a></li>
+        </ul>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">Share Quotation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div class="share-options">
+                    <button class="share-option-btn" onclick="shareVia('whatsapp')">
+                        <i class="bi bi-whatsapp text-success"></i>
+                        <span>WhatsApp</span>
+                    </button>
+                    <button class="share-option-btn" onclick="shareVia('email')">
+                        <i class="bi bi-envelope text-primary"></i>
+                        <span>Email</span>
+                    </button>
+                    <button class="share-option-btn" onclick="copyLink()">
+                        <i class="bi bi-link-45deg text-secondary"></i>
+                        <span>Copy Link</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .fw-extrabold { font-weight: 800; }
-    .custom-scrollbar::-webkit-scrollbar { height: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    .btn-white { background-color: #fff; color: #64748b; }
-    .btn-white:hover { background-color: #f8fafc; color: #0d6efd; }
-    #mainQuoteTable tr:hover { background-color: rgba(13, 110, 253, 0.02); }
-    .line-total-value { font-size: 1.05rem; letter-spacing: -0.02em; }
-    .sticky-top { top: 2rem; }
-    
-    /* Active Radio styling */
-    .btn-check:checked + .btn-outline-primary {
-        background-color: #0d6efd !important;
-        color: #fff !important;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+/* ===== CSS Variables ===== */
+:root {
+    --primary: #4f46e5;
+    --primary-light: #eef2ff;
+    --primary-dark: #4338ca;
+    --success: #10b981;
+    --success-light: #d1fae5;
+    --danger: #ef4444;
+    --danger-light: #fee2e2;
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-lg: 16px;
+}
+
+/* ===== Base Styles ===== */
+.quote-preview-wrapper {
+    background: var(--gray-50);
+    min-height: 100vh;
+    padding-bottom: 100px;
+}
+
+/* ===== Top Action Bar ===== */
+.top-action-bar {
+    background: #fff;
+    border-bottom: 1px solid var(--gray-200);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.page-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.page-subtitle {
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-draft {
+    background: var(--warning-light);
+    color: var(--warning);
+}
+
+.autosave-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    padding: 6px 12px;
+    background: var(--gray-100);
+    border-radius: 100px;
+}
+
+/* ===== Button Styles ===== */
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+}
+
+.btn-ghost {
+    background: transparent;
+    border: none;
+    color: var(--gray-500);
+}
+
+.btn-ghost:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+/* ===== Client Info Card ===== */
+.client-info-card {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.client-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--gray-600);
+}
+
+.meta-item i {
+    color: var(--gray-400);
+}
+
+/* ===== Items Card ===== */
+.items-card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+}
+
+.items-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.items-header h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-box i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+    font-size: 0.875rem;
+}
+
+.search-box input {
+    padding-left: 36px;
+    border-radius: 100px;
+    border: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    width: 200px;
+    transition: all 0.2s;
+}
+
+.search-box input:focus {
+    width: 280px;
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===== Item Row ===== */
+.items-body {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.item-row {
+    display: grid;
+    grid-template-columns: 24px 60px 1fr 100px 120px 40px;
+    gap: 16px;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--gray-100);
+    transition: all 0.2s;
+}
+
+.item-row:hover {
+    background: var(--gray-50);
+}
+
+.item-row.dragging {
+    opacity: 0.5;
+    background: var(--primary-light);
+}
+
+.item-drag-handle {
+    cursor: grab;
+    color: var(--gray-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.item-drag-handle:hover {
+    color: var(--gray-500);
+}
+
+.item-image img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.img-placeholder {
+    width: 60px;
+    height: 60px;
+    background: var(--gray-100);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-400);
+}
+
+.item-details {
+    min-width: 0;
+}
+
+.item-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 4px;
+}
+
+.item-location {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.badge-floor, .badge-location {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.badge-floor {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.badge-location {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+.item-spec {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.item-materials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.material-tag {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    background: var(--gray-100);
+    border-radius: 100px;
+    color: var(--gray-600);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.material-tag i {
+    font-size: 0.65rem;
+}
+
+.material-tag.brand {
+    background: var(--success-light);
+    color: var(--success);
+    font-weight: 500;
+}
+
+.item-quantity {
+    text-align: center;
+}
+
+.qty-display {
+    background: var(--gray-100);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    display: inline-block;
+}
+
+.qty-value {
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.qty-unit {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.qty-count {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    margin-top: 4px;
+}
+
+.item-pricing {
+    text-align: right;
+}
+
+.unit-price {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+}
+
+.line-total {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.item-actions {
+    display: flex;
+    justify-content: center;
+}
+
+/* ===== Empty State ===== */
+.empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--gray-500);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: var(--gray-300);
+    margin-bottom: 16px;
+}
+
+.empty-state h6 {
+    color: var(--gray-700);
+    margin-bottom: 8px;
+}
+
+/* ===== Sidebar & Pricing Card ===== */
+.sidebar-sticky {
+    position: sticky;
+    top: 80px;
+}
+
+.pricing-card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+}
+
+.pricing-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.pricing-header h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.pricing-body {
+    padding: 20px 24px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.summary-label {
+    font-size: 0.9rem;
+    color: var(--gray-600);
+}
+
+.summary-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+/* ===== Config Sections ===== */
+.config-section {
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.config-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.config-value {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.config-body {
+    padding: 0 16px 16px;
+}
+
+/* ===== Slider Input ===== */
+.slider-input {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.slider-input .form-range {
+    flex: 1;
+}
+
+.slider-value {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 70px;
+}
+
+.slider-value input {
+    width: 50px;
+    text-align: center;
+    padding: 4px;
+}
+
+.slider-value span {
+    font-size: 0.85rem;
+    color: var(--gray-500);
+}
+
+/* ===== Tax Presets ===== */
+.tax-presets {
+    display: flex;
+    gap: 6px;
+}
+
+.preset-btn {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.preset-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.preset-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+/* ===== Discount Toggle ===== */
+.discount-type-toggle {
+    display: flex;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    margin-bottom: 12px;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: center;
+    border-radius: 6px;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-check:checked + .toggle-btn {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===== Discount Input ===== */
+.discount-input-wrapper {
+    position: relative;
+}
+
+.discount-input-wrapper .input-symbol {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: 600;
+    color: var(--gray-500);
+}
+
+.discount-input-wrapper input {
+    padding-left: 36px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    background: #fff;
+}
+
+/* ===== Grand Total ===== */
+.summary-divider {
+    margin: 20px 0;
+    border-color: var(--gray-200);
+}
+
+.grand-total-section {
+    background: linear-gradient(135deg, var(--primary-light) 0%, #fff 100%);
+    margin: -20px -24px;
+    padding: 20px 24px;
+    border-top: 1px solid var(--gray-200);
+}
+
+.grand-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.grand-label {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.grand-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.savings-badge {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: var(--success-light);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ===== Pricing Footer ===== */
+.pricing-footer {
+    padding: 20px 24px;
+    border-top: 1px solid var(--gray-100);
+}
+
+.pricing-footer .btn-primary {
+    background: var(--primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 14px 24px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.pricing-footer .btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ===== Quick Actions ===== */
+.quick-actions-card {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1px solid var(--gray-200);
+}
+
+.quick-actions-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 12px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--gray-600);
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: #fff;
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.action-btn i {
+    font-size: 1.25rem;
+}
+
+.action-btn.action-convert {
+    background: var(--success-light);
+    border-color: transparent;
+    color: var(--success);
+}
+
+.action-btn.action-convert:hover {
+    background: var(--success);
+    color: #fff;
+}
+
+/* ===== Mobile Bottom Bar ===== */
+.mobile-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid var(--gray-200);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 1000;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-total {
+    min-width: 100px;
+}
+
+.mobile-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.mobile-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gray-800);
+}
+
+/* ===== Share Modal ===== */
+.share-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.share-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    width: 100%;
+    text-align: left;
+    font-weight: 500;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.share-option-btn:hover {
+    background: #fff;
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.share-option-btn i {
+    font-size: 1.25rem;
+}
+
+/* ===== Custom Scrollbar ===== */
+.items-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.items-body::-webkit-scrollbar-track {
+    background: var(--gray-100);
+}
+
+.items-body::-webkit-scrollbar-thumb {
+    background: var(--gray-300);
+    border-radius: 10px;
+}
+
+.items-body::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-400);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1200px) {
+    .item-row {
+        grid-template-columns: 24px 50px 1fr 80px 100px 40px;
+        gap: 12px;
+        padding: 12px 16px;
     }
+}
+
+@media (max-width: 992px) {
+    .item-row {
+        grid-template-columns: 50px 1fr;
+        gap: 12px;
+    }
+    
+    .item-drag-handle,
+    .item-quantity,
+    .item-actions {
+        display: none;
+    }
+    
+    .item-pricing {
+        position: absolute;
+        right: 16px;
+        top: 16px;
+    }
+    
+    .item-row {
+        position: relative;
+    }
+    
+    .search-box input {
+        width: 150px;
+    }
+    
+    .search-box input:focus {
+        width: 200px;
+    }
+}
+
+@media (max-width: 576px) {
+    .top-action-bar .btn-group {
+        display: none;
+    }
+    
+    .client-meta {
+        display: none;
+    }
+    
+    .items-header h5 {
+        font-size: 0.9rem;
+    }
+    
+    .pricing-card {
+        border-radius: 0;
+        margin: 0 -16px;
+    }
+}
+
+/* ===== Animations ===== */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.btn-loader .spinner-border {
+    animation: pulse 1s ease-in-out infinite;
+}
+
+.item-row {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>
 
-
-
 <script>
+// ===== Sortable Items =====
+let draggedItem = null;
 
-// Row Reordering
-function moveUp(btn){
-    const row = btn.closest("tr");
-    const prev = row.previousElementSibling;
+document.querySelectorAll('.item-drag-handle').forEach(handle => {
+    handle.closest('.item-row').setAttribute('draggable', 'true');
+    
+    handle.closest('.item-row').addEventListener('dragstart', function(e) {
+        draggedItem = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    });
+    
+    handle.closest('.item-row').addEventListener('dragend', function() {
+        this.classList.remove('dragging');
+        updateItemOrder();
+    });
+    
+    handle.closest('.item-row').addEventListener('dragover', function(e) {
+        e.preventDefault();
+        const container = document.getElementById('itemsContainer');
+        const afterElement = getDragAfterElement(container, e.clientY);
+        if (afterElement == null) {
+            container.appendChild(draggedItem);
+        } else {
+            container.insertBefore(draggedItem, afterElement);
+        }
+    });
+});
 
-    if(prev){
-        row.classList.add('bg-primary-subtle');
-        setTimeout(()=>row.classList.remove('bg-primary-subtle'),500);
-        row.parentNode.insertBefore(row, prev);
-    }
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.item-row:not(.dragging)')];
+    
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
-function moveDown(btn){
-    const row = btn.closest("tr");
-    const next = row.nextElementSibling;
+function updateItemOrder() {
+    const items = document.querySelectorAll('.item-row');
+    const order = Array.from(items).map(item => item.dataset.id);
+    document.getElementById('item_order_hidden').value = JSON.stringify(order);
+    showAutosave();
+}
 
-    if(next){
-        row.classList.add('bg-primary-subtle');
-        setTimeout(()=>row.classList.remove('bg-primary-subtle'),500);
-        row.parentNode.insertBefore(next, row);
-    }
+// ===== Autosave Indicator =====
+function showAutosave() {
+    const indicator = document.getElementById('autosaveIndicator');
+    indicator.innerHTML = '<span class="spinner-border spinner-border-sm text-primary me-2"></span><span>Saving...</span>';
+    
+    setTimeout(() => {
+        indicator.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i><span>All changes saved</span>';
+    }, 1000);
+}
+
+// ===== Search Items =====
+document.getElementById('searchItems').addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase();
+    document.querySelectorAll('.item-row').forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+    });
+});
+// ===== INIT (VERY IMPORTANT 🔥) =====
+document.addEventListener("DOMContentLoaded", function () {
+
+    const gstInput = document.getElementById('gst');
+    const gstSlider = document.getElementById('gstSlider');
+
+    if (!gstInput || !gstSlider) return;
+
+    let value = parseFloat(gstInput.value) || 0;
+
+    // Sync UI on load
+    gstSlider.value = value;
+    updatePresetButtons(value);
+
+    calculateTotals();
+});
+
+
+// ===== Tax Presets =====
+document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+
+        const value = parseFloat(this.dataset.value) || 0;
+
+        document.getElementById('gst').value = value;
+        document.getElementById('gstSlider').value = value;
+
+        updatePresetButtons(value);
+
+        calculateTotals();
+    });
+});
+
+
+// ===== Sync slider → input =====
+const gstSliderEl = document.getElementById('gstSlider');
+if (gstSliderEl) {
+    gstSliderEl.addEventListener('input', function () {
+
+        const value = parseFloat(this.value) || 0;
+
+        document.getElementById('gst').value = value;
+        updatePresetButtons(value);
+
+        calculateTotals();
+    });
 }
 
 
-// MAIN CALCULATION
-function calculateTotals(){
+// ===== Sync input → slider =====
+const gstInputEl = document.getElementById('gst');
+if (gstInputEl) {
+    gstInputEl.addEventListener('input', function () {
+
+        let value = parseFloat(this.value) || 0;
+
+        // Clamp
+        value = Math.min(Math.max(value, 0), 28);
+
+        this.value = value;
+        document.getElementById('gstSlider').value = value;
+
+        updatePresetButtons(value);
+
+        calculateTotals();
+    });
+}
+
+
+// ===== Preset Button Highlight =====
+function updatePresetButtons(value) {
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.classList.toggle(
+            'active',
+            parseFloat(btn.dataset.value) === parseFloat(value)
+        );
+    });
+}
+
+
+// ===== MAIN CALCULATION =====
+function calculateTotals() {
 
     let subtotal = 0;
 
-    document.querySelectorAll(".line-total-value").forEach(el=>{
-        subtotal += parseFloat(el.innerText.replace(/[₹, ]/g,"")) || 0;
+    document.querySelectorAll('.line-total').forEach(el => {
+        subtotal += parseFloat(el.dataset.amount) || 0;
     });
 
-    // GST
-    let gstPercent = parseFloat(document.getElementById("gst").value) || 0;
-    gstPercent = Math.min(Math.max(gstPercent,0),28);
-    document.getElementById("gst").value = gstPercent;
+    // ===== GST =====
+    let gstPercent = parseFloat(document.getElementById('gst')?.value) || 0;
+    gstPercent = Math.min(Math.max(gstPercent, 0), 28);
 
-    const gstAmount = subtotal * gstPercent / 100;
+    const gstAmount = (subtotal * gstPercent) / 100;
 
+    // ===== DISCOUNT =====
+    let discountInput = document.getElementById('discount');
+    let discountValue = parseFloat(discountInput?.value) || 0;
 
-    // Discount
-    let discountValue = parseFloat(document.getElementById("discount").value) || 0;
-    const type = document.querySelector("input[name='discountType']:checked").value;
+    const typeEl = document.querySelector("input[name='discountType']:checked");
+    const type = typeEl ? typeEl.value : "amount";
 
-    if(type === "percent"){
-        discountValue = Math.min(Math.max(discountValue,0),100);
-    }else{
-        discountValue = Math.min(Math.max(discountValue,0),subtotal);
+    if (type === 'percent') {
+        discountValue = Math.min(Math.max(discountValue, 0), 100);
+    } else {
+        discountValue = Math.min(Math.max(discountValue, 0), subtotal + gstAmount);
     }
 
-    document.getElementById("discount").value = discountValue;
+    if (discountInput) discountInput.value = discountValue;
 
-
-    // Calculate discount amount
-    let discountAmount =
-        (type === "percent")
-        ? subtotal * discountValue / 100
+    let discountAmount = (type === 'percent')
+        ? (subtotal + gstAmount) * discountValue / 100
         : discountValue;
 
-
+    // ===== FINAL =====
     const grandTotal = Math.max((subtotal + gstAmount) - discountAmount, 0);
 
+    // ===== UI UPDATE =====
+    updateText('subtotal', '₹' + formatCurrency(subtotal));
+    updateText('taxDisplay', '+₹' + formatCurrency(gstAmount));
+    updateText('discountDisplay', '-₹' + formatCurrency(discountAmount));
+    updateText('grandTotal', '₹' + formatCurrency(grandTotal));
+    updateText('mobileGrandTotal', '₹' + formatCurrency(grandTotal));
 
-    // Update UI
-    document.getElementById("subtotal").innerText =
-        "₹ " + subtotal.toLocaleString('en-IN',{minimumFractionDigits:2});
+    // ===== SAVINGS BADGE =====
+    const savingsBadge = document.getElementById('savingsBadge');
+    if (savingsBadge) {
+        if (discountAmount > 0) {
+            savingsBadge.style.display = 'flex';
+            updateText('savingsAmount', '₹' + formatCurrency(discountAmount));
+        } else {
+            savingsBadge.style.display = 'none';
+        }
+    }
 
-    document.getElementById("grandTotal").innerText =
-        "₹ " + grandTotal.toLocaleString('en-IN',{minimumFractionDigits:2});
+    // ===== HIDDEN FIELDS =====
+    setValue('gst_hidden', gstPercent);
+    setValue('discount_hidden', discountValue);
+    setValue('discount_type_hidden', type);
+    setValue('grand_total_hidden', grandTotal.toFixed(2));
 
-    document.getElementById("discountAmount").innerText =
-        "₹ " + discountAmount.toLocaleString('en-IN',{minimumFractionDigits:2});
-
-
-    // Hidden form values
-    document.getElementById("gst_hidden").value = gstPercent;
-    document.getElementById("discount_hidden").value = discountValue;
-    document.getElementById("discount_type_hidden").value = type;
-    document.getElementById("grand_total_hidden").value = grandTotal.toFixed(2);
-
+    // ===== AUTO SAVE INDICATOR =====
+    if (typeof showAutosave === "function") {
+        showAutosave();
+    }
 }
 
 
-// Toggle Discount Mode
-document.querySelectorAll("input[name='discountType']").forEach(radio=>{
-    radio.addEventListener("change", ()=>{
+// ===== HELPERS =====
+function updateText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = value;
+}
 
-        const type = radio.value;
+function setValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+}
 
-        document.getElementById("discountSymbol").innerText =
-            (type === "percent") ? "%" : "₹";
+function formatCurrency(amount) {
+    return (amount || 0).toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
 
+// ===== Discount Type Toggle =====
+document.querySelectorAll("input[name='discountType']").forEach(radio => {
+    radio.addEventListener('change', function() {
+        const symbol = this.value === 'percent' ? '%' : '₹';
+        document.getElementById('discountSymbol').innerText = symbol;
+        document.getElementById('discount').value = '';
         calculateTotals();
-
     });
 });
 
+// ===== Input Listeners =====
+document.getElementById('discount').addEventListener('input', calculateTotals);
 
-// Input listeners
-["gst","discount"].forEach(id=>{
-    document.getElementById(id).addEventListener("input", calculateTotals);
+// ===== Form Submit =====
+document.getElementById('quotationForm').addEventListener('submit', function(e) {
+    const btn = document.getElementById('saveBtn');
+    btn.querySelector('.btn-text').style.display = 'none';
+    btn.querySelector('.btn-loader').style.display = 'inline-flex';
+    btn.disabled = true;
 });
 
+// ===== Share Functions =====
+function shareQuotation() {
+    const modal = new bootstrap.Modal(document.getElementById('shareModal'));
+    modal.show();
+}
 
-// Initial Load
-window.addEventListener("load", ()=>{
+function shareVia(platform) {
+    const url = window.location.href;
+    const text = `Check out this quotation for {{ client.name }}`;
+    
+    if (platform === 'whatsapp') {
+        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+    } else if (platform === 'email') {
+        window.location.href = `mailto:?subject=Quotation for {{ client.name }}&body=${encodeURIComponent(text + '\n\n' + url)}`;
+    }
+}
 
-    const type =
-        document.querySelector("input[name='discountType']:checked").value;
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        // Show toast
+        alert('Link copied to clipboard!');
+    });
+}
 
-    document.getElementById("discountSymbol").innerText =
-        (type === "percent") ? "%" : "₹";
+function duplicateQuotation() {
+    if (confirm('Create a duplicate of this quotation?')) {
+        // Handle duplication
+    }
+}
 
+// ===== Initialize =====
+window.addEventListener('load', function() {
+    const type = document.querySelector("input[name='discountType']:checked").value;
+    document.getElementById('discountSymbol').innerText = (type === 'percent') ? '%' : '₹';
+    
+    // Set initial preset button
+    const gstValue = parseFloat(document.getElementById('gst').value);
+    updatePresetButtons(gstValue);
+    
     calculateTotals();
-
 });
-
 </script>
 
 {% endblock %}

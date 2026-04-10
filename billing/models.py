@@ -343,3 +343,31 @@ class QuotationItem(models.Model):
 
     def __str__(self):
         return f"{self.client.name} - {self.element}"
+
+
+from django.db import models
+from django.conf import settings
+
+class QuotationDraft(models.Model):
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+
+    # 🔥 ADD THIS
+    quotation_id = models.IntegerField(null=True, blank=True)
+
+    data = models.JSONField()
+    timestamp = models.BigIntegerField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'quotation_id'],  # ✅ FIXED
+                name='unique_user_quotation_draft'
+            )
+        ]

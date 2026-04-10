@@ -1,447 +1,2146 @@
 {% load extra_filters %}
 {% load pdf_wrap %}
 
-
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-
-<style>
-body{
-    font-family: Arial, sans-serif;
-    font-size:12px;
-    color:#222;
-}
-
-h1,h2,h3{
-    margin:0;
-}
-
-.quote-title{
-    text-align:center;
-    margin-bottom:15px;
-}
-
-.tagline{
-    color:#1aa187;
-    font-style:italic;
-    margin-bottom:4px;
-}
-
-.info-table{
-    width:100%;
-    border-collapse:collapse;
-    margin-bottom:15px;
-}
-
-.info-table td{
-    border:1px solid #ccc;
-    padding:8px;
-    vertical-align:top;
-}
-
-.section-title{
-    font-weight:bold;
-    margin-bottom:6px;
-}
-
-
-.product-table th{
-    background:#0b6b73;
-    color:white;
-    padding:6px;
-    border:1px solid #ccc;
-    font-size:11px;
-}
-
-.product-table td{
-    border:1px solid #ccc;
-    padding:6px;
-    font-size:11px;
-}
-
-.product-table img{
-    width:55px;
-    height:auto;
-}
-
-.totals{
-    width:40%;
-    float:right;
-    margin-top:15px;
-}
-
-.totals td{
-    padding:6px;
-    border:1px solid #ccc;
-}
-
-.grand{
-    font-weight:bold;
-    font-size:14px;
-}
-
-.text-right{
-    text-align:right;
-}
-
-.text-center{
-    text-align:center;
-}
-
-.product-table td{
-    font-size:12px;
-}
-
-
-
-.floor-row{
-    background:#e3f2f2;
-    font-weight:bold;
-    text-align:center;
-}
-
-.location-row{
-    background:#f6f8fa;
-    font-weight:bold;
-    text-align:center;
-}
-
-
-
-.grand{
-    font-weight:bold;
-    background:#e3f2f2;
-}
-
-table {
-    width: 100%;
-    table-layout: fixed;   /* 🔥 this is the key */
-    border-collapse: collapse;
-}
-
-
-td, th {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
-
-.total-wrapper{
-    width:100%;
-    margin-top:60px;
-}
-
-.total-box{
-    width:40%;
-    margin-left:auto;
-}
-
-.total-box table{
-    width:100%;
-    border-collapse:collapse;
-}
-
-.total-box td{
-    padding:6px;
-    border:1px solid #ddd;
-}
-
-.total-box tr{
-    page-break-inside: avoid;
-}
-
-
-.selected{
-background:#dbeafe;
-outline:2px solid #3b82f6;
-}
-
-
-
-.dragging{
-opacity:0.6;
-}
-
-/* show drag cursor */
-.draggable-row{
-    cursor: grab;
-}
-
-/* while dragging */
-.draggable-row:active{
-    cursor: grabbing;
-}
-
-</style>
-</head>
-
-<body>
-
-<div class="quote-title">
-    <div class="tagline">“We don’t just design spaces — we create experiences.”</div>
-    <h2>QUOTATION</h2>
-</div>
-
-<table width="100%" style="margin-bottom:8px;">
-<tr>
-<td>
-<b>Quotation No:</b> {{ quotation_number }}
-</td>
-<td class="text-right">
-<b>Date:</b> {{ today }}
-</td>
-</tr>
-</table>
-
-<table class="info-table">
-<tr>
-<td width="50%">
-<div class="section-title">CLIENT INFORMATION</div>
-<b>Name:</b> {{ client.name }}<br>
-<b>Mobile:</b> {{ client.phone1 }}<br>
-<b>Email:</b> {{ client.email }}<br>
-<b>Address:</b> {{ client.location }}<br>
-<b>Estimate Start:</b> {{ client.estimate_start_date }}<br>
-<b>Estimate End:</b> {{ client.estimate_end_date }}
-</td>
-
-<td width="50%">
-<div class="section-title">COMPANY INFORMATION</div>
-<b>Company:</b> HomeDen Interiors<br>
-<b>GSTIN:</b> 33AKTPH2053F2ZB<br>
-<b>Mobile:</b> +91 77 8003 8004<br>
-<b>Email:</b> homedeninterior@gmail.com<br>
-<b>Address:</b> No.18, Susi Nagar,Ponmalaipattai Road,Ponneripuram, Trichy-04, Tamil Nadu
-</td>
-</tr>
-</table>
-
-<h3>PRODUCT SUMMARY</h3>
-
-<table class="product-table">
-<thead>
-<tr>
-    <th rowspan="2" style="width:35px;">S.No</th>
-    <th rowspan="2" style="width:240px;">Item</th>
-    <th rowspan="2" style="width:90px;">Core Material</th>
-    <th rowspan="2" style="width:80px;">Brand</th>
-    <th colspan="2" style="width:100px;">Size</th>
-    <th rowspan="2" style="width:100px;">Price</th>
-</tr>
-<tr>
-    <th>Length</th>
-    <th>Width / Height</th>
-</tr>
-</thead>
-
-<tbody id="quotationRows">
-
-{% regroup rows by floor_lower as floor_list %}
-
-{% for floor in floor_list %}
-
-<tr class="floor-row draggable-row" data-type="floor">
-<td colspan="7">
-{{ floor.list.0.floor|upper }}
-</td>
-</tr>
-
-{% regroup floor.list by location_lower as location_list %}
-
-{% for location in location_list %}
-
-<tr class="location-row draggable-row" data-type="location">
-<td colspan="7">
-{{ location.list.0.location|upper }}
-</td>
-</tr>
-
-{% for r in location.list %}
-
-<tr class="item-row draggable-row"
-    data-type="item"
-    data-id="{{ r.id }}">
-
-<td class="text-center">
-{{ forloop.parentloop.counter }}.{{ forloop.counter }}
-</td>
-
-<td style="width:240px;vertical-align:top;font-size:11px;line-height:1.5;">
-<b>{{ r.element }} :</b><br>
-
-{{ r.specification|pdf_wrap|safe }}
-
-{% if r.image %}
-<br>
-<img src="{{ r.image.image.url }}" style="width:55px;border:1px solid #ccc;">
-{% endif %}
-</td>
-
-<td>{{ r.core_material }}<br>/ {{r.finish_material }}</td>
-<td>{{ r.brand }}</td>
-
-<td class="text-center">{{ r.length }}</td>
-<td class="text-center">{{ r.width }}</td>
-
-<td class="text-right">
-Rs. {{ r.total|indian_currency }}
-</td>
-
-</tr>
-
-{% endfor %}
-{% endfor %}
-{% endfor %}
-
-</tbody>
-</table>
-
-<div class="total-wrapper">
-
-<div class="total-box">
-
-<table>
-<tr>
-<td>Total</td>
-<td class="text-right"><b>Rs. {{ total_amount|indian_currency }}</b></td>
-</tr>
-
-<tr>
-<td>GST ({{ gst_rate }}%)</td>
-<td class="text-right"><b>Rs. {{ gst_amount|indian_currency }}</b></td>
-</tr>
-
-<tr>
-<td><b>Total (Incl. GST)</b></td>
-<td class="text-right"><b>Rs. {{ total_with_gst|indian_currency }}</b></td>
-</tr>
-
-<tr>
-<td>Discount</td>
-<td class="text-right"><b>Rs. {{ discount|indian_currency }}</b></td>
-</tr>
-
-<tr class="grand">
-<td>Grand Total</td>
-<td class="text-right"><b>Rs. {{ grand_total|indian_currency }}</b></td>
-</tr>
-</table>
-
-<div>
-<b>Notes:</b><br>
-{{ client.notes|linebreaksbr }}
-</div>
-
-</div>
-
-</div>
-
-
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-
-function getCookie(name) {
-    let cookieValue = null;
-
-    if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-
-            if (cookie.substring(0, name.length + 1) === (name + "=")) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quotation Editor - {{ client.name }}</title>
+    
+    <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            --primary: #0b6b73;
+            --primary-light: #e3f2f2;
+            --primary-dark: #085a61;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --selected: #dbeafe;
+            --selected-border: #3b82f6;
+            --copied: #fef3c7;
+            --copied-border: #f59e0b;
+            --paste-indicator: #10b981;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 12px;
+            color: #222;
+            background: #e5e7eb;
+            min-height: 100vh;
+        }
+
+        /* ===== Floating Toolbar ===== */
+        .floating-toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            padding: 16px;
+            z-index: 1000;
+            width: 300px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .toolbar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .toolbar-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-light);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        .toolbar-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .toolbar-subtitle {
+            font-size: 11px;
+            color: var(--gray-500);
+        }
+
+        .toolbar-section {
+            margin-bottom: 12px;
+        }
+
+        .toolbar-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .toolbar-hint {
+            background: var(--warning-light);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            color: var(--gray-700);
+            line-height: 1.5;
+        }
+
+        .toolbar-hint strong {
+            color: var(--warning);
+        }
+
+        /* Selection Info */
+        .selection-info {
+            background: var(--selected);
+            padding: 10px 12px;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .selection-info.show {
+            display: flex;
+        }
+
+        .selection-badge {
+            background: var(--selected-border);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .selection-text {
+            font-size: 12px;
+            color: var(--selected-border);
+            font-weight: 500;
+        }
+
+        .btn-clear-selection {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .btn-clear-selection:hover {
+            background: rgba(0,0,0,0.1);
+            color: var(--gray-700);
+        }
+
+        /* Clipboard Info */
+        .clipboard-info {
+            background: var(--copied);
+            padding: 10px 12px;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            border: 1px dashed var(--copied-border);
+        }
+
+        .clipboard-info.show {
+            display: flex;
+        }
+
+        .clipboard-badge {
+            background: var(--copied-border);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .clipboard-text {
+            font-size: 11px;
+            color: var(--gray-700);
+            flex: 1;
+        }
+
+        .btn-clear-clipboard {
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* Toolbar Actions */
+        .toolbar-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(11, 107, 115, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-outline {
+            background: #fff;
+            border: 2px solid var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: #fff;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-icon-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-icon {
+            flex: 1;
+            padding: 10px;
+            background: var(--gray-100);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            color: var(--gray-600);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover:not(:disabled) {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-icon:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-icon.copy-btn {
+            background: var(--warning-light);
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .btn-icon.paste-btn {
+            background: var(--success-light);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        /* ===== Paper Container ===== */
+        .paper-container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+            padding-right: 340px;
+        }
+
+        .paper {
+            background: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        /* ===== Header ===== */
+        .quote-title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .tagline {
+            color: var(--primary);
+            font-style: italic;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .quote-title h2 {
+            font-size: 24px;
+            color: var(--gray-800);
+            letter-spacing: 2px;
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+
+        /* ===== Info Tables ===== */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .info-table td {
+            border: 1px solid var(--gray-300);
+            padding: 12px;
+            vertical-align: top;
+            width: 50%;
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-line {
+            margin-bottom: 4px;
+            font-size: 11px;
+        }
+
+        .info-line b {
+            color: var(--gray-600);
+        }
+
+        /* ===== Product Table ===== */
+        h3 {
+            font-size: 14px;
+            color: var(--gray-800);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .product-table th {
+            background: var(--primary);
+            color: #fff;
+            padding: 10px 8px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid var(--primary);
+            text-align: left;
+        }
+
+        .product-table td {
+            border: 1px solid var(--gray-200);
+            padding: 10px 8px;
+            font-size: 11px;
+            vertical-align: top;
+        }
+
+        .product-table img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid var(--gray-200);
+        }
+
+        /* ===== Row Types ===== */
+        
+        /* Floor Row */
+        .floor-row {
+            background: var(--primary-light) !important;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .floor-row:hover {
+            background: #c5e4e4 !important;
+        }
+
+        .floor-row td {
+            font-weight: bold;
+            color: var(--primary);
+            text-align: center;
+            padding: 12px;
+            font-size: 12px;
+        }
+
+        .floor-row.selected {
+            background: var(--selected) !important;
+            outline: 2px solid var(--selected-border);
+            outline-offset: -2px;
+        }
+
+        .floor-row.selected td {
+            color: var(--selected-border);
+        }
+
+        .floor-row.copied {
+            background: var(--copied) !important;
+            outline: 2px dashed var(--copied-border);
+            outline-offset: -2px;
+        }
+
+        /* Location Row */
+        .location-row {
+            background: var(--gray-100) !important;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .location-row:hover {
+            background: var(--gray-200) !important;
+        }
+
+        .location-row td {
+            font-weight: 600;
+            color: var(--gray-600);
+            text-align: center;
+            padding: 10px;
+        }
+
+        .location-row.selected {
+            background: var(--selected) !important;
+            outline: 2px solid var(--selected-border);
+            outline-offset: -2px;
+        }
+
+        .location-row.selected td {
+            color: var(--selected-border);
+        }
+
+        .location-row.copied {
+            background: var(--copied) !important;
+            outline: 2px dashed var(--copied-border);
+            outline-offset: -2px;
+        }
+
+        /* Item Row */
+        .item-row {
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .item-row:hover {
+            background: var(--gray-50);
+        }
+
+        .item-row.selected {
+            background: var(--selected) !important;
+            outline: 2px solid var(--selected-border);
+            outline-offset: -2px;
+        }
+
+        .item-row.copied {
+            background: var(--copied) !important;
+            outline: 2px dashed var(--copied-border);
+            outline-offset: -2px;
+        }
+
+        .item-row.dragging {
+            opacity: 0.4;
+            background: var(--warning-light) !important;
+        }
+
+        .item-row.drag-over,
+        .floor-row.drag-over,
+        .location-row.drag-over {
+            border-top: 3px solid var(--selected-border) !important;
+        }
+
+        .item-row.drag-over-bottom,
+        .floor-row.drag-over-bottom,
+        .location-row.drag-over-bottom {
+            border-bottom: 3px solid var(--selected-border) !important;
+        }
+
+        /* Child highlight (when parent floor/location is selected) */
+        .child-of-selected {
+            background: rgba(59, 130, 246, 0.08) !important;
+            border-left: 3px solid var(--selected-border) !important;
+        }
+
+        /* Paste indicator */
+        .paste-indicator {
+            position: relative;
+        }
+
+        .paste-indicator::before {
+            content: '📋 Paste Here';
+            position: absolute;
+            left: 50%;
+            top: -14px;
+            transform: translateX(-50%);
+            background: var(--paste-indicator);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 10;
+            animation: pulse 1.5s infinite;
+        }
+
+        .paste-indicator::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: -2px;
+            height: 3px;
+            background: var(--paste-indicator);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Drag Handle */
+        .drag-cell {
+            width: 30px;
+            text-align: center;
+            color: var(--gray-300);
+            cursor: grab;
+            font-size: 14px;
+        }
+
+        .drag-cell:hover {
+            color: var(--gray-500);
+        }
+
+        .drag-cell:active {
+            cursor: grabbing;
+        }
+
+        /* Selection Checkbox */
+        .select-cell {
+            width: 30px;
+            text-align: center;
+        }
+
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--gray-300);
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 10px;
+            color: transparent;
+        }
+
+        .checkbox:hover {
+            border-color: var(--selected-border);
+        }
+
+        .checkbox.checked {
+            background: var(--selected-border);
+            border-color: var(--selected-border);
+            color: #fff;
+        }
+
+        /* Row type indicator */
+        .row-type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+
+        .badge-floor {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .badge-location {
+            background: var(--gray-400);
+            color: #fff;
+        }
+
+        /* Item Content */
+        .item-name {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 4px;
+        }
+
+        .item-spec {
+            color: var(--gray-500);
+            line-height: 1.5;
+            font-size: 10px;
+        }
+
+        .item-material {
+            font-size: 10px;
+        }
+
+        .item-brand {
+            color: var(--primary);
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        /* ===== Totals ===== */
+        .total-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .total-box {
+            width: 280px;
+        }
+
+        .total-box table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .total-box td {
+            padding: 10px 12px;
+            border: 1px solid var(--gray-200);
+            font-size: 12px;
+        }
+
+        .total-box .grand {
+            background: var(--primary);
+            color: #fff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* ===== Notes ===== */
+        .notes-section {
+            margin-top: 24px;
+            padding: 16px;
+            background: var(--gray-50);
+            border-radius: 8px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .notes-section b {
+            color: var(--gray-700);
+        }
+
+        /* ===== Drag Ghost ===== */
+        .drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            background: #fff;
+            border: 2px solid var(--selected-border);
+            border-radius: 8px;
+            padding: 10px 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .drag-ghost .icon {
+            font-size: 16px;
+        }
+
+        .drag-ghost .count {
+            background: var(--selected-border);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        /* ===== Context Menu ===== */
+        .context-menu {
+            position: fixed;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 8px 0;
+            z-index: 10001;
+            min-width: 180px;
+            display: none;
+        }
+
+        .context-menu.show {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--gray-700);
+            transition: all 0.15s;
+        }
+
+        .context-menu-item:hover {
+            background: var(--gray-100);
+        }
+
+        .context-menu-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .context-menu-item .icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        .context-menu-item .shortcut {
+            margin-left: auto;
+            font-size: 11px;
+            color: var(--gray-400);
+        }
+
+        .context-menu-divider {
+            height: 1px;
+            background: var(--gray-200);
+            margin: 6px 0;
+        }
+
+        /* ===== Loading Overlay ===== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 9999;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .loading-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .loading-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--gray-400);
+        }
+
+        .loading-step.active {
+            color: var(--primary);
+        }
+
+        .loading-step.done {
+            color: var(--success);
+        }
+
+        .loading-step .step-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .loading-step .step-icon.pending {
+            border: 2px solid var(--gray-300);
+        }
+
+        .loading-step.active .step-icon {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .loading-step.done .step-icon {
+            background: var(--success);
+            color: #fff;
+        }
+
+        /* ===== Toast ===== */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
+
+        .toast {
+            background: var(--gray-800);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            animation: toastIn 0.3s ease;
+            margin-bottom: 8px;
+        }
+
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.warning { background: var(--warning); }
+
+        @keyframes toastIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* ===== Keyboard Shortcut Hints ===== */
+        kbd {
+            background: var(--gray-100);
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-family: monospace;
+        }
+
+        /* ===== Print Styles ===== */
+        @media print {
+            .floating-toolbar,
+            .drag-ghost,
+            .loading-overlay,
+            .toast-container,
+            .context-menu,
+            .drag-cell,
+            .select-cell {
+                display: none !important;
+            }
+            
+            .paper-container {
+                padding-right: 20px;
+                margin: 0;
+                max-width: 100%;
+            }
+            
+            .paper {
+                box-shadow: none;
+                padding: 20px;
+            }
+            
+            .item-row, .floor-row, .location-row {
+                cursor: default;
+            }
+            
+            .selected, .copied, .child-of-selected {
+                background: transparent !important;
+                outline: none !important;
+                border-left: none !important;
             }
         }
-    }
 
-    return cookieValue;
-}
+        /* ===== Responsive ===== */
+        @media (max-width: 1200px) {
+            .floating-toolbar {
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                width: auto;
+                border-radius: 16px 16px 0 0;
+                max-height: 50vh;
+            }
+            
+            .paper-container {
+                padding-right: 20px;
+                padding-bottom: 280px;
+            }
+            
+            .toolbar-hint {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
 
-const csrftoken = getCookie("csrftoken");
+    <!-- Floating Toolbar -->
+    <div class="floating-toolbar">
+        <div class="toolbar-header">
+            <div class="toolbar-icon">📄</div>
+            <div>
+                <div class="toolbar-title">Quotation Editor</div>
+                <div class="toolbar-subtitle">{{ quotation_number }}</div>
+            </div>
+        </div>
 
+        <!-- Selection Info -->
+        <div class="selection-info" id="selectionInfo">
+            <span class="selection-badge" id="selectedCount">0</span>
+            <span class="selection-text" id="selectionText">items selected</span>
+            <button class="btn-clear-selection" onclick="clearSelection()" title="Clear selection">✕</button>
+        </div>
 
-document.addEventListener("DOMContentLoaded", function(){
+        <!-- Clipboard Info -->
+        <div class="clipboard-info" id="clipboardInfo">
+            <span class="clipboard-badge" id="clipboardCount">0</span>
+            <span class="clipboard-text" id="clipboardText">items copied</span>
+            <button class="btn-clear-clipboard" onclick="clearClipboard()" title="Clear clipboard">✕</button>
+        </div>
 
-const tbody = document.getElementById("quotationRows");
+        <!-- Move Controls -->
+        <div class="toolbar-section">
+            <div class="toolbar-label">Move Selected</div>
+            <div class="btn-icon-group">
+                <button class="btn-icon" onclick="moveSelectedUp()" id="btnMoveUp" disabled title="Move Up (Ctrl+↑)">
+                    ⬆️
+                </button>
+                <button class="btn-icon" onclick="moveSelectedDown()" id="btnMoveDown" disabled title="Move Down (Ctrl+↓)">
+                    ⬇️
+                </button>
+                <button class="btn-icon" onclick="moveSelectedToTop()" id="btnMoveTop" disabled title="Move to Top">
+                    ⏫
+                </button>
+                <button class="btn-icon" onclick="moveSelectedToBottom()" id="btnMoveBottom" disabled title="Move to Bottom">
+                    ⏬
+                </button>
+            </div>
+        </div>
 
-function saveOrder(){
+        <!-- Copy/Paste Controls -->
+        <div class="toolbar-section">
+            <div class="toolbar-label">Copy / Paste</div>
+            <div class="btn-icon-group">
+                <button class="btn-icon copy-btn" onclick="copySelected()" id="btnCopy" disabled title="Copy (Ctrl+C)">
+                    📋 Copy
+                </button>
+                <button class="btn-icon paste-btn" onclick="pasteAtSelection()" id="btnPaste" disabled title="Paste (Ctrl+V)">
+                    📥 Paste
+                </button>
+            </div>
+        </div>
 
-    const rows = document.querySelectorAll("#quotationRows tr[data-id]");
+        <!-- Hints -->
+        <div class="toolbar-section">
+            <div class="toolbar-hint">
+                <strong>💡 Tips:</strong><br>
+                • <kbd>Ctrl</kbd>+Click to multi-select<br>
+                • Click Floor/Location to select with children<br>
+                • <kbd>Ctrl</kbd>+<kbd>C</kbd> to copy, <kbd>Ctrl</kbd>+<kbd>V</kbd> to paste<br>
+                • Right-click for context menu
+            </div>
+        </div>
 
-    let order = [];
+        <!-- Action Buttons -->
+        <div class="toolbar-actions">
+            <button class="btn btn-outline" onclick="saveOrderToDatabase()">
+                💾 Save Order
+            </button>
+            <button class="btn btn-primary" onclick="downloadMergedPDF()">
+                📥 Download Merged PDF
+            </button>
+        </div>
+    </div>
 
-    rows.forEach(row=>{
-        order.push(row.dataset.id);
-    });
+    <!-- Paper Container -->
+    <div class="paper-container">
+        <div class="paper">
+            
+            <!-- Header -->
+            <div class="quote-title">
+                <div class="tagline">"We don't just design spaces — we create experiences."</div>
+                <h2>QUOTATION</h2>
+            </div>
 
-    console.log("Saving order:", order);
+            <div class="meta-row">
+                <span><b>Quotation No:</b> {{ quotation_number }}</span>
+                <span><b>Date:</b> {{ today|date:"M d, Y" }}</span>
+            </div>
 
-    fetch("{% url 'save_quotation_order' client.id %}", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrftoken
-        },
-        body: JSON.stringify({order: order})
-    })
-    .then(res => res.json())
-    .then(data => {
+            <!-- Info Table -->
+            <table class="info-table">
+                <tr>
+                    <td>
+                        <div class="section-title">CLIENT INFORMATION</div>
+                        <div class="info-line"><b>Name:</b> {{ client.name }}</div>
+                        <div class="info-line"><b>Mobile:</b> {{ client.phone1 }}</div>
+                        <div class="info-line"><b>Email:</b> {{ client.email }}</div>
+                        <div class="info-line"><b>Address:</b> {{ client.location }}</div>
+                        <div class="info-line"><b>Duration:</b> {{ client.estimate_start_date }} — {{ client.estimate_end_date }}</div>
+                    </td>
+                    <td>
+                        <div class="section-title">COMPANY INFORMATION</div>
+                        <div class="info-line"><b>Company:</b> HomeDen Interiors</div>
+                        <div class="info-line"><b>GSTIN:</b> 33AKTPH2053F2ZB</div>
+                        <div class="info-line"><b>Mobile:</b> +91 77 8003 8004</div>
+                        <div class="info-line"><b>Email:</b> homedeninterior@gmail.com</div>
+                        <div class="info-line"><b>Address:</b> No.18, Susi Nagar, Trichy-04</div>
+                    </td>
+                </tr>
+            </table>
 
-        if(data.status === "success"){
+            <!-- Product Table -->
+            <h3>📦 PRODUCT SUMMARY</h3>
 
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "success",
-                title: "Order auto-saved",
-                showConfirmButton: false,
-                timer: 1200
+            <table class="product-table" id="productTable">
+                <thead>
+                    <tr>
+                        <th class="select-cell"></th>
+                        <th class="drag-cell"></th>
+                        <th style="width: 35px;">S.No</th>
+                        <th style="width: 35%;">Item</th>
+                        <th style="width: 60px;">Image</th>
+                        <th style="width: 15%;">Material</th>
+                        <th style="width: 10%;">Brand</th>
+                        <th style="width: 80px;">Size</th>
+                        <th style="width: 80px;" class="text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    {% for r in rows %}
+                        {% ifchanged r.floor_lower %}
+                            <!-- Floor Header -->
+                            <tr class="floor-row" data-type="floor" data-floor="{{ r.floor }}" data-id="floor-{{ forloop.counter }}">
+                                <td class="select-cell">
+                                    <div class="checkbox" data-type="floor">✓</div>
+                                </td>
+                                <td class="drag-cell">⋮⋮</td>
+                                <td colspan="7">
+                                    🏢 {{ r.floor|upper }}
+                                    <span class="row-type-badge badge-floor">Floor</span>
+                                </td>
+                            </tr>
+                        {% endifchanged %}
+
+                        {% ifchanged r.location_lower %}
+                            <!-- Location Header -->
+                            <tr class="location-row" data-type="location" data-location="{{ r.location }}" data-floor="{{ r.floor }}" data-id="loc-{{ forloop.counter }}">
+                                <td class="select-cell">
+                                    <div class="checkbox" data-type="location">✓</div>
+                                </td>
+                                <td class="drag-cell">⋮⋮</td>
+                                <td colspan="7">
+                                    📍 {{ r.location|upper }}
+                                    <span class="row-type-badge badge-location">Location</span>
+                                </td>
+                            </tr>
+                        {% endifchanged %}
+
+                        <!-- Item Row -->
+                        <tr class="item-row" data-type="item" data-id="{{ r.id }}" data-floor="{{ r.floor }}" data-location="{{ r.location }}">
+                            <td class="select-cell">
+                                <div class="checkbox" data-id="{{ r.id }}">✓</div>
+                            </td>
+                            <td class="drag-cell">⋮⋮</td>
+                            <td class="text-center">{{ forloop.counter }}</td>
+                            <td>
+                                <div class="item-name">{{ r.element }}</div>
+                                <div class="item-spec">{{ r.specification|truncatewords:20 }}</div>
+                            </td>
+                            <td>
+                                {% if r.image %}
+                                    <img src="{{ r.image.image.url }}" alt="{{ r.element }}">
+                                {% else %}
+                                    <div style="width:50px;height:50px;background:var(--gray-100);border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--gray-400);">📷</div>
+                                {% endif %}
+                            </td>
+                            <td class="item-material">
+                                {{ r.core_material }}<br>
+                                <small style="color:var(--gray-500)">{{ r.finish_material }}</small>
+                            </td>
+                            <td>
+                                <div class="item-brand">{{ r.brand }}</div>
+                            </td>
+                            <td class="text-center">{{ r.length }} × {{ r.width }}</td>
+                            <td class="text-right"><b>₹{{ r.total|floatformat:0 }}</b></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Totals -->
+            <div class="total-wrapper">
+                <div class="total-box">
+                    <table>
+                        <tr>
+                            <td>Subtotal</td>
+                            <td class="text-right">₹{{ total_amount|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td>GST ({{ gst_rate }}%)</td>
+                            <td class="text-right">₹{{ gst_amount|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Total (incl. GST)</b></td>
+                            <td class="text-right"><b>₹{{ total_with_gst|floatformat:2 }}</b></td>
+                        </tr>
+                        {% if discount %}
+                        <tr>
+                            <td>Discount</td>
+                            <td class="text-right" style="color:var(--success)">-₹{{ discount|floatformat:2 }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr class="grand">
+                            <td>Grand Total</td>
+                            <td class="text-right">₹{{ grand_total|floatformat:2 }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            {% if client.notes %}
+            <div class="notes-section">
+                <b>📝 Notes:</b><br>
+                {{ client.notes|linebreaksbr }}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" onclick="copySelected()">
+            <span class="icon">📋</span>
+            <span>Copy</span>
+            <span class="shortcut">Ctrl+C</span>
+        </div>
+        <div class="context-menu-item" onclick="cutSelected()">
+            <span class="icon">✂️</span>
+            <span>Cut</span>
+            <span class="shortcut">Ctrl+X</span>
+        </div>
+        <div class="context-menu-item" onclick="pasteAtSelection()" id="contextPaste">
+            <span class="icon">📥</span>
+            <span>Paste</span>
+            <span class="shortcut">Ctrl+V</span>
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" onclick="selectAllChildren()">
+            <span class="icon">☑️</span>
+            <span>Select All Children</span>
+        </div>
+        <div class="context-menu-item" onclick="selectAll()">
+            <span class="icon">✅</span>
+            <span>Select All</span>
+            <span class="shortcut">Ctrl+A</span>
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" onclick="moveSelectedUp()">
+            <span class="icon">⬆️</span>
+            <span>Move Up</span>
+            <span class="shortcut">Ctrl+↑</span>
+        </div>
+        <div class="context-menu-item" onclick="moveSelectedDown()">
+            <span class="icon">⬇️</span>
+            <span>Move Down</span>
+            <span class="shortcut">Ctrl+↓</span>
+        </div>
+    </div>
+
+    <!-- Drag Ghost -->
+    <div class="drag-ghost" id="dragGhost">
+        <span class="icon">📦</span>
+        <span>Moving</span>
+        <span class="count" id="dragCount">1</span>
+        <span>item(s)</span>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Generating your PDF...</div>
+        <div class="loading-steps">
+            <div class="loading-step" id="step1">
+                <div class="step-icon pending">1</div>
+                <span>Saving row order</span>
+            </div>
+            <div class="loading-step" id="step2">
+                <div class="step-icon pending">2</div>
+                <span>Generating quotation PDF</span>
+            </div>
+            <div class="loading-step" id="step3">
+                <div class="step-icon pending">3</div>
+                <span>Merging front & back pages</span>
+            </div>
+            <div class="loading-step" id="step4">
+                <div class="step-icon pending">4</div>
+                <span>Preparing download</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // ===== State =====
+        const state = {
+            selectedRows: new Set(),      // Set of row elements
+            clipboard: [],                 // Array of row data for paste
+            clipboardMode: 'copy',         // 'copy' or 'cut'
+            isDragging: false,
+            pasteTarget: null,             // Row element where paste will happen
+            lastClickedRow: null           // For shift-click selection
+        };
+
+        // ===== Utilities =====
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== "") {
+                const cookies = document.cookie.split(";");
+                for (let cookie of cookies) {
+                    cookie = cookie.trim();
+                    if (cookie.startsWith(name + "=")) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie("csrftoken");
+
+        function showToast(message, type = "success") {
+            const container = document.getElementById("toastContainer");
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${type === "success" ? "✓" : type === "warning" ? "⚠️" : "✕"}</span><span>${message}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = "toastIn 0.3s ease reverse";
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function getAllRows() {
+            return Array.from(document.querySelectorAll('#tableBody tr'));
+        }
+
+        function getCurrentOrder() {
+            const rows = document.querySelectorAll(".item-row[data-id]");
+            return Array.from(rows).map(row => row.dataset.id);
+        }
+
+        // ===== Get Children of Floor/Location =====
+        function getChildrenOf(row) {
+            const children = [];
+            const type = row.dataset.type;
+            
+            if (type === 'floor') {
+                const floorName = row.dataset.floor;
+                let nextRow = row.nextElementSibling;
+                
+                while (nextRow && nextRow.dataset.type !== 'floor') {
+                    children.push(nextRow);
+                    nextRow = nextRow.nextElementSibling;
+                }
+            } else if (type === 'location') {
+                const locationName = row.dataset.location;
+                const floorName = row.dataset.floor;
+                let nextRow = row.nextElementSibling;
+                
+                while (nextRow && nextRow.dataset.type === 'item' && 
+                       nextRow.dataset.location === locationName && 
+                       nextRow.dataset.floor === floorName) {
+                    children.push(nextRow);
+                    nextRow = nextRow.nextElementSibling;
+                }
+            }
+            
+            return children;
+        }
+
+        // ===== Selection Management =====
+        function updateSelectionUI() {
+            const count = state.selectedRows.size;
+            const info = document.getElementById("selectionInfo");
+            const countEl = document.getElementById("selectedCount");
+            const textEl = document.getElementById("selectionText");
+            
+            // Count types
+            let floors = 0, locations = 0, items = 0;
+            state.selectedRows.forEach(row => {
+                if (row.dataset.type === 'floor') floors++;
+                else if (row.dataset.type === 'location') locations++;
+                else items++;
             });
+            
+            if (count > 0) {
+                info.classList.add("show");
+                countEl.textContent = count;
+                
+                let text = [];
+                if (floors > 0) text.push(`${floors} floor${floors > 1 ? 's' : ''}`);
+                if (locations > 0) text.push(`${locations} location${locations > 1 ? 's' : ''}`);
+                if (items > 0) text.push(`${items} item${items > 1 ? 's' : ''}`);
+                textEl.textContent = text.join(', ') + ' selected';
+                
+                document.getElementById("btnMoveUp").disabled = false;
+                document.getElementById("btnMoveDown").disabled = false;
+                document.getElementById("btnMoveTop").disabled = false;
+                document.getElementById("btnMoveBottom").disabled = false;
+                document.getElementById("btnCopy").disabled = false;
+            } else {
+                info.classList.remove("show");
+                document.getElementById("btnMoveUp").disabled = true;
+                document.getElementById("btnMoveDown").disabled = true;
+                document.getElementById("btnMoveTop").disabled = true;
+                document.getElementById("btnMoveBottom").disabled = true;
+                document.getElementById("btnCopy").disabled = true;
+            }
 
-        }else{
-            console.error(data.message);
+            // Update row visuals
+            getAllRows().forEach(row => {
+                const isSelected = state.selectedRows.has(row);
+                row.classList.toggle("selected", isSelected);
+                
+                const checkbox = row.querySelector(".checkbox");
+                if (checkbox) {
+                    checkbox.classList.toggle("checked", isSelected);
+                }
+            });
+            
+            // Highlight children of selected floors/locations
+            document.querySelectorAll('.child-of-selected').forEach(el => {
+                el.classList.remove('child-of-selected');
+            });
+            
+            state.selectedRows.forEach(row => {
+                if (row.dataset.type === 'floor' || row.dataset.type === 'location') {
+                    getChildrenOf(row).forEach(child => {
+                        if (!state.selectedRows.has(child)) {
+                            child.classList.add('child-of-selected');
+                        }
+                    });
+                }
+            });
         }
 
-    })
-    .catch(err=>{
-        console.error("SAVE ERROR:", err);
-    });
-
-}
-
-
-new Sortable(tbody,{
-    animation:150,
-    draggable:"tr[data-id]",
-    ghostClass:"dragging",
-
-    onEnd:function(evt){
-
-        if(evt.oldIndex !== evt.newIndex){
-            saveOrder();
+        function updateClipboardUI() {
+            const info = document.getElementById("clipboardInfo");
+            const countEl = document.getElementById("clipboardCount");
+            const textEl = document.getElementById("clipboardText");
+            const pasteBtn = document.getElementById("btnPaste");
+            const contextPaste = document.getElementById("contextPaste");
+            
+            if (state.clipboard.length > 0) {
+                info.classList.add("show");
+                countEl.textContent = state.clipboard.length;
+                textEl.textContent = `item${state.clipboard.length > 1 ? 's' : ''} ${state.clipboardMode === 'cut' ? 'cut' : 'copied'}`;
+                pasteBtn.disabled = false;
+                contextPaste.classList.remove('disabled');
+            } else {
+                info.classList.remove("show");
+                pasteBtn.disabled = true;
+                contextPaste.classList.add('disabled');
+            }
+            
+            // Update copied visual indicator
+            getAllRows().forEach(row => {
+                row.classList.remove('copied');
+            });
+            
+            state.clipboard.forEach(data => {
+                if (data.element) {
+                    data.element.classList.add('copied');
+                }
+            });
         }
 
-    }
-});
+        function toggleSelection(row, isMultiSelect = false, isShiftSelect = false) {
+            if (!row) return;
+            
+            if (isShiftSelect && state.lastClickedRow) {
+                // Shift-click: select range
+                const allRows = getAllRows();
+                const startIdx = allRows.indexOf(state.lastClickedRow);
+                const endIdx = allRows.indexOf(row);
+                
+                const [minIdx, maxIdx] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
+                
+                for (let i = minIdx; i <= maxIdx; i++) {
+                    state.selectedRows.add(allRows[i]);
+                }
+            } else if (isMultiSelect) {
+                // Ctrl-click: toggle single
+                if (state.selectedRows.has(row)) {
+                    state.selectedRows.delete(row);
+                } else {
+                    state.selectedRows.add(row);
+                }
+            } else {
+                // Normal click: select only this
+                state.selectedRows.clear();
+                state.selectedRows.add(row);
+            }
+            
+            state.lastClickedRow = row;
+            updateSelectionUI();
+        }
 
+        function selectAll() {
+            getAllRows().forEach(row => state.selectedRows.add(row));
+            updateSelectionUI();
+            showToast("All rows selected", "success");
+        }
 
-document.getElementById("downloadPDF").addEventListener("click", function(){
+        function selectAllChildren() {
+            const newSelections = [];
+            state.selectedRows.forEach(row => {
+                const children = getChildrenOf(row);
+                children.forEach(child => newSelections.push(child));
+            });
+            newSelections.forEach(row => state.selectedRows.add(row));
+            updateSelectionUI();
+            showToast("Children selected", "success");
+        }
 
-    window.open("{% url 'quotation_pdf' client.id %}", "_blank");
+        function clearSelection() {
+            state.selectedRows.clear();
+            state.lastClickedRow = null;
+            updateSelectionUI();
+        }
 
-});
+        // ===== Copy / Cut / Paste =====
+        function copySelected() {
+            if (state.selectedRows.size === 0) {
+                showToast("No rows selected", "warning");
+                return;
+            }
+            
+            // Get all selected rows and their children
+            const rowsToCopy = new Set();
+            
+            state.selectedRows.forEach(row => {
+                rowsToCopy.add(row);
+                
+                // Include children for floor/location
+                if (row.dataset.type === 'floor' || row.dataset.type === 'location') {
+                    getChildrenOf(row).forEach(child => rowsToCopy.add(child));
+                }
+            });
+            
+            // Store in clipboard
+            state.clipboard = [];
+            state.clipboardMode = 'copy';
+            
+            // Maintain order from DOM
+            getAllRows().forEach(row => {
+                if (rowsToCopy.has(row)) {
+                    state.clipboard.push({
+                        element: row,
+                        html: row.outerHTML,
+                        type: row.dataset.type,
+                        data: {...row.dataset}
+                    });
+                }
+            });
+            
+            updateClipboardUI();
+            showToast(`${state.clipboard.length} row(s) copied`, "success");
+        }
 
-});
+        function cutSelected() {
+            if (state.selectedRows.size === 0) {
+                showToast("No rows selected", "warning");
+                return;
+            }
+            
+            copySelected();
+            state.clipboardMode = 'cut';
+            updateClipboardUI();
+            showToast(`${state.clipboard.length} row(s) cut`, "warning");
+        }
 
+        function pasteAtSelection() {
+            if (state.clipboard.length === 0) {
+                showToast("Clipboard is empty", "warning");
+                return;
+            }
+            
+            // Determine paste position
+            let targetRow = null;
+            
+            if (state.selectedRows.size > 0) {
+                // Paste after the last selected row
+                const selectedArray = Array.from(state.selectedRows);
+                const allRows = getAllRows();
+                let maxIndex = -1;
+                
+                selectedArray.forEach(row => {
+                    const idx = allRows.indexOf(row);
+                    if (idx > maxIndex) {
+                        maxIndex = idx;
+                        targetRow = row;
+                    }
+                });
+            } else {
+                // Paste at the end
+                const allRows = getAllRows();
+                targetRow = allRows[allRows.length - 1];
+            }
+            
+            const tbody = document.getElementById("tableBody");
+            
+            // If cut mode, remove original rows
+            if (state.clipboardMode === 'cut') {
+                state.clipboard.forEach(data => {
+                    if (data.element && data.element.parentNode) {
+                        data.element.remove();
+                    }
+                });
+            }
+            
+            // Insert rows after target
+            let insertAfter = targetRow;
+            
+            state.clipboard.forEach((data, index) => {
+                let newRow;
+                
+                if (state.clipboardMode === 'cut') {
+                    // For cut, we already have the element
+                    newRow = data.element;
+                } else {
+                    // For copy, create new element from HTML
+                    const temp = document.createElement('tbody');
+                    temp.innerHTML = data.html;
+                    newRow = temp.firstElementChild;
+                    
+                    // Update IDs for copied items to avoid duplicates
+                    if (data.type === 'item') {
+                        newRow.dataset.id = `copy-${data.data.id}-${Date.now()}-${index}`;
+                    } else {
+                        newRow.dataset.id = `copy-${data.data.id}-${Date.now()}-${index}`;
+                    }
+                }
+                
+                // Remove copied class
+                newRow.classList.remove('copied', 'selected');
+                
+                // Insert into DOM
+                if (insertAfter.nextSibling) {
+                    tbody.insertBefore(newRow, insertAfter.nextSibling);
+                } else {
+                    tbody.appendChild(newRow);
+                }
+                
+                insertAfter = newRow;
+                
+                // Rebind event listeners
+                bindRowEvents(newRow);
+            });
+            
+            // Clear clipboard if cut
+            if (state.clipboardMode === 'cut') {
+                state.clipboard = [];
+                updateClipboardUI();
+            }
+            
+            renumberRows();
+            clearSelection();
+            showToast(`${state.clipboard.length} row(s) pasted`, "success");
+        }
 
+        function clearClipboard() {
+            state.clipboard.forEach(data => {
+                if (data.element) {
+                    data.element.classList.remove('copied');
+                }
+            });
+            state.clipboard = [];
+            updateClipboardUI();
+        }
 
-</script>
+        // ===== Row Event Binding =====
+        function bindRowEvents(row) {
+            // Click handler
+            row.addEventListener("click", e => {
+                if (e.target.closest(".drag-cell")) return;
+                toggleSelection(row, e.ctrlKey || e.metaKey, e.shiftKey);
+            });
+            
+            // Checkbox click
+            const checkbox = row.querySelector(".checkbox");
+            if (checkbox) {
+                checkbox.addEventListener("click", e => {
+                    e.stopPropagation();
+                    toggleSelection(row, e.ctrlKey || e.metaKey || state.selectedRows.size > 0, e.shiftKey);
+                });
+            }
+            
+            // Drag handle
+            const dragHandle = row.querySelector(".drag-cell");
+            if (dragHandle) {
+                dragHandle.addEventListener("mousedown", e => {
+                    e.preventDefault();
+                    startDrag(e, row);
+                });
+            }
+            
+            // Context menu
+            row.addEventListener("contextmenu", e => {
+                e.preventDefault();
+                
+                // Select row if not already selected
+                if (!state.selectedRows.has(row)) {
+                    toggleSelection(row, false, false);
+                }
+                
+                showContextMenu(e.clientX, e.clientY);
+            });
+        }
+
+        // ===== Context Menu =====
+        function showContextMenu(x, y) {
+            const menu = document.getElementById("contextMenu");
+            menu.style.left = x + "px";
+            menu.style.top = y + "px";
+            menu.classList.add("show");
+            
+            // Update paste state
+            document.getElementById("contextPaste").classList.toggle("disabled", state.clipboard.length === 0);
+        }
+
+        function hideContextMenu() {
+            document.getElementById("contextMenu").classList.remove("show");
+        }
+
+        document.addEventListener("click", e => {
+            if (!e.target.closest(".context-menu")) {
+                hideContextMenu();
+            }
+        });
+
+        // ===== Drag & Drop =====
+        let dragOverRow = null;
+
+        function startDrag(e, row) {
+            // Auto-select if not selected, including children
+            if (!state.selectedRows.has(row)) {
+                state.selectedRows.clear();
+                state.selectedRows.add(row);
+                
+                // Include children for floor/location
+                if (row.dataset.type === 'floor' || row.dataset.type === 'location') {
+                    getChildrenOf(row).forEach(child => state.selectedRows.add(child));
+                }
+                
+                updateSelectionUI();
+            }
+            
+            state.isDragging = true;
+            
+            // Mark selected rows as dragging
+            state.selectedRows.forEach(r => r.classList.add("dragging"));
+            
+            // Show ghost
+            const ghost = document.getElementById("dragGhost");
+            ghost.style.display = "flex";
+            document.getElementById("dragCount").textContent = state.selectedRows.size;
+            updateGhostPosition(e);
+            
+            document.addEventListener("mousemove", onDragMove);
+            document.addEventListener("mouseup", onDragEnd);
+        }
+
+        function updateGhostPosition(e) {
+            const ghost = document.getElementById("dragGhost");
+            ghost.style.left = (e.clientX + 15) + "px";
+            ghost.style.top = (e.clientY - 10) + "px";
+        }
+
+        function onDragMove(e) {
+            if (!state.isDragging) return;
+            
+            updateGhostPosition(e);
+            
+            // Find target row
+            const rows = getAllRows().filter(r => !r.classList.contains("dragging"));
+            let closest = null;
+            let closestDist = Infinity;
+            
+            rows.forEach(row => {
+                const rect = row.getBoundingClientRect();
+                const mid = rect.top + rect.height / 2;
+                const dist = Math.abs(e.clientY - mid);
+                
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closest = row;
+                }
+            });
+            
+            // Clear previous indicators
+            document.querySelectorAll(".drag-over, .drag-over-bottom").forEach(r => {
+                r.classList.remove("drag-over", "drag-over-bottom");
+            });
+            
+            if (closest && closestDist < 60) {
+                const rect = closest.getBoundingClientRect();
+                const mid = rect.top + rect.height / 2;
+                
+                if (e.clientY < mid) {
+                    closest.classList.add("drag-over");
+                } else {
+                    closest.classList.add("drag-over-bottom");
+                }
+                dragOverRow = closest;
+            } else {
+                dragOverRow = null;
+            }
+        }
+
+        function onDragEnd(e) {
+            if (!state.isDragging) return;
+            
+            state.isDragging = false;
+            
+            // Hide ghost
+            document.getElementById("dragGhost").style.display = "none";
+            
+            // Remove visual states
+            document.querySelectorAll(".dragging, .drag-over, .drag-over-bottom").forEach(r => {
+                r.classList.remove("dragging", "drag-over", "drag-over-bottom");
+            });
+            
+            // Move rows
+            if (dragOverRow) {
+                const tbody = document.getElementById("tableBody");
+                const selectedArray = Array.from(state.selectedRows);
+                
+                // Sort selected rows by their DOM order
+                const allRows = getAllRows();
+                selectedArray.sort((a, b) => allRows.indexOf(a) - allRows.indexOf(b));
+                
+                const rect = dragOverRow.getBoundingClientRect();
+                const insertBefore = e.clientY < rect.top + rect.height / 2;
+                
+                selectedArray.forEach(row => {
+                    if (insertBefore) {
+                        tbody.insertBefore(row, dragOverRow);
+                    } else {
+                        const next = dragOverRow.nextElementSibling;
+                        if (next) {
+                            tbody.insertBefore(row, next);
+                        } else {
+                            tbody.appendChild(row);
+                        }
+                    }
+                });
+                
+                renumberRows();
+                showToast("Items reordered", "success");
+            }
+            
+            document.removeEventListener("mousemove", onDragMove);
+            document.removeEventListener("mouseup", onDragEnd);
+            dragOverRow = null;
+        }
+
+        // ===== Move Functions =====
+        function getSelectedRowsOrdered() {
+            const allRows = getAllRows();
+            const selected = Array.from(state.selectedRows);
+            return selected.sort((a, b) => allRows.indexOf(a) - allRows.indexOf(b));
+        }
+
+        function moveSelectedUp() {
+            const selectedRows = getSelectedRowsOrdered();
+            if (selectedRows.length === 0) return;
+            
+            const tbody = document.getElementById("tableBody");
+            const firstSelected = selectedRows[0];
+            
+            // Find previous row
+            let prev = firstSelected.previousElementSibling;
+            while (prev && state.selectedRows.has(prev)) {
+                prev = prev.previousElementSibling;
+            }
+            
+            if (prev) {
+                selectedRows.forEach(row => tbody.insertBefore(row, prev));
+                renumberRows();
+                showToast("Moved up", "success");
+            }
+        }
+
+        function moveSelectedDown() {
+            const selectedRows = getSelectedRowsOrdered();
+            if (selectedRows.length === 0) return;
+            
+            const tbody = document.getElementById("tableBody");
+            const lastSelected = selectedRows[selectedRows.length - 1];
+            
+            // Find next row
+            let next = lastSelected.nextElementSibling;
+            while (next && state.selectedRows.has(next)) {
+                next = next.nextElementSibling;
+            }
+            
+            if (next) {
+                const insertBefore = next.nextElementSibling;
+                selectedRows.reverse().forEach(row => {
+                    if (insertBefore) {
+                        tbody.insertBefore(row, insertBefore);
+                    } else {
+                        tbody.appendChild(row);
+                    }
+                });
+                renumberRows();
+                showToast("Moved down", "success");
+            }
+        }
+
+        function moveSelectedToTop() {
+            const selectedRows = getSelectedRowsOrdered();
+            if (selectedRows.length === 0) return;
+            
+            const tbody = document.getElementById("tableBody");
+            const firstRow = tbody.querySelector("tr");
+            
+            if (firstRow && firstRow !== selectedRows[0]) {
+                selectedRows.forEach(row => tbody.insertBefore(row, firstRow));
+                renumberRows();
+                showToast("Moved to top", "success");
+            }
+        }
+
+        function moveSelectedToBottom() {
+            const selectedRows = getSelectedRowsOrdered();
+            if (selectedRows.length === 0) return;
+            
+            const tbody = document.getElementById("tableBody");
+            selectedRows.forEach(row => tbody.appendChild(row));
+            renumberRows();
+            showToast("Moved to bottom", "success");
+        }
+
+        function renumberRows() {
+            const items = document.querySelectorAll(".item-row");
+            items.forEach((row, index) => {
+                const numCell = row.querySelector("td:nth-child(3)");
+                if (numCell) {
+                    numCell.textContent = index + 1;
+                }
+            });
+        }
+
+        // ===== Save Order =====
+        async function saveOrderToDatabase() {
+            const order = getCurrentOrder();
+            
+            try {
+                const response = await fetch("{% url 'save_quotation_order' client.id %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken
+                    },
+                    body: JSON.stringify({ order: order })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === "success") {
+                    showToast("Order saved!", "success");
+                } else {
+                    showToast("Failed to save order", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Error saving order", "error");
+            }
+        }
+
+        // ===== Download Merged PDF =====
+        async function downloadMergedPDF() {
+            const overlay = document.getElementById("loadingOverlay");
+            overlay.classList.add("show");
+            
+            const steps = ["step1", "step2", "step3", "step4"];
+            
+            function activateStep(index) {
+                steps.forEach((id, i) => {
+                    const el = document.getElementById(id);
+                    el.classList.remove("active", "done");
+                    if (i < index) el.classList.add("done");
+                    if (i === index) el.classList.add("active");
+                });
+            }
+            
+            try {
+                activateStep(0);
+                await new Promise(r => setTimeout(r, 500));
+                const order = getCurrentOrder();
+                
+                // Save order first
+                await fetch("{% url 'save_quotation_order' client.id %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken
+                    },
+                    body: JSON.stringify({ order: order })
+                });
+                
+                activateStep(1);
+                await new Promise(r => setTimeout(r, 500));
+                
+                activateStep(2);
+                
+                const response = await fetch("{% url 'quotation_pdf' client.id %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrftoken,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ order: order })
+                });
+                
+                if (!response.ok) {
+                    throw new Error("PDF generation failed");
+                }
+                
+                activateStep(3);
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `QTN_{{ client.name }}_{{ today|date:"Ymd" }}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                steps.forEach(id => {
+                    document.getElementById(id).classList.remove("active");
+                    document.getElementById(id).classList.add("done");
+                });
+                
+                await new Promise(r => setTimeout(r, 1000));
+                
+                overlay.classList.remove("show");
+                showToast("PDF downloaded!", "success");
+                
+            } catch (err) {
+                console.error(err);
+                overlay.classList.remove("show");
+                showToast("Failed to generate PDF", "error");
+            }
+        }
+
+        // ===== Keyboard Shortcuts =====
+        document.addEventListener("keydown", e => {
+            // Ctrl+A: Select All
+            if ((e.ctrlKey || e.metaKey) && e.key === "a") {
+                e.preventDefault();
+                selectAll();
+            }
+            
+            // Escape: Clear Selection
+            if (e.key === "Escape") {
+                clearSelection();
+                hideContextMenu();
+            }
+            
+            // Ctrl+C: Copy
+            if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+                e.preventDefault();
+                copySelected();
+            }
+            
+            // Ctrl+X: Cut
+            if ((e.ctrlKey || e.metaKey) && e.key === "x") {
+                e.preventDefault();
+                cutSelected();
+            }
+            
+            // Ctrl+V: Paste
+            if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+                e.preventDefault();
+                pasteAtSelection();
+            }
+            
+            // Ctrl+Up: Move Up
+            if ((e.ctrlKey || e.metaKey) && e.key === "ArrowUp" && state.selectedRows.size > 0) {
+                e.preventDefault();
+                moveSelectedUp();
+            }
+            
+            // Ctrl+Down: Move Down
+            if ((e.ctrlKey || e.metaKey) && e.key === "ArrowDown" && state.selectedRows.size > 0) {
+                e.preventDefault();
+                moveSelectedDown();
+            }
+            
+            // Ctrl+S: Save
+            if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+                e.preventDefault();
+                saveOrderToDatabase();
+            }
+            
+            // Ctrl+P: Print/PDF
+            if ((e.ctrlKey || e.metaKey) && e.key === "p") {
+                e.preventDefault();
+                downloadMergedPDF();
+            }
+            
+            // Delete: Remove selected (optional)
+            if (e.key === "Delete" && state.selectedRows.size > 0) {
+                // Could implement delete functionality here
+            }
+        });
+
+        // ===== Initialize =====
+        document.addEventListener("DOMContentLoaded", () => {
+            // Bind events to all rows
+            getAllRows().forEach(row => bindRowEvents(row));
+            
+            // Initial UI update
+            updateSelectionUI();
+            updateClipboardUI();
+        });
+    </script>
 
 </body>
 </html>

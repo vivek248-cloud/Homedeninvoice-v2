@@ -1,0 +1,1117 @@
+{% extends "billing/layouts/base.html" %}
+{% block content %}
+
+<style>
+/* ========== SaaS Theme Variables ========== */
+:root {
+    --convert-primary: #6366f1;
+    --convert-primary-dark: #4f46e5;
+    --convert-primary-light: #818cf8;
+    --convert-secondary: #8b5cf6;
+    --convert-success: #10b981;
+    --convert-success-light: #d1fae5;
+    --convert-warning: #f59e0b;
+    --convert-warning-light: #fef3c7;
+    --convert-danger: #ef4444;
+    --convert-danger-light: #fee2e2;
+    --convert-info: #3b82f6;
+    --convert-info-light: #dbeafe;
+    --convert-dark: #0f172a;
+    --convert-gray-900: #1e293b;
+    --convert-gray-700: #334155;
+    --convert-gray-600: #475569;
+    --convert-gray-500: #64748b;
+    --convert-gray-400: #94a3b8;
+    --convert-gray-300: #cbd5e1;
+    --convert-gray-200: #e2e8f0;
+    --convert-gray-100: #f1f5f9;
+    --convert-gray-50: #f8fafc;
+    --convert-white: #ffffff;
+    --convert-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+    --convert-gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    --convert-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --convert-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --convert-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --convert-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --convert-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --convert-radius: 16px;
+    --convert-radius-md: 12px;
+    --convert-radius-sm: 8px;
+}
+
+/* ========== Page Container ========== */
+.convert-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========== Page Header ========== */
+.convert-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.convert-header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.convert-header-icon {
+    width: 56px;
+    height: 56px;
+    background: var(--convert-gradient);
+    border-radius: var(--convert-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+    flex-shrink: 0;
+}
+
+.convert-header-text h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--convert-dark);
+    margin: 0 0 0.25rem 0;
+    letter-spacing: -0.025em;
+}
+
+.convert-header-text p {
+    font-size: 0.875rem;
+    color: var(--convert-gray-500);
+    margin: 0;
+}
+
+.convert-header-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--convert-gray-400);
+    margin-top: 0.5rem;
+}
+
+.convert-header-breadcrumb i {
+    font-size: 0.625rem;
+}
+
+.convert-header-breadcrumb a {
+    color: var(--convert-primary);
+    text-decoration: none;
+}
+
+.convert-header-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.convert-header-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border-radius: var(--convert-radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--convert-gray-200);
+    background: var(--convert-white);
+    color: var(--convert-gray-700);
+}
+
+.action-btn:hover {
+    background: var(--convert-gray-100);
+    border-color: var(--convert-gray-300);
+}
+
+.action-btn.select-all:hover {
+    background: var(--convert-success-light);
+    border-color: var(--convert-success);
+    color: var(--convert-success);
+}
+
+.action-btn.unselect:hover {
+    background: var(--convert-danger-light);
+    border-color: var(--convert-danger);
+    color: var(--convert-danger);
+}
+
+/* ========== Selection Info Card ========== */
+.selection-card {
+    background: var(--convert-white);
+    border-radius: var(--convert-radius);
+    box-shadow: var(--convert-shadow-md);
+    border: 1px solid var(--convert-gray-100);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.selection-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: var(--convert-gray-50);
+    border-bottom: 1px solid var(--convert-gray-100);
+}
+
+.selection-card-header i {
+    font-size: 1.125rem;
+    color: var(--convert-primary);
+}
+
+.selection-card-header span {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--convert-dark);
+}
+
+.selection-card-body {
+    padding: 1.5rem;
+}
+
+.selection-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+@media (max-width: 768px) {
+    .selection-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--convert-gray-700);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-select-wrapper {
+    position: relative;
+}
+
+.form-select-custom {
+    width: 100%;
+    padding: 0.875rem 2.5rem 0.875rem 1rem;
+    background: var(--convert-white);
+    border: 2px solid var(--convert-gray-200);
+    border-radius: var(--convert-radius-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--convert-dark);
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.form-select-custom:hover {
+    border-color: var(--convert-gray-300);
+}
+
+.form-select-custom:focus {
+    outline: none;
+    border-color: var(--convert-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-select-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--convert-gray-400);
+}
+
+/* ========== Items Card ========== */
+.items-card {
+    background: var(--convert-white);
+    border-radius: var(--convert-radius);
+    box-shadow: var(--convert-shadow-md);
+    border: 1px solid var(--convert-gray-100);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.items-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: var(--convert-gray-50);
+    border-bottom: 1px solid var(--convert-gray-100);
+}
+
+.items-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.items-card-title i {
+    font-size: 1.125rem;
+    color: var(--convert-primary);
+}
+
+.items-card-title h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--convert-dark);
+    margin: 0;
+}
+
+.items-card-title .badge {
+    padding: 0.25rem 0.625rem;
+    background: var(--convert-primary);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.live-total-display {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--convert-success-light);
+    border-radius: var(--convert-radius-sm);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.live-total-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--convert-success);
+    text-transform: uppercase;
+}
+
+.live-total-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--convert-success);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ========== Items List ========== */
+.items-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.items-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.items-list::-webkit-scrollbar-track {
+    background: var(--convert-gray-100);
+}
+
+.items-list::-webkit-scrollbar-thumb {
+    background: var(--convert-gray-300);
+    border-radius: 10px;
+}
+
+.item-row {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--convert-gray-100);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.item-row:last-child {
+    border-bottom: none;
+}
+
+.item-row:hover {
+    background: var(--convert-gray-50);
+}
+
+.item-row.selected {
+    background: rgba(99, 102, 241, 0.05);
+    border-left: 3px solid var(--convert-primary);
+}
+
+.item-checkbox-wrapper {
+    flex-shrink: 0;
+    margin-right: 1rem;
+}
+
+.custom-checkbox {
+    position: relative;
+    width: 22px;
+    height: 22px;
+}
+
+.custom-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.custom-checkbox .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 22px;
+    height: 22px;
+    background: var(--convert-white);
+    border: 2px solid var(--convert-gray-300);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-checkbox input:checked ~ .checkmark {
+    background: var(--convert-primary);
+    border-color: var(--convert-primary);
+}
+
+.custom-checkbox .checkmark i {
+    font-size: 0.75rem;
+    color: white;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s ease;
+}
+
+.custom-checkbox input:checked ~ .checkmark i {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.custom-checkbox:hover .checkmark {
+    border-color: var(--convert-primary);
+}
+
+.item-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 2fr 2fr 1.5fr 0.5fr 1fr;
+    gap: 1rem;
+    align-items: center;
+}
+
+@media (max-width: 992px) {
+    .item-content {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .item-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+.item-element {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.item-element-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--convert-dark);
+}
+
+.item-element-location {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--convert-gray-500);
+}
+
+.item-element-location i {
+    font-size: 0.625rem;
+}
+
+.item-spec {
+    font-size: 0.8rem;
+    color: var(--convert-gray-600);
+    line-height: 1.4;
+}
+
+.item-dimensions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.item-dimensions-main {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--convert-gray-700);
+}
+
+.item-dimensions-area {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    background: var(--convert-info-light);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--convert-info);
+}
+
+.item-qty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.item-qty-value {
+    width: 32px;
+    height: 32px;
+    background: var(--convert-gray-100);
+    border-radius: var(--convert-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--convert-dark);
+}
+
+.item-qty-label {
+    font-size: 0.6rem;
+    color: var(--convert-gray-400);
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+}
+
+.item-total {
+    text-align: right;
+}
+
+.item-total-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--convert-dark);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ========== Empty State ========== */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-state-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--convert-gray-100);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: var(--convert-gray-400);
+}
+
+.empty-state-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--convert-dark);
+    margin: 0 0 0.5rem 0;
+}
+
+.empty-state-text {
+    font-size: 0.875rem;
+    color: var(--convert-gray-500);
+    margin: 0;
+}
+
+/* ========== Summary & Submit ========== */
+.submit-section {
+    background: var(--convert-white);
+    border-radius: var(--convert-radius);
+    box-shadow: var(--convert-shadow-md);
+    border: 1px solid var(--convert-gray-100);
+    overflow: hidden;
+}
+
+.submit-section-body {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.submit-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.submit-info-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--convert-info-light);
+    border-radius: var(--convert-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--convert-info);
+    font-size: 1.25rem;
+}
+
+.submit-info-text h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--convert-dark);
+    margin: 0 0 0.25rem 0;
+}
+
+.submit-info-text p {
+    font-size: 0.8rem;
+    color: var(--convert-gray-500);
+    margin: 0;
+}
+
+.submit-stats {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 0 1rem;
+    border-right: 1px solid var(--convert-gray-200);
+}
+
+.stat-item:last-child {
+    border-right: none;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--convert-dark);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.stat-value.amount {
+    color: var(--convert-success);
+}
+
+.stat-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--convert-gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.btn-convert {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: var(--convert-gradient-success);
+    border: none;
+    border-radius: var(--convert-radius-md);
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    transition: all 0.2s ease;
+}
+
+.btn-convert:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+}
+
+.btn-convert:active {
+    transform: translateY(0);
+}
+
+.btn-convert i {
+    font-size: 1.125rem;
+}
+
+/* ========== Selection Summary Bar (Sticky) ========== */
+.selection-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--convert-white);
+    border-top: 1px solid var(--convert-gray-200);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.selection-bar.visible {
+    transform: translateY(0);
+}
+
+.selection-bar-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.selection-bar-count {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.selection-bar-count .count {
+    width: 32px;
+    height: 32px;
+    background: var(--convert-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.selection-bar-count .label {
+    font-size: 0.875rem;
+    color: var(--convert-gray-600);
+}
+
+.selection-bar-total {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--convert-success);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+    .convert-page {
+        padding: 1rem;
+    }
+    
+    .convert-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .convert-header-actions {
+        justify-content: flex-end;
+    }
+    
+    .submit-section-body {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .submit-info {
+        flex-direction: column;
+    }
+    
+    .submit-stats {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .selection-bar {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+
+/* ========== Animations ========== */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.15s; }
+.stagger-3 { animation-delay: 0.2s; }
+
+@keyframes checkPop {
+    0% { transform: scale(0.8); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.item-row.just-checked {
+    animation: checkPop 0.3s ease;
+}
+</style>
+
+<div class="convert-page">
+    <form method="POST" action="{% url 'convert_qtn_to_spend' %}" id="convertForm">
+        {% csrf_token %}
+        
+        <!-- ========== Page Header ========== -->
+        <div class="convert-header">
+            <div class="convert-header-left">
+                <div class="convert-header-icon">
+                    <i class="bi bi-arrow-left-right"></i>
+                </div>
+                <div class="convert-header-text">
+                    <h1>Convert Quotation to Spend</h1>
+                    <p>Select items from quotation to create spend entries</p>
+                    <div class="convert-header-breadcrumb">
+                        <a href="#">Dashboard</a>
+                        <i class="bi bi-chevron-right"></i>
+                        <a href="#">Quotations</a>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>Convert to Spend</span>
+                    </div>
+                </div>
+            </div>
+            <div class="convert-header-actions">
+                <button type="button" class="action-btn select-all" onclick="toggleAll(true)">
+                    <i class="bi bi-check-all"></i>
+                    Select All
+                </button>
+                <button type="button" class="action-btn unselect" onclick="toggleAll(false)">
+                    <i class="bi bi-x-lg"></i>
+                    Clear Selection
+                </button>
+            </div>
+        </div>
+
+        <!-- ========== Client & Project Selection ========== -->
+        <div class="selection-card">
+            <div class="selection-card-header">
+                <i class="bi bi-building"></i>
+                <span>Client & Project Selection</span>
+            </div>
+            <div class="selection-card-body">
+                <div class="selection-grid">
+                    <div class="form-group">
+                        <label class="form-label">Select Client</label>
+                        <div class="form-select-wrapper">
+                            <select name="client" id="clientSelect" class="form-select-custom" required>
+                                <option value="">Choose a client...</option>
+                                {% for c in clients %}
+                                    <option value="{{ c.id }}">{{ c.name }} ({{c.address}})</option>
+                                {% endfor %}
+                            </select>
+                            <i class="bi bi-chevron-down form-select-arrow"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Select Project</label>
+                        <div class="form-select-wrapper">
+                            <select name="project" id="projectSelect" class="form-select-custom" required>
+                                <option value="">Choose a project...</option>
+                                {% for p in projects %}
+                                    <option value="{{ p.id }}" data-client="{{ p.client.id }}">
+                                        {{ p.name }} - {{ p.client.name }} ({{ p.client.address }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <i class="bi bi-chevron-down form-select-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== Items Card ========== -->
+        <div class="items-card">
+            <div class="items-card-header">
+                <div class="items-card-title">
+                    <i class="bi bi-list-check"></i>
+                    <h3>Quotation Items</h3>
+                    <span class="badge" id="itemCount">{{ items|length }}</span>
+                </div>
+                <div class="live-total-display">
+                    <span class="live-total-label">Selected Total</span>
+                    <span class="live-total-value">₹<span id="liveTotal">0</span></span>
+                </div>
+            </div>
+
+            <div class="items-list">
+                {% for item in items %}
+                <div class="item-row selected" data-item-id="{{ item.id }}" onclick="toggleItem(this)">
+                    <div class="item-checkbox-wrapper">
+                        <label class="custom-checkbox">
+                            <input type="checkbox"
+                                   class="item-checkbox"
+                                   name="items"
+                                   value="{{ item.id }}"
+                                   data-total="{{ item.total }}"
+                                   checked
+                                   onclick="event.stopPropagation()">
+                            <span class="checkmark">
+                                <i class="bi bi-check"></i>
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <div class="item-content">
+                        <div class="item-element">
+                            <span class="item-element-name">{{ item.element }}</span>
+                            <span class="item-element-location">
+                                <i class="bi bi-geo-alt-fill"></i>
+                                {{ item.location }}
+                            </span>
+                        </div>
+                        
+                        <div class="item-spec">
+                            {{ item.specification }}
+                        </div>
+                        
+                        <div class="item-dimensions">
+                            <span class="item-dimensions-main">
+                                L: {{ item.length }} × W: {{ item.width }}
+                            </span>
+                            <span class="item-dimensions-area">
+                                <i class="bi bi-aspect-ratio"></i>
+                                Area: {{ item.area }}
+                            </span>
+                        </div>
+                        
+                        <div class="item-qty">
+                            <span class="item-qty-value">{{ item.qty }}</span>
+                            <span class="item-qty-label">Qty</span>
+                        </div>
+                        
+                        <div class="item-total">
+                            <span class="item-total-value">₹{{ item.total|floatformat:0 }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-inbox"></i>
+                    </div>
+                    <h4 class="empty-state-title">No Quotation Items</h4>
+                    <p class="empty-state-text">There are no items available for conversion.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ========== Submit Section ========== -->
+        <div class="submit-section">
+            <div class="submit-section-body">
+                <div class="submit-info">
+                    <div class="submit-info-icon">
+                        <i class="bi bi-info-circle"></i>
+                    </div>
+                    <div class="submit-info-text">
+                        <h4>Ready to Convert</h4>
+                        <p>Selected items will be converted to spend entries in your chosen project.</p>
+                    </div>
+                </div>
+                
+                <div class="submit-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="selectedCount">0</div>
+                        <div class="stat-label">Items Selected</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value amount">₹<span id="totalAmount">0</span></div>
+                        <div class="stat-label">Total Amount</div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-convert">
+                    <i class="bi bi-arrow-right-circle"></i>
+                    Convert to Spend
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- ========== Floating Selection Bar ========== -->
+<div class="selection-bar" id="selectionBar">
+    <div class="selection-bar-info">
+        <div class="selection-bar-count">
+            <span class="count" id="floatingCount">0</span>
+            <span class="label">items selected</span>
+        </div>
+        <div class="selection-bar-total">
+            ₹<span id="floatingTotal">0</span>
+        </div>
+    </div>
+    <button type="button" class="btn-convert" onclick="document.getElementById('convertForm').submit()">
+        <i class="bi bi-arrow-right-circle"></i>
+        Convert Selected
+    </button>
+</div>
+
+<script>
+// Toggle All Items
+function toggleAll(state) {
+    document.querySelectorAll('.item-checkbox').forEach(cb => {
+        cb.checked = state;
+        const row = cb.closest('.item-row');
+        if (state) {
+            row.classList.add('selected');
+        } else {
+            row.classList.remove('selected');
+        }
+    });
+    updateTotal();
+}
+
+// Toggle Single Item
+function toggleItem(row) {
+    const checkbox = row.querySelector('.item-checkbox');
+    checkbox.checked = !checkbox.checked;
+    row.classList.toggle('selected', checkbox.checked);
+    
+    // Add animation
+    row.classList.add('just-checked');
+    setTimeout(() => row.classList.remove('just-checked'), 300);
+    
+    updateTotal();
+}
+
+// Update Total
+function updateTotal() {
+    let total = 0;
+    let count = 0;
+
+    document.querySelectorAll('.item-checkbox:checked').forEach(cb => {
+        total += parseFloat(cb.dataset.total || 0);
+        count++;
+    });
+
+    const formattedTotal = Math.round(total).toLocaleString('en-IN');
+    
+    // Update all displays
+    document.getElementById('liveTotal').textContent = formattedTotal;
+    document.getElementById('selectedCount').textContent = count;
+    document.getElementById('totalAmount').textContent = formattedTotal;
+    document.getElementById('floatingCount').textContent = count;
+    document.getElementById('floatingTotal').textContent = formattedTotal;
+    
+    // Show/hide floating bar
+    const selectionBar = document.getElementById('selectionBar');
+    if (count > 0) {
+        selectionBar.classList.add('visible');
+    } else {
+        selectionBar.classList.remove('visible');
+    }
+}
+
+// Client → Project Filter
+document.getElementById('clientSelect').addEventListener('change', function() {
+    const clientId = this.value;
+    const projectSelect = document.getElementById('projectSelect');
+
+    Array.from(projectSelect.options).forEach(opt => {
+        if (!opt.value) return;
+
+        if (opt.dataset.client === clientId) {
+            opt.style.display = '';
+        } else {
+            opt.style.display = 'none';
+        }
+    });
+
+    projectSelect.value = '';
+});
+
+// Checkbox Change Handler
+document.querySelectorAll('.item-checkbox').forEach(cb => {
+    cb.addEventListener('change', function(e) {
+        e.stopPropagation();
+        const row = this.closest('.item-row');
+        row.classList.toggle('selected', this.checked);
+        updateTotal();
+    });
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateTotal();
+});
+
+// Form Submit Confirmation
+document.getElementById('convertForm').addEventListener('submit', function(e) {
+    const selectedCount = document.querySelectorAll('.item-checkbox:checked').length;
+    
+    if (selectedCount === 0) {
+        e.preventDefault();
+        Swal.fire({
+            title: 'No Items Selected',
+            text: 'Please select at least one item to convert.',
+            icon: 'warning',
+            confirmButtonColor: '#6366f1'
+        });
+        return;
+    }
+    
+    const clientSelect = document.getElementById('clientSelect');
+    const projectSelect = document.getElementById('projectSelect');
+    
+    if (!clientSelect.value || !projectSelect.value) {
+        e.preventDefault();
+        Swal.fire({
+            title: 'Selection Required',
+            text: 'Please select both a client and a project.',
+            icon: 'warning',
+            confirmButtonColor: '#6366f1'
+        });
+        return;
+    }
+});
+</script>
+
+{% endblock %}
