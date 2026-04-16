@@ -11,7 +11,7 @@
     <!-- Page Header -->
     <div class="page-header fade-in fi-1">
         <div class="page-header-left">
-            <a href="{% url 'spend_list' %}" class="back-btn">
+            <a href="{% url 'spend_list' %}" class="back-btn bg-danger text-white">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div class="page-icon-wrap pi-emerald">
@@ -26,6 +26,237 @@
             <div class="hs-indicator hs-warning"></div>
             <span class="hs-text">Incomplete</span>
         </div>
+    </div>
+
+    <!-- ===== Quick Actions Grid ===== -->
+    <div class="quick-grid-section">
+        <div class="quick-grid-header">
+            <div class="quick-grid-title">
+                <i class="bi bi-lightning-charge-fill"></i>
+                <span>Quick Setup</span>
+            </div>
+            <p class="quick-grid-sub">Create master data instantly without leaving this page</p>
+        </div>
+
+        <div class="quick-grid">
+
+            <!-- Floor -->
+            <div class="quick-card floor-card" onclick="openQuickModal('floor')">
+                <div class="quick-card-icon">
+                    <i class="bi bi-building"></i>
+                </div>
+                <div class="quick-card-body">
+                    <h5>Add Floor</h5>
+                    <p>New floor type</p>
+                </div>
+                <div class="quick-card-count">
+                    <span id="floorCount">{{ floors|length }}</span>
+                    <small>added</small>
+                </div>
+                <div class="quick-card-arrow">
+                    <i class="bi bi-plus-lg"></i>
+                </div>
+            </div>
+
+            <!-- Room -->
+            <div class="quick-card room-card" onclick="openQuickModal('room')">
+                <div class="quick-card-icon">
+                    <i class="bi bi-geo-alt"></i>
+                </div>
+                <div class="quick-card-body">
+                    <h5>Add Room</h5>
+                    <p>New room type</p>
+                </div>
+                <div class="quick-card-count">
+                    <span id="roomCount">{{ rooms|length }}</span>
+                    <small>added</small>
+                </div>
+                <div class="quick-card-arrow">
+                    <i class="bi bi-plus-lg"></i>
+                </div>
+            </div>
+
+            <!-- Full/Semi -->
+            <div class="quick-card fullsemi-card" onclick="openQuickModal('fullsemi')">
+                <div class="quick-card-icon">
+                    <i class="bi bi-layers"></i>
+                </div>
+                <div class="quick-card-body">
+                    <h5>Add Series</h5>
+                    <p>Full / Semi series</p>
+                </div>
+                <div class="quick-card-count">
+                    <span id="fullsemiCount">{{ fullsemis|length }}</span>
+                    <small>added</small>
+                </div>
+                <div class="quick-card-arrow">
+                    <i class="bi bi-plus-lg"></i>
+                </div>
+            </div>
+
+            <!-- Image -->
+            <div class="quick-card image-card" onclick="openQuickModal('image')">
+                <div class="quick-card-icon">
+                    <i class="bi bi-image"></i>
+                </div>
+                <div class="quick-card-body">
+                    <h5>Upload Image</h5>
+                    <p>Reference photo</p>
+                </div>
+                <div class="quick-card-count">
+                    <span id="imageCount">0</span>
+                    <small>uploaded</small>
+                </div>
+                <div class="quick-card-arrow">
+                    <i class="bi bi-plus-lg"></i>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+        QUICK CREATE MODAL
+    ═══════════════════════════════════════ -->
+    <div class="qc-overlay" id="qcOverlay" onclick="closeQuickModal()"></div>
+
+    <div class="qc-modal" id="qcModal">
+
+        <!-- Modal Header -->
+        <div class="qc-modal-header" id="qcModalHeader">
+            <div class="qc-modal-icon" id="qcModalIcon">
+                <i class="bi bi-plus"></i>
+            </div>
+            <div>
+                <h4 id="qcModalTitle">Create</h4>
+                <p id="qcModalSub">Fill in the details below</p>
+            </div>
+            <button class="qc-close-btn" onclick="closeQuickModal()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="qc-modal-body">
+
+            <!-- ===== FLOOR FORM ===== -->
+            <div class="qc-form" id="form-floor">
+                <div class="qc-field">
+                    <label>Floor Name <span class="req">*</span></label>
+                    <input type="text" 
+                        id="floor-name" 
+                        class="qc-input" 
+                        placeholder="e.g. Ground Floor, 1st Floor..."
+                        autocomplete="off">
+                    <span class="qc-hint">This will appear in all dropdowns</span>
+                </div>
+            </div>
+
+            <!-- ===== ROOM FORM ===== -->
+            <div class="qc-form" id="form-room" style="display:none;">
+                <div class="qc-field">
+                    <label>Room Name <span class="req">*</span></label>
+                    <input type="text" 
+                        id="room-name" 
+                        class="qc-input" 
+                        placeholder="e.g. Master Bedroom, Kitchen..."
+                        autocomplete="off">
+                    <span class="qc-hint">This will appear in all dropdowns</span>
+                </div>
+            </div>
+
+            <!-- ===== FULLSEMI FORM ===== -->
+            <div class="qc-form" id="form-fullsemi" style="display:none;">
+                <div class="qc-field">
+                    <label>Series Name <span class="req">*</span></label>
+                    <input type="text" 
+                        id="fullsemi-name" 
+                        class="qc-input" 
+                        placeholder="e.g. Full Series, Semi Series..."
+                        autocomplete="off">
+                </div>
+                <div class="qc-field">
+                    <label>Rate (₹ per sqft) <span class="req">*</span></label>
+                    <div class="qc-input-prefix">
+                        <span class="prefix-symbol">₹</span>
+                        <input type="number" 
+                            id="fullsemi-rate" 
+                            class="qc-input has-prefix" 
+                            placeholder="0.00"
+                            step="0.01"
+                            min="0">
+                    </div>
+                    <span class="qc-hint">Rate applied per square foot</span>
+                </div>
+            </div>
+
+            <!-- ===== IMAGE FORM ===== -->
+            <div class="qc-form" id="form-image" style="display:none;">
+                <div class="qc-field">
+                    <label>Image Name <span class="req">*</span></label>
+                    <input type="text" 
+                        id="image-name" 
+                        class="qc-input" 
+                        placeholder="e.g. Wardrobe Laminate, Kitchen Panel..."
+                        autocomplete="off">
+                </div>
+                <div class="qc-field">
+                    <label>Image File <span class="req">*</span></label>
+                    <div class="qc-upload-area" id="uploadArea" onclick="document.getElementById('image-file').click()">
+                        <input type="file" 
+                            id="image-file" 
+                            accept="image/*"
+                            style="display:none;"
+                            onchange="handleFileSelect(this)">
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <i class="bi bi-cloud-upload"></i>
+                            <span>Click to upload or drag & drop</span>
+                            <small>JPG, PNG, WEBP up to 5MB</small>
+                        </div>
+                        <div class="upload-preview" id="uploadPreview" style="display:none;">
+                            <img id="previewImg" src="" alt="Preview">
+                            <div class="preview-info">
+                                <span class="preview-name" id="previewName"></span>
+                                <span class="preview-size" id="previewSize"></span>
+                                <button type="button" class="preview-clear" onclick="clearFile(event)">
+                                    <i class="bi bi-x"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success State -->
+            <div class="qc-success" id="qcSuccess" style="display:none;">
+                <div class="success-animation">
+                    <div class="success-circle">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                </div>
+                <h4 id="successTitle">Created!</h4>
+                <p id="successMessage">Item added successfully</p>
+            </div>
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="qc-modal-footer" id="qcModalFooter">
+            <button class="qc-btn-cancel" onclick="closeQuickModal()">
+                Cancel
+            </button>
+            <button class="qc-btn-create" id="qcCreateBtn" onclick="submitQuickCreate()">
+                <span class="btn-idle">
+                    <i class="bi bi-plus-circle"></i>
+                    Create Now
+                </span>
+                <span class="btn-loading" style="display:none;">
+                    <span class="btn-spinner"></span>
+                    Creating...
+                </span>
+            </button>
+        </div>
+
     </div>
 
     <form method="POST" id="spendForm" novalidate>
@@ -679,6 +910,617 @@
 }
 .table-responsive::-webkit-scrollbar { height: 4px; }
 .table-responsive::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
+
+/* ===== Quick Grid ===== */
+.quick-grid-section {
+    margin-bottom: 28px;
+}
+
+.quick-grid-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.quick-grid-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #374151;
+}
+
+.quick-grid-title i { color: #f59e0b; }
+
+.quick-grid-sub {
+    font-size: 0.72rem;
+    color: #9ca3af;
+    margin: 0;
+}
+
+.quick-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.quick-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+}
+
+.quick-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    transition: background 0.2s ease;
+}
+
+.quick-card:hover {
+    transform: translateY(-2px);
+}
+
+.quick-card:active {
+    transform: scale(0.98);
+}
+
+.quick-card-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.quick-card:hover .quick-card-icon {
+    transform: scale(1.1);
+}
+
+.quick-card-body { flex: 1; min-width: 0; }
+
+.quick-card-body h5 {
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin: 0 0 2px;
+    color: #1f2937;
+}
+
+.quick-card-body p {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    margin: 0;
+}
+
+.quick-card-count {
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.quick-card-count span {
+    display: block;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.quick-card-count small {
+    font-size: 0.6rem;
+    color: #9ca3af;
+    text-transform: uppercase;
+}
+
+.quick-card-arrow {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.quick-card:hover .quick-card-arrow {
+    transform: scale(1.1) rotate(90deg);
+}
+
+/* Card Color Themes */
+.floor-card { border-color: #e0e7ff; }
+.floor-card:hover { border-color: #6366f1; box-shadow: 0 6px 20px rgba(99,102,241,0.15); }
+.floor-card .quick-card-icon { background: #eef2ff; color: #6366f1; }
+.floor-card:hover .quick-card-icon { background: #6366f1; color: #fff; }
+.floor-card .quick-card-arrow { background: #eef2ff; color: #6366f1; }
+.floor-card:hover .quick-card-arrow { background: #6366f1; color: #fff; }
+.floor-card .quick-card-count span { color: #6366f1; }
+
+.room-card { border-color: #d1fae5; }
+.room-card:hover { border-color: #10b981; box-shadow: 0 6px 20px rgba(16,185,129,0.15); }
+.room-card .quick-card-icon { background: #d1fae5; color: #059669; }
+.room-card:hover .quick-card-icon { background: #10b981; color: #fff; }
+.room-card .quick-card-arrow { background: #d1fae5; color: #059669; }
+.room-card:hover .quick-card-arrow { background: #10b981; color: #fff; }
+.room-card .quick-card-count span { color: #10b981; }
+
+.fullsemi-card { border-color: #fef3c7; }
+.fullsemi-card:hover { border-color: #f59e0b; box-shadow: 0 6px 20px rgba(245,158,11,0.15); }
+.fullsemi-card .quick-card-icon { background: #fef3c7; color: #d97706; }
+.fullsemi-card:hover .quick-card-icon { background: #f59e0b; color: #fff; }
+.fullsemi-card .quick-card-arrow { background: #fef3c7; color: #d97706; }
+.fullsemi-card:hover .quick-card-arrow { background: #f59e0b; color: #fff; }
+.fullsemi-card .quick-card-count span { color: #f59e0b; }
+
+.image-card { border-color: #e0f2fe; }
+.image-card:hover { border-color: #0ea5e9; box-shadow: 0 6px 20px rgba(14,165,233,0.15); }
+.image-card .quick-card-icon { background: #e0f2fe; color: #0284c7; }
+.image-card:hover .quick-card-icon { background: #0ea5e9; color: #fff; }
+.image-card .quick-card-arrow { background: #e0f2fe; color: #0284c7; }
+.image-card:hover .quick-card-arrow { background: #0ea5e9; color: #fff; }
+.image-card .quick-card-count span { color: #0ea5e9; }
+
+/* ===== Modal ===== */
+.qc-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.qc-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.qc-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.92);
+    width: 90%;
+    max-width: 460px;
+    background: #fff;
+    border-radius: 18px;
+    z-index: 1001;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+.qc-modal.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Modal Header */
+.qc-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.qc-modal-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.qc-modal-header h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.qc-modal-header p {
+    font-size: 0.78rem;
+    color: #9ca3af;
+    margin: 2px 0 0;
+}
+
+.qc-close-btn {
+    margin-left: auto;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 8px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+}
+
+.qc-close-btn:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+}
+
+/* Modal Body */
+.qc-modal-body {
+    padding: 24px;
+}
+
+.qc-field {
+    margin-bottom: 18px;
+}
+
+.qc-field:last-child {
+    margin-bottom: 0;
+}
+
+.qc-field label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.req { color: #ef4444; }
+
+.qc-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: #1f2937;
+    background: #fff;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.qc-input:focus {
+    border-color: var(--active-color, #6366f1);
+    box-shadow: 0 0 0 3px var(--active-glow, rgba(99,102,241,0.12));
+}
+
+.qc-input.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+
+.qc-hint {
+    display: block;
+    font-size: 0.72rem;
+    color: #9ca3af;
+    margin-top: 6px;
+}
+
+/* Input with prefix */
+.qc-input-prefix {
+    position: relative;
+}
+
+.prefix-symbol {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: 700;
+    color: #6b7280;
+    pointer-events: none;
+}
+
+.qc-input.has-prefix {
+    padding-left: 32px;
+}
+
+/* Upload Area */
+.qc-upload-area {
+    border: 2px dashed #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f9fafb;
+}
+
+.qc-upload-area:hover {
+    border-color: #0ea5e9;
+    background: #f0f9ff;
+}
+
+.qc-upload-area.drag-over {
+    border-color: #0ea5e9;
+    background: #e0f2fe;
+    transform: scale(1.01);
+}
+
+.upload-placeholder i {
+    font-size: 2rem;
+    color: #9ca3af;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.upload-placeholder span {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.upload-placeholder small {
+    font-size: 0.72rem;
+    color: #9ca3af;
+}
+
+/* Upload Preview */
+.upload-preview {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+}
+
+.upload-preview img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.preview-info {
+    flex: 1;
+}
+
+.preview-name {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.preview-size {
+    display: block;
+    font-size: 0.72rem;
+    color: #9ca3af;
+    margin-bottom: 8px;
+}
+
+.preview-clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: #fee2e2;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    color: #ef4444;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.preview-clear:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+/* Success State */
+.qc-success {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.success-animation {
+    margin-bottom: 16px;
+}
+
+.success-circle {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.75rem;
+    margin: 0 auto;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.qc-success h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 6px;
+}
+
+.qc-success p {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Modal Footer */
+.qc-modal-footer {
+    display: flex;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid #f3f4f6;
+    background: #f9fafb;
+}
+
+.qc-btn-cancel {
+    flex: 1;
+    padding: 12px;
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.qc-btn-cancel:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.qc-btn-create {
+    flex: 2;
+    padding: 12px;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    border: none;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.qc-btn-create:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(99,102,241,0.35);
+}
+
+.qc-btn-create:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-idle, .btn-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== Toast Notification ===== */
+.qc-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: #1f2937;
+    color: #fff;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    z-index: 2000;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.qc-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.qc-toast.success { background: #10b981; }
+.qc-toast.error { background: #ef4444; }
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .quick-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .quick-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .quick-card {
+        padding: 10px 12px;
+    }
+
+    .quick-card-count,
+    .quick-card-arrow {
+        display: none;
+    }
+
+    .qc-modal {
+        width: 95%;
+    }
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1197,5 +2039,416 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.spend-row').forEach(row => updateSpecButton(row));
     updateSidebar();
 });
+
+
+// ===== Quick Create System =====
+
+const CSRF = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+// Modal config per type
+const MODAL_CONFIG = {
+    floor: {
+        title: 'Add Floor Type',
+        sub: 'Create a new floor instantly',
+        icon: 'bi-building',
+        color: '#6366f1',
+        glow: 'rgba(99,102,241,0.12)',
+        headerBg: '#eef2ff',
+    },
+    room: {
+        title: 'Add Room Type',
+        sub: 'Create a new room instantly',
+        icon: 'bi-geo-alt',
+        color: '#10b981',
+        glow: 'rgba(16,185,129,0.12)',
+        headerBg: '#d1fae5',
+    },
+    fullsemi: {
+        title: 'Add Full / Semi Series',
+        sub: 'Create pricing series instantly',
+        icon: 'bi-layers',
+        color: '#f59e0b',
+        glow: 'rgba(245,158,11,0.12)',
+        headerBg: '#fef3c7',
+    },
+    image: {
+        title: 'Upload Image',
+        sub: 'Add a reference photo instantly',
+        icon: 'bi-image',
+        color: '#0ea5e9',
+        glow: 'rgba(14,165,233,0.12)',
+        headerBg: '#e0f2fe',
+    },
+};
+
+let activeType = null;
+
+// ===== Open Modal =====
+function openQuickModal(type) {
+    activeType = type;
+    const config = MODAL_CONFIG[type];
+
+    // Configure modal header
+    document.getElementById('qcModalTitle').textContent = config.title;
+    document.getElementById('qcModalSub').textContent = config.sub;
+    document.getElementById('qcModalIcon').innerHTML = `<i class="bi ${config.icon}"></i>`;
+    document.getElementById('qcModalIcon').style.background = config.headerBg;
+    document.getElementById('qcModalIcon').style.color = config.color;
+    document.getElementById('qcModalHeader').style.background = `linear-gradient(to right, ${config.headerBg}, #fff)`;
+
+    // Set CSS variables for focus colors
+    document.documentElement.style.setProperty('--active-color', config.color);
+    document.documentElement.style.setProperty('--active-glow', config.glow);
+
+    // Set button color
+    const createBtn = document.getElementById('qcCreateBtn');
+    createBtn.style.background = `linear-gradient(135deg, ${config.color}, ${shadeColor(config.color, -15)})`;
+
+    // Show correct form
+    document.querySelectorAll('.qc-form').forEach(f => f.style.display = 'none');
+    document.getElementById(`form-${type}`).style.display = 'block';
+
+    // Reset state
+    resetModal();
+
+    // Show modal
+    document.getElementById('qcOverlay').classList.add('show');
+    document.getElementById('qcModal').classList.add('show');
+
+    // Focus first input
+    setTimeout(() => {
+        const firstInput = document.querySelector(`#form-${type} .qc-input`);
+        if (firstInput) firstInput.focus();
+    }, 250);
+}
+
+// ===== Close Modal =====
+function closeQuickModal() {
+    document.getElementById('qcOverlay').classList.remove('show');
+    document.getElementById('qcModal').classList.remove('show');
+    
+    setTimeout(() => {
+        resetModal();
+        activeType = null;
+    }, 250);
+}
+
+// ===== Reset Modal =====
+function resetModal() {
+    // Reset all inputs
+    document.querySelectorAll('.qc-input').forEach(i => {
+        i.value = '';
+        i.classList.remove('error');
+    });
+
+    // Reset image upload
+    clearFile(null);
+
+    // Hide success, show forms + footer
+    document.getElementById('qcSuccess').style.display = 'none';
+    document.getElementById('qcModalFooter').style.display = 'flex';
+
+    // Reset button
+    const btn = document.getElementById('qcCreateBtn');
+    btn.disabled = false;
+    btn.querySelector('.btn-idle').style.display = 'inline-flex';
+    btn.querySelector('.btn-loading').style.display = 'none';
+}
+
+// ===== Submit Create =====
+async function submitQuickCreate() {
+    if (!activeType) return;
+
+    const btn = document.getElementById('qcCreateBtn');
+
+    // Validate
+    if (!validateForm(activeType)) return;
+
+    // Show loading
+    btn.disabled = true;
+    btn.querySelector('.btn-idle').style.display = 'none';
+    btn.querySelector('.btn-loading').style.display = 'inline-flex';
+
+    try {
+        let result;
+
+        if (activeType === 'image') {
+            result = await createImage();
+        } else {
+            result = await createItem(activeType);
+        }
+
+        if (result.success) {
+            showSuccess(result);
+            updateCounter(activeType, result);
+            updateDropdowns(activeType, result);
+        } else {
+            throw new Error(result.error || 'Creation failed');
+        }
+
+    } catch (err) {
+        showToast(err.message, 'error');
+        btn.disabled = false;
+        btn.querySelector('.btn-idle').style.display = 'inline-flex';
+        btn.querySelector('.btn-loading').style.display = 'none';
+    }
+}
+
+// ===== Create Floor / Room / FullSemi =====
+async function createItem(type) {
+    const urls = {
+        floor: "{% url 'floor_create' %}",
+        room: "{% url 'room_create' %}",
+        fullsemi: "{% url 'fullsemi_create' %}",
+    };
+
+    const payloads = {
+        floor: { name: document.getElementById('floor-name').value.trim() },
+        room: { name: document.getElementById('room-name').value.trim() },
+        fullsemi: {
+            name: document.getElementById('fullsemi-name').value.trim(),
+            rate: document.getElementById('fullsemi-rate').value,
+        },
+    };
+
+    const response = await fetch(urls[type], {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF,
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify(payloads[type]),
+    });
+
+    return await response.json();
+}
+
+// ===== Create Image (multipart) =====
+async function createImage() {
+    const formData = new FormData();
+    formData.append('name', document.getElementById('image-name').value.trim());
+    formData.append('image', document.getElementById('image-file').files[0]);
+    formData.append('csrfmiddlewaretoken', CSRF);
+
+    const response = await fetch("{% url 'image_create' %}", {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData,
+    });
+
+    return await response.json();
+}
+
+// ===== Validate Form =====
+function validateForm(type) {
+    let valid = true;
+
+    if (type === 'floor') {
+        const val = document.getElementById('floor-name');
+        if (!val.value.trim()) { val.classList.add('error'); valid = false; }
+    }
+
+    if (type === 'room') {
+        const val = document.getElementById('room-name');
+        if (!val.value.trim()) { val.classList.add('error'); valid = false; }
+    }
+
+    if (type === 'fullsemi') {
+        const name = document.getElementById('fullsemi-name');
+        const rate = document.getElementById('fullsemi-rate');
+        if (!name.value.trim()) { name.classList.add('error'); valid = false; }
+        if (!rate.value || parseFloat(rate.value) <= 0) { rate.classList.add('error'); valid = false; }
+    }
+
+    if (type === 'image') {
+        const name = document.getElementById('image-name');
+        const file = document.getElementById('image-file');
+        if (!name.value.trim()) { name.classList.add('error'); valid = false; }
+        if (!file.files[0]) {
+            document.getElementById('uploadArea').style.borderColor = '#ef4444';
+            valid = false;
+        }
+    }
+
+    return valid;
+}
+
+// ===== Show Success =====
+function showSuccess(result) {
+    document.querySelectorAll('.qc-form').forEach(f => f.style.display = 'none');
+    document.getElementById('qcSuccess').style.display = 'block';
+
+    document.getElementById('successTitle').textContent = 'Created Successfully!';
+    document.getElementById('successMessage').textContent = 
+        result.name ? `"${result.name}" has been added` : 'Item added successfully';
+
+    document.getElementById('qcModalFooter').style.display = 'none';
+
+    showToast(result.name ? `"${result.name}" created!` : 'Created!', 'success');
+
+    // Auto close
+    setTimeout(() => closeQuickModal(), 1800);
+}
+
+// ===== Update Counter Badge =====
+function updateCounter(type, result) {
+    const counterMap = {
+        floor: 'floorCount',
+        room: 'roomCount',
+        fullsemi: 'fullsemiCount',
+        image: 'imageCount',
+    };
+
+    const el = document.getElementById(counterMap[type]);
+    if (el) {
+        const current = parseInt(el.textContent) || 0;
+        el.textContent = current + 1;
+        el.style.transform = 'scale(1.3)';
+        setTimeout(() => el.style.transform = 'scale(1)', 300);
+    }
+}
+
+// ===== Update Dropdowns on Page =====
+function updateDropdowns(type, result) {
+    if (!result.id || !result.name) return;
+
+    const dropdownMap = {
+        floor: 'select[name*="floor"]',
+        room: 'select[name*="room"]',
+        fullsemi: 'select[name*="fullsemi"]',
+    };
+
+    const selector = dropdownMap[type];
+    if (!selector) return;
+
+    document.querySelectorAll(selector).forEach(select => {
+        const option = document.createElement('option');
+        option.value = result.id;
+        option.textContent = result.name + (result.rate ? ` (₹${result.rate}/sqft)` : '');
+        option.selected = true;
+        select.appendChild(option);
+    });
+}
+
+// ===== Image File Handling =====
+function handleFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Validate size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('File too large. Max 5MB allowed.', 'error');
+        input.value = '';
+        return;
+    }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('previewImg').src = e.target.result;
+        document.getElementById('previewName').textContent = file.name;
+        document.getElementById('previewSize').textContent = formatFileSize(file.size);
+        document.getElementById('uploadPlaceholder').style.display = 'none';
+        document.getElementById('uploadPreview').style.display = 'flex';
+        document.getElementById('uploadArea').style.borderColor = '#0ea5e9';
+        document.getElementById('uploadArea').style.borderStyle = 'solid';
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearFile(e) {
+    if (e) e.stopPropagation();
+    document.getElementById('image-file').value = '';
+    document.getElementById('previewImg').src = '';
+    document.getElementById('uploadPlaceholder').style.display = 'block';
+    document.getElementById('uploadPreview').style.display = 'none';
+    document.getElementById('uploadArea').style.borderColor = '#e5e7eb';
+    document.getElementById('uploadArea').style.borderStyle = 'dashed';
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+// ===== Drag & Drop =====
+const uploadArea = document.getElementById('uploadArea');
+
+uploadArea?.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('drag-over');
+});
+
+uploadArea?.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('drag-over');
+});
+
+uploadArea?.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const input = document.getElementById('image-file');
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        handleFileSelect(input);
+    }
+});
+
+// ===== Toast =====
+function showToast(message, type = 'success') {
+    let toast = document.getElementById('qcToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'qcToast';
+        toast.className = 'qc-toast';
+        document.body.appendChild(toast);
+    }
+
+    toast.className = `qc-toast ${type}`;
+    toast.innerHTML = `
+        <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'}"></i>
+        <span>${message}</span>
+    `;
+
+    toast.classList.add('show');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ===== Keyboard =====
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && activeType) closeQuickModal();
+    if (e.key === 'Enter' && activeType) {
+        const focused = document.activeElement;
+        if (focused?.classList.contains('qc-input')) {
+            submitQuickCreate();
+        }
+    }
+});
+
+// ===== Remove error class on input =====
+document.addEventListener('input', (e) => {
+    if (e.target.classList.contains('qc-input')) {
+        e.target.classList.remove('error');
+    }
+});
+
+// ===== Utility =====
+function shadeColor(hex, percent) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) + amt;
+    const G = (num >> 8 & 0x00FF) + amt;
+    const B = (num & 0x0000FF) + amt;
+    return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 + 
+        (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 + 
+        (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+}
+
+
 </script>
 {% endblock %}

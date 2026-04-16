@@ -4663,16 +4663,16 @@ function calcAll() {
 
         const total = area * rate * qty;
         row.querySelector(".total").innerText = "₹" + total.toLocaleString('en-IN', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
         });
 
         grand += total;
     });
 
     const formattedGrand = "₹" + grand.toLocaleString('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
     });
     
     document.getElementById("grandTotalDisplay").innerText = formattedGrand;

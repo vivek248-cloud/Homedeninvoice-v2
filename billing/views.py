@@ -762,14 +762,62 @@ def floor_list(request):
 
 
 # 📌 Floor Create
+from django.http import JsonResponse
+import json
+
+@login_required
 def floor_create(request):
     if request.method == 'POST':
-        FloorType.objects.create(
-            name=request.POST.get('name')
-        )
+        
+        # ===== AJAX Request (from Quick Create modal) =====
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                data = json.loads(request.body)
+                name = data.get('name', '').strip()
+                
+                if not name:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Floor name is required'
+                    }, status=400)
+                
+                # Check duplicate
+                if FloorType.objects.filter(name__iexact=name).exists():
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'"{name}" already exists'
+                    }, status=400)
+                
+                floor = FloorType.objects.create(name=name)
+                
+                return JsonResponse({
+                    'success': True,
+                    'id': floor.id,
+                    'name': floor.name,
+                })
+                
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid request'
+                }, status=400)
+                
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                }, status=500)
+        
+        # ===== Normal Form POST =====
+        name = request.POST.get('name', '').strip()
+        if name:
+            FloorType.objects.get_or_create(name=name)
         return redirect('floor_list')
 
     return render(request, 'billing/floor/create.html')
+
+
+
 
 
 # 📌 Floor Update
@@ -806,11 +854,53 @@ def room_list(request):
 
 
 # 📌 Room Create
+import json
+from decimal import Decimal
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+
+
+@login_required
 def room_create(request):
     if request.method == 'POST':
-        RoomType.objects.create(
-            name=request.POST.get('name')
-        )
+
+        # ===== AJAX =====
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                data = json.loads(request.body)
+                name = data.get('name', '').strip()
+
+                if not name:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Room name is required'
+                    }, status=400)
+
+                if RoomType.objects.filter(name__iexact=name).exists():
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'"{name}" already exists'
+                    }, status=400)
+
+                room = RoomType.objects.create(name=name)
+
+                return JsonResponse({
+                    'success': True,
+                    'id': room.id,
+                    'name': room.name,
+                })
+
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                }, status=500)
+
+        # ===== Normal POST =====
+        name = request.POST.get('name', '').strip()
+        if name:
+            RoomType.objects.create(name=name)
         return redirect('room_list')
 
     return render(request, 'billing/room/create.html')
@@ -853,12 +943,58 @@ def fullsemi_list(request):
 
 
 # 📌 FullSemi Create
+@login_required
 def fullsemi_create(request):
     if request.method == 'POST':
-        FullSemi.objects.create(
-            name=request.POST.get('name'),
-            rate=request.POST.get('rate')
-        )
+
+        # ===== AJAX =====
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                data = json.loads(request.body)
+                name = data.get('name', '').strip()
+                rate = data.get('rate', 0)
+
+                if not name:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Series name is required'
+                    }, status=400)
+
+                if not rate or float(rate) <= 0:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Rate must be greater than 0'
+                    }, status=400)
+
+                if FullSemi.objects.filter(name__iexact=name).exists():
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'"{name}" already exists'
+                    }, status=400)
+
+                fs = FullSemi.objects.create(
+                    name=name,
+                    rate=Decimal(str(rate))
+                )
+
+                return JsonResponse({
+                    'success': True,
+                    'id': fs.id,
+                    'name': fs.name,
+                    'rate': str(fs.rate),
+                })
+
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                }, status=500)
+
+        # ===== Normal POST =====
+        name = request.POST.get('name', '').strip()
+        rate = request.POST.get('rate', 0)
+        if name and rate:
+            FullSemi.objects.create(name=name, rate=rate)
         return redirect('fullsemi_list')
 
     return render(request, 'billing/fullsemi/create.html')
@@ -2638,14 +2774,74 @@ def image_index(request):
 
 @login_required
 def image_create(request):
-    if request.method == "POST":
-        Image.objects.create(
-            name=request.POST["name"],
-            image=request.FILES["image"]
-        )
-        return redirect("image_index")
+    if request.method == 'POST':
 
-    return render(request, "billing/image/create.html")
+        # ===== AJAX (multipart — no json.loads) =====
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                name = request.POST.get('name', '').strip()
+                image_file = request.FILES.get('image')
+
+                if not name:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Image name is required'
+                    }, status=400)
+
+                if not image_file:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Please select an image file'
+                    }, status=400)
+
+                # Validate type
+                allowed_types = [
+                    'image/jpeg',
+                    'image/png',
+                    'image/webp',
+                    'image/gif'
+                ]
+                if image_file.content_type not in allowed_types:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Only JPG, PNG, WEBP, GIF allowed'
+                    }, status=400)
+
+                # Validate size (5MB)
+                if image_file.size > 5 * 1024 * 1024:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'File too large. Max 5MB allowed'
+                    }, status=400)
+
+                img = Image.objects.create(
+                    name=name,
+                    image=image_file
+                )
+
+                return JsonResponse({
+                    'success': True,
+                    'id': img.id,
+                    'name': img.name,
+                    'url': img.image.url,
+                })
+
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                }, status=500)
+
+        # ===== Normal POST =====
+        name = request.POST.get('name', '').strip()
+        image_file = request.FILES.get('image')
+        if name and image_file:
+            Image.objects.create(name=name, image=image_file)
+        return redirect('image_index')
+
+    return render(request, 'billing/image/create.html')
+
+
 
 
 @login_required
