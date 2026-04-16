@@ -1815,6 +1815,7 @@ def quotation_create(request):
         "clients": QtnClient.objects.all(),
         "images": Image.objects.all(),
         "fullsemis": FullSemi.objects.all(),
+        "max_fields": 10000,  # frontend can use this to limit dynamic rows
         "previous_specs": list(
             QuotationItem.objects
             .exclude(specification="")
@@ -1832,148 +1833,279 @@ from django.shortcuts import render, redirect
 from .models import QtnClient, QuotationItem, Image, FullSemi
 
 
+# from decimal import Decimal, InvalidOperation
+# from django.db import transaction
+# from django.contrib.auth.decorators import login_required
+# from django.shortcuts import render, redirect
+# from .models import QtnClient, QuotationItem, Image, FullSemi
+
+
+# @login_required
+# def quotation_update(request, id):
+
+#     rows = QuotationItem.objects.filter(client_id=id)
+
+#     if not rows.exists():
+#         return redirect("quotation_index")
+
+#     client_id = id
+
+#     if request.method == "POST":
+
+#         start_date = request.POST.get("estimate_start_date")
+#         end_date = request.POST.get("estimate_end_date")
+
+#         # ✅ update client dates
+#         QtnClient.objects.filter(id=client_id).update(
+#             estimate_start_date=start_date,
+#             estimate_end_date=end_date,
+#         )
+
+#         # 🔥 GET ALL LISTS
+#         floors = request.POST.getlist("floor[]")
+#         locations = request.POST.getlist("location[]")
+#         elements = request.POST.getlist("element[]")
+
+#         images = request.POST.getlist("image[]")
+#         fullsemis = request.POST.getlist("full_semi[]")
+
+#         core_materials = request.POST.getlist("core_material[]")
+#         finish_materials = request.POST.getlist("finish_material[]")
+#         brands = request.POST.getlist("brand[]")
+#         specifications = request.POST.getlist("specification[]")
+
+#         units = request.POST.getlist("unit[]")
+#         lengths = request.POST.getlist("length[]")
+#         widths = request.POST.getlist("width[]")
+#         qtys = request.POST.getlist("qty[]")
+
+#         # 🔥 IMPORTANT (manual rate)
+#         rate_inputs = request.POST.getlist("rate[]")
+
+#         # 🔥 preload rates
+#         fullsemi_rates = {f.id: f.rate for f in FullSemi.objects.all()}
+
+#         quotation_rows = []
+
+#         for i in range(len(elements)):
+
+#             if not elements[i]:
+#                 continue
+
+#             # ✅ SAFE PARSE
+#             try:
+#                 length = Decimal(lengths[i] or 0)
+#                 width = Decimal(widths[i] or 0)
+#                 qty = Decimal(qtys[i] or 1)
+#             except InvalidOperation:
+#                 continue
+
+#             area = length * width
+
+#             # 🔥 RATE FIX (CRITICAL 🔥)
+#             try:
+#                 price = Decimal(rate_inputs[i] or 0)
+#             except (InvalidOperation, IndexError):
+#                 price = Decimal("0.00")
+
+#             fullsemi_id = fullsemis[i] if i < len(fullsemis) else None
+
+#             # fallback to preset
+#             if price <= 0 and fullsemi_id:
+#                 price = fullsemi_rates.get(int(fullsemi_id), Decimal("0.00"))
+
+#             # optional skip invalid
+#             if price <= 0:
+#                 continue
+
+#             # checkbox
+#             end_floor = request.POST.get(f"floor_end_{i}") == "1"
+
+#             total = area * price * qty
+
+#             quotation_rows.append(
+#                 QuotationItem(
+#                     client_id=client_id,
+
+#                     floor=floors[i].strip() if i < len(floors) else "",
+#                     location=locations[i].strip() if i < len(locations) else "",
+#                     element=elements[i].strip(),
+
+#                     image_id=int(images[i]) if i < len(images) and images[i] else None,
+#                     full_semi_id=fullsemi_id,
+
+#                     core_material=core_materials[i] if i < len(core_materials) else "",
+#                     finish_material=finish_materials[i] if i < len(finish_materials) else "",
+#                     brand=brands[i] if i < len(brands) else "",
+#                     specification=specifications[i] if i < len(specifications) else "",
+
+#                     unit=units[i] if i < len(units) else "sqft",
+
+#                     length=length,
+#                     width=width,
+#                     area=area,
+
+#                     price=price,  # ✅ FIXED
+#                     qty=qty,
+#                     total=total,
+
+#                     end=end_floor,
+#                 )
+#             )
+
+#         # 🔥 REPLACE OLD DATA SAFELY
+#         with transaction.atomic():
+#             rows.delete()
+#             if quotation_rows:
+#                 QuotationItem.objects.bulk_create(quotation_rows, batch_size=500)
+
+#         return redirect("quotation_index")
+
+#     return render(request, "billing/quotation/update.html", {
+#         "quotation_rows": rows,
+#         "clients": QtnClient.objects.all(),
+#         "images": Image.objects.all(),
+#         "fullsemis": FullSemi.objects.all(),
+#         "previous_specs": list(
+#             QuotationItem.objects
+#             .exclude(specification="")
+#             .values_list("specification", flat=True)
+#             .distinct()[:200]
+#         )
+#     })
+
+
+
+
+
 from decimal import Decimal, InvalidOperation
 from django.db import transaction
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import QtnClient, QuotationItem, Image, FullSemi
 
 
 @login_required
-def quotation_update(request, id):
-
-    rows = QuotationItem.objects.filter(client_id=id)
+def quotation_update(request, client_id):
+    """
+    Shows ALL rows for a client in a READ-ONLY list
+    Each row has an EDIT button that opens the single-row editor
+    """
+    client = get_object_or_404(QtnClient, id=client_id)
+    
+    rows = QuotationItem.objects.filter(
+        client_id=client_id
+    ).select_related('client', 'image', 'full_semi').order_by('sort_order', 'id')
 
     if not rows.exists():
         return redirect("quotation_index")
 
-    client_id = id
-
-    if request.method == "POST":
-
-        start_date = request.POST.get("estimate_start_date")
-        end_date = request.POST.get("estimate_end_date")
-
-        # ✅ update client dates
-        QtnClient.objects.filter(id=client_id).update(
-            estimate_start_date=start_date,
-            estimate_end_date=end_date,
-        )
-
-        # 🔥 GET ALL LISTS
-        floors = request.POST.getlist("floor[]")
-        locations = request.POST.getlist("location[]")
-        elements = request.POST.getlist("element[]")
-
-        images = request.POST.getlist("image[]")
-        fullsemis = request.POST.getlist("full_semi[]")
-
-        core_materials = request.POST.getlist("core_material[]")
-        finish_materials = request.POST.getlist("finish_material[]")
-        brands = request.POST.getlist("brand[]")
-        specifications = request.POST.getlist("specification[]")
-
-        units = request.POST.getlist("unit[]")
-        lengths = request.POST.getlist("length[]")
-        widths = request.POST.getlist("width[]")
-        qtys = request.POST.getlist("qty[]")
-
-        # 🔥 IMPORTANT (manual rate)
-        rate_inputs = request.POST.getlist("rate[]")
-
-        # 🔥 preload rates
-        fullsemi_rates = {f.id: f.rate for f in FullSemi.objects.all()}
-
-        quotation_rows = []
-
-        for i in range(len(elements)):
-
-            if not elements[i]:
-                continue
-
-            # ✅ SAFE PARSE
-            try:
-                length = Decimal(lengths[i] or 0)
-                width = Decimal(widths[i] or 0)
-                qty = Decimal(qtys[i] or 1)
-            except InvalidOperation:
-                continue
-
-            area = length * width
-
-            # 🔥 RATE FIX (CRITICAL 🔥)
-            try:
-                price = Decimal(rate_inputs[i] or 0)
-            except (InvalidOperation, IndexError):
-                price = Decimal("0.00")
-
-            fullsemi_id = fullsemis[i] if i < len(fullsemis) else None
-
-            # fallback to preset
-            if price <= 0 and fullsemi_id:
-                price = fullsemi_rates.get(int(fullsemi_id), Decimal("0.00"))
-
-            # optional skip invalid
-            if price <= 0:
-                continue
-
-            # checkbox
-            end_floor = request.POST.get(f"floor_end_{i}") == "1"
-
-            total = area * price * qty
-
-            quotation_rows.append(
-                QuotationItem(
-                    client_id=client_id,
-
-                    floor=floors[i].strip() if i < len(floors) else "",
-                    location=locations[i].strip() if i < len(locations) else "",
-                    element=elements[i].strip(),
-
-                    image_id=int(images[i]) if i < len(images) and images[i] else None,
-                    full_semi_id=fullsemi_id,
-
-                    core_material=core_materials[i] if i < len(core_materials) else "",
-                    finish_material=finish_materials[i] if i < len(finish_materials) else "",
-                    brand=brands[i] if i < len(brands) else "",
-                    specification=specifications[i] if i < len(specifications) else "",
-
-                    unit=units[i] if i < len(units) else "sqft",
-
-                    length=length,
-                    width=width,
-                    area=area,
-
-                    price=price,  # ✅ FIXED
-                    qty=qty,
-                    total=total,
-
-                    end=end_floor,
-                )
-            )
-
-        # 🔥 REPLACE OLD DATA SAFELY
-        with transaction.atomic():
-            rows.delete()
-            if quotation_rows:
-                QuotationItem.objects.bulk_create(quotation_rows, batch_size=500)
-
-        return redirect("quotation_index")
+    subtotal = sum(r.total for r in rows)
 
     return render(request, "billing/quotation/update.html", {
-        "quotation_rows": rows,
-        "clients": QtnClient.objects.all(),
+        "client": client,
+        "rows": rows,
+        "subtotal": subtotal,
+        "row_count": rows.count(),
+    })
+
+
+@login_required
+def quotation_row_edit(request, row_id):
+    """
+    Edit a SINGLE quotation row
+    Only this one row is loaded and saved
+    """
+    row = get_object_or_404(
+        QuotationItem.objects.select_related('client', 'image', 'full_semi'),
+        id=row_id
+    )
+    client = row.client
+
+    if request.method == "POST":
+        
+        # Parse values
+        try:
+            length = Decimal(request.POST.get('length', 0) or 0)
+            width = Decimal(request.POST.get('width', 0) or 0)
+            qty = Decimal(request.POST.get('qty', 1) or 1)
+        except InvalidOperation:
+            length = Decimal("0")
+            width = Decimal("0")
+            qty = Decimal("1")
+
+        area = length * width
+
+        # Rate
+        try:
+            price = Decimal(request.POST.get('rate', 0) or 0)
+        except (InvalidOperation, TypeError):
+            price = Decimal("0.00")
+
+        # Fallback to preset rate
+        fullsemi_id = request.POST.get('full_semi') or None
+        if price <= 0 and fullsemi_id:
+            try:
+                fs = FullSemi.objects.get(id=int(fullsemi_id))
+                price = fs.rate
+            except (FullSemi.DoesNotExist, ValueError):
+                pass
+
+        total = area * price * qty
+
+        # Update fields
+        row.floor = request.POST.get('floor', '')
+        row.location = request.POST.get('location', '')
+        row.element = request.POST.get('element', '')
+        row.unit = request.POST.get('unit', 'sqft')
+        row.specification = request.POST.get('specification', '')
+        row.core_material = request.POST.get('core_material', '')
+        row.finish_material = request.POST.get('finish_material', '')
+        row.brand = request.POST.get('brand', '')
+
+        image_id = request.POST.get('image')
+        row.image_id = int(image_id) if image_id else None
+
+        row.full_semi_id = int(fullsemi_id) if fullsemi_id else None
+
+        row.length = length
+        row.width = width
+        row.area = area
+        row.price = price
+        row.qty = qty
+        row.total = total
+        row.end = request.POST.get('end') == '1'
+
+        row.save()
+
+        # Redirect back to the list
+        next_url = request.POST.get('next', '')
+        if next_url == 'stay':
+            # Stay on same edit page (save & continue)
+            return redirect('quotation_row_edit', row_id=row.id)
+        
+        return redirect('quotation_update', client_id=client.id)
+
+    return render(request, "billing/quotation/row_edit.html", {
+        "row": row,
+        "client": client,
         "images": Image.objects.all(),
         "fullsemis": FullSemi.objects.all(),
         "previous_specs": list(
             QuotationItem.objects
+            .filter(client=client)
             .exclude(specification="")
             .values_list("specification", flat=True)
-            .distinct()[:200]
-        )
+            .distinct()[:100]
+        ),
+        # Next and previous row for navigation
+        "next_row": QuotationItem.objects.filter(
+            client=client, id__gt=row.id
+        ).order_by('id').first(),
+        "prev_row": QuotationItem.objects.filter(
+            client=client, id__lt=row.id
+        ).order_by('-id').first(),
     })
-
-
 
 
 
@@ -2007,6 +2139,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import QtnClient, QuotationItem
 
+from collections import defaultdict
 
 @login_required
 def quotation_detail(request, client_id):
@@ -2015,6 +2148,7 @@ def quotation_detail(request, client_id):
         QuotationItem.objects
         .select_related("client", "image", "full_semi")
         .filter(client_id=client_id)
+        .order_by("floor", "location")
     )
 
     if not rows.exists():
@@ -2022,64 +2156,54 @@ def quotation_detail(request, client_id):
 
     client = rows.first().client
 
+
+    grouped_data = defaultdict(lambda: defaultdict(list))
+
+    for r in rows:
+        floor = r.floor or "Other"
+        location = r.location or "General"
+        grouped_data[floor][location].append(r)
+
+    # ✅ CONVERT TO NORMAL DICT (IMPORTANT)
+    grouped_data = {
+        floor: dict(locations)
+        for floor, locations in grouped_data.items()
+    }
+
     # -------------------------
-    # Subtotal
+    # Totals (same as before)
     # -------------------------
     subtotal = sum((r.total for r in rows), Decimal("0.00"))
 
-    # -------------------------
-    # GST
-    # -------------------------
     gst_rate = Decimal(client.gst or 0)
     gst_amount = (subtotal * gst_rate) / Decimal("100")
 
     total_with_gst = subtotal + gst_amount
 
-    # -------------------------
-    # Discount Handling
-    # -------------------------
-    discount_amount = Decimal("0.00")
-    discount_percent = Decimal("0.00")
     discount_mode = client.discount_mode or "amount"
 
     if discount_mode == "percent":
-
         discount_percent = Decimal(client.discount_percent or 0)
         discount_amount = (subtotal * discount_percent) / Decimal("100")
-
     else:
-
         discount_amount = Decimal(client.discount_amount or 0)
+        discount_percent = (discount_amount / subtotal * 100) if subtotal else 0
 
-        if subtotal > 0:
-            discount_percent = (discount_amount / subtotal) * Decimal("100")
+    grand_total = max(total_with_gst - discount_amount, Decimal("0.00"))
 
-    # -------------------------
-    # Final Total
-    # -------------------------
-    grand_total = max(
-        total_with_gst - discount_amount,
-        Decimal("0.00")
-    )
+    return render(request, "billing/quotation/detail.html", {
+        "client": client,
+        "rows": rows,  # keep original if needed
+        "grouped_data": grouped_data,  # 🔥 NEW
 
-    return render(
-        request,
-        "billing/quotation/detail.html",
-        {
-            "client": client,
-            "rows": rows,
-
-            "subtotal": round(subtotal, 2),
-            "gst_rate": gst_rate,
-            "gst_amount": round(gst_amount, 2),
-
-            "discount_amount": round(discount_amount, 2),
-            "discount_percent": round(discount_percent, 2),
-            "discount_mode": discount_mode,
-
-            "grand_total": round(grand_total, 2),
-        }
-    )
+        "subtotal": round(subtotal, 2),
+        "gst_rate": gst_rate,
+        "gst_amount": round(gst_amount, 2),
+        "discount_amount": round(discount_amount, 2),
+        "discount_percent": round(discount_percent, 2),
+        "discount_mode": discount_mode,
+        "grand_total": round(grand_total, 2),
+    })
 
 
 

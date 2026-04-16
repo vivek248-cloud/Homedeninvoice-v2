@@ -1253,67 +1253,455 @@
     color: var(--quote-gray-500);
     text-transform: uppercase;
 }
-
+/* ===== Floating Bar Actions ===== */
 .floating-bar-actions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 12px;
 }
 
+/* ===== Bar Divider ===== */
+.bar-divider {
+    width: 1px;
+    height: 36px;
+    background: linear-gradient(
+        to bottom,
+        transparent,
+        rgba(255,255,255,0.2),
+        transparent
+    );
+}
+
+/* ===== Capacity Pill ===== */
+.capacity-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px 8px 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50px;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+}
+
+.capacity-pill:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.capacity-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.75rem;
+}
+
+.capacity-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.capacity-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1;
+}
+
+.capacity-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    transition: color 0.3s ease;
+}
+
+.capacity-value.low {
+    color: #fbbf24;
+}
+
+.capacity-value.critical {
+    color: #f87171;
+    animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Capacity Ring SVG */
+.capacity-ring {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.capacity-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.ring-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.15);
+    stroke-width: 3.5;
+}
+
+.ring-fill {
+    fill: none;
+    stroke: #34d399;
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.5s ease, stroke 0.3s ease;
+}
+
+.ring-fill.low {
+    stroke: #fbbf24;
+}
+
+.ring-fill.critical {
+    stroke: #f87171;
+}
+
+/* ===== Discard Button ===== */
 .btn-discard {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.25rem;
-    background: var(--quote-white);
-    border: 2px solid var(--quote-danger);
-    border-radius: var(--quote-radius-md);
+    gap: 8px;
+    padding: 10px 18px;
+    background: transparent;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--quote-danger);
+    color: rgba(255, 255, 255, 0.75);
     text-decoration: none;
     cursor: pointer;
     transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-discard::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(239, 68, 68, 0);
+    transition: background 0.2s ease;
+    border-radius: inherit;
 }
 
 .btn-discard:hover {
-    background: var(--quote-danger);
-    color: white;
+    border-color: rgba(239, 68, 68, 0.6);
+    color: #f87171;
 }
 
+.btn-discard:hover::before {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-discard .btn-icon-wrap {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.15);
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.btn-discard:hover .btn-icon-wrap {
+    background: rgba(239, 68, 68, 0.25);
+    transform: rotate(90deg);
+}
+
+.btn-discard .btn-label {
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== Save Button ===== */
 .btn-save {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.875rem 2rem;
-    background: var(--quote-gradient-success);
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     border: none;
-    border-radius: var(--quote-radius-md);
-    font-size: 0.95rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
     font-weight: 700;
     color: white;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-    transition: all 0.2s ease;
+    box-shadow:
+        0 4px 14px rgba(16, 185, 129, 0.4),
+        0 0 0 0 rgba(16, 185, 129, 0);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    min-width: 160px;
+    letter-spacing: 0.01em;
+}
+
+/* Shimmer Effect */
+.btn-save::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    transform: skewX(-15deg);
+    transition: none;
+}
+
+.btn-save:hover::before {
+    animation: shimmer 0.6s ease forwards;
+}
+
+@keyframes shimmer {
+    from { left: -100%; }
+    to { left: 150%; }
+}
+
+/* Top Highlight */
+.btn-save::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+        to right,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent
+    );
 }
 
 .btn-save:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+    box-shadow:
+        0 8px 24px rgba(16, 185, 129, 0.5),
+        0 0 0 0 rgba(16, 185, 129, 0);
+}
+
+.btn-save:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
 }
 
 .btn-save:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
+    transform: none;
 }
 
-.btn-save .validation-warning {
+/* Button States */
+.btn-save-idle,
+.btn-save-loading,
+.btn-save-error {
     display: none;
-    margin-left: 0.375rem;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
 }
 
-.btn-save.has-errors .validation-warning {
-    display: inline;
+.btn-save-idle {
+    display: inline-flex;
+}
+
+.btn-save.loading .btn-save-idle { display: none; }
+.btn-save.loading .btn-save-loading { display: inline-flex; }
+
+.btn-save.has-errors {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+}
+
+.btn-save.has-errors .btn-save-idle { display: none; }
+.btn-save.has-errors .btn-save-error { display: inline-flex; }
+
+/* Save Spinner */
+.save-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: saveSpin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes saveSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error Dot */
+.error-dot {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 10px;
+    height: 10px;
+    background: #f87171;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    display: none;
+    animation: dotPulse 1.5s ease-in-out infinite;
+}
+
+.btn-save.has-errors .error-dot {
+    display: block;
+}
+
+@keyframes dotPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+}
+
+/* ===== Validation Toast ===== */
+.validation-toast {
+    position: fixed;
+    bottom: 90px;
+    right: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: #1f2937;
+    border-radius: 12px;
+    border-left: 4px solid #f59e0b;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    max-width: 360px;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.validation-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.toast-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(245, 158, 11, 0.15);
+    border-radius: 50%;
+    color: #f59e0b;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.toast-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.toast-body strong {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.toast-body span {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.6);
+}
+
+.toast-close {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.08);
+    border: none;
+    border-radius: 50%;
+    color: rgba(255,255,255,0.5);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.toast-close:hover {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .floating-bar-actions {
+        gap: 8px;
+    }
+
+    .capacity-pill {
+        padding: 6px 10px;
+    }
+
+    .capacity-info {
+        display: none;
+    }
+
+    .btn-discard .btn-label {
+        display: none;
+    }
+
+    .btn-discard {
+        padding: 10px;
+        border-radius: 50%;
+        width: 42px;
+        height: 42px;
+        justify-content: center;
+    }
+
+    .btn-save {
+        padding: 10px 16px;
+        font-size: 0.82rem;
+        min-width: 130px;
+    }
+
+    .bar-divider {
+        display: none;
+    }
+
+    .validation-toast {
+        bottom: 80px;
+        right: 12px;
+        left: 12px;
+        max-width: none;
+    }
 }
 
 /* ========== Modern Modal ========== */
@@ -2261,7 +2649,7 @@
                 <span class="status-text" id="autosaveText">All changes saved</span>
                 <span class="status-time" id="autosaveTime">Just now</span>
             </div>
-            
+
             <div class="completion-badge" id="completionBadge">
                 <i class="bi bi-pie-chart"></i>
                 <span>Completion: <span class="percentage" id="completionPercentage">0%</span></span>
@@ -2606,15 +2994,54 @@
             <div class="floating-stat-label">Total</div>
         </div>
     </div>
+    <!-- Enhanced Floating Bar Actions -->
     <div class="floating-bar-actions">
-        <a href="{% url 'quotation_index' %}" class="btn-discard">
-            <i class="bi bi-x-circle"></i>
-            Discard
+        
+
+
+        <div class="bar-divider"></div>
+
+        <!-- Discard Button -->
+        <a href="{% url 'quotation_index' %}" class="btn-discard" id="discardBtn">
+            <span class="btn-icon-wrap">
+                <i class="bi bi-x-lg"></i>
+            </span>
+            <span class="btn-label">Discard</span>
         </a>
-        <button type="button" class="btn-save" id="saveBtn" onclick="submitForm()">
-            <i class="bi bi-check2-all"></i>
-            Save Quotation
-            <span class="validation-warning">⚠️</span>
+
+        <!-- Save Button -->
+        <button type="button" 
+                class="btn-save" 
+                id="saveBtn" 
+                onclick="submitForm()">
+            <span class="btn-save-idle">
+                <i class="bi bi-check2-all"></i>
+                <span>Save Quotation</span>
+            </span>
+            <span class="btn-save-loading">
+                <span class="save-spinner"></span>
+                <span>Saving...</span>
+            </span>
+            <span class="btn-save-error">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>Fix Errors</span>
+            </span>
+            <span class="error-dot" id="errorDot"></span>
+        </button>
+
+    </div>
+
+    <!-- Validation Toast -->
+    <div class="validation-toast" id="validationToast">
+        <div class="toast-icon">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div class="toast-body">
+            <strong>Validation Error</strong>
+            <span id="toastMessage">Please fix all errors before saving.</span>
+        </div>
+        <button class="toast-close" onclick="closeToast()">
+            <i class="bi bi-x"></i>
         </button>
     </div>
 </div>
@@ -2737,6 +3164,9 @@
 
 <!-- Previous Specs for AI -->
 <script>
+
+
+
 const previousSpecs = {{ previous_specs|safe }};
 
 // Templates Data
@@ -2773,7 +3203,11 @@ const templates = {
 };
 </script>
 
+
+
 <script>
+
+
 
     // ========== CONFIGURATION ==========
 const CONFIG = {
@@ -2818,6 +3252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+
+
 let countdownTimer = null;
 let remainingTime = CONFIG.AUTO_SAVE_INTERVAL / 1000;
 
@@ -2851,6 +3287,11 @@ function updateCountdownText() {
 
 
 
+
+
+
+
+
 // ========== AUTO-SAVE SYSTEM ==========
 function initializeAutoSave() {
     // Start auto-save timer
@@ -2859,6 +3300,7 @@ function initializeAutoSave() {
     // Track changes
     document.getElementById('quotationForm').addEventListener('input', markDirty);
     document.getElementById('quotationForm').addEventListener('change', markDirty);
+    
     
     // Initial save
     setTimeout(autoSave, 5000);
@@ -2878,12 +3320,14 @@ function autoSave() {
     
     saveToLocalStorage();
     saveToServer();
+    updateFieldLimitUI() 
 }
 
 function forceSave() {
     state.isDirty = true;
     saveToLocalStorage();
     saveToServer();
+    
 }
 
 function saveToLocalStorage() {
@@ -3301,49 +3745,54 @@ function showRecoveryModal(savedData) {
 
 function restoreRecovery() {
     if (!window.recoveryData) return;
-    
+
     const data = window.recoveryData.data;
-    
+
     // Restore client info
     const clientSelect = document.querySelector('[name="client"]');
     if (clientSelect && data.client) {
         clientSelect.value = data.client;
     }
-    
+
     const startDate = document.querySelector('[name="estimate_start_date"]');
     if (startDate && data.startDate) {
         startDate.value = data.startDate;
     }
-    
+
     const endDate = document.querySelector('[name="estimate_end_date"]');
     if (endDate && data.endDate) {
         endDate.value = data.endDate;
     }
-    
-    // Restore items
+
     const tbody = document.querySelector('#quoteTable tbody');
-    
+
+    // 🔥 CLEAR EXISTING ROWS FIRST (IMPORTANT)
+    tbody.innerHTML = '';
+
     data.items.forEach((item, index) => {
-        if (index > 0) {
-            addRow();
-        }
-        
+
+        addRow(); // create row dynamically
+
         const row = tbody.rows[index];
         if (!row) return;
-        
+
         if (item.floor) row.querySelector('[name="floor[]"]').value = item.floor;
         if (item.location) row.querySelector('[name="location[]"]').value = item.location;
         if (item.element) row.querySelector('[name="element[]"]').value = item.element;
         if (item.unit) row.querySelector('[name="unit[]"]').value = item.unit;
+
         if (item.fullSemi) {
             const select = row.querySelector('[name="full_semi[]"]');
             select.value = item.fullSemi;
             updateRateFromSelect(select);
         }
+
         if (item.rate && parseFloat(item.rate) > 0) {
             row.querySelector('.final-rate').value = item.rate;
-            row.querySelector('.rate-value').textContent = '₹' + parseFloat(item.rate).toLocaleString('en-IN') + '/sqft';
+            row.querySelector('.rate-value').textContent =
+                '₹' + parseFloat(item.rate).toLocaleString('en-IN') + '/sqft';
         }
+
         if (item.coreMaterial) row.querySelector('[name="core_material[]"]').value = item.coreMaterial;
         if (item.finish) row.querySelector('[name="finish_material[]"]').value = item.finish;
         if (item.brand) row.querySelector('[name="brand[]"]').value = item.brand;
@@ -3351,21 +3800,39 @@ function restoreRecovery() {
         if (item.length) row.querySelector('[name="length[]"]').value = item.length;
         if (item.width) row.querySelector('[name="width[]"]').value = item.width;
         if (item.qty) row.querySelector('[name="qty[]"]').value = item.qty;
-        
+
         validateSingleRow(row);
     });
-    
-    // Close modal and recalculate
-    document.getElementById('recoveryModal').classList.remove('visible');
-    
+
+    // 🔥 IMPORTANT UPDATES
+    updateSerialNumbers();
+    updateItemCount();
+    updateFieldLimitUI();
+
     validateClientSection();
     updateValidationSummary();
     updateOverallProgress();
     calcAll();
-    
+
+    // 🔥 ROW WARNING AFTER RESTORE
+    const restoredCount = data.items.filter(i => i.element).length;
+
+    if (restoredCount >= 50) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Large Draft Restored ⚠️',
+            text: `This draft contains ${restoredCount} rows. Performance may be slow.`,
+            confirmButtonColor: '#f59e0b'
+        });
+
+        window.rowWarningShown = true;
+    }
+
+    // Close modal
+    document.getElementById('recoveryModal').classList.remove('visible');
+
     showToast('success', 'Data Restored', 'Your previous work has been restored');
-    
-    // Clear recovery data
+
     window.recoveryData = null;
 }
 
@@ -3399,6 +3866,11 @@ function exportDraft() {
     
     showToast('success', 'Draft Exported', 'Your draft has been downloaded');
 }
+
+
+
+
+
 
 function importDraft() {
     document.getElementById('importFileInput').click();
@@ -3442,6 +3914,9 @@ function saveAndExit() {
         window.location.href = '{% url "quotation_index" %}';
     }, 1000);
 }
+
+
+
 
 // ========== UI HELPERS ==========
 function showSaveStatus(status, message = '') {
@@ -3604,6 +4079,8 @@ function validateRow(inputElement) {
     validateSingleRow(row);
     updateValidationSummary();
     updateOverallProgress();
+    
+    
 }
 
 function validateSingleRow(row) {
@@ -3733,6 +4210,7 @@ function validateAllRows() {
     updateValidationSummary();
     updateOverallProgress();
     
+
     if (allValid) {
         Swal.fire({
             icon: 'success',
@@ -3965,12 +4443,14 @@ function addRow() {
     updateOverallProgress();
     calcAll();
     
+    
     showAutoSave();
 }
 
 function addMultipleRows() {
     for (let i = 0; i < 5; i++) {
         addRow();
+        
     }
     
     Swal.fire({
@@ -4003,8 +4483,11 @@ function duplicateRow(btn) {
     updateOverallProgress();
     calcAll();
     
+    
+    
     clone.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     showAutoSave();
+    
 }
 
 function copyFromPreviousRow(btn) {
@@ -4048,6 +4531,7 @@ function copyFromPreviousRow(btn) {
     updateOverallProgress();
     calcAll();
     
+    
     // Highlight copied fields
     currentRow.classList.add('highlight-field');
     setTimeout(() => currentRow.classList.remove('highlight-field'), 1000);
@@ -4060,6 +4544,7 @@ function copyFromPreviousRow(btn) {
         showConfirmButton: false,
         timer: 1000
     });
+    
 }
 
 function removeRow(btn) {
@@ -4071,6 +4556,8 @@ function removeRow(btn) {
         updateOverallProgress();
         calcAll();
         showAutoSave();
+        
+        
     } else {
         Swal.fire({
             icon: 'warning',
@@ -4079,6 +4566,7 @@ function removeRow(btn) {
             confirmButtonColor: '#6366f1'
         });
     }
+    
 }
 
 function clearAllRows() {
@@ -4123,14 +4611,37 @@ function clearAllRows() {
             updateValidationSummary();
             updateOverallProgress();
             calcAll();
+            
+
         }
     });
 }
 
 function updateItemCount() {
+
     const count = document.querySelectorAll("#quoteTable tbody tr").length;
+
+    // ✅ Update UI
     document.getElementById("itemCountBadge").textContent = count;
     document.getElementById("floatingItemCount").textContent = count;
+
+    // ⚠️ WARNING (only once)
+    if (count >= 50 && !window.rowWarningShown) {
+
+        window.rowWarningShown = true;
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Large Quotation ⚠️',
+            text: 'You have added 50 or more rows. Performance may slow and submission may fail. first save your work, then consider splitting into multiple quotations if needed.',
+            confirmButtonColor: '#f59e0b'
+        });
+    }
+
+    // 🔄 RESET WARNING if user reduces rows
+    if (count < 50) {
+        window.rowWarningShown = false;
+    }
 }
 
 // ========== CALCULATIONS ==========
@@ -4541,6 +5052,10 @@ document.addEventListener("DOMContentLoaded", function() {
     // Show floating bar
     document.getElementById('floatingActionBar').classList.add('visible');
 });
+
+
+
+
 </script>
 
 {% endblock %}

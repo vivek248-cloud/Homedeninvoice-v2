@@ -1,4292 +1,1908 @@
-{% extends "billing/layouts/base.html" %}
+{% extends 'billing/layouts/base.html' %}
 {% block content %}
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     STYLES - SaaS Theme
-═══════════════════════════════════════════════════════════════════════════ -->
-<style>
-/* ========== SaaS Theme Variables ========== */
-:root {
-    --quote-primary: #6366f1;
-    --quote-primary-dark: #4f46e5;
-    --quote-primary-light: #818cf8;
-    --quote-secondary: #8b5cf6;
-    --quote-success: #10b981;
-    --quote-success-light: #d1fae5;
-    --quote-warning: #f59e0b;
-    --quote-warning-light: #fef3c7;
-    --quote-danger: #ef4444;
-    --quote-danger-light: #fee2e2;
-    --quote-info: #3b82f6;
-    --quote-info-light: #dbeafe;
-    --quote-dark: #0f172a;
-    --quote-gray-900: #1e293b;
-    --quote-gray-800: #1e293b;
-    --quote-gray-700: #334155;
-    --quote-gray-600: #475569;
-    --quote-gray-500: #64748b;
-    --quote-gray-400: #94a3b8;
-    --quote-gray-300: #cbd5e1;
-    --quote-gray-200: #e2e8f0;
-    --quote-gray-100: #f1f5f9;
-    --quote-gray-50: #f8fafc;
-    --quote-white: #ffffff;
-    --quote-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
-    --quote-gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-    --quote-gradient-warning: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-    --quote-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --quote-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --quote-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --quote-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --quote-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --quote-radius: 16px;
-    --quote-radius-md: 12px;
-    --quote-radius-sm: 8px;
-    --quote-radius-xs: 6px;
-}
-
-/* ========== Base Styles ========== */
-.quote-page {
-    min-height: 100vh;
-    background: linear-gradient(180deg, var(--quote-gray-50) 0%, var(--quote-gray-100) 100%);
-    padding: 1.5rem;
-    padding-bottom: 100px;
-    animation: fadeIn 0.5s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* ========== Progress Bar ========== */
-.progress-bar-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: var(--quote-gray-200);
-    z-index: 1000;
-}
-
-.progress-bar-fill {
-    height: 100%;
-    background: var(--quote-gradient);
-    transition: width 0.3s ease;
-    border-radius: 0 2px 2px 0;
-}
-
-/* ========== Page Header ========== */
-.quote-header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.quote-header-left {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-}
-
-.quote-header-icon {
-    width: 56px;
-    height: 56px;
-    background: var(--quote-gradient-warning);
-    border-radius: var(--quote-radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.5rem;
-    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35);
-    flex-shrink: 0;
-}
-
-.quote-header-content h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--quote-dark);
-    margin: 0 0 0.25rem 0;
-    letter-spacing: -0.025em;
-}
-
-.quote-header-content p {
-    font-size: 0.875rem;
-    color: var(--quote-gray-500);
-    margin: 0 0 0.5rem 0;
-}
-
-.quote-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.75rem;
-}
-
-.quote-breadcrumb a {
-    color: var(--quote-primary);
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.quote-breadcrumb i {
-    color: var(--quote-gray-400);
-    font-size: 0.625rem;
-}
-
-.quote-breadcrumb span {
-    color: var(--quote-gray-500);
-}
-
-.quote-header-right {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-/* ========== Completion Badge ========== */
-.completion-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 1rem;
-    background: var(--quote-white);
-    border: 1px solid var(--quote-gray-200);
-    border-radius: 50px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    box-shadow: var(--quote-shadow-sm);
-}
-
-.completion-badge .percentage {
-    color: var(--quote-primary);
-}
-
-.completion-badge.complete {
-    background: var(--quote-success-light);
-    border-color: var(--quote-success);
-}
-
-.completion-badge.complete .percentage {
-    color: var(--quote-success);
-}
-
-.completion-badge.warning {
-    background: var(--quote-warning-light);
-    border-color: var(--quote-warning);
-}
-
-.completion-badge.warning .percentage {
-    color: var(--quote-warning);
-}
-
-.edit-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--quote-info-light);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 50px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--quote-info);
-}
-
-.edit-badge i {
-    font-size: 0.875rem;
-}
-
-/* ========== Auto-save Status ========== */
-.autosave-status {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 1rem;
-    background: var(--quote-white);
-    border: 1px solid var(--quote-gray-200);
-    border-radius: 50px;
-    font-size: 0.75rem;
-    box-shadow: var(--quote-shadow-sm);
-}
-
-.autosave-status .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
-.autosave-status.saved .status-dot {
-    background: var(--quote-success);
-}
-
-.autosave-status.saving .status-dot {
-    background: var(--quote-warning);
-    animation: pulse-dot 0.5s infinite;
-}
-
-.autosave-status.error .status-dot {
-    background: var(--quote-danger);
-}
-
-.autosave-status .status-text {
-    color: var(--quote-gray-600);
-}
-
-.autosave-status .status-time {
-    color: var(--quote-gray-400);
-    font-size: 0.65rem;
-}
-
-/* ========== Quick Actions Bar ========== */
-.quick-actions-bar {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: var(--quote-white);
-    border: 1px solid var(--quote-gray-200);
-    border-radius: var(--quote-radius-md);
-    margin-bottom: 1rem;
-    box-shadow: var(--quote-shadow-sm);
-    flex-wrap: wrap;
-}
-
-.quick-action-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--quote-gray-500);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-right: 0.5rem;
-}
-
-.quick-action-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    background: var(--quote-gray-100);
-    border: 1px solid var(--quote-gray-200);
-    border-radius: var(--quote-radius-sm);
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--quote-gray-700);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.quick-action-btn:hover {
-    background: var(--quote-primary);
-    border-color: var(--quote-primary);
-    color: white;
-}
-
-.quick-action-btn i {
-    font-size: 0.8rem;
-}
-
-.quick-action-divider {
-    width: 1px;
-    height: 20px;
-    background: var(--quote-gray-200);
-    margin: 0 0.5rem;
-}
-
-.kbd {
-    display: inline-block;
-    padding: 0.125rem 0.375rem;
-    background: var(--quote-gray-200);
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.65rem;
-}
-
-/* ========== Main Card ========== */
-.quote-card {
-    background: var(--quote-white);
-    border-radius: var(--quote-radius);
-    box-shadow: var(--quote-shadow-lg);
-    border: 1px solid var(--quote-gray-100);
-    overflow: hidden;
-}
-
-/* ========== Client Info Section ========== */
-.client-section {
-    padding: 1.5rem;
-    background: linear-gradient(135deg, var(--quote-gray-50) 0%, var(--quote-white) 100%);
-    border-bottom: 1px solid var(--quote-gray-100);
-}
-
-.client-section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-}
-
-.client-section-title {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-}
-
-.client-section-title i {
-    font-size: 1rem;
-    color: var(--quote-primary);
-}
-
-.client-section-title span {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--quote-dark);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.section-status {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-}
-
-.section-status.complete {
-    color: var(--quote-success);
-}
-
-.section-status.incomplete {
-    color: var(--quote-warning);
-}
-
-.client-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
-}
-
-@media (max-width: 768px) {
-    .client-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.form-label-modern {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--quote-gray-600);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-}
-
-.form-label-modern .required {
-    color: var(--quote-danger);
-}
-
-.input-wrapper {
-    position: relative;
-}
-
-.input-wrapper i.input-icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--quote-gray-400);
-    font-size: 1rem;
-    pointer-events: none;
-    z-index: 1;
-    transition: color 0.2s ease;
-}
-
-.input-wrapper.valid i.input-icon {
-    color: var(--quote-success);
-}
-
-.input-wrapper.invalid i.input-icon {
-    color: var(--quote-danger);
-}
-
-.form-input-modern,
-.form-select-modern {
-    width: 100%;
-    padding: 0.875rem 1rem 0.875rem 2.75rem;
-    background: var(--quote-white);
-    border: 2px solid var(--quote-gray-200);
-    border-radius: var(--quote-radius-sm);
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--quote-dark);
-    transition: all 0.2s ease;
-    appearance: none;
-}
-
-.form-input-modern:hover,
-.form-select-modern:hover {
-    border-color: var(--quote-gray-300);
-}
-
-.form-input-modern:focus,
-.form-select-modern:focus {
-    outline: none;
-    border-color: var(--quote-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-.form-input-modern.valid,
-.form-select-modern.valid {
-    border-color: var(--quote-success);
-}
-
-.form-input-modern.invalid,
-.form-select-modern.invalid {
-    border-color: var(--quote-danger);
-    background: var(--quote-danger-light);
-}
-
-.validation-icon {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1rem;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.validation-icon.valid {
-    color: var(--quote-success);
-    opacity: 1;
-}
-
-.validation-icon.invalid {
-    color: var(--quote-danger);
-    opacity: 1;
-}
-
-.select-arrow {
-    position: absolute;
-    right: 2.5rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--quote-gray-400);
-    pointer-events: none;
-}
-
-/* ========== Table Section ========== */
-.table-section {
-    padding: 0;
-}
-
-.table-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--quote-gray-50);
-    border-bottom: 1px solid var(--quote-gray-100);
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.table-header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.table-header-left h3 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--quote-dark);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.table-header-left h3 i {
-    color: var(--quote-primary);
-}
-
-.item-count-badge {
-    padding: 0.25rem 0.625rem;
-    background: var(--quote-primary);
-    color: white;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 600;
-}
-
-.validation-summary {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.75rem;
-}
-
-.validation-item {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.validation-item.valid {
-    color: var(--quote-success);
-}
-
-.validation-item.invalid {
-    color: var(--quote-danger);
-}
-
-.table-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-table-action {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 0.875rem;
-    background: var(--quote-white);
-    border: 1px solid var(--quote-gray-200);
-    border-radius: var(--quote-radius-sm);
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--quote-gray-700);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-table-action:hover {
-    background: var(--quote-gray-100);
-    border-color: var(--quote-gray-300);
-}
-
-.btn-table-action.primary {
-    background: var(--quote-primary);
-    border-color: var(--quote-primary);
-    color: white;
-}
-
-.btn-table-action.primary:hover {
-    background: var(--quote-primary-dark);
-}
-
-/* ========== Modern Table ========== */
-.table-container {
-    max-height: 500px;
-    overflow: auto;
-}
-
-.table-container::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-.table-container::-webkit-scrollbar-track {
-    background: var(--quote-gray-100);
-}
-
-.table-container::-webkit-scrollbar-thumb {
-    background: var(--quote-gray-300);
-    border-radius: 10px;
-}
-
-.quote-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 1400px;
-}
-
-.quote-table thead {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-}
-
-.quote-table thead th {
-    background: var(--quote-dark);
-    color: var(--quote-white);
-    padding: 1rem 0.75rem;
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    text-align: left;
-    white-space: nowrap;
-    border: none;
-}
-
-.quote-table thead th:first-child {
-    padding-left: 1.5rem;
-}
-
-.quote-table thead th.total-col {
-    background: var(--quote-primary);
-    text-align: center;
-}
-
-.quote-table thead th.action-col {
-    background: var(--quote-gray-800);
-    text-align: center;
-    position: sticky;
-    right: 0;
-    z-index: 21;
-}
-
-.quote-table tbody tr {
-    border-bottom: 1px solid var(--quote-gray-100);
-    transition: all 0.2s ease;
-}
-
-.quote-table tbody tr:hover {
-    background: var(--quote-gray-50);
-}
-
-.quote-table tbody tr.incomplete {
-    background: rgba(245, 158, 11, 0.05);
-    border-left: 3px solid var(--quote-warning);
-}
-
-.quote-table tbody tr.complete {
-    border-left: 3px solid var(--quote-success);
-}
-
-.quote-table tbody td {
-    padding: 0.875rem 0.75rem;
-    vertical-align: top;
-}
-
-.quote-table tbody td:first-child {
-    padding-left: 1.5rem;
-}
-
-.quote-table tbody td.total-col {
-    background: rgba(99, 102, 241, 0.05);
-    text-align: center;
-    vertical-align: middle;
-}
-
-.quote-table tbody td.action-col {
-    background: var(--quote-white);
-    position: sticky;
-    right: 0;
-    z-index: 10;
-    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.05);
-    vertical-align: middle;
-}
-
-/* ========== Table Input Styles ========== */
-.table-input {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    background: var(--quote-gray-50);
-    border: 1px solid var(--quote-gray-200);
-    border-radius: var(--quote-radius-xs);
-    font-size: 0.8rem;
-    color: var(--quote-dark);
-    transition: all 0.2s ease;
-}
-
-.table-input:hover {
-    border-color: var(--quote-gray-300);
-}
-
-.table-input:focus {
-    outline: none;
-    background: var(--quote-white);
-    border-color: var(--quote-primary);
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
-}
-
-.table-input.primary {
-    font-weight: 600;
-    color: var(--quote-primary);
-}
-
-.table-input.small {
-    font-size: 0.75rem;
-    padding: 0.375rem 0.625rem;
-    color: var(--quote-gray-600);
-}
-
-.table-input.valid {
-    border-color: var(--quote-success);
-    background: rgba(16, 185, 129, 0.05);
-}
-
-.table-input.invalid {
-    border-color: var(--quote-danger);
-    background: var(--quote-danger-light);
-}
-
-/* ========== Hybrid Rate Input ========== */
-.hybrid-rate-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-}
-
-.rate-mode-toggle {
-    display: flex;
-    background: var(--quote-gray-100);
-    border-radius: var(--quote-radius-xs);
-    padding: 2px;
-    margin-bottom: 0.25rem;
-}
-
-.rate-mode-btn {
-    flex: 1;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.6rem;
-    font-weight: 600;
-    text-align: center;
-    border: none;
-    background: transparent;
-    color: var(--quote-gray-500);
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
-
-.rate-mode-btn.active {
-    background: var(--quote-white);
-    color: var(--quote-primary);
-    box-shadow: var(--quote-shadow-sm);
-}
-
-.rate-select-wrapper {
-    position: relative;
-}
-
-.table-select {
-    width: 100%;
-    padding: 0.5rem 2rem 0.5rem 0.75rem;
-    background: var(--quote-gray-50);
-    border: 1px solid var(--quote-gray-200);
-    border-radius: var(--quote-radius-xs);
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--quote-primary);
-    appearance: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-}
-
-.table-select:focus {
-    outline: none;
-    border-color: var(--quote-primary);
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
-}
-
-.rate-manual-input {
-    display: none;
-}
-
-.rate-manual-input.active {
-    display: block;
-}
-
-.rate-display {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.375rem 0.625rem;
-    background: var(--quote-info-light);
-    border-radius: 4px;
-    font-size: 0.7rem;
-    margin-top: 0.25rem;
-}
-
-.rate-display .label {
-    color: var(--quote-gray-600);
-}
-
-.rate-display .value {
-    font-weight: 700;
-    color: var(--quote-info);
-    font-family: 'JetBrains Mono', monospace;
-}
-
-/* ========== Dimension Input Group ========== */
-.dimension-group {
-    display: flex;
-    align-items: center;
-    background: var(--quote-gray-100);
-    border-radius: var(--quote-radius-sm);
-    padding: 0.25rem;
-    border: 1px solid var(--quote-gray-200);
-}
-
-.dimension-input {
-    width: 50px;
-    padding: 0.375rem;
-    background: var(--quote-white);
-    border: none;
-    border-radius: var(--quote-radius-xs);
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--quote-dark);
-    text-align: center;
-}
-
-.dimension-input:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-}
-
-.dimension-separator {
-    padding: 0 0.375rem;
-    color: var(--quote-gray-400);
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
-.area-display {
-    margin-top: 0.375rem;
-    padding: 0.25rem 0.5rem;
-    background: var(--quote-info-light);
-    border-radius: 4px;
-    font-size: 0.65rem;
-    font-weight: 600;
-    color: var(--quote-info);
-    text-align: center;
-}
-
-/* ========== Qty Input ========== */
-.qty-input {
-    width: 50px;
-    padding: 0.5rem;
-    background: var(--quote-white);
-    border: 2px solid var(--quote-gray-200);
-    border-radius: var(--quote-radius-sm);
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--quote-dark);
-    text-align: center;
-}
-
-.qty-input:focus {
-    outline: none;
-    border-color: var(--quote-primary);
-}
-
-/* ========== Total Display ========== */
-.line-total {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--quote-primary);
-    font-family: 'JetBrains Mono', monospace;
-}
-
-/* ========== Row Status Indicator ========== */
-.row-status {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.375rem;
-    margin-bottom: 0.5rem;
-}
-
-.row-status-icon {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-}
-
-.row-status-icon.complete {
-    background: var(--quote-success-light);
-    color: var(--quote-success);
-}
-
-.row-status-icon.incomplete {
-    background: var(--quote-warning-light);
-    color: var(--quote-warning);
-}
-
-.row-status-text {
-    font-size: 0.55rem;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.row-status-text.complete {
-    color: var(--quote-success);
-}
-
-.row-status-text.incomplete {
-    color: var(--quote-warning);
-}
-
-/* ========== Action Buttons ========== */
-.row-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.375rem;
-}
-
-.row-action-btn {
-    width: 32px;
-    height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--quote-radius-xs);
-    border: 1px solid var(--quote-gray-200);
-    background: var(--quote-white);
-    color: var(--quote-gray-500);
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.row-action-btn:hover {
-    transform: scale(1.1);
-}
-
-.row-action-btn.duplicate:hover {
-    background: var(--quote-info-light);
-    border-color: var(--quote-info);
-    color: var(--quote-info);
-}
-
-.row-action-btn.delete:hover {
-    background: var(--quote-danger-light);
-    border-color: var(--quote-danger);
-    color: var(--quote-danger);
-}
-
-.row-action-btn.copy-prev:hover {
-    background: var(--quote-success-light);
-    border-color: var(--quote-success);
-    color: var(--quote-success);
-}
-
-/* ========== Image Preview ========== */
-.image-preview-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.375rem;
-}
-
-.image-preview {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--quote-radius-xs);
-    border: 2px solid var(--quote-gray-200);
-    object-fit: cover;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.image-preview:hover {
-    transform: scale(1.1);
-    border-color: var(--quote-primary);
-}
-
-.image-actions {
-    display: flex;
-    gap: 0.25rem;
-}
-
-.image-btn {
-    width: 28px;
-    height: 28px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--quote-radius-xs);
-    border: 1px solid var(--quote-gray-200);
-    background: var(--quote-white);
-    color: var(--quote-gray-500);
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.image-btn:hover {
-    background: var(--quote-gray-100);
-}
-
-.image-btn.select:hover {
-    background: var(--quote-info-light);
-    border-color: var(--quote-info);
-    color: var(--quote-info);
-}
-
-.image-btn.clear:hover {
-    background: var(--quote-danger-light);
-    border-color: var(--quote-danger);
-    color: var(--quote-danger);
-}
-
-/* ========== Spec Button ========== */
-.spec-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 0.875rem;
-    background: var(--quote-gray-100);
-    border: 1px solid var(--quote-gray-200);
-    border-radius: var(--quote-radius-sm);
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--quote-gray-700);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.spec-btn:hover {
-    background: var(--quote-primary);
-    border-color: var(--quote-primary);
-    color: white;
-}
-
-.spec-btn.has-content {
-    background: var(--quote-success-light);
-    border-color: var(--quote-success);
-    color: var(--quote-success);
-}
-
-/* ========== Floor Checkbox ========== */
-.floor-checkbox-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    margin-top: 0.375rem;
-}
-
-.floor-checkbox-wrapper input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
-    accent-color: var(--quote-primary);
-}
-
-.floor-checkbox-wrapper label {
-    font-size: 0.65rem;
-    color: var(--quote-gray-500);
-}
-
-/* ========== Missing Fields Tooltip ========== */
-.missing-fields-tooltip {
-    position: relative;
-}
-
-.missing-fields-list {
-    display: none;
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--quote-dark);
-    color: white;
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--quote-radius-xs);
-    font-size: 0.65rem;
-    white-space: nowrap;
-    z-index: 100;
-    margin-bottom: 0.25rem;
-}
-
-.missing-fields-list::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 5px solid transparent;
-    border-top-color: var(--quote-dark);
-}
-
-.missing-fields-tooltip:hover .missing-fields-list {
-    display: block;
-}
-
-/* ========== Footer Section ========== */
-.quote-footer {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    padding: 1.5rem;
-    background: var(--quote-gray-50);
-    border-top: 1px solid var(--quote-gray-100);
-}
-
-.add-item-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: var(--quote-dark);
-    border: none;
-    border-radius: var(--quote-radius-md);
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.add-item-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--quote-shadow-lg);
-}
-
-/* ========== Grand Total Card ========== */
-.grand-total-card {
-    background: var(--quote-gradient);
-    border-radius: var(--quote-radius-md);
-    padding: 1.25rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    min-width: 320px;
-    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
-    position: relative;
-    overflow: hidden;
-}
-
-.grand-total-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 150px;
-    height: 150px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    transform: translate(30%, -30%);
-}
-
-.grand-total-info {
-    position: relative;
-    z-index: 1;
-}
-
-.grand-total-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.7);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 0.25rem;
-}
-
-.grand-total-value {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: white;
-    font-family: 'JetBrains Mono', monospace;
-}
-
-.grand-total-icon {
-    width: 48px;
-    height: 48px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: var(--quote-radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.5rem;
-    position: relative;
-    z-index: 1;
-}
-
-/* ========== Floating Action Bar ========== */
-.floating-action-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--quote-white);
-    border-top: 1px solid var(--quote-gray-200);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-    padding: 1rem 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    z-index: 100;
-    transform: translateY(100%);
-    transition: transform 0.3s ease;
-}
-
-.floating-action-bar.visible {
-    transform: translateY(0);
-}
-
-.floating-bar-info {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-}
-
-.floating-stat {
-    text-align: center;
-}
-
-.floating-stat-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--quote-dark);
-    font-family: 'JetBrains Mono', monospace;
-}
-
-.floating-stat-value.amount {
-    color: var(--quote-success);
-}
-
-.floating-stat-label {
-    font-size: 0.6rem;
-    font-weight: 600;
-    color: var(--quote-gray-500);
-    text-transform: uppercase;
-}
-
-.floating-bar-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.btn-discard {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.25rem;
-    background: var(--quote-white);
-    border: 2px solid var(--quote-danger);
-    border-radius: var(--quote-radius-md);
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--quote-danger);
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-discard:hover {
-    background: var(--quote-danger);
-    color: white;
-}
-
-.btn-save {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.875rem 2rem;
-    background: var(--quote-gradient-warning);
-    border: none;
-    border-radius: var(--quote-radius-md);
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
-    transition: all 0.2s ease;
-}
-
-.btn-save:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
-}
-
-.btn-save:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btn-save .validation-warning {
-    display: none;
-    margin-left: 0.375rem;
-}
-
-.btn-save.has-errors .validation-warning {
-    display: inline;
-}
-
-/* ========== Status Indicators ========== */
-.connection-status {
-    position: fixed;
-    top: 60px;
-    right: 20px;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--quote-white);
-    border-radius: 50px;
-    box-shadow: var(--quote-shadow-md);
-    font-size: 0.7rem;
-    font-weight: 600;
-    z-index: 999;
-    transition: all 0.3s ease;
-}
-
-.connection-status.online {
-    border: 1px solid var(--quote-success);
-    color: var(--quote-success);
-}
-
-.connection-status.offline {
-    border: 1px solid var(--quote-danger);
-    color: var(--quote-danger);
-    background: var(--quote-danger-light);
-}
-
-.connection-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
-.connection-status.online .connection-dot {
-    background: var(--quote-success);
-    animation: pulse-dot 2s infinite;
-}
-
-.connection-status.offline .connection-dot {
-    background: var(--quote-danger);
-}
-
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-/* Unsaved Indicator */
-.unsaved-indicator {
-    position: fixed;
-    bottom: 100px;
-    right: 20px;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1rem;
-    background: var(--quote-warning-light);
-    border: 1px solid var(--quote-warning);
-    border-radius: var(--quote-radius-sm);
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--quote-warning);
-    z-index: 999;
-    opacity: 0;
-    transform: translateX(100%);
-    transition: all 0.3s ease;
-}
-
-.unsaved-indicator.visible {
-    opacity: 1;
-    transform: translateX(0);
-}
-
-/* Status Toast */
-.status-toast {
-    position: fixed;
-    bottom: 100px;
-    right: 20px;
-    background: var(--quote-white);
-    border-radius: var(--quote-radius-md);
-    box-shadow: var(--quote-shadow-xl);
-    border: 1px solid var(--quote-gray-200);
-    padding: 0.875rem 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    z-index: 1000;
-    transform: translateX(120%);
-    transition: transform 0.3s ease;
-    max-width: 320px;
-}
-
-.status-toast.visible {
-    transform: translateX(0);
-}
-
-.status-toast-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    flex-shrink: 0;
-}
-
-.status-toast-icon.saving {
-    background: var(--quote-info-light);
-    color: var(--quote-info);
-    animation: spin 1s linear infinite;
-}
-
-.status-toast-icon.saved {
-    background: var(--quote-success-light);
-    color: var(--quote-success);
-}
-
-.status-toast-icon.error {
-    background: var(--quote-danger-light);
-    color: var(--quote-danger);
-}
-
-.status-toast-content h6 {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--quote-dark);
-    margin: 0 0 0.125rem 0;
-}
-
-.status-toast-content p {
-    font-size: 0.7rem;
-    color: var(--quote-gray-500);
-    margin: 0;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* ========== Recovery Modal ========== */
-.recovery-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.8);
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.recovery-modal-overlay.visible {
-    opacity: 1;
-    visibility: visible;
-}
-
-.recovery-modal {
-    background: var(--quote-white);
-    border-radius: var(--quote-radius);
-    box-shadow: var(--quote-shadow-xl);
-    max-width: 500px;
-    width: 90%;
-    overflow: hidden;
-    transform: scale(0.9);
-    transition: transform 0.3s ease;
-}
-
-.recovery-modal-overlay.visible .recovery-modal {
-    transform: scale(1);
-}
-
-.recovery-modal-header {
-    padding: 1.5rem;
-    background: linear-gradient(135deg, var(--quote-warning-light), var(--quote-white));
-    border-bottom: 1px solid var(--quote-gray-100);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.recovery-modal-icon {
-    width: 56px;
-    height: 56px;
-    background: var(--quote-warning);
-    border-radius: var(--quote-radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.5rem;
-}
-
-.recovery-modal-title h4 {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--quote-dark);
-    margin: 0 0 0.25rem 0;
-}
-
-.recovery-modal-title p {
-    font-size: 0.8rem;
-    color: var(--quote-gray-500);
-    margin: 0;
-}
-
-.recovery-modal-body {
-    padding: 1.5rem;
-}
-
-.recovery-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-}
-
-.recovery-info-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1rem;
-    background: var(--quote-gray-50);
-    border-radius: var(--quote-radius-sm);
-}
-
-.recovery-info-item .label {
-    font-size: 0.75rem;
-    color: var(--quote-gray-500);
-}
-
-.recovery-info-item .value {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--quote-dark);
-}
-
-.recovery-modal-actions {
-    display: flex;
-    gap: 0.75rem;
-}
-
-.recovery-btn {
-    flex: 1;
-    padding: 0.875rem 1.25rem;
-    border-radius: var(--quote-radius-sm);
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.recovery-btn.primary {
-    background: var(--quote-success);
-    border: none;
-    color: white;
-}
-
-.recovery-btn.primary:hover {
-    background: #059669;
-}
-
-.recovery-btn.secondary {
-    background: var(--quote-white);
-    border: 2px solid var(--quote-gray-200);
-    color: var(--quote-gray-700);
-}
-
-.recovery-btn.secondary:hover {
-    background: var(--quote-gray-100);
-}
-
-/* ========== Session Warning Modal ========== */
-.session-warning-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.9);
-    z-index: 3000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.session-warning-overlay.visible {
-    opacity: 1;
-    visibility: visible;
-}
-
-.session-warning-modal {
-    background: var(--quote-white);
-    border-radius: var(--quote-radius);
-    box-shadow: var(--quote-shadow-xl);
-    max-width: 450px;
-    width: 90%;
-    text-align: center;
-    padding: 2rem;
-}
-
-.session-warning-icon {
-    width: 80px;
-    height: 80px;
-    background: var(--quote-danger-light);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    font-size: 2rem;
-    color: var(--quote-danger);
-    animation: pulse-icon 1s infinite;
-}
-
-@keyframes pulse-icon {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-}
-
-.session-warning-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--quote-dark);
-    margin: 0 0 0.5rem 0;
-}
-
-.session-warning-text {
-    font-size: 0.9rem;
-    color: var(--quote-gray-600);
-    margin: 0 0 1rem 0;
-}
-
-.session-countdown {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--quote-danger);
-    margin: 1rem 0;
-    font-family: 'JetBrains Mono', monospace;
-}
-
-.session-warning-actions {
-    display: flex;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
-}
-
-.session-warning-actions button {
-    flex: 1;
-    padding: 0.875rem;
-    border-radius: var(--quote-radius-sm);
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.session-warning-actions .btn-extend {
-    background: var(--quote-success);
-    border: none;
-    color: white;
-}
-
-.session-warning-actions .btn-save-exit {
-    background: var(--quote-white);
-    border: 2px solid var(--quote-primary);
-    color: var(--quote-primary);
-}
-
-/* ========== Idle Warning ========== */
-.idle-warning {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--quote-white);
-    border-radius: var(--quote-radius);
-    box-shadow: var(--quote-shadow-xl);
-    padding: 2rem;
-    text-align: center;
-    max-width: 400px;
-    z-index: 2500;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.idle-warning.visible {
-    opacity: 1;
-    visibility: visible;
-}
-
-.idle-warning-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 2499;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.idle-warning-backdrop.visible {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* ========== Modern Modal ========== */
-.modal-modern .modal-content {
-    border: none;
-    border-radius: var(--quote-radius);
-    box-shadow: var(--quote-shadow-xl);
-}
-
-.modal-modern .modal-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--quote-gray-100);
-}
-
-.modal-modern .modal-title {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--quote-dark);
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-}
-
-.modal-modern .modal-title i {
-    color: var(--quote-primary);
-}
-
-.modal-modern .modal-body {
-    padding: 1.5rem;
-}
-
-.modal-modern .modal-footer {
-    padding: 1rem 1.5rem;
-    background: var(--quote-gray-50);
-    border-top: 1px solid var(--quote-gray-100);
-}
-
-.modal-textarea {
-    width: 100%;
-    min-height: 200px;
-    padding: 1rem;
-    background: var(--quote-gray-50);
-    border: 2px solid var(--quote-gray-200);
-    border-radius: var(--quote-radius-sm);
-    font-size: 0.9rem;
-    color: var(--quote-dark);
-    resize: vertical;
-    transition: all 0.2s ease;
-}
-
-.modal-textarea:focus {
-    outline: none;
-    border-color: var(--quote-primary);
-    background: var(--quote-white);
-}
-
-.modal-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.625rem 1rem;
-    border-radius: var(--quote-radius-sm);
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-}
-
-.modal-btn.secondary {
-    background: var(--quote-gray-100);
-    color: var(--quote-gray-700);
-}
-
-.modal-btn.secondary:hover {
-    background: var(--quote-gray-200);
-}
-
-.modal-btn.primary {
-    background: var(--quote-primary);
-    color: white;
-}
-
-.modal-btn.primary:hover {
-    background: var(--quote-primary-dark);
-}
-
-.modal-btn.success {
-    background: var(--quote-success);
-    color: white;
-}
-
-.modal-btn.ai {
-    background: var(--quote-dark);
-    color: white;
-    position: relative;
-    overflow: hidden;
-}
-
-.modal-btn.ai::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-    100% { left: 100%; }
-}
-
-/* ========== Template Grid ========== */
-.template-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
-}
-
-.template-item {
-    padding: 1rem;
-    background: var(--quote-gray-50);
-    border: 2px solid var(--quote-gray-200);
-    border-radius: var(--quote-radius-sm);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: center;
-}
-
-.template-item:hover {
-    border-color: var(--quote-primary);
-    background: rgba(99, 102, 241, 0.05);
-}
-
-.template-item i {
-    font-size: 1.5rem;
-    color: var(--quote-primary);
-    margin-bottom: 0.5rem;
-}
-
-.template-item h6 {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--quote-dark);
-    margin: 0;
-}
-
-.template-item p {
-    font-size: 0.65rem;
-    color: var(--quote-gray-500);
-    margin: 0.25rem 0 0 0;
-}
-
-/* ========== Image Grid ========== */
-.image-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
-    max-height: 300px;
-    overflow-y: auto;
-    padding: 0.25rem;
-}
-
-.image-grid-item {
-    aspect-ratio: 1;
-    border-radius: var(--quote-radius-sm);
-    overflow: hidden;
-    cursor: pointer;
-    border: 2px solid var(--quote-gray-200);
-    transition: all 0.2s ease;
-}
-
-.image-grid-item:hover {
-    border-color: var(--quote-primary);
-    transform: scale(1.05);
-}
-
-.image-grid-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* ========== Animations ========== */
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-}
-
-.shake {
-    animation: shake 0.3s ease;
-}
-
-@keyframes highlight {
-    0% { background: var(--quote-warning-light); }
-    100% { background: transparent; }
-}
-
-.highlight-field {
-    animation: highlight 1s ease;
-}
-
-/* ========== Responsive ========== */
-@media (max-width: 768px) {
-    .quote-page {
-        padding: 1rem;
-        padding-bottom: 120px;
-    }
-    
-    .quote-header {
-        flex-direction: column;
-    }
-    
-    .quick-actions-bar {
-        overflow-x: auto;
-    }
-    
-    .quote-footer {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .grand-total-card {
-        min-width: auto;
-        width: 100%;
-    }
-    
-    .floating-action-bar {
-        flex-direction: column;
-        gap: 1rem;
-        padding: 1rem;
-    }
-    
-    .floating-bar-info {
-        width: 100%;
-        justify-content: space-around;
-    }
-    
-    .floating-bar-actions {
-        width: 100%;
-        flex-direction: column;
-    }
-    
-    .btn-save {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .template-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-</style>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     STATUS INDICATORS
-═══════════════════════════════════════════════════════════════════════════ -->
-
-<!-- Connection Status -->
-<div class="connection-status online" id="connectionStatus">
-    <span class="connection-dot"></span>
-    <span class="status-text">Connected</span>
-</div>
-
-<!-- Unsaved Changes -->
-<div class="unsaved-indicator" id="unsavedIndicator">
-    <i class="bi bi-exclamation-circle"></i>
-    <span id="unsavedText">Unsaved changes</span>
-</div>
-
-<!-- Status Toast -->
-<div class="status-toast" id="statusToast">
-    <div class="status-toast-icon saving" id="toastIcon">
-        <i class="bi bi-arrow-repeat"></i>
-    </div>
-    <div class="status-toast-content">
-        <h6 id="toastTitle">Saving...</h6>
-        <p id="toastMessage">Your changes are being saved</p>
-    </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     MODALS - Recovery, Session, Idle
-═══════════════════════════════════════════════════════════════════════════ -->
-
-<!-- Recovery Modal -->
-<div class="recovery-modal-overlay" id="recoveryModal">
-    <div class="recovery-modal">
-        <div class="recovery-modal-header">
-            <div class="recovery-modal-icon">
-                <i class="bi bi-clock-history"></i>
+<div class="qtn-list-page">
+    <div class="container-fluid py-4 px-3 px-lg-4">
+
+        <!-- ===== Page Header ===== -->
+        <div class="page-header">
+            <div class="header-left">
+                <a href="{% url 'quotation_index' %}" class="back-btn">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div class="client-avatar">
+                    {{ client.name|slice:":1"|upper }}
+                </div>
+                <div class="header-text">
+                    <div class="header-top">
+                        <h1>{{ client.name }}</h1>
+                        <span class="status-chip">
+                            <span class="chip-dot"></span>
+                            Active
+                        </span>
+                    </div>
+                    <div class="header-meta">
+                        <span><i class="bi bi-telephone"></i>{{ client.phone1 }}</span>
+                        <span class="dot">•</span>
+                        <span><i class="bi bi-list-check"></i>{{ row_count }} items</span>
+                        <span class="dot">•</span>
+                        <span><i class="bi bi-geo-alt"></i>{{ client.location|truncatechars:30 }}</span>
+                    </div>
+                </div>
             </div>
-            <div class="recovery-modal-title">
-                <h4>Recover Unsaved Changes?</h4>
-                <p>We found unsaved edits from your last session</p>
+
+            <div class="header-right">
+                <div class="total-pill">
+                    <span class="total-pill-label">Grand Total</span>
+                    <span class="total-pill-value">₹{{ subtotal|floatformat:0 }}</span>
+                </div>
+                <a href="{% url 'quotation_pdf' client.id %}?preview=1" 
+                   class="action-btn outline" target="_blank">
+                    <i class="bi bi-eye"></i>
+                    Preview
+                </a>
+                <a href="{% url 'quotation_pdf' client.id %}" 
+                   class="action-btn primary" target="_blank">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    PDF
+                </a>
             </div>
         </div>
-        <div class="recovery-modal-body">
-            <div class="recovery-info">
-                <div class="recovery-info-item">
-                    <span class="label">Last saved</span>
-                    <span class="value" id="recoveryTime">--</span>
+
+        <!-- ===== Stats Strip ===== -->
+        <div class="stats-strip">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <i class="bi bi-boxes"></i>
                 </div>
-                <div class="recovery-info-item">
-                    <span class="label">Items</span>
-                    <span class="value" id="recoveryItems">--</span>
-                </div>
-                <div class="recovery-info-item">
-                    <span class="label">Total value</span>
-                    <span class="value" id="recoveryTotal">--</span>
+                <div>
+                    <div class="stat-num">{{ row_count }}</div>
+                    <div class="stat-lbl">Total Items</div>
                 </div>
             </div>
-            <div class="recovery-modal-actions">
-                <button class="recovery-btn secondary" onclick="discardRecovery()">
-                    <i class="bi bi-trash3"></i>
-                    Use Original
+
+            <div class="stat-card">
+                <div class="stat-icon green">
+                    <i class="bi bi-currency-rupee"></i>
+                </div>
+                <div>
+                    <div class="stat-num">₹{{ subtotal|floatformat:0 }}</div>
+                    <div class="stat-lbl">Subtotal</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon purple">
+                    <i class="bi bi-building"></i>
+                </div>
+                <div>
+                    <div class="stat-num" id="floorCount">--</div>
+                    <div class="stat-lbl">Floors</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon orange">
+                    <i class="bi bi-geo-alt"></i>
+                </div>
+                <div>
+                    <div class="stat-num" id="locationCount">--</div>
+                    <div class="stat-lbl">Locations</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Filter / Search Bar ===== -->
+        <div class="filter-bar">
+            <div class="search-wrap">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" 
+                       id="searchInput" 
+                       class="search-input" 
+                       placeholder="Search by floor, location, element, material..."
+                       oninput="filterRows()">
+                <button class="search-clear" id="clearSearch" onclick="clearSearch()" style="display:none;">
+                    <i class="bi bi-x"></i>
                 </button>
-                <button class="recovery-btn primary" onclick="restoreRecovery()">
-                    <i class="bi bi-arrow-clockwise"></i>
-                    Restore Changes
+            </div>
+
+            <div class="filter-chips" id="filterChips">
+                <button class="filter-chip active" data-filter="all" onclick="setFilter('all', this)">
+                    All <span>{{ row_count }}</span>
+                </button>
+                {% regroup rows by floor as floor_list %}
+                {% for floor_group in floor_list %}
+                <button class="filter-chip" 
+                        data-filter="{{ floor_group.grouper }}" 
+                        onclick="setFilter('{{ floor_group.grouper }}', this)">
+                    {{ floor_group.grouper }} 
+                    <span>{{ floor_group.list|length }}</span>
+                </button>
+                {% endfor %}
+            </div>
+
+            <div class="view-toggle">
+                <button class="view-btn active" id="viewTable" onclick="setView('table')" title="Table View">
+                    <i class="bi bi-table"></i>
+                </button>
+                <button class="view-btn" id="viewCard" onclick="setView('card')" title="Card View">
+                    <i class="bi bi-grid-3x3-gap"></i>
                 </button>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Session Warning Modal -->
-<div class="session-warning-overlay" id="sessionWarning">
-    <div class="session-warning-modal">
-        <div class="session-warning-icon">
-            <i class="bi bi-hourglass-split"></i>
-        </div>
-        <h4 class="session-warning-title">Session Expiring Soon!</h4>
-        <p class="session-warning-text">Your session will expire due to inactivity.</p>
-        <div class="session-countdown" id="sessionCountdown">02:00</div>
-        <p class="session-warning-text" style="font-size: 0.8rem;">Click below to continue or save and exit.</p>
-        <div class="session-warning-actions">
-            <button class="btn-save-exit" onclick="saveAndExit()">
-                <i class="bi bi-box-arrow-right"></i> Save & Exit
-            </button>
-            <button class="btn-extend" onclick="extendSession()">
-                <i class="bi bi-arrow-clockwise"></i> Continue
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Idle Warning -->
-<div class="idle-warning-backdrop" id="idleBackdrop"></div>
-<div class="idle-warning" id="idleWarning">
-    <i class="bi bi-moon" style="font-size: 3rem; color: var(--quote-primary); margin-bottom: 1rem;"></i>
-    <h4 style="margin: 0 0 0.5rem 0;">Are you still there?</h4>
-    <p style="color: var(--quote-gray-500); margin: 0 0 1rem 0; font-size: 0.85rem;">
-        You've been idle. Your changes have been saved.
-    </p>
-    <button onclick="dismissIdleWarning()" style="padding: 0.75rem 2rem; background: var(--quote-primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-        I'm still here
-    </button>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     PROGRESS BAR
-═══════════════════════════════════════════════════════════════════════════ -->
-<div class="progress-bar-container">
-    <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     DATALISTS
-═══════════════════════════════════════════════════════════════════════════ -->
-<datalist id="elementList">
-    <option value="Wardrobe">
-    <option value="Kitchen">
-    <option value="TV Unit">
-    <option value="Loft">
-    <option value="Bed Back Panel">
-    <option value="Study Table">
-    <option value="Shoe Rack">
-    <option value="Crockery Unit">
-    <option value="Dressing Table">
-    <option value="Bookshelf">
-</datalist>
-
-<datalist id="locationList">
-    <option value="Living Room">
-    <option value="Master Bedroom">
-    <option value="Guest Bedroom">
-    <option value="Kids Bedroom">
-    <option value="Kitchen">
-    <option value="Dining">
-    <option value="Foyer">
-    <option value="Balcony">
-</datalist>
-
-<datalist id="brandList">
-    <option value="Greenply">
-    <option value="Century">
-    <option value="Merino">
-    <option value="Hettich">
-    <option value="Hafele">
-    <option value="Home Den">
-    <option value="Ebco">
-    <option value="Sleek">
-</datalist>
-
-<datalist id="finishList">
-    <option value="Laminate">
-    <option value="Acrylic">
-    <option value="PU Paint">
-    <option value="Veneer">
-    <option value="Lacquer">
-    <option value="Membrane">
-    <option value="Glass">
-</datalist>
-
-<datalist id="coreMaterialList">
-    <option value="BWR Plywood 18mm">
-    <option value="BWR Plywood 12mm">
-    <option value="MDF 18mm">
-    <option value="MDF 12mm">
-    <option value="HDHMR 18mm">
-    <option value="Particle Board">
-    <option value="Block Board">
-</datalist>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     MAIN PAGE
-═══════════════════════════════════════════════════════════════════════════ -->
-<div class="quote-page">
-    
-    <!-- ========== Page Header ========== -->
-    <div class="quote-header">
-        <div class="quote-header-left">
-            <div class="quote-header-icon">
-                <i class="bi bi-pencil-square"></i>
-            </div>
-            <div class="quote-header-content">
-                <h1>Edit Quotation</h1>
-                <p>Update quotation for {{ quotation_rows.0.client.name }}</p>
-                <div class="quote-breadcrumb">
-                    <a href="{% url 'quotation_index' %}">Quotations</a>
-                    <i class="bi bi-chevron-right"></i>
-                    <span>Edit #{{ quotation_rows.0.id }}</span>
+        <!-- ===== TABLE VIEW ===== -->
+        <div class="rows-card" id="tableView">
+            <div class="rows-card-header">
+                <div class="card-header-left">
+                    <h3><i class="bi bi-list-check"></i>Line Items</h3>
+                    <span class="count-badge" id="visibleCount">{{ row_count }}</span>
                 </div>
-            </div>
-        </div>
-        <div class="quote-header-right">
-            <!-- Auto-save Status -->
-            <div class="autosave-status saved" id="autosaveStatus">
-                <span class="status-dot"></span>
-                <span class="status-text" id="autosaveText">All changes saved</span>
-                <span class="status-time" id="autosaveTime">Just now</span>
-            </div>
-            
-            <div class="completion-badge" id="completionBadge">
-                <i class="bi bi-pie-chart"></i>
-                <span>Completion: <span class="percentage" id="completionPercentage">0%</span></span>
-            </div>
-            
-            <div class="edit-badge">
-                <i class="bi bi-pencil"></i>
-                Edit Mode
-            </div>
-        </div>
-    </div>
-
-    <!-- ========== Quick Actions Bar ========== -->
-    <div class="quick-actions-bar">
-        <span class="quick-action-label">Quick Actions:</span>
-        
-        <button type="button" class="quick-action-btn" onclick="forceSave()" title="Force save now (Ctrl+S)">
-            <i class="bi bi-cloud-upload"></i> Save Now
-        </button>
-        
-        <button type="button" class="quick-action-btn" onclick="openTemplateModal()">
-            <i class="bi bi-lightning"></i> Templates
-        </button>
-        
-        <button type="button" class="quick-action-btn" onclick="addRow()">
-            <i class="bi bi-plus-lg"></i> Add Row
-        </button>
-        
-        <button type="button" class="quick-action-btn" onclick="addMultipleRows()">
-            <i class="bi bi-plus-circle-dotted"></i> Add 5 Rows
-        </button>
-        
-        <div class="quick-action-divider"></div>
-        
-        <button type="button" class="quick-action-btn" onclick="validateAllRows()">
-            <i class="bi bi-check2-all"></i> Validate
-        </button>
-        
-        <button type="button" class="quick-action-btn" onclick="highlightEmptyFields()">
-            <i class="bi bi-exclamation-triangle"></i> Show Empty
-        </button>
-        
-        <div class="quick-action-divider"></div>
-        
-        <button type="button" class="quick-action-btn" onclick="exportDraft()">
-            <i class="bi bi-download"></i> Export
-        </button>
-        
-        <button type="button" class="quick-action-btn" onclick="importDraft()">
-            <i class="bi bi-upload"></i> Import
-        </button>
-        
-        <div class="quick-action-divider"></div>
-        
-        <span style="font-size: 0.65rem; color: var(--quote-gray-500);">
-            <span class="kbd">Ctrl+S</span> Save | <span class="kbd">Ctrl+N</span> Add | <span class="kbd">Ctrl+D</span> Duplicate
-        </span>
-    </div>
-
-    <!-- ========== Main Card ========== -->
-    <div class="quote-card">
-        <form method="post" id="quotationForm" novalidate>
-            {% csrf_token %}
-            <input type="hidden" name="csrfmiddlewaretoken" id="csrfToken" value="{{ csrf_token }}">
-            <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="handleImport(event)">
-
-            <!-- ========== Client Info Section ========== -->
-            <div class="client-section">
-                <div class="client-section-header">
-                    <div class="client-section-title">
-                        <i class="bi bi-building"></i>
-                        <span>Client & Project Details</span>
-                    </div>
-                    <div class="section-status complete" id="clientSectionStatus">
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>Complete</span>
-                    </div>
-                </div>
-                <div class="client-grid">
-                    <div class="form-group">
-                        <label class="form-label-modern">
-                            Client Name <span class="required">*</span>
-                        </label>
-                        <div class="input-wrapper valid" id="clientWrapper">
-                            <i class="bi bi-person input-icon"></i>
-                            <select name="client" class="form-select-modern valid" id="clientSelect" required onchange="validateClientSection()">
-                                <option value="">Select a client...</option>
-                                {% for c in clients %}
-                                <option value="{{ c.id }}" {% if c.id == quotation_rows.0.client.id %}selected{% endif %}>
-                                    {{ c.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            <i class="bi bi-chevron-down select-arrow"></i>
-                            <i class="bi bi-check-circle-fill validation-icon valid" id="clientValidation"></i>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label-modern">
-                            Estimate Start Date <span class="required">*</span>
-                        </label>
-                        <div class="input-wrapper valid" id="startDateWrapper">
-                            <i class="bi bi-calendar3 input-icon"></i>
-                            <input type="date" 
-                                   name="estimate_start_date" 
-                                   class="form-input-modern valid" 
-                                   id="startDate" 
-                                   value="{{ quotation_rows.0.client.estimate_start_date|date:'Y-m-d' }}"
-                                   required 
-                                   onchange="validateClientSection(); autoFillEndDate()">
-                            <i class="bi bi-check-circle-fill validation-icon valid" id="startDateValidation"></i>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label-modern">
-                            Estimate End Date <span class="required">*</span>
-                        </label>
-                        <div class="input-wrapper valid" id="endDateWrapper">
-                            <i class="bi bi-calendar-check input-icon"></i>
-                            <input type="date" 
-                                   name="estimate_end_date" 
-                                   class="form-input-modern valid" 
-                                   id="endDate" 
-                                   value="{{ quotation_rows.0.client.estimate_end_date|date:'Y-m-d' }}"
-                                   required 
-                                   onchange="validateClientSection()">
-                            <i class="bi bi-check-circle-fill validation-icon valid" id="endDateValidation"></i>
-                        </div>
-                    </div>
+                <div class="card-header-right">
+                    <span class="results-text" id="resultsText"></span>
                 </div>
             </div>
 
-            <!-- ========== Table Section ========== -->
-            <div class="table-section">
-                <div class="table-header">
-                    <div class="table-header-left">
-                        <h3>
-                            <i class="bi bi-list-check"></i>
-                            Quotation Items
-                        </h3>
-                        <span class="item-count-badge" id="itemCountBadge">{{ quotation_rows|length }}</span>
-                        <div class="validation-summary" id="validationSummary">
-                            <div class="validation-item valid" id="validRowsCount">
-                                <i class="bi bi-check-circle-fill"></i>
-                                <span>0 complete</span>
-                            </div>
-                            <div class="validation-item invalid" id="invalidRowsCount">
-                                <i class="bi bi-exclamation-circle-fill"></i>
-                                <span>0 incomplete</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="table-actions">
-                        <button type="button" class="btn-table-action primary" onclick="addRow()">
-                            <i class="bi bi-plus-lg"></i>
-                            Add Item
-                        </button>
-                    </div>
-                </div>
+            <div class="table-wrap">
+                <table class="rows-table" id="mainTable">
+                    <thead>
+                        <tr>
+                            <th class="th-num">#</th>
+                            <th class="th-floor">
+                                <i class="bi bi-building"></i> Floor
+                            </th>
+                            <th class="th-location">
+                                <i class="bi bi-geo-alt"></i> Location
+                            </th>
+                            <th class="th-element">
+                                <i class="bi bi-box"></i> Element
+                            </th>
+                            <th class="th-desc">
+                                <i class="bi bi-card-text"></i> Description
+                            </th>
+                            <th class="th-material">
+                                <i class="bi bi-layers"></i> Material
+                            </th>
+                            <th class="th-brand">
+                                <i class="bi bi-tag"></i> Brand
+                            </th>
+                            <th class="th-size text-center">
+                                <i class="bi bi-rulers"></i> L × W
+                            </th>
+                            <th class="th-qty text-center">Qty</th>
+                            <th class="th-rate text-end">Rate</th>
+                            <th class="th-total text-end">Total</th>
+                            <th class="th-action text-center">Edit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        {% regroup rows by floor as floor_groups %}
+                        {% for floor_group in floor_groups %}
 
-                <div class="table-container">
-                    <table class="quote-table" id="quoteTable">
-                        <thead>
-                            <tr>
-                                <th style="min-width: 50px;" class="text-center">Status</th>
-                                <th style="min-width: 140px;">Floor / Location</th>
-                                <th style="min-width: 160px;">Element Details</th>
-                                <th style="min-width: 80px;" class="text-center">Image</th>
-                                <th style="min-width: 200px;">Series & Rate</th>
-                                <th style="min-width: 160px;">Finish & Brand</th>
-                                <th style="min-width: 100px;" class="text-center">Spec</th>
-                                <th style="min-width: 150px;" class="text-center">Dimensions</th>
-                                <th style="min-width: 60px;" class="text-center">Qty</th>
-                                <th style="min-width: 120px;" class="total-col">Line Total</th>
-                                <th style="min-width: 70px;" class="action-col">Actions</th>
+                            <!-- Floor Group Header -->
+                            <tr class="floor-group-row" data-floor="{{ floor_group.grouper }}">
+                                <td colspan="12">
+                                    <div class="floor-group-header">
+                                        <div class="floor-group-left">
+                                            <div class="floor-group-icon">
+                                                <i class="bi bi-building"></i>
+                                            </div>
+                                            <span class="floor-group-name">
+                                                {{ floor_group.grouper|upper }}
+                                            </span>
+                                            <span class="floor-group-count">
+                                                {{ floor_group.list|length }} items
+                                            </span>
+                                        </div>
+                                        <div class="floor-group-total">
+                                            <!-- Total per floor calculated via JS -->
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {% for q in quotation_rows %}
-                            <tr class="quote-row" data-row-index="{{ forloop.counter0 }}">
-                                <!-- Row Status -->
-                                <td class="text-center">
-                                    <div class="row-status missing-fields-tooltip">
-                                        <div class="row-status-icon incomplete">
-                                            <i class="bi bi-exclamation"></i>
+
+                            {% for r in floor_group.list %}
+                            <tr class="row-item {% if r.end %}row-end-floor{% endif %}"
+                                data-floor="{{ r.floor }}"
+                                data-location="{{ r.location|lower }}"
+                                data-element="{{ r.element|lower }}"
+                                data-material="{{ r.core_material|lower }} {{ r.finish_material|lower }}"
+                                data-brand="{{ r.brand|lower }}"
+                                data-spec="{{ r.specification|lower|truncatechars:100 }}">
+
+                                <!-- # -->
+                                <td class="td-num">
+                                    <span class="row-num">{{ forloop.counter }}</span>
+                                </td>
+
+                                <!-- Floor -->
+                                <td class="td-floor">
+                                    <span class="floor-badge">{{ r.floor }}</span>
+                                </td>
+
+                                <!-- Location -->
+                                <td class="td-location">
+                                    <span class="location-pill">
+                                        <i class="bi bi-geo-alt-fill"></i>
+                                        {{ r.location }}
+                                    </span>
+                                </td>
+
+                                <!-- Element -->
+                                <td class="td-element">
+                                    <div class="element-cell">
+                                        {% if r.image %}
+                                        <div class="thumb-wrap">
+                                            <img src="{{ r.image.image.url }}" 
+                                                 class="cell-thumb"
+                                                 onclick="openImageModal('{{ r.image.image.url }}', '{{ r.element }}')"
+                                                 title="Click to enlarge">
+                                            <span class="thumb-overlay">
+                                                <i class="bi bi-zoom-in"></i>
+                                            </span>
                                         </div>
-                                        <span class="row-status-text incomplete">0/8</span>
-                                        <div class="missing-fields-list">
-                                            Checking...
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <!-- Floor / Location -->
-                                <td>
-                                    <input name="floor[]" 
-                                           class="table-input primary floor-input" 
-                                           placeholder="Floor" 
-                                           value="{{ q.floor|default:'' }}"
-                                           required 
-                                           data-field="Floor" 
-                                           oninput="validateRow(this)">
-                                    <input name="location[]" 
-                                           list="locationList" 
-                                           class="table-input small" 
-                                           placeholder="Location" 
-                                           value="{{ q.location|default:'' }}"
-                                           required 
-                                           style="margin-top: 0.375rem;" 
-                                           data-field="Location" 
-                                           oninput="validateRow(this)">
-                                    <div class="floor-checkbox-wrapper">
-                                        <input type="checkbox" 
-                                               class="floor-end-toggle"
-                                               {% if q.end %}checked{% endif %}>
-                                        <label>Move to end</label>
-                                    </div>
-                                    <input type="hidden" 
-                                           name="floor_end_{{ forloop.counter0 }}" 
-                                           class="floor-end-hidden" 
-                                           value="{% if q.end %}1{% else %}0{% endif %}">
-                                </td>
-
-                                <!-- Element Details -->
-                                <td>
-                                    <input name="element[]" 
-                                           list="elementList" 
-                                           class="table-input primary" 
-                                           placeholder="e.g. Wardrobe" 
-                                           value="{{ q.element|default:'' }}"
-                                           required 
-                                           data-field="Element" 
-                                           oninput="validateRow(this)">
-                                    <input name="unit[]" 
-                                           class="table-input small" 
-                                           placeholder="Unit (sqft)" 
-                                           value="{{ q.unit|default:'sqft' }}"
-                                           style="margin-top: 0.375rem;">
-                                </td>
-
-                                <!-- Image -->
-                                <td class="text-center">
-                                    <input type="hidden" 
-                                           name="image[]" 
-                                           class="selected-image-id" 
-                                           value="{{ q.image.id|default:'' }}">
-                                    <div class="image-preview-wrapper">
-                                        {% if q.image %}
-                                        <img class="image-preview selected-image-preview" 
-                                             src="{{ q.image.image.url }}" 
-                                             onclick="openPreviewModal(this)"
-                                             style="display: block;">
                                         {% else %}
-                                        <img class="image-preview selected-image-preview" 
-                                             onclick="openPreviewModal(this)"
-                                             style="display: none;">
+                                        <div class="thumb-placeholder">
+                                            <i class="bi bi-image"></i>
+                                        </div>
                                         {% endif %}
-                                        <div class="image-actions">
-                                            <button type="button" 
-                                                    class="image-btn select" 
-                                                    onclick="openImageModal(this)" 
-                                                    title="Select Image">
-                                                <i class="bi bi-image"></i>
-                                            </button>
-                                            <button type="button" 
-                                                    class="image-btn clear" 
-                                                    onclick="clearSelectedImage(this)" 
-                                                    title="Clear">
-                                                <i class="bi bi-trash3"></i>
-                                            </button>
+                                        <div class="element-info">
+                                            <span class="element-name">{{ r.element }}</span>
+                                            <span class="element-unit">{{ r.unit }}</span>
                                         </div>
                                     </div>
                                 </td>
 
-                                <!-- Series & Rate (Hybrid) -->
-                                <td>
-                                    <div class="hybrid-rate-container">
-                                        <div class="rate-mode-toggle">
-                                            <button type="button" class="rate-mode-btn active" onclick="setRateMode(this, 'preset')">Preset</button>
-                                            <button type="button" class="rate-mode-btn" onclick="setRateMode(this, 'manual')">Manual</button>
-                                        </div>
-                                        
-                                        <div class="rate-select-wrapper rate-preset-wrapper">
-                                            <select class="table-select fullsemi" 
-                                                    name="full_semi[]" 
-                                                    onchange="updateRateFromSelect(this); validateRow(this)" 
-                                                    data-field="Series">
-                                                <option value="" data-rate="0">Select Series</option>
-                                                {% for f in fullsemis %}
-                                                <option value="{{ f.id }}" 
-                                                        data-rate="{{ f.rate }}"
-                                                        {% if q.full_semi and f.id == q.full_semi.id %}selected{% endif %}>
-                                                    {{ f.name }} (₹{{ f.rate }}/sqft)
-                                                </option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        
-                                        <div class="rate-manual-input">
-                                            <input type="number" 
-                                                   class="table-input manual-rate" 
-                                                   placeholder="Enter rate/sqft" 
-                                                   oninput="updateRateManual(this); validateRow(this)" 
-                                                   data-field="Rate">
-                                        </div>
-                                        
-                                        <input type="hidden" name="rate[]" class="final-rate" value="{{ q.price|default:'0' }}">
-                                        
-                                        <div class="rate-display">
-                                            <span class="label">Rate:</span>
-                                            <span class="value rate-value">₹{{ q.price|default:'0' }}/sqft</span>
-                                        </div>
-                                        
-                                        <input name="core_material[]" 
-                                               list="coreMaterialList" 
-                                               class="table-input small" 
-                                               placeholder="Core Material" 
-                                               value="{{ q.core_material|default:'' }}"
-                                               style="margin-top: 0.375rem;" 
-                                               data-field="Core" 
-                                               oninput="validateRow(this)">
+                                <!-- Description / Specification -->
+                                <td class="td-desc">
+                                    {% if r.specification %}
+                                    <div class="spec-cell">
+                                        <p class="spec-preview">{{ r.specification|truncatechars:80 }}</p>
+                                        {% if r.specification|length > 80 %}
+                                        <button class="spec-read-more" 
+                                                onclick="showSpec(this, `{{ r.specification|escapejs }}`)" 
+                                                type="button">
+                                            Read more
+                                        </button>
+                                        {% endif %}
                                     </div>
+                                    {% else %}
+                                    <span class="no-spec">—</span>
+                                    {% endif %}
                                 </td>
 
-                                <!-- Finish & Brand -->
-                                <td>
-                                    <input name="finish_material[]" 
-                                           list="finishList" 
-                                           class="table-input" 
-                                           placeholder="Finish" 
-                                           value="{{ q.finish_material|default:'' }}"
-                                           required 
-                                           data-field="Finish" 
-                                           oninput="validateRow(this)">
-                                    <input name="brand[]" 
-                                           list="brandList" 
-                                           class="table-input small" 
-                                           placeholder="Brand" 
-                                           value="{{ q.brand|default:'' }}"
-                                           style="margin-top: 0.375rem;">
+                                <!-- Material -->
+                                <td class="td-material">
+                                    <span class="material-name">{{ r.core_material }}</span>
+                                    {% if r.finish_material %}
+                                    <span class="material-finish">{{ r.finish_material }}</span>
+                                    {% endif %}
                                 </td>
 
-                                <!-- Specification -->
-                                <td class="text-center">
-                                    <button type="button" 
-                                            class="spec-btn {% if q.specification %}has-content{% endif %}" 
-                                            onclick="openSpecModal(this)">
-                                        <i class="bi bi-card-text"></i>
-                                        Specs
-                                    </button>
-                                    <textarea name="specification[]" class="d-none spec-text">{{ q.specification|default:'' }}</textarea>
+                                <!-- Brand -->
+                                <td class="td-brand">
+                                    {% if r.brand %}
+                                    <span class="brand-tag">{{ r.brand }}</span>
+                                    {% else %}
+                                    <span class="no-spec">—</span>
+                                    {% endif %}
                                 </td>
 
-                                <!-- Dimensions -->
-                                <td>
-                                    <div class="dimension-group">
-                                        <input class="dimension-input length" 
-                                               name="length[]" 
-                                               placeholder="L" 
-                                               value="{{ q.length }}"
-                                               required 
-                                               data-field="Length" 
-                                               oninput="validateRow(this); calcAll()">
-                                        <span class="dimension-separator">×</span>
-                                        <input class="dimension-input width" 
-                                               name="width[]" 
-                                               placeholder="W" 
-                                               value="{{ q.width }}"
-                                               data-field="Width" 
-                                               oninput="calcAll()">
+                                <!-- Size -->
+                                <td class="td-size text-center">
+                                    <div class="size-display">
+                                        <span class="size-val">{{ r.length }}</span>
+                                        <span class="size-x">×</span>
+                                        <span class="size-val">{{ r.width }}</span>
                                     </div>
-                                    <div class="area-display">
-                                        Area: <span class="area">{{ q.area }}</span> sqft
+                                    <div class="area-chip">
+                                        {{ r.area|floatformat:1 }} sqft
                                     </div>
-                                    <span class="d-none price">{{ q.price }}</span>
                                 </td>
 
                                 <!-- Qty -->
-                                <td class="text-center">
-                                    <input class="qty-input qty" 
-                                           name="qty[]" 
-                                           value="{{ q.qty }}"
-                                           required 
-                                           oninput="calcAll()">
+                                <td class="td-qty text-center">
+                                    <span class="qty-badge">{{ r.qty }}</span>
+                                </td>
+
+                                <!-- Rate -->
+                                <td class="td-rate text-end">
+                                    <span class="rate-val">₹{{ r.price|floatformat:0 }}</span>
+                                    <span class="rate-unit">/{{ r.unit }}</span>
                                 </td>
 
                                 <!-- Total -->
-                                <td class="total-col">
-                                    <span class="line-total total">₹{{ q.total }}</span>
+                                <td class="td-total text-end">
+                                    <span class="total-val">₹{{ r.total|floatformat:0 }}</span>
                                 </td>
 
-                                <!-- Actions -->
-                                <td class="action-col">
-                                    <div class="row-actions">
-                                        <button type="button" 
-                                                class="row-action-btn copy-prev" 
-                                                onclick="copyFromPreviousRow(this)" 
-                                                title="Copy from above">
-                                            <i class="bi bi-arrow-down-circle"></i>
-                                        </button>
-                                        <button type="button" 
-                                                class="row-action-btn duplicate" 
-                                                onclick="duplicateRow(this)" 
-                                                title="Duplicate">
-                                            <i class="bi bi-files"></i>
-                                        </button>
-                                        <button type="button" 
-                                                class="row-action-btn delete" 
-                                                onclick="removeRow(this)" 
-                                                title="Delete">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                    </div>
+                                <!-- Edit -->
+                                <td class="td-action text-center">
+                                    <a href="{% url 'quotation_row_edit' r.id %}" 
+                                       class="edit-btn"
+                                       title="Edit row #{{ forloop.counter }}">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
                                 </td>
                             </tr>
                             {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
-            <!-- ========== Footer Section ========== -->
-            <div class="quote-footer">
-                <button type="button" class="add-item-btn" onclick="addRow()">
-                    <i class="bi bi-plus-circle"></i>
-                    Add New Item
-                </button>
+                        {% endfor %}
+                    </tbody>
 
-                <div class="grand-total-card">
-                    <div class="grand-total-info">
-                        <div class="grand-total-label">Grand Total</div>
-                        <div class="grand-total-value" id="grandTotalDisplay">₹0.00</div>
-                    </div>
-                    <div class="grand-total-icon">
-                        <i class="bi bi-wallet2"></i>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
+                    <tfoot>
+                        <tr class="grand-row">
+                            <td colspan="10" class="text-end">
+                                <strong>Grand Total</strong>
+                            </td>
+                            <td class="text-end">
+                                <strong class="grand-val">₹{{ subtotal|floatformat:0 }}</strong>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
 
-<!-- ========== Floating Action Bar ========== -->
-<div class="floating-action-bar visible" id="floatingActionBar">
-    <div class="floating-bar-info">
-        <div class="floating-stat">
-            <div class="floating-stat-value" id="floatingItemCount">{{ quotation_rows|length }}</div>
-            <div class="floating-stat-label">Items</div>
-        </div>
-        <div class="floating-stat">
-            <div class="floating-stat-value" id="floatingValidCount">0</div>
-            <div class="floating-stat-label">Complete</div>
-        </div>
-        <div class="floating-stat">
-            <div class="floating-stat-value amount" id="floatingTotal">₹0</div>
-            <div class="floating-stat-label">Total</div>
-        </div>
-    </div>
-    <div class="floating-bar-actions">
-        <a href="{% url 'quotation_index' %}" class="btn-discard">
-            <i class="bi bi-x-circle"></i>
-            Cancel
-        </a>
-        <button type="button" class="btn-save" id="saveBtn" onclick="submitForm()">
-            <i class="bi bi-check2-all"></i>
-            Update Quotation
-            <span class="validation-warning">⚠️</span>
-        </button>
-    </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     MODALS
-═══════════════════════════════════════════════════════════════════════════ -->
-
-<!-- Template Modal -->
-<div class="modal fade modal-modern" id="templateModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-lightning"></i>
-                    Quick Templates
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="template-grid">
-                    <div class="template-item" onclick="applyTemplate('wardrobe')">
-                        <i class="bi bi-door-closed"></i>
-                        <h6>Wardrobe</h6>
-                        <p>Standard wardrobe setup</p>
-                    </div>
-                    <div class="template-item" onclick="applyTemplate('kitchen')">
-                        <i class="bi bi-cup-hot"></i>
-                        <h6>Kitchen</h6>
-                        <p>Modular kitchen items</p>
-                    </div>
-                    <div class="template-item" onclick="applyTemplate('tvunit')">
-                        <i class="bi bi-tv"></i>
-                        <h6>TV Unit</h6>
-                        <p>Entertainment unit</p>
-                    </div>
-                    <div class="template-item" onclick="applyTemplate('bedroom')">
-                        <i class="bi bi-house-heart"></i>
-                        <h6>Full Bedroom</h6>
-                        <p>Wardrobe + Loft + Dresser</p>
-                    </div>
-                    <div class="template-item" onclick="applyTemplate('living')">
-                        <i class="bi bi-lamp"></i>
-                        <h6>Living Room</h6>
-                        <p>TV Unit + Storage</p>
-                    </div>
-                    <div class="template-item" onclick="applyTemplate('study')">
-                        <i class="bi bi-book"></i>
-                        <h6>Study Room</h6>
-                        <p>Table + Bookshelf</p>
-                    </div>
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display:none;">
+                    <i class="bi bi-search"></i>
+                    <h4>No results found</h4>
+                    <p>Try different keywords or clear the search</p>
+                    <button class="btn-clear-search" onclick="clearSearch()">
+                        Clear Search
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Specification Modal -->
-<div class="modal fade modal-modern" id="specModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-card-text"></i>
-                    Edit Specification
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <textarea id="specModalText" class="modal-textarea" placeholder="Enter product specification..."></textarea>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn secondary" onclick="copySpecModal()">
-                    <i class="bi bi-clipboard"></i> Copy
-                </button>
-                <button class="modal-btn secondary" onclick="pasteSpecModal()">
-                    <i class="bi bi-clipboard-check"></i> Paste
-                </button>
-                <button class="modal-btn ai" onclick="generateSpecs(this)">
-                    <i class="bi bi-stars"></i> AI Generate
-                </button>
-                <button class="modal-btn success" onclick="saveSpecModal()">
-                    <i class="bi bi-check-lg"></i> Save
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+        <!-- ===== CARD VIEW ===== -->
+        <div class="card-view" id="cardView" style="display:none;">
+            {% regroup rows by floor as floor_groups %}
+            {% for floor_group in floor_groups %}
+            <div class="floor-section" data-floor="{{ floor_group.grouper }}">
+                <div class="floor-section-header">
+                    <i class="bi bi-building"></i>
+                    {{ floor_group.grouper|upper }}
+                    <span>({{ floor_group.list|length }})</span>
+                </div>
+                <div class="cards-grid">
+                    {% for r in floor_group.list %}
+                    <div class="item-card {% if r.end %}item-card-end{% endif %}"
+                         data-floor="{{ r.floor }}"
+                         data-location="{{ r.location|lower }}"
+                         data-element="{{ r.element|lower }}"
+                         data-material="{{ r.core_material|lower }}"
+                         data-brand="{{ r.brand|lower }}">
 
-<!-- Image Selection Modal -->
-<div class="modal fade modal-modern" id="imageModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-images"></i>
-                    Select Image
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="image-grid" id="imageGrid">
-                    {% for i in images %}
-                    <div class="image-grid-item" onclick="selectImage(this, '{{ i.id }}', '{{ i.image.url }}')">
-                        <img src="{{ i.image.url }}" alt="{{ i.name }}">
+                        <div class="item-card-top">
+                            {% if r.image %}
+                            <img src="{{ r.image.image.url }}" 
+                                 class="item-card-img"
+                                 onclick="openImageModal('{{ r.image.image.url }}', '{{ r.element }}')"
+                                 alt="{{ r.element }}">
+                            {% else %}
+                            <div class="item-card-img-placeholder">
+                                <i class="bi bi-image"></i>
+                            </div>
+                            {% endif %}
+
+                            <div class="item-card-badges">
+                                <span class="card-floor-badge">{{ r.floor }}</span>
+                                <span class="card-loc-badge">{{ r.location }}</span>
+                            </div>
+                        </div>
+
+                        <div class="item-card-body">
+                            <div class="item-card-name">{{ r.element }}</div>
+                            
+                            {% if r.specification %}
+                            <div class="item-card-spec">{{ r.specification|truncatechars:70 }}</div>
+                            {% endif %}
+
+                            <div class="item-card-meta">
+                                <span>
+                                    <i class="bi bi-layers"></i>
+                                    {{ r.core_material|truncatechars:20 }}
+                                </span>
+                                <span>
+                                    <i class="bi bi-palette"></i>
+                                    {{ r.finish_material|truncatechars:15 }}
+                                </span>
+                            </div>
+
+                            <div class="item-card-dims">
+                                <span class="dim-item">
+                                    <i class="bi bi-rulers"></i>
+                                    {{ r.length }}×{{ r.width }} {{ r.unit }}
+                                </span>
+                                <span class="dim-item">
+                                    <i class="bi bi-123"></i>
+                                    Qty: {{ r.qty }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="item-card-footer">
+                            <div class="item-card-price">
+                                <span class="card-rate">₹{{ r.price|floatformat:0 }}/{{ r.unit }}</span>
+                                <span class="card-total">₹{{ r.total|floatformat:0 }}</span>
+                            </div>
+                            <a href="{% url 'quotation_row_edit' r.id %}" class="card-edit-btn">
+                                <i class="bi bi-pencil-square"></i>
+                                Edit
+                            </a>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
-            <div class="modal-footer">
-                <form method="post" enctype="multipart/form-data" action="{% url 'image_create' %}" class="d-flex gap-2 w-100">
-                    {% csrf_token %}
-                    <input type="text" name="name" class="form-control" placeholder="Image name" required>
-                    <input type="file" name="image" class="form-control" required>
-                    <button class="btn btn-primary">Upload</button>
-                </form>
-            </div>
+            {% endfor %}
         </div>
+
     </div>
 </div>
 
-<!-- Image Preview Modal -->
-<div class="modal fade" id="imagePreviewModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="background: transparent; border: none;">
-            <div class="modal-body text-center p-0">
-                <img id="previewModalImg" src="" style="max-width: 100%; max-height: 80vh; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
-            </div>
-        </div>
+<!-- ===== Image Lightbox ===== -->
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+    <div class="lightbox-box" onclick="event.stopPropagation()">
+        <button class="lightbox-close" onclick="closeLightbox()">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <img id="lightboxImg" src="" alt="">
+        <div class="lightbox-caption" id="lightboxCaption"></div>
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════════════════════════════════════════════════ -->
+<!-- ===== Spec Modal ===== -->
+<div class="spec-overlay" id="specOverlay" onclick="closeSpec()">
+    <div class="spec-modal" onclick="event.stopPropagation()">
+        <div class="spec-modal-header">
+            <h5><i class="bi bi-card-text"></i> Specification</h5>
+            <button onclick="closeSpec()" class="spec-close">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="spec-modal-body" id="specModalBody"></div>
+    </div>
+</div>
 
-<!-- Previous Specs for AI -->
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --primary-light: #eef2ff;
+        --success: #10b981;
+        --success-dark: #059669;
+        --success-light: #d1fae5;
+        --warning: #f59e0b;
+        --warning-light: #fef3c7;
+        --danger: #ef4444;
+        --danger-light: #fee2e2;
+        --info: #3b82f6;
+        --info-light: #dbeafe;
+        --purple: #8b5cf6;
+        --purple-light: #ede9fe;
+        --orange: #f97316;
+        --orange-light: #ffedd5;
+        --g50: #f9fafb;
+        --g100: #f3f4f6;
+        --g200: #e5e7eb;
+        --g300: #d1d5db;
+        --g400: #9ca3af;
+        --g500: #6b7280;
+        --g600: #4b5563;
+        --g700: #374151;
+        --g800: #1f2937;
+        --g900: #111827;
+        --radius-sm: 6px;
+        --radius: 10px;
+        --radius-lg: 14px;
+        --radius-xl: 20px;
+        --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+        --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+        --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+        --transition: all 0.2s ease;
+    }
+
+    .qtn-list-page {
+        background: var(--g50);
+        min-height: 100vh;
+        padding-bottom: 40px;
+    }
+
+    /* ===== Page Header ===== */
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:red;
+        border: 1px solid var(--g200);
+        border-radius: var(--radius);
+        color: #fff;
+        text-decoration: none;
+        transition: var(--transition);
+        flex-shrink: 0;
+    }
+
+    .back-btn:hover {
+        background:var(--warning);
+        transform: translateX(-2px);
+        color: #fff;
+    }
+
+    .client-avatar {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .header-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .header-text h1 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--g900);
+        margin: 0;
+    }
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        background: var(--success-light);
+        color: var(--success-dark);
+        font-size: 0.7rem;
+        font-weight: 600;
+        border-radius: 50px;
+    }
+
+    .chip-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--success);
+        border-radius: 50%;
+        animation: pulseDot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulseDot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .header-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 4px;
+        font-size: 0.8rem;
+        color: var(--g500);
+        flex-wrap: wrap;
+    }
+
+    .header-meta span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .header-meta i {
+        font-size: 0.75rem;
+    }
+
+    .dot { color: var(--g300); }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .total-pill {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        padding: 8px 16px;
+        background: var(--success-light);
+        border-radius: var(--radius);
+        border: 1px solid rgba(16,185,129,0.2);
+    }
+
+    .total-pill-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--success-dark);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .total-pill-value {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--success-dark);
+    }
+
+    .action-btn {
+        padding: 10px 18px;
+        border-radius: var(--radius);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: var(--transition);
+    }
+
+    .action-btn.outline {
+        background: var(--primary);
+        color: #fff;
+    }
+
+    .action-btn.outline:hover {
+        scale: 1.05;
+        background: var(--primary-dark);
+    }
+
+    .action-btn.primary {
+        background: var(--danger);
+        color: #fff;
+        border: none;
+        box-shadow: 0 4px 12px rgba(239,68,68,0.2);
+    }
+
+    .action-btn.primary:hover {
+        background: #dc2626;
+        transform: translateY(-1px);
+    }
+
+    /* ===== Stats Strip ===== */
+    .stats-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .stat-card {
+        background: #fff;
+        border: 1px solid var(--g200);
+        border-radius: var(--radius-lg);
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition);
+    }
+
+    .stat-card:hover {
+        box-shadow: var(--shadow);
+        transform: translateY(-1px);
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .stat-icon.blue { background: var(--info-light); color: var(--info); }
+    .stat-icon.green { background: var(--success-light); color: var(--success); }
+    .stat-icon.purple { background: var(--purple-light); color: var(--purple); }
+    .stat-icon.orange { background: var(--orange-light); color: var(--orange); }
+
+    .stat-num {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--g900);
+        line-height: 1;
+    }
+
+    .stat-lbl {
+        font-size: 0.72rem;
+        color: var(--g400);
+        font-weight: 500;
+        margin-top: 3px;
+    }
+
+    /* ===== Filter Bar ===== */
+    .filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .search-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--g400);
+        font-size: 0.9rem;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 11px 44px 11px 40px;
+        border: 2px solid var(--g200);
+        border-radius: var(--radius);
+        font-size: 0.88rem;
+        color: var(--g800);
+        background: #fff;
+        outline: none;
+        transition: var(--transition);
+    }
+
+    .search-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .search-clear {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--g200);
+        border: none;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--g600);
+        font-size: 0.75rem;
+    }
+
+    .search-clear:hover { background: var(--g300); }
+
+    .filter-chips {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .filter-chip {
+        padding: 7px 14px;
+        background: #fff;
+        border: 1.5px solid var(--g200);
+        border-radius: 50px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--g600);
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .filter-chip span {
+        background: var(--g100);
+        color: var(--g500);
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    .filter-chip:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .filter-chip.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+
+    .filter-chip.active span {
+        background: rgba(255,255,255,0.25);
+        color: #fff;
+    }
+
+    .view-toggle {
+        display: flex;
+        background: #fff;
+        border: 1px solid var(--g200);
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+
+    .view-btn {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        color: var(--g400);
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 0.95rem;
+    }
+
+    .view-btn:hover { color: var(--primary); background: var(--g50); }
+    .view-btn.active { background: var(--primary); color: #fff; }
+
+    /* ===== Rows Card ===== */
+    .rows-card {
+        background: #fff;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--g200);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+
+    .rows-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--g100);
+        background: var(--g50);
+    }
+
+    .card-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .rows-card-header h3 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--g800);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .count-badge {
+        background: var(--primary-light);
+        color: var(--primary);
+        padding: 3px 10px;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    .results-text {
+        font-size: 0.78rem;
+        color: var(--g400);
+    }
+
+    /* ===== Table ===== */
+    .table-wrap {
+        overflow-x: auto;
+    }
+
+    .rows-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1100px;
+    }
+
+    /* Sticky Header */
+    .rows-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .rows-table thead th {
+        padding: 11px 12px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--g500);
+        background: var(--g800);
+        color: rgba(255,255,255,0.7);
+        white-space: nowrap;
+        border: none;
+    }
+
+    .rows-table thead th i {
+        opacity: 0.7;
+        margin-right: 4px;
+    }
+
+    /* Floor Group Row */
+    .floor-group-row td {
+        padding: 0;
+        background: transparent;
+        border: none;
+    }
+
+    .floor-group-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: linear-gradient(to right, var(--primary-light), #fff);
+        border-top: 2px solid var(--primary);
+        border-bottom: 1px solid var(--g200);
+        margin-top: 4px;
+    }
+
+    .floor-group-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .floor-group-icon {
+        width: 30px;
+        height: 30px;
+        background: var(--primary);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 0.85rem;
+    }
+
+    .floor-group-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        letter-spacing: 0.5px;
+    }
+
+    .floor-group-count {
+        font-size: 0.72rem;
+        color: var(--primary);
+        background: rgba(99,102,241,0.1);
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+
+    /* Item Row */
+    .row-item td {
+        padding: 12px;
+        border-bottom: 1px solid var(--g100);
+        vertical-align: middle;
+    }
+
+    .row-item:hover td {
+        background: rgba(99,102,241,0.02);
+    }
+
+    .row-item:last-child td {
+        border-bottom: none;
+    }
+
+    .row-end-floor td {
+        border-bottom: 2px solid var(--warning) !important;
+        background: rgba(245,158,11,0.02) !important;
+    }
+
+    /* Hidden rows */
+    .row-item.hidden,
+    .floor-group-row.hidden {
+        display: none;
+    }
+
+    /* ===== Cell Styles ===== */
+    .td-num { width: 48px; }
+
+    .row-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        background: var(--g100);
+        border-radius: 50%;
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--g500);
+    }
+
+    /* Floor Badge */
+    .floor-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        background: var(--primary-light);
+        color: var(--primary-dark);
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    /* Location Pill */
+    .location-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        background: var(--g100);
+        color: var(--g600);
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .location-pill i {
+        font-size: 0.7rem;
+        color: var(--danger);
+    }
+
+    /* Element Cell */
+    .element-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .thumb-wrap {
+        position: relative;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .cell-thumb {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-sm);
+        object-fit: cover;
+        border: 1px solid var(--g200);
+        transition: var(--transition);
+    }
+
+    .thumb-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 0.75rem;
+        opacity: 0;
+        transition: var(--transition);
+    }
+
+    .thumb-wrap:hover .thumb-overlay { opacity: 1; }
+    .thumb-wrap:hover .cell-thumb { transform: scale(1.05); }
+
+    .thumb-placeholder {
+        width: 40px;
+        height: 40px;
+        background: var(--g100);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--g300);
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .element-info { min-width: 0; }
+
+    .element-name {
+        display: block;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--g800);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 130px;
+    }
+
+    .element-unit {
+        display: block;
+        font-size: 0.7rem;
+        color: var(--g400);
+        margin-top: 2px;
+    }
+
+    /* Description Cell */
+    .td-desc { max-width: 200px; }
+
+    .spec-cell {}
+
+    .spec-preview {
+        font-size: 0.78rem;
+        color: var(--g600);
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .spec-read-more {
+        background: none;
+        border: none;
+        color: var(--primary);
+        font-size: 0.72rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 2px 0;
+        transition: var(--transition);
+    }
+
+    .spec-read-more:hover { text-decoration: underline; }
+
+    .no-spec {
+        color: var(--g300);
+        font-size: 0.8rem;
+    }
+
+    /* Material */
+    .material-name {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--g700);
+        font-weight: 500;
+    }
+
+    .material-finish {
+        display: block;
+        font-size: 0.72rem;
+        color: var(--g400);
+        margin-top: 2px;
+    }
+
+    /* Brand */
+    .brand-tag {
+        display: inline-block;
+        padding: 3px 8px;
+        background: var(--purple-light);
+        color: var(--purple);
+        border-radius: 5px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    /* Size */
+    .size-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--g700);
+    }
+
+    .size-x {
+        color: var(--g300);
+        font-size: 0.75rem;
+    }
+
+    .area-chip {
+        display: block;
+        text-align: center;
+        font-size: 0.68rem;
+        color: var(--g400);
+        margin-top: 3px;
+    }
+
+    /* Qty */
+    .qty-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        padding: 3px 8px;
+        background: var(--g100);
+        color: var(--g700);
+        border-radius: 5px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    /* Rate */
+    .rate-val {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--g700);
+        display: block;
+    }
+
+    .rate-unit {
+        font-size: 0.65rem;
+        color: var(--g400);
+    }
+
+    /* Total */
+    .total-val {
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: var(--g900);
+    }
+
+    /* Edit Button */
+    .edit-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        background: var(--primary-light);
+        border-radius: var(--radius-sm);
+        color: var(--primary);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 0.88rem;
+    }
+
+    .edit-btn:hover {
+        background: var(--primary);
+        color: #fff;
+        transform: scale(1.08);
+        box-shadow: 0 4px 10px rgba(99,102,241,0.3);
+    }
+
+    /* Grand Row */
+    .grand-row td {
+        padding: 14px 12px;
+        background: var(--g50);
+        border-top: 2px solid var(--g200);
+    }
+
+    .grand-val {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--success-dark);
+    }
+
+    /* Empty State */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 60px 24px;
+        text-align: center;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--g300);
+    }
+
+    .empty-state h4 {
+        font-size: 1rem;
+        color: var(--g600);
+        margin: 0;
+    }
+
+    .empty-state p {
+        font-size: 0.85rem;
+        color: var(--g400);
+        margin: 0;
+    }
+
+    .btn-clear-search {
+        padding: 8px 20px;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 8px;
+    }
+
+    .btn-clear-search:hover { background: var(--primary-dark); }
+
+    /* ===== Card View ===== */
+    .floor-section {
+        margin-bottom: 24px;
+    }
+
+    .floor-section-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+        padding: 10px 16px;
+        background: var(--primary-light);
+        border-radius: var(--radius);
+        border-left: 4px solid var(--primary);
+    }
+
+    .floor-section-header span {
+        color: var(--g400);
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 14px;
+    }
+
+    .item-card {
+        background: #fff;
+        border: 1px solid var(--g200);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        transition: var(--transition);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .item-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .item-card-end {
+        border-bottom: 3px solid var(--warning);
+    }
+
+    .item-card-top {
+        position: relative;
+    }
+
+    .item-card-img {
+        width: 100%;
+        height: 140px;
+        object-fit: cover;
+        cursor: pointer;
+        display: block;
+    }
+
+    .item-card-img-placeholder {
+        width: 100%;
+        height: 100px;
+        background: var(--g100);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--g300);
+        font-size: 2rem;
+    }
+
+    .item-card-badges {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+
+    .card-floor-badge,
+    .card-loc-badge {
+        padding: 3px 8px;
+        border-radius: 5px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        backdrop-filter: blur(8px);
+    }
+
+    .card-floor-badge {
+        background: rgba(99,102,241,0.85);
+        color: #fff;
+    }
+
+    .card-loc-badge {
+        background: rgba(0,0,0,0.5);
+        color: #fff;
+    }
+
+    .item-card-body {
+        padding: 14px;
+    }
+
+    .item-card-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--g800);
+        margin-bottom: 6px;
+    }
+
+    .item-card-spec {
+        font-size: 0.75rem;
+        color: var(--g500);
+        line-height: 1.5;
+        margin-bottom: 10px;
+        border-left: 2px solid var(--g200);
+        padding-left: 8px;
+    }
+
+    .item-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .item-card-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.72rem;
+        color: var(--g500);
+    }
+
+    .item-card-meta i {
+        font-size: 0.7rem;
+        color: var(--g300);
+    }
+
+    .item-card-dims {
+        display: flex;
+        gap: 12px;
+    }
+
+    .dim-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.72rem;
+        color: var(--g500);
+    }
+
+    .dim-item i { font-size: 0.7rem; }
+
+    .item-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        background: var(--g50);
+        border-top: 1px solid var(--g100);
+    }
+
+    .item-card-price {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    .card-rate {
+        font-size: 0.72rem;
+        color: var(--g400);
+    }
+
+    .card-total {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--g900);
+    }
+
+    .card-edit-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        background: var(--primary-light);
+        color: var(--primary);
+        border-radius: var(--radius-sm);
+        text-decoration: none;
+        font-size: 0.78rem;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .card-edit-btn:hover {
+        background: var(--primary);
+        color: #fff;
+    }
+
+    /* ===== Lightbox ===== */
+    .lightbox-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
+    }
+
+    .lightbox-overlay.show { display: flex; }
+
+    .lightbox-box {
+        position: relative;
+        max-width: 90vw;
+        max-height: 90vh;
+        animation: zoomIn 0.3s ease;
+    }
+
+    @keyframes zoomIn {
+        from { opacity: 0; transform: scale(0.85); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    .lightbox-box img {
+        max-width: 100%;
+        max-height: 80vh;
+        border-radius: var(--radius-lg);
+        object-fit: contain;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+
+    .lightbox-close {
+        position: absolute;
+        top: -12px;
+        right: -12px;
+        width: 36px;
+        height: 36px;
+        background: #fff;
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: var(--transition);
+        z-index: 1;
+    }
+
+    .lightbox-close:hover { background: var(--danger); color: #fff; }
+
+    .lightbox-caption {
+        text-align: center;
+        color: rgba(255,255,255,0.7);
+        font-size: 0.85rem;
+        margin-top: 12px;
+        font-weight: 500;
+    }
+
+    /* ===== Spec Modal ===== */
+    .spec-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9998;
+        padding: 20px;
+    }
+
+    .spec-overlay.show { display: flex; }
+
+    .spec-modal {
+        background: #fff;
+        border-radius: var(--radius-xl);
+        max-width: 500px;
+        width: 100%;
+        overflow: hidden;
+        animation: zoomIn 0.25s ease;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .spec-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--g100);
+        background: var(--g50);
+    }
+
+    .spec-modal-header h5 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--g800);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .spec-close {
+        background: none;
+        border: none;
+        color: var(--g400);
+        cursor: pointer;
+        font-size: 1rem;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+    }
+
+    .spec-close:hover { background: var(--g100); color: var(--g700); }
+
+    .spec-modal-body {
+        padding: 20px;
+        font-size: 0.88rem;
+        color: var(--g700);
+        line-height: 1.7;
+        max-height: 60vh;
+        overflow-y: auto;
+        white-space: pre-line;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 992px) {
+        .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: flex-start; }
+        .header-right { width: 100%; justify-content: flex-end; }
+        .stats-strip { grid-template-columns: repeat(2, 1fr); }
+        .filter-bar { flex-direction: column; align-items: stretch; }
+        .filter-chips { overflow-x: auto; flex-wrap: nowrap; }
+        .view-toggle { align-self: flex-end; }
+        .cards-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 480px) {
+        .stats-strip { grid-template-columns: 1fr 1fr; }
+        .cards-grid { grid-template-columns: 1fr; }
+        .header-meta { display: none; }
+    }
+</style>
+
 <script>
-const previousSpecs = {{ previous_specs|safe }};
-
-// Templates Data
-const templates = {
-    wardrobe: [
-        { floor: '1st', location: 'Master Bedroom', element: 'Wardrobe', finish: 'Laminate', length: 8, width: 7 },
-        { floor: '1st', location: 'Master Bedroom', element: 'Loft', finish: 'Laminate', length: 8, width: 2 }
-    ],
-    kitchen: [
-        { floor: 'Ground', location: 'Kitchen', element: 'Base Cabinet', finish: 'Acrylic', length: 12, width: 2.5 },
-        { floor: 'Ground', location: 'Kitchen', element: 'Wall Cabinet', finish: 'Acrylic', length: 12, width: 2 },
-        { floor: 'Ground', location: 'Kitchen', element: 'Tall Unit', finish: 'Acrylic', length: 2, width: 7 }
-    ],
-    tvunit: [
-        { floor: 'Ground', location: 'Living Room', element: 'TV Unit', finish: 'Veneer', length: 8, width: 5 },
-        { floor: 'Ground', location: 'Living Room', element: 'Back Panel', finish: 'Veneer', length: 8, width: 6 }
-    ],
-    bedroom: [
-        { floor: '1st', location: 'Master Bedroom', element: 'Wardrobe', finish: 'Laminate', length: 8, width: 7 },
-        { floor: '1st', location: 'Master Bedroom', element: 'Loft', finish: 'Laminate', length: 8, width: 2 },
-        { floor: '1st', location: 'Master Bedroom', element: 'Dressing Table', finish: 'Laminate', length: 4, width: 6 },
-        { floor: '1st', location: 'Master Bedroom', element: 'Bed Back Panel', finish: 'Veneer', length: 6, width: 4 }
-    ],
-    living: [
-        { floor: 'Ground', location: 'Living Room', element: 'TV Unit', finish: 'Veneer', length: 10, width: 5 },
-        { floor: 'Ground', location: 'Living Room', element: 'Storage Unit', finish: 'Laminate', length: 4, width: 6 },
-        { floor: 'Ground', location: 'Living Room', element: 'Display Unit', finish: 'Laminate', length: 3, width: 6 }
-    ],
-    study: [
-        { floor: '1st', location: 'Study Room', element: 'Study Table', finish: 'Laminate', length: 5, width: 2.5 },
-        { floor: '1st', location: 'Study Room', element: 'Bookshelf', finish: 'Laminate', length: 4, width: 6 },
-        { floor: '1st', location: 'Study Room', element: 'Wall Cabinet', finish: 'Laminate', length: 5, width: 1.5 }
-    ]
-};
-
-// Quotation ID for storage key
-const QUOTATION_ID = '{{ quotation_rows.0.id|default:"0" }}';
-</script>
-
-<script>
-// ========== CONFIGURATION ==========
-const CONFIG = {
-    AUTO_SAVE_INTERVAL: 30000,
-    SESSION_TIMEOUT: 1800000,
-    SESSION_WARNING: 120000,
-    IDLE_TIMEOUT: 300000,
-    CSRF_REFRESH_INTERVAL: 600000,
-    KEEP_ALIVE_INTERVAL: 300000,
-    STORAGE_KEY: 'quotation_edit_' + QUOTATION_ID + '_{{ request.user.id|default:"guest" }}',
-    MAX_RECOVERY_AGE: 86400000,
-    DRAFT_SAVE_URL: "/quotation/draft/save/",  // 🔥 ADD THIS
-};
-
-// ========== STATE MANAGEMENT ==========
-let state = {
-    isDirty: false,
-    lastSaveTime: null,
-    lastActivityTime: Date.now(),
-    sessionStartTime: Date.now(),
-    autoSaveTimer: null,
-    sessionTimer: null,
-    idleTimer: null,
-    keepAliveTimer: null,
-    csrfRefreshTimer: null,
-    isOnline: navigator.onLine,
-    saveInProgress: false,
-    sessionWarningShown: false,
-};
-
-// ========== INITIALIZATION ==========
-document.addEventListener('DOMContentLoaded', function() {
-    initializeAutoSave();
-    initializeSessionManagement();
-    initializeConnectionMonitoring();
-    initializeIdleDetection();
-    initializeBeforeUnload();
-    initializeFloorEndToggle();
-    checkForRecoveryData();
-    
-    // Initial validation and calculation
-    document.querySelectorAll('#quoteTable tbody tr').forEach(row => {
-        validateSingleRow(row);
-        // Initialize rate display from selected series
-        const select = row.querySelector('.fullsemi');
-        if (select && select.value) {
-            updateRateFromSelect(select);
-        }
-    });
-    
-    validateClientSection();
-    updateValidationSummary();
-    updateOverallProgress();
-    calcAll();
-    updateItemCount();
-    
-    // Show floating bar
-    document.getElementById('floatingActionBar').classList.add('visible');
-    
-    console.log('📋 Quotation edit form initialized');
-});
-
-
-
-let countdownTimer = null;
-let remainingTime = CONFIG.AUTO_SAVE_INTERVAL / 1000;
-
-function startSaveCountdown() {
-    clearInterval(countdownTimer);
-
-    remainingTime = CONFIG.AUTO_SAVE_INTERVAL / 1000;
-
-    updateCountdownText();
-
-    countdownTimer = setInterval(() => {
-        remainingTime--;
-
-        if (remainingTime <= 0) {
-            clearInterval(countdownTimer);
-        }
-
-        updateCountdownText();
-    }, 1000);
-}
-
-function updateCountdownText() {
-    const textEl = document.getElementById('unsavedText');
-
-    if (!textEl) return;
-
-    if (state.isDirty) {
-        textEl.textContent = `Unsaved changes • Saving in ${remainingTime}s`;
-    }
-}
-
-
-
-// ========== AUTO-SAVE SYSTEM ==========
-function initializeAutoSave() {
-    state.autoSaveTimer = setInterval(autoSave, CONFIG.AUTO_SAVE_INTERVAL);
-    
-    document.getElementById('quotationForm').addEventListener('input', markDirty);
-    document.getElementById('quotationForm').addEventListener('change', markDirty);
-    
-    setTimeout(autoSave, 5000);
-}
-
-function markDirty() {
-    if (!state.isDirty) {
-        state.isDirty = true;
-        showUnsavedIndicator();
-        startSaveCountdown();
-    }
-    state.lastActivityTime = Date.now();
-}
-
-function autoSave() {
-    if (!state.isDirty || state.saveInProgress) return;
-    saveToLocalStorage();
-    saveToServer().catch(error => {
-        console.error('Auto-save failed:', error);
-        showToast('error', 'Auto-Save Failed', error.message);
-    });
-}
-
-function forceSave() {
-    state.isDirty = true;
-    saveToLocalStorage();
-    saveToServer().then(() => {
-        console.log('Force save successful');
-    }).catch(error => {
-        console.error('Force save failed:', error);
-    });
-    showToast('success', 'Saved', 'Your changes have been saved locally');
-}
-
-
-function showSaveStatus(status) {
-    const indicator = document.getElementById('unsavedIndicator');
-    if (!indicator) return;
-
-    const text = indicator.querySelector('span');
-
-    if (status === 'saving') {
-        text.textContent = "Saving...";
-        indicator.style.background = "#fff3cd"; // yellow
-    } 
-    else if (status === 'saved') {
-        text.textContent = "All changes saved ✅";
-        indicator.style.background = "#d1e7dd"; // green
-    } 
-    else if (status === 'error') {
-        text.textContent = "Save failed ❌";
-        indicator.style.background = "#f8d7da"; // red
-    }
-}
-
-
-function saveToLocalStorage() {
-    try {
-        const formData = collectFormData();
-        const saveData = {
-            timestamp: Date.now(),
-            data: formData,
-            quotationId: QUOTATION_ID,
-            url: window.location.href
-        };
+    // ===== Count unique floors and locations =====
+    document.addEventListener('DOMContentLoaded', function() {
+        const rows = document.querySelectorAll('.row-item');
+        const floors = new Set();
+        const locations = new Set();
         
-        localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(saveData));
-        state.lastSaveTime = Date.now();
-        updateAutoSaveStatus('saved');
-        console.log('💾 Saved to localStorage');
-        
-        return true;
-    } catch (error) {
-        console.error('❌ localStorage save failed:', error);
-        return false;
-    }
-}
-
-async function saveToServer() {
-    if (state.saveInProgress) return;
-
-    state.saveInProgress = true;
-
-    showSaveStatus('saving'); // 🔥 ADD
-
-    try {
-        const formData = collectFormData();
-        formData.quotation_id = CONFIG.QUOTATION_ID;
-
-        const response = await fetch(CONFIG.DRAFT_SAVE_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(),
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                draft_data: formData,
-                timestamp: Date.now()
-            }),
-            credentials: 'same-origin'
+        rows.forEach(row => {
+            if (row.dataset.floor) floors.add(row.dataset.floor);
+            if (row.dataset.location) locations.add(row.dataset.location.toLowerCase());
         });
 
-        if (response.ok) {
-            const result = await response.json();
-
-            if (result.success) {
-
-                state.isDirty = false;
-                state.lastSaveTime = Date.now();
-
-                clearInterval(countdownTimer);
-
-                showSaveStatus('saved'); // ✅ FIXED
-                updateAutoSaveStatus('saved');
-
-                return result;
-
-            } else {
-                throw new Error(result.error);
-            }
-        } else {
-            throw new Error(`Server error: ${response.status}`);
-        }
-
-    } catch (error) {
-        console.error('❌ Server save failed:', error);
-
-        showSaveStatus('error'); // ✅ NOW EXISTS
-        showToast('error', 'Auto-Save Failed', error.message);
-
-    } finally {
-        state.saveInProgress = false;
-    }
-}
-
-
-function closeSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    if (!sidebar) return;  // ✅ SAFE CHECK
-
-    sidebar.classList.remove('open');
-}
-
-
-function collectFormData() {
-    const form = document.getElementById('quotationForm');
-    const formData = {
-        client: form.querySelector('[name="client"]')?.value || '',
-        startDate: form.querySelector('[name="estimate_start_date"]')?.value || '',
-        endDate: form.querySelector('[name="estimate_end_date"]')?.value || '',
-        items: []
-    };
-    
-    document.querySelectorAll('#quoteTable tbody tr').forEach(row => {
-        const item = {
-            floor: row.querySelector('[name="floor[]"]')?.value || '',
-            location: row.querySelector('[name="location[]"]')?.value || '',
-            element: row.querySelector('[name="element[]"]')?.value || '',
-            unit: row.querySelector('[name="unit[]"]')?.value || '',
-            fullSemi: row.querySelector('[name="full_semi[]"]')?.value || '',
-            rate: row.querySelector('.final-rate')?.value || '0',
-            coreMaterial: row.querySelector('[name="core_material[]"]')?.value || '',
-            finish: row.querySelector('[name="finish_material[]"]')?.value || '',
-            brand: row.querySelector('[name="brand[]"]')?.value || '',
-            specification: row.querySelector('[name="specification[]"]')?.value || '',
-            length: row.querySelector('[name="length[]"]')?.value || '',
-            width: row.querySelector('[name="width[]"]')?.value || '1',
-            qty: row.querySelector('[name="qty[]"]')?.value || '1',
-            image: row.querySelector('[name="image[]"]')?.value || ''
-        };
-        formData.items.push(item);
+        const floorEl = document.getElementById('floorCount');
+        const locEl = document.getElementById('locationCount');
+        if (floorEl) floorEl.textContent = floors.size;
+        if (locEl) locEl.textContent = locations.size;
     });
-    
-    return formData;
-}
 
-// ========== SESSION MANAGEMENT ==========
-function initializeSessionManagement() {
-    resetSessionTimer();
-    state.keepAliveTimer = setInterval(keepSessionAlive, CONFIG.KEEP_ALIVE_INTERVAL);
-}
+    // ===== Search & Filter =====
+    let activeFilter = 'all';
 
-function resetSessionTimer() {
-    state.lastActivityTime = Date.now();
-    
-    if (state.sessionTimer) clearTimeout(state.sessionTimer);
-    if (state.sessionWarningShown) hideSessionWarning();
-    
-    state.sessionTimer = setTimeout(() => {
-        showSessionWarning();
-    }, CONFIG.SESSION_TIMEOUT - CONFIG.SESSION_WARNING);
-}
-
-function showSessionWarning() {
-    state.sessionWarningShown = true;
-    document.getElementById('sessionWarning').classList.add('visible');
-    
-    let timeLeft = CONFIG.SESSION_WARNING / 1000;
-    const countdownEl = document.getElementById('sessionCountdown');
-    
-    const countdownInterval = setInterval(() => {
-        timeLeft--;
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        countdownEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    function filterRows() {
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        const clearBtn = document.getElementById('clearSearch');
         
-        if (timeLeft <= 0) {
-            clearInterval(countdownInterval);
-            handleSessionTimeout();
-        }
-    }, 1000);
-    
-    state.countdownInterval = countdownInterval;
-}
-
-function hideSessionWarning() {
-    state.sessionWarningShown = false;
-    document.getElementById('sessionWarning').classList.remove('visible');
-    if (state.countdownInterval) clearInterval(state.countdownInterval);
-}
-
-function extendSession() {
-    hideSessionWarning();
-    resetSessionTimer();
-    keepSessionAlive();
-    showToast('success', 'Session Extended', 'Your session has been extended');
-}
-
-function handleSessionTimeout() {
-    forceSave();
-    alert('Your session has expired. Your work has been saved locally.');
-    window.location.href = '{% url "quotation_index" %}';
-}
-
-function keepSessionAlive() {
-    // Ping server to keep session alive
-    fetch(window.location.href, {
-        method: 'HEAD',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    }).catch(() => {});
-}
-
-function getCSRFToken() {
-    return document.getElementById('csrfToken')?.value || 
-           document.querySelector('[name="csrfmiddlewaretoken"]')?.value || '';
-}
-
-// ========== IDLE DETECTION ==========
-function initializeIdleDetection() {
-    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    
-    activityEvents.forEach(event => {
-        document.addEventListener(event, handleUserActivity, { passive: true });
-    });
-    
-    startIdleTimer();
-}
-
-function handleUserActivity() {
-    state.lastActivityTime = Date.now();
-    resetSessionTimer();
-    
-    if (document.getElementById('idleWarning').classList.contains('visible')) {
-        dismissIdleWarning();
-    }
-    
-    startIdleTimer();
-}
-
-function startIdleTimer() {
-    if (state.idleTimer) clearTimeout(state.idleTimer);
-    
-    state.idleTimer = setTimeout(() => {
-        showIdleWarning();
-    }, CONFIG.IDLE_TIMEOUT);
-}
-
-function showIdleWarning() {
-    forceSave();
-    document.getElementById('idleBackdrop').classList.add('visible');
-    document.getElementById('idleWarning').classList.add('visible');
-}
-
-function dismissIdleWarning() {
-    document.getElementById('idleBackdrop').classList.remove('visible');
-    document.getElementById('idleWarning').classList.remove('visible');
-    startIdleTimer();
-}
-
-// ========== CONNECTION MONITORING ==========
-function initializeConnectionMonitoring() {
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    updateConnectionStatus();
-}
-
-function handleOnline() {
-    state.isOnline = true;
-    updateConnectionStatus();
-    showToast('success', 'Back Online', 'Connection restored');
-    if (state.isDirty) autoSave();
-}
-
-function handleOffline() {
-    state.isOnline = false;
-    updateConnectionStatus();
-    showToast('warning', 'Offline', 'Working offline. Changes saved locally.');
-}
-
-function updateConnectionStatus() {
-    const statusEl = document.getElementById('connectionStatus');
-    if (state.isOnline) {
-        statusEl.className = 'connection-status online';
-        statusEl.querySelector('.status-text').textContent = 'Connected';
-    } else {
-        statusEl.className = 'connection-status offline';
-        statusEl.querySelector('.status-text').textContent = 'Offline';
-    }
-}
-
-// ========== BEFORE UNLOAD ==========
-function initializeBeforeUnload() {
-    window.addEventListener('beforeunload', (e) => {
-        if (state.isDirty) {
-            saveToLocalStorage();
-            const message = 'You have unsaved changes.';
-            e.returnValue = message;
-            return message;
-        }
-    });
-    
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden' && state.isDirty) {
-            saveToLocalStorage();
-        }
-    });
-}
-
-// ========== RECOVERY SYSTEM ==========
-function checkForRecoveryData() {
-    try {
-        const savedData = localStorage.getItem(CONFIG.STORAGE_KEY);
-        if (!savedData) return;
+        clearBtn.style.display = query ? 'flex' : 'none';
         
-        const parsed = JSON.parse(savedData);
-        const age = Date.now() - parsed.timestamp;
-        
-        if (age > CONFIG.MAX_RECOVERY_AGE) {
-            localStorage.removeItem(CONFIG.STORAGE_KEY);
-            return;
-        }
-        
-        // Show recovery modal
-        showRecoveryModal(parsed);
-    } catch (error) {
-        console.error('Recovery check failed:', error);
-    }
-}
+        const rows = document.querySelectorAll('.row-item');
+        const floorGroupRows = document.querySelectorAll('.floor-group-row');
+        let visibleCount = 0;
 
-function showRecoveryModal(savedData) {
-    const timeAgo = getTimeAgo(savedData.timestamp);
-    const itemCount = savedData.data.items.filter(i => i.element).length;
-    
-    let total = 0;
-    savedData.data.items.forEach(item => {
-        const length = parseFloat(item.length) || 0;
-        const width = parseFloat(item.width) || 1;
-        const rate = parseFloat(item.rate) || 0;
-        const qty = parseFloat(item.qty) || 1;
-        total += length * width * rate * qty;
-    });
-    
-    document.getElementById('recoveryTime').textContent = timeAgo;
-    document.getElementById('recoveryItems').textContent = itemCount + ' items';
-    document.getElementById('recoveryTotal').textContent = '₹' + total.toLocaleString('en-IN');
-    
-    window.recoveryData = savedData;
-    document.getElementById('recoveryModal').classList.add('visible');
-}
-
-function restoreRecovery() {
-    if (!window.recoveryData) return;
-    
-    const data = window.recoveryData.data;
-    
-    // Restore client info
-    if (data.client) document.querySelector('[name="client"]').value = data.client;
-    if (data.startDate) document.querySelector('[name="estimate_start_date"]').value = data.startDate;
-    if (data.endDate) document.querySelector('[name="estimate_end_date"]').value = data.endDate;
-    
-    // Get current rows
-    const tbody = document.querySelector('#quoteTable tbody');
-    const currentRows = tbody.querySelectorAll('tr');
-    
-    // Restore items
-    data.items.forEach((item, index) => {
-        let row;
-        if (index < currentRows.length) {
-            row = currentRows[index];
-        } else {
-            addRow();
-            row = tbody.lastElementChild;
-        }
-        
-        if (item.floor) row.querySelector('[name="floor[]"]').value = item.floor;
-        if (item.location) row.querySelector('[name="location[]"]').value = item.location;
-        if (item.element) row.querySelector('[name="element[]"]').value = item.element;
-        if (item.unit) row.querySelector('[name="unit[]"]').value = item.unit;
-        if (item.fullSemi) {
-            const select = row.querySelector('[name="full_semi[]"]');
-            select.value = item.fullSemi;
-            updateRateFromSelect(select);
-        }
-        if (item.rate && parseFloat(item.rate) > 0) {
-            row.querySelector('.final-rate').value = item.rate;
-            row.querySelector('.rate-value').textContent = '₹' + parseFloat(item.rate).toLocaleString('en-IN') + '/sqft';
-        }
-        if (item.coreMaterial) row.querySelector('[name="core_material[]"]').value = item.coreMaterial;
-        if (item.finish) row.querySelector('[name="finish_material[]"]').value = item.finish;
-        if (item.brand) row.querySelector('[name="brand[]"]').value = item.brand;
-        if (item.specification) row.querySelector('[name="specification[]"]').value = item.specification;
-        if (item.length) row.querySelector('[name="length[]"]').value = item.length;
-        if (item.width) row.querySelector('[name="width[]"]').value = item.width;
-        if (item.qty) row.querySelector('[name="qty[]"]').value = item.qty;
-        
-        validateSingleRow(row);
-    });
-    
-    document.getElementById('recoveryModal').classList.remove('visible');
-    
-    validateClientSection();
-    updateValidationSummary();
-    updateOverallProgress();
-    calcAll();
-    
-    showToast('success', 'Restored', 'Your previous changes have been restored');
-    
-    // Clear recovery
-    localStorage.removeItem(CONFIG.STORAGE_KEY);
-    window.recoveryData = null;
-}
-
-function discardRecovery() {
-    localStorage.removeItem(CONFIG.STORAGE_KEY);
-    document.getElementById('recoveryModal').classList.remove('visible');
-    window.recoveryData = null;
-    showToast('info', 'Using Original', 'Starting with original quotation data');
-}
-
-// ========== EXPORT/IMPORT ==========
-function exportDraft() {
-    const formData = collectFormData();
-    const exportData = {
-        version: '1.0',
-        type: 'quotation_edit',
-        quotationId: QUOTATION_ID,
-        exportedAt: new Date().toISOString(),
-        data: formData
-    };
-    
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `quotation_${QUOTATION_ID}_${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    showToast('success', 'Exported', 'Quotation data downloaded');
-}
-
-function importDraft() {
-    document.getElementById('importFileInput').click();
-}
-
-function handleImport(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const imported = JSON.parse(e.target.result);
+        rows.forEach(row => {
+            const floor = row.dataset.floor || '';
+            const location = row.dataset.location || '';
+            const element = row.dataset.element || '';
+            const material = row.dataset.material || '';
+            const brand = row.dataset.brand || '';
+            const spec = row.dataset.spec || '';
             
-            if (!imported.data || !imported.data.items) {
-                throw new Error('Invalid format');
+            const searchText = `${floor} ${location} ${element} ${material} ${brand} ${spec}`.toLowerCase();
+            const matchesSearch = !query || searchText.includes(query);
+            const matchesFilter = activeFilter === 'all' || floor === activeFilter;
+            
+            const visible = matchesSearch && matchesFilter;
+            row.classList.toggle('hidden', !visible);
+            if (visible) visibleCount++;
+        });
+
+        // Hide/show floor group headers
+        floorGroupRows.forEach(groupRow => {
+            const floor = groupRow.dataset.floor;
+            
+            if (activeFilter !== 'all' && floor !== activeFilter) {
+                groupRow.classList.add('hidden');
+                return;
             }
             
-            window.recoveryData = { data: imported.data };
-            restoreRecovery();
-            
-        } catch (error) {
-            alert('Failed to import file. Please check the format.');
-        }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
-}
-
-function saveAndExit() {
-    forceSave();
-    setTimeout(() => {
-        window.location.href = '{% url "quotation_index" %}';
-    }, 500);
-}
-
-// ========== UI HELPERS ==========
-function showToast(type, title, message) {
-    const toast = document.getElementById('statusToast');
-    const icon = document.getElementById('toastIcon');
-    const titleEl = document.getElementById('toastTitle');
-    const msg = document.getElementById('toastMessage');
-    
-    const icons = {
-        success: 'bi-check-lg',
-        error: 'bi-exclamation-lg',
-        warning: 'bi-exclamation-triangle',
-        info: 'bi-info-lg'
-    };
-    
-    icon.className = `status-toast-icon ${type === 'error' ? 'error' : 'saved'}`;
-    icon.innerHTML = `<i class="bi ${icons[type]}"></i>`;
-    titleEl.textContent = title;
-    msg.textContent = message;
-    
-    toast.classList.add('visible');
-    setTimeout(() => toast.classList.remove('visible'), 3000);
-}
-
-function updateAutoSaveStatus(status) {
-    const statusEl = document.getElementById('autosaveStatus');
-    const textEl = document.getElementById('autosaveText');
-    const timeEl = document.getElementById('autosaveTime');
-    
-    if (status === 'saved') {
-        statusEl.className = 'autosave-status saved';
-        textEl.textContent = 'All changes saved';
-        timeEl.textContent = 'Just now';
-    } else if (status === 'saving') {
-        statusEl.className = 'autosave-status saving';
-        textEl.textContent = 'Saving...';
-        timeEl.textContent = '';
-    }
-}
-
-function showUnsavedIndicator() {
-    document.getElementById('unsavedIndicator').classList.add('visible');
-}
-
-function hideUnsavedIndicator() {
-    document.getElementById('unsavedIndicator').classList.remove('visible');
-}
-
-function getTimeAgo(timestamp) {
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes ago';
-    if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
-    return Math.floor(seconds / 86400) + ' days ago';
-}
-
-// ========== VALIDATION ==========
-function validateClientSection() {
-    const clientSelect = document.getElementById('clientSelect');
-    const startDate = document.getElementById('startDate');
-    const endDate = document.getElementById('endDate');
-    
-    let validCount = 0;
-    
-    if (clientSelect.value) {
-        validCount++;
-        document.getElementById('clientWrapper').classList.add('valid');
-        document.getElementById('clientValidation').classList.add('valid');
-    } else {
-        document.getElementById('clientWrapper').classList.remove('valid');
-        document.getElementById('clientValidation').classList.remove('valid');
-    }
-    
-    if (startDate.value) {
-        validCount++;
-        document.getElementById('startDateWrapper').classList.add('valid');
-        document.getElementById('startDateValidation').classList.add('valid');
-    } else {
-        document.getElementById('startDateWrapper').classList.remove('valid');
-        document.getElementById('startDateValidation').classList.remove('valid');
-    }
-    
-    if (endDate.value) {
-        validCount++;
-        document.getElementById('endDateWrapper').classList.add('valid');
-        document.getElementById('endDateValidation').classList.add('valid');
-    } else {
-        document.getElementById('endDateWrapper').classList.remove('valid');
-        document.getElementById('endDateValidation').classList.remove('valid');
-    }
-    
-    const statusEl = document.getElementById('clientSectionStatus');
-    if (validCount === 3) {
-        statusEl.className = 'section-status complete';
-        statusEl.innerHTML = '<i class="bi bi-check-circle-fill"></i><span>Complete</span>';
-    } else {
-        statusEl.className = 'section-status incomplete';
-        statusEl.innerHTML = `<i class="bi bi-exclamation-circle"></i><span>${3 - validCount} fields required</span>`;
-    }
-    
-    updateOverallProgress();
-}
-
-function validateRow(inputElement) {
-    const row = inputElement.closest('tr');
-    validateSingleRow(row);
-    updateValidationSummary();
-    updateOverallProgress();
-}
-
-function validateSingleRow(row) {
-    let filledCount = 0;
-    let totalRequired = 8;
-    let missingFields = [];
-    
-    const floor = row.querySelector('.floor-input');
-    if (floor?.value.trim()) { filledCount++; floor.classList.add('valid'); } 
-    else { missingFields.push('Floor'); floor?.classList.remove('valid'); }
-    
-    const location = row.querySelector('[name="location[]"]');
-    if (location?.value.trim()) { filledCount++; location.classList.add('valid'); }
-    else { missingFields.push('Location'); location?.classList.remove('valid'); }
-    
-    const element = row.querySelector('[name="element[]"]');
-    if (element?.value.trim()) { filledCount++; element.classList.add('valid'); }
-    else { missingFields.push('Element'); element?.classList.remove('valid'); }
-    
-    const finalRate = row.querySelector('.final-rate');
-    if (finalRate && parseFloat(finalRate.value) > 0) { filledCount++; }
-    else { missingFields.push('Rate'); }
-    
-    const finish = row.querySelector('[name="finish_material[]"]');
-    if (finish?.value.trim()) { filledCount++; finish.classList.add('valid'); }
-    else { missingFields.push('Finish'); finish?.classList.remove('valid'); }
-    
-    const length = row.querySelector('.length');
-    if (length?.value && parseFloat(length.value) > 0) { filledCount++; length.classList.add('valid'); }
-    else { missingFields.push('Length'); length?.classList.remove('valid'); }
-    
-    const core = row.querySelector('[name="core_material[]"]');
-    if (core?.value.trim()) { filledCount++; }
-    else { missingFields.push('Core'); }
-    
-    const brand = row.querySelector('[name="brand[]"]');
-    if (brand?.value.trim()) { filledCount++; }
-    
-    const isComplete = filledCount >= 6;
-    
-    const statusIcon = row.querySelector('.row-status-icon');
-    const statusText = row.querySelector('.row-status-text');
-    const missingList = row.querySelector('.missing-fields-list');
-    
-    if (isComplete) {
-        row.classList.remove('incomplete');
-        row.classList.add('complete');
-        statusIcon.className = 'row-status-icon complete';
-        statusIcon.innerHTML = '<i class="bi bi-check"></i>';
-        statusText.className = 'row-status-text complete';
-    } else {
-        row.classList.remove('complete');
-        row.classList.add('incomplete');
-        statusIcon.className = 'row-status-icon incomplete';
-        statusIcon.innerHTML = '<i class="bi bi-exclamation"></i>';
-        statusText.className = 'row-status-text incomplete';
-    }
-    
-    statusText.textContent = `${filledCount}/${totalRequired}`;
-    if (missingList) {
-        missingList.textContent = missingFields.length > 0 ? `Missing: ${missingFields.join(', ')}` : 'Complete';
-    }
-    
-    return isComplete;
-}
-
-function validateAllRows() {
-    const rows = document.querySelectorAll('#quoteTable tbody tr');
-    let allValid = true;
-    
-    rows.forEach(row => {
-        if (!validateSingleRow(row)) allValid = false;
-    });
-    
-    updateValidationSummary();
-    updateOverallProgress();
-    
-    if (allValid) {
-        showToast('success', 'All Valid', 'All items are complete');
-    } else {
-        showToast('warning', 'Incomplete', 'Some items have missing fields');
-    }
-}
-
-function updateValidationSummary() {
-    const rows = document.querySelectorAll('#quoteTable tbody tr');
-    let validCount = 0;
-    let invalidCount = 0;
-    
-    rows.forEach(row => {
-        if (row.classList.contains('complete')) validCount++;
-        else invalidCount++;
-    });
-    
-    document.getElementById('validRowsCount').innerHTML = `<i class="bi bi-check-circle-fill"></i><span>${validCount} complete</span>`;
-    document.getElementById('invalidRowsCount').innerHTML = `<i class="bi bi-exclamation-circle-fill"></i><span>${invalidCount} incomplete</span>`;
-    document.getElementById('floatingValidCount').textContent = validCount;
-    
-    const saveBtn = document.getElementById('saveBtn');
-    if (invalidCount > 0) saveBtn.classList.add('has-errors');
-    else saveBtn.classList.remove('has-errors');
-}
-
-function updateOverallProgress() {
-    let totalFields = 3; // Client fields
-    let filledFields = 0;
-    
-    if (document.getElementById('clientSelect').value) filledFields++;
-    if (document.getElementById('startDate').value) filledFields++;
-    if (document.getElementById('endDate').value) filledFields++;
-    
-    const rows = document.querySelectorAll('#quoteTable tbody tr');
-    rows.forEach(row => {
-        totalFields += 8;
-        if (row.querySelector('.floor-input')?.value.trim()) filledFields++;
-        if (row.querySelector('[name="location[]"]')?.value.trim()) filledFields++;
-        if (row.querySelector('[name="element[]"]')?.value.trim()) filledFields++;
-        if (parseFloat(row.querySelector('.final-rate')?.value) > 0) filledFields++;
-        if (row.querySelector('[name="finish_material[]"]')?.value.trim()) filledFields++;
-        if (row.querySelector('.length')?.value) filledFields++;
-        if (row.querySelector('[name="core_material[]"]')?.value.trim()) filledFields++;
-        if (row.querySelector('[name="brand[]"]')?.value.trim()) filledFields++;
-    });
-    
-    const percentage = Math.round((filledFields / totalFields) * 100);
-    
-    document.getElementById('progressBar').style.width = percentage + '%';
-    document.getElementById('completionPercentage').textContent = percentage + '%';
-    
-    const badge = document.getElementById('completionBadge');
-    if (percentage === 100) badge.className = 'completion-badge complete';
-    else if (percentage >= 50) badge.className = 'completion-badge warning';
-    else badge.className = 'completion-badge';
-}
-
-function highlightEmptyFields() {
-    document.querySelectorAll('#quoteTable tbody tr').forEach(row => {
-        row.querySelectorAll('input[required], select[required]').forEach(input => {
-            if (!input.value.trim()) {
-                input.classList.add('invalid', 'shake');
-                setTimeout(() => input.classList.remove('shake'), 300);
-            }
-        });
-    });
-    
-    ['clientSelect', 'startDate', 'endDate'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el.value) el.classList.add('invalid', 'shake');
-    });
-}
-
-// ========== RATE FUNCTIONS ==========
-function setRateMode(btn, mode) {
-    const container = btn.closest('.hybrid-rate-container');
-    const buttons = container.querySelectorAll('.rate-mode-btn');
-    const presetWrapper = container.querySelector('.rate-select-wrapper');
-    const manualInput = container.querySelector('.rate-manual-input');
-    
-    buttons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    
-    if (mode === 'preset') {
-        presetWrapper.style.display = 'block';
-        manualInput.classList.remove('active');
-    } else {
-        presetWrapper.style.display = 'none';
-        manualInput.classList.add('active');
-    }
-}
-
-function updateRateFromSelect(select) {
-    const container = select.closest('.hybrid-rate-container');
-    const rate = select.options[select.selectedIndex]?.dataset.rate || 0;
-    const finalRateInput = container.querySelector('.final-rate');
-    const rateDisplay = container.querySelector('.rate-value');
-    
-    finalRateInput.value = rate;
-    rateDisplay.textContent = '₹' + parseFloat(rate).toLocaleString('en-IN') + '/sqft';
-    
-    calcAll();
-}
-
-function updateRateManual(input) {
-    const container = input.closest('.hybrid-rate-container');
-    const rate = parseFloat(input.value) || 0;
-    const finalRateInput = container.querySelector('.final-rate');
-    const rateDisplay = container.querySelector('.rate-value');
-    
-    finalRateInput.value = rate;
-    rateDisplay.textContent = '₹' + rate.toLocaleString('en-IN') + '/sqft';
-    
-    calcAll();
-}
-
-// ========== ROW MANAGEMENT ==========
-function addRow() {
-    const table = document.querySelector("#quoteTable tbody");
-    const firstRow = table.rows[0];
-    const row = firstRow.cloneNode(true);
-    const newIndex = table.rows.length;
-
-    // Reset values
-    row.querySelectorAll("input, textarea").forEach(el => {
-        if (el.name === 'qty[]') el.value = '1';
-        else if (el.name === 'width[]') el.value = '1';
-        else if (el.name === 'unit[]') el.value = 'sqft';
-        else if (!el.classList.contains('floor-end-hidden')) el.value = "";
-        el.classList.remove('valid', 'invalid');
-    });
-    
-    row.querySelectorAll("select").forEach(el => {
-        el.selectedIndex = 0;
-        el.classList.remove('valid', 'invalid');
-    });
-    
-    row.querySelectorAll(".area").forEach(t => t.innerText = "0.00");
-    row.querySelector(".total").innerText = "₹0.00";
-    row.querySelector(".rate-value").textContent = "₹0/sqft";
-    row.querySelector(".final-rate").value = "0";
-    
-    // Reset image
-    const preview = row.querySelector(".image-preview");
-    preview.src = "";
-    preview.style.display = "none";
-    row.querySelector(".selected-image-id").value = "";
-    
-    // Reset spec
-    row.querySelector(".spec-btn").classList.remove("has-content");
-    row.querySelector(".spec-text").value = "";
-    
-    // Reset rate mode
-    row.querySelector('.rate-mode-btn').classList.add('active');
-    row.querySelector('.rate-select-wrapper').style.display = 'block';
-    row.querySelector('.rate-manual-input').classList.remove('active');
-    
-    // Reset status
-    row.classList.remove('complete');
-    row.classList.add('incomplete');
-    row.dataset.rowIndex = newIndex;
-    
-    // Update floor_end
-    const floorEndHidden = row.querySelector('.floor-end-hidden');
-    floorEndHidden.name = `floor_end_${newIndex}`;
-    floorEndHidden.value = '0';
-    row.querySelector('.floor-end-toggle').checked = false;
-
-    table.appendChild(row);
-    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    row.querySelector('.floor-input').focus();
-    
-    updateItemCount();
-    validateSingleRow(row);
-    updateValidationSummary();
-    updateOverallProgress();
-    calcAll();
-    markDirty();
-}
-
-function addMultipleRows() {
-    for (let i = 0; i < 5; i++) addRow();
-    showToast('success', '5 Rows Added', 'Ready to fill');
-}
-
-function duplicateRow(btn) {
-    const row = btn.closest("tr");
-    const clone = row.cloneNode(true);
-    const table = document.querySelector("#quoteTable tbody");
-    const newIndex = table.rows.length;
-    
-    clone.dataset.rowIndex = newIndex;
-    clone.querySelector('.floor-end-hidden').name = `floor_end_${newIndex}`;
-    
-    table.appendChild(clone);
-    
-    updateItemCount();
-    validateSingleRow(clone);
-    updateValidationSummary();
-    updateOverallProgress();
-    calcAll();
-    
-    clone.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    markDirty();
-}
-
-function copyFromPreviousRow(btn) {
-    const currentRow = btn.closest("tr");
-    const allRows = Array.from(document.querySelectorAll("#quoteTable tbody tr"));
-    const currentIndex = allRows.indexOf(currentRow);
-    
-    if (currentIndex === 0) {
-        showToast('info', 'No Row Above', 'This is the first row');
-        return;
-    }
-    
-    const prevRow = allRows[currentIndex - 1];
-    
-    currentRow.querySelector('.floor-input').value = prevRow.querySelector('.floor-input').value;
-    currentRow.querySelector('[name="location[]"]').value = prevRow.querySelector('[name="location[]"]').value;
-    currentRow.querySelector('[name="finish_material[]"]').value = prevRow.querySelector('[name="finish_material[]"]').value;
-    currentRow.querySelector('[name="brand[]"]').value = prevRow.querySelector('[name="brand[]"]').value;
-    currentRow.querySelector('[name="core_material[]"]').value = prevRow.querySelector('[name="core_material[]"]').value;
-    
-    const prevSelect = prevRow.querySelector('.fullsemi');
-    currentRow.querySelector('.fullsemi').value = prevSelect.value;
-    
-    const prevRate = prevRow.querySelector('.final-rate').value;
-    currentRow.querySelector('.final-rate').value = prevRate;
-    currentRow.querySelector('.rate-value').textContent = '₹' + parseFloat(prevRate).toLocaleString('en-IN') + '/sqft';
-    
-    validateSingleRow(currentRow);
-    updateValidationSummary();
-    updateOverallProgress();
-    calcAll();
-    
-    currentRow.classList.add('highlight-field');
-    setTimeout(() => currentRow.classList.remove('highlight-field'), 1000);
-    
-    showToast('success', 'Copied', 'Fields copied from previous row');
-    markDirty();
-}
-
-function removeRow(btn) {
-    const rows = document.querySelectorAll("#quoteTable tbody tr");
-    if (rows.length > 1) {
-        btn.closest("tr").remove();
-        
-        // Reindex floor_end fields
-        document.querySelectorAll("#quoteTable tbody tr").forEach((tr, index) => {
-            const hidden = tr.querySelector('.floor-end-hidden');
-            if (hidden) hidden.name = `floor_end_${index}`;
-            tr.dataset.rowIndex = index;
-        });
-        
-        updateItemCount();
-        updateValidationSummary();
-        updateOverallProgress();
-        calcAll();
-        markDirty();
-    } else {
-        showToast('warning', 'Cannot Delete', 'At least one row is required');
-    }
-}
-
-function updateItemCount() {
-    const count = document.querySelectorAll("#quoteTable tbody tr").length;
-    document.getElementById("itemCountBadge").textContent = count;
-    document.getElementById("floatingItemCount").textContent = count;
-}
-
-// ========== CALCULATIONS ==========
-function calcAll() {
-    let grand = 0;
-
-    document.querySelectorAll("#quoteTable tbody tr").forEach(row => {
-        const length = parseFloat(row.querySelector(".length").value) || 0;
-        const width = parseFloat(row.querySelector(".width").value) || 1;
-        const qty = parseFloat(row.querySelector(".qty").value) || 1;
-
-        const area = length * width;
-        row.querySelector(".area").innerText = area.toFixed(2);
-
-        const rate = parseFloat(row.querySelector(".final-rate").value) || 0;
-        row.querySelector(".price").innerText = rate;
-
-        const total = area * rate * qty;
-        row.querySelector(".total").innerText = "₹" + total.toLocaleString('en-IN', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-
-        grand += total;
-    });
-
-    const formattedGrand = "₹" + grand.toLocaleString('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-    
-    document.getElementById("grandTotalDisplay").innerText = formattedGrand;
-    document.getElementById("floatingTotal").innerText = "₹" + Math.round(grand).toLocaleString('en-IN');
-}
-
-// ========== DATE AUTO-FILL ==========
-function autoFillEndDate() {
-    const startInput = document.getElementById('startDate');
-    const endInput = document.getElementById('endDate');
-    
-    if (!startInput.value) return;
-    
-    const startDate = new Date(startInput.value);
-    const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + 1);
-    
-    if (endDate.getDate() !== startDate.getDate()) {
-        endDate.setDate(0);
-    }
-    
-    const yyyy = endDate.getFullYear();
-    const mm = String(endDate.getMonth() + 1).padStart(2, "0");
-    const dd = String(endDate.getDate()).padStart(2, "0");
-    
-    endInput.value = `${yyyy}-${mm}-${dd}`;
-    validateClientSection();
-}
-
-// ========== TEMPLATE FUNCTIONS ==========
-function openTemplateModal() {
-    new bootstrap.Modal(document.getElementById('templateModal')).show();
-}
-
-function applyTemplate(templateName) {
-    const template = templates[templateName];
-    if (!template) return;
-    
-    if (confirm(`This will add ${template.length} items. Continue?`)) {
-        bootstrap.Modal.getInstance(document.getElementById('templateModal')).hide();
-        
-        template.forEach((item, index) => {
-            if (index > 0) addRow();
-            
-            const rows = document.querySelectorAll('#quoteTable tbody tr');
-            const row = rows[rows.length - 1];
-            
-            row.querySelector('.floor-input').value = item.floor || '';
-            row.querySelector('[name="location[]"]').value = item.location || '';
-            row.querySelector('[name="element[]"]').value = item.element || '';
-            row.querySelector('[name="finish_material[]"]').value = item.finish || '';
-            row.querySelector('.length').value = item.length || '';
-            row.querySelector('.width').value = item.width || '1';
-            
-            validateSingleRow(row);
-        });
-        
-        updateValidationSummary();
-        updateOverallProgress();
-        calcAll();
-        markDirty();
-        
-        showToast('success', 'Template Applied', `${template.length} items added`);
-    }
-}
-
-// ========== SPECIFICATION MODAL ==========
-let activeSpecBox = null;
-
-function openSpecModal(btn) {
-    activeSpecBox = btn.closest("td").querySelector("textarea");
-    document.getElementById("specModalText").value = activeSpecBox.value;
-    new bootstrap.Modal(document.getElementById("specModal")).show();
-}
-
-function copySpecModal() {
-    const txt = document.getElementById("specModalText");
-    txt.select();
-    navigator.clipboard.writeText(txt.value);
-    showToast('success', 'Copied', 'Text copied to clipboard');
-}
-
-async function pasteSpecModal() {
-    try {
-        const text = await navigator.clipboard.readText();
-        document.getElementById("specModalText").value = text;
-    } catch (err) {
-        showToast('error', 'Error', 'Clipboard access denied');
-    }
-}
-
-function saveSpecModal() {
-    const text = document.getElementById("specModalText").value;
-    if (activeSpecBox) {
-        activeSpecBox.value = text;
-        
-        const btn = activeSpecBox.closest("td").querySelector(".spec-btn");
-        if (text.trim()) {
-            btn.classList.add("has-content");
-        } else {
-            btn.classList.remove("has-content");
-        }
-    }
-    bootstrap.Modal.getInstance(document.getElementById("specModal")).hide();
-    markDirty();
-}
-
-function generateSpecs(btn) {
-    const textarea = document.getElementById("specModalText");
-    let text = textarea.value.toLowerCase().trim();
-
-    if (!text) {
-        showToast('info', 'Enter Keywords', 'Type something like: wardrobe laminate soft close');
-        return;
-    }
-
-    btn.classList.add("loading");
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
-
-    setTimeout(() => {
-        // Search previous specs
-        let bestMatch = null;
-        let score = 0;
-
-        previousSpecs.forEach(spec => {
-            let s = spec.toLowerCase();
-            let words = text.split(" ");
-            let matchScore = 0;
-            words.forEach(w => {
-                if (s.includes(w)) matchScore++;
+            // Check if any items in this floor are visible
+            let hasVisible = false;
+            rows.forEach(row => {
+                if (row.dataset.floor === floor && !row.classList.contains('hidden')) {
+                    hasVisible = true;
+                }
             });
-            if (matchScore > score) {
-                score = matchScore;
-                bestMatch = spec;
-            }
+            
+            groupRow.classList.toggle('hidden', !hasVisible);
         });
 
-        if (bestMatch && score >= 2) {
-            typeWriter(bestMatch);
-            resetButton(btn, originalText);
-            return;
-        }
-
-        // Generate based on keywords
-        let specs = [];
-        if (text.includes("wardrobe")) specs.push("Wardrobe Unit with internal partitions");
-        if (text.includes("kitchen")) specs.push("Modular Kitchen with soft-close");
-        if (text.includes("tv")) specs.push("TV Unit with cable management");
-        if (text.includes("ply")) specs.push("BWR Grade Plywood 18mm");
-        if (text.includes("mdf")) specs.push("HDHMR/MDF Board");
-        if (text.includes("laminate")) specs.push("1mm Laminate Finish");
-        if (text.includes("acrylic")) specs.push("High Gloss Acrylic");
-        if (text.includes("veneer")) specs.push("Natural Wood Veneer");
-        if (text.includes("pu")) specs.push("PU Polish Finish");
-        if (text.includes("soft")) specs.push("Hettich Soft Close Hardware");
-        if (text.includes("glass")) specs.push("Toughened Glass Panel");
-        if (text.includes("hettich")) specs.push("Hettich Premium Hardware");
-        if (text.includes("hafele")) specs.push("Hafele Fittings");
-
-        if (specs.length === 0) {
-            specs = ["• Core: BWR Plywood 18mm", "• Finish: Premium Laminate", "• Hardware: Soft Close", "• Edge: PVC Edge Banding"];
-        }
-
-        typeWriter("• " + specs.join("\n• "));
-        resetButton(btn, originalText);
-    }, 800);
-}
-
-function typeWriter(text) {
-    const textarea = document.getElementById("specModalText");
-    textarea.value = "";
-    let i = 0;
-    const speed = 12;
-
-    function typing() {
-        if (i < text.length) {
-            textarea.value += text.charAt(i);
-            i++;
-            setTimeout(typing, speed);
-        }
-    }
-    typing();
-}
-
-function resetButton(btn, originalText) {
-    setTimeout(() => {
-        btn.classList.remove("loading");
-        btn.innerHTML = originalText;
-    }, 500);
-}
-
-// ========== IMAGE MODAL ==========
-let activeRowBtn = null;
-
-function openImageModal(btn) {
-    activeRowBtn = btn;
-    new bootstrap.Modal(document.getElementById("imageModal")).show();
-}
-
-function selectImage(item, id, src) {
-    const cell = activeRowBtn.closest("td");
-    cell.querySelector(".selected-image-id").value = id;
-    
-    const preview = cell.querySelector(".image-preview");
-    preview.src = src;
-    preview.style.display = "block";
-    
-    bootstrap.Modal.getInstance(document.getElementById("imageModal")).hide();
-    markDirty();
-}
-
-function clearSelectedImage(button) {
-    const td = button.closest("td");
-    td.querySelector(".selected-image-id").value = "";
-    
-    const preview = td.querySelector(".image-preview");
-    preview.src = "";
-    preview.style.display = "none";
-    markDirty();
-}
-
-function openPreviewModal(img) {
-    if (!img.src) return;
-    document.getElementById("previewModalImg").src = img.src;
-    new bootstrap.Modal(document.getElementById("imagePreviewModal")).show();
-}
-
-// ========== FLOOR END TOGGLE ==========
-function initializeFloorEndToggle() {
-    document.addEventListener("change", function(e) {
-        if (!e.target.classList.contains("floor-end-toggle")) return;
-
-        const row = e.target.closest("tr");
-        const floorName = row.querySelector(".floor-input").value.trim().toLowerCase();
-        const checked = e.target.checked;
-
-        if (!floorName) return;
-
-        // Sync all rows with same floor name
-        document.querySelectorAll("#quoteTable tbody tr").forEach((tr) => {
-            const floorInput = tr.querySelector(".floor-input");
-            const checkbox = tr.querySelector(".floor-end-toggle");
-            const hidden = tr.querySelector(".floor-end-hidden");
-
-            if (!floorInput) return;
-
-            if (floorInput.value.trim().toLowerCase() === floorName) {
-                if (checkbox) checkbox.checked = checked;
-                if (hidden) hidden.value = checked ? "1" : "0";
-            }
-        });
+        // Update count
+        const countEl = document.getElementById('visibleCount');
+        const resultsEl = document.getElementById('resultsText');
         
-        markDirty();
-    });
-}
+        if (countEl) countEl.textContent = visibleCount;
+        if (resultsEl) {
+            resultsEl.textContent = query ? `${visibleCount} results for "${query}"` : '';
+        }
 
-// ========== FORM SUBMISSION ==========
-function submitForm() {
-    const clientSelect = document.getElementById('clientSelect');
-    const startDate = document.getElementById('startDate');
-    const endDate = document.getElementById('endDate');
-    
-    // Validate client section
-    if (!clientSelect.value || !startDate.value || !endDate.value) {
-        showToast('warning', 'Missing Details', 'Please fill in all client and date fields');
-        highlightEmptyFields();
-        return;
+        // Empty state
+        const emptyState = document.getElementById('emptyState');
+        if (emptyState) {
+            emptyState.style.display = visibleCount === 0 ? 'flex' : 'none';
+        }
     }
-    
-    // Check for incomplete rows
-    const incompleteRows = document.querySelectorAll('#quoteTable tbody tr.incomplete');
-    
-    if (incompleteRows.length > 0) {
-        if (confirm(`${incompleteRows.length} item(s) have missing fields. Save anyway?`)) {
-            // Clear localStorage before submit
-            localStorage.removeItem(CONFIG.STORAGE_KEY);
-            document.getElementById('quotationForm').submit();
+
+    function setFilter(filter, btn) {
+        activeFilter = filter;
+        
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        
+        filterRows();
+    }
+
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        filterRows();
+    }
+
+    // ===== View Toggle =====
+    function setView(view) {
+        const tableView = document.getElementById('tableView');
+        const cardView = document.getElementById('cardView');
+        const tableBtn = document.getElementById('viewTable');
+        const cardBtn = document.getElementById('viewCard');
+        
+        if (view === 'table') {
+            tableView.style.display = 'block';
+            cardView.style.display = 'none';
+            tableBtn.classList.add('active');
+            cardBtn.classList.remove('active');
         } else {
-            highlightEmptyFields();
+            tableView.style.display = 'none';
+            cardView.style.display = 'block';
+            tableBtn.classList.remove('active');
+            cardBtn.classList.add('active');
         }
-    } else {
-        // Clear localStorage before submit
-        localStorage.removeItem(CONFIG.STORAGE_KEY);
-        document.getElementById('quotationForm').submit();
-    }
-}
 
-// ========== KEYBOARD SHORTCUTS ==========
-document.addEventListener("keydown", function(e) {
-    // Ctrl + N: Add new row
-    if (e.ctrlKey && e.key === "n") {
-        e.preventDefault();
-        addRow();
+        // Save preference
+        localStorage.setItem('qtn_view', view);
     }
-    
-    // Ctrl + D: Duplicate current row
-    if (e.ctrlKey && e.key === "d") {
-        e.preventDefault();
-        const active = document.activeElement.closest("tr");
-        if (active && active.closest("#quoteTable tbody")) {
-            const duplicateBtn = active.querySelector(".duplicate");
-            if (duplicateBtn) duplicateRow(duplicateBtn);
+
+    // Restore view preference
+    const savedView = localStorage.getItem('qtn_view');
+    if (savedView) setView(savedView);
+
+    // ===== Image Lightbox =====
+    function openImageModal(url, caption) {
+        const overlay = document.getElementById('lightboxOverlay');
+        document.getElementById('lightboxImg').src = url;
+        document.getElementById('lightboxCaption').textContent = caption;
+        overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        document.getElementById('lightboxOverlay').classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    // ===== Spec Modal =====
+    function showSpec(btn, fullText) {
+        const modal = document.getElementById('specOverlay');
+        const body = document.getElementById('specModalBody');
+        body.textContent = fullText;
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSpec() {
+        document.getElementById('specOverlay').classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    // ===== Keyboard Shortcuts =====
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeLightbox();
+            closeSpec();
         }
-    }
-    
-    // Ctrl + S: Save/Submit form
-    if (e.ctrlKey && e.key === "s") {
-        e.preventDefault();
-        submitForm();
-    }
-    
-    // Escape: Dismiss modals
-    if (e.key === "Escape") {
-        if (document.getElementById('idleWarning').classList.contains('visible')) {
-            dismissIdleWarning();
+        
+        // Ctrl+F: Focus search
+        if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
         }
-    }
-});
+    });
 
-// ========== INPUT EVENT LISTENERS ==========
-document.addEventListener("input", function(e) {
-    if (e.target.closest("#quoteTable")) {
-        calcAll();
-    }
-});
+    // ===== Card view filter sync =====
+    function filterCards() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.item-card');
+        const sections = document.querySelectorAll('.floor-section');
 
-document.addEventListener("change", function(e) {
-    if (e.target.closest("#quoteTable")) {
-        calcAll();
+        cards.forEach(card => {
+            const text = [
+                card.dataset.floor,
+                card.dataset.location,
+                card.dataset.element,
+                card.dataset.material,
+                card.dataset.brand,
+            ].join(' ').toLowerCase();
+
+            const matchesSearch = !query || text.includes(query);
+            const matchesFilter = activeFilter === 'all' || 
+                                  card.dataset.floor === activeFilter;
+
+            card.style.display = matchesSearch && matchesFilter ? '' : 'none';
+        });
+
+        sections.forEach(section => {
+            const visibleCards = section.querySelectorAll('.item-card:not([style*="display: none"])');
+            section.style.display = visibleCards.length ? '' : 'none';
+        });
     }
-});
+
+    // Override filterRows to also filter cards
+    const originalFilterRows = filterRows;
+    window.filterRows = function() {
+        originalFilterRows();
+        filterCards();
+    };
 </script>
 
 {% endblock %}

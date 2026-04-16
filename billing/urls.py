@@ -115,7 +115,8 @@ urlpatterns = [
     
     path("quotation/index/", views.quotation_index, name="quotation_index"),
     path("quotation/create/", views.quotation_create, name="quotation_create"),
-    path("quotation/client/<int:id>/edit/", views.quotation_update, name="quotation_update"),
+    path('quotation/client/<int:client_id>/edit/', views.quotation_update, name='quotation_update'),
+    path('quotation/row/<int:row_id>/edit/', views.quotation_row_edit, name='quotation_row_edit'),
     path("quotation/<int:id>/delete/", views.quotation_delete, name="quotation_delete"),
    
 

@@ -1,0 +1,1128 @@
+{% extends 'billing/layouts/base.html' %}
+{% block content %}
+
+<div class="row-edit-page">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-xl-10 col-xxl-9">
+
+                <!-- Top Navigation -->
+                <div class="edit-topbar">
+                    <a href="{% url 'quotation_update' client.id %}" class="back-link">
+                        <i class="bi bi-arrow-left"></i>
+                        <span>Back to List</span>
+                    </a>
+                    
+                    <!-- Row Navigation -->
+                    <div class="row-nav">
+                        {% if prev_row %}
+                        <a href="{% url 'quotation_row_edit' prev_row.id %}" class="nav-btn" title="Previous row">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                        {% else %}
+                        <span class="nav-btn disabled"><i class="bi bi-chevron-left"></i></span>
+                        {% endif %}
+
+                        <span class="nav-label">Row #{{ row.id }}</span>
+
+                        {% if next_row %}
+                        <a href="{% url 'quotation_row_edit' next_row.id %}" class="nav-btn" title="Next row">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                        {% else %}
+                        <span class="nav-btn disabled"><i class="bi bi-chevron-right"></i></span>
+                        {% endif %}
+                    </div>
+
+                    <div class="edit-badge">
+                        <i class="bi bi-pencil"></i>
+                        Editing
+                    </div>
+                </div>
+
+                <!-- Header -->
+                <div class="edit-header">
+                    <div class="edit-icon">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <div class="edit-info">
+                        <h1>{{ row.element|default:"New Item" }}</h1>
+                        <p>
+                            {{ client.name }} • {{ row.floor }} • {{ row.location }}
+                        </p>
+                    </div>
+                    <div class="current-total">
+                        <span class="total-label">Current Total</span>
+                        <span class="total-value">₹{{ row.total|floatformat:0 }}</span>
+                    </div>
+                </div>
+
+                <!-- Edit Form -->
+                <form method="post" id="rowEditForm">
+                    {% csrf_token %}
+
+                    <!-- Section 1: Location -->
+                    <div class="edit-card">
+                        <div class="card-section-header">
+                            <div class="section-badge">
+                                <i class="bi bi-geo-alt"></i>
+                            </div>
+                            <div>
+                                <h3>Location</h3>
+                                <p>Floor and room details</p>
+                            </div>
+                        </div>
+                        <div class="card-section-body">
+                            <div class="field-row three">
+                                <div class="field-group">
+                                    <label>Floor <span class="req">*</span></label>
+                                    <input type="text" 
+                                           name="floor" 
+                                           value="{{ row.floor }}" 
+                                           class="field-input"
+                                           placeholder="e.g. Ground Floor"
+                                           required>
+                                </div>
+                                <div class="field-group">
+                                    <label>Location <span class="req">*</span></label>
+                                    <input type="text" 
+                                           name="location" 
+                                           value="{{ row.location }}" 
+                                           class="field-input"
+                                           placeholder="e.g. Master Bedroom"
+                                           list="locationList"
+                                           required>
+                                </div>
+                                <div class="field-group">
+                                    <label>End of Floor</label>
+                                    <div class="toggle-wrap">
+                                        <label class="toggle">
+                                            <input type="checkbox" 
+                                                   name="end" 
+                                                   value="1"
+                                                   {% if row.end %}checked{% endif %}>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                        <span class="toggle-text">Move to end</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Item -->
+                    <div class="edit-card">
+                        <div class="card-section-header">
+                            <div class="section-badge">
+                                <i class="bi bi-box"></i>
+                            </div>
+                            <div>
+                                <h3>Item Details</h3>
+                                <p>Element name and unit</p>
+                            </div>
+                        </div>
+                        <div class="card-section-body">
+                            <div class="field-row two">
+                                <div class="field-group">
+                                    <label>Element <span class="req">*</span></label>
+                                    <input type="text" 
+                                           name="element" 
+                                           value="{{ row.element }}" 
+                                           class="field-input"
+                                           placeholder="e.g. Wardrobe"
+                                           list="elementList"
+                                           required>
+                                </div>
+                                <div class="field-group">
+                                    <label>Unit</label>
+                                    <select name="unit" class="field-input">
+                                        <option value="sqft" {% if row.unit == 'sqft' %}selected{% endif %}>sqft</option>
+                                        <option value="sqm" {% if row.unit == 'sqm' %}selected{% endif %}>sqm</option>
+                                        <option value="rft" {% if row.unit == 'rft' %}selected{% endif %}>rft</option>
+                                        <option value="nos" {% if row.unit == 'nos' %}selected{% endif %}>nos</option>
+                                        <option value="lot" {% if row.unit == 'lot' %}selected{% endif %}>lot</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Materials -->
+                    <div class="edit-card">
+                        <div class="card-section-header">
+                            <div class="section-badge">
+                                <i class="bi bi-layers"></i>
+                            </div>
+                            <div>
+                                <h3>Materials & Finish</h3>
+                                <p>Core, finish, and brand</p>
+                            </div>
+                        </div>
+                        <div class="card-section-body">
+                            <div class="field-row three">
+                                <div class="field-group">
+                                    <label>Core Material</label>
+                                    <input type="text" 
+                                           name="core_material" 
+                                           value="{{ row.core_material }}" 
+                                           class="field-input"
+                                           placeholder="e.g. BWR Plywood 18mm"
+                                           list="coreMaterialList">
+                                </div>
+                                <div class="field-group">
+                                    <label>Finish</label>
+                                    <input type="text" 
+                                           name="finish_material" 
+                                           value="{{ row.finish_material }}" 
+                                           class="field-input"
+                                           placeholder="e.g. Laminate"
+                                           list="finishList">
+                                </div>
+                                <div class="field-group">
+                                    <label>Brand</label>
+                                    <input type="text" 
+                                           name="brand" 
+                                           value="{{ row.brand }}" 
+                                           class="field-input"
+                                           placeholder="e.g. Greenply"
+                                           list="brandList">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Pricing -->
+                    <div class="edit-card">
+                        <div class="card-section-header">
+                            <div class="section-badge accent">
+                                <i class="bi bi-currency-rupee"></i>
+                            </div>
+                            <div>
+                                <h3>Pricing & Dimensions</h3>
+                                <p>Rate, size, and quantity</p>
+                            </div>
+                        </div>
+                        <div class="card-section-body">
+
+                            <!-- Series / Rate -->
+                            <div class="field-row two">
+                                <div class="field-group">
+                                    <label>Series (Preset Rate)</label>
+                                    <select name="full_semi" 
+                                            class="field-input" 
+                                            id="fullsemiSelect"
+                                            onchange="updatePresetRate()">
+                                        <option value="" data-rate="0">-- Manual Rate --</option>
+                                        {% for f in fullsemis %}
+                                        <option value="{{ f.id }}" 
+                                                data-rate="{{ f.rate }}"
+                                                {% if row.full_semi and f.id == row.full_semi.id %}selected{% endif %}>
+                                            {{ f.name }} — ₹{{ f.rate }}/sqft
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="field-group">
+                                    <label>Rate per unit <span class="req">*</span></label>
+                                    <div class="input-with-prefix">
+                                        <span class="prefix">₹</span>
+                                        <input type="number" 
+                                               name="rate" 
+                                               value="{{ row.price }}" 
+                                               class="field-input has-prefix"
+                                               id="rateInput"
+                                               step="0.01"
+                                               min="0"
+                                               placeholder="0.00"
+                                               oninput="calcTotal()">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dimensions -->
+                            <div class="field-row four">
+                                <div class="field-group">
+                                    <label>Length <span class="req">*</span></label>
+                                    <input type="number" 
+                                           name="length" 
+                                           value="{{ row.length }}" 
+                                           class="field-input"
+                                           id="lengthInput"
+                                           step="0.01"
+                                           min="0"
+                                           placeholder="0"
+                                           oninput="calcTotal()">
+                                </div>
+                                <div class="field-group">
+                                    <label>Width</label>
+                                    <input type="number" 
+                                           name="width" 
+                                           value="{{ row.width }}" 
+                                           class="field-input"
+                                           id="widthInput"
+                                           step="0.01"
+                                           min="0"
+                                           placeholder="1"
+                                           oninput="calcTotal()">
+                                </div>
+                                <div class="field-group">
+                                    <label>Qty</label>
+                                    <input type="number" 
+                                           name="qty" 
+                                           value="{{ row.qty }}" 
+                                           class="field-input"
+                                           id="qtyInput"
+                                           step="1"
+                                           min="1"
+                                           placeholder="1"
+                                           oninput="calcTotal()">
+                                </div>
+                                <div class="field-group">
+                                    <label>Area (auto)</label>
+                                    <div class="computed-value" id="areaDisplay">
+                                        {{ row.area|floatformat:2 }} sqft
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Live Total -->
+                            <div class="live-total-bar">
+                                <div class="total-breakdown">
+                                    <span class="calc-formula" id="calcFormula">
+                                        {{ row.length }} × {{ row.width }} × ₹{{ row.price|floatformat:0 }} × {{ row.qty }}
+                                    </span>
+                                </div>
+                                <div class="total-result">
+                                    <span class="total-label">Line Total</span>
+                                    <span class="total-amount" id="liveTotal">₹{{ row.total|floatformat:2 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: Image -->
+                    <div class="edit-card">
+                        <div class="card-section-header">
+                            <div class="section-badge">
+                                <i class="bi bi-image"></i>
+                            </div>
+                            <div>
+                                <h3>Image</h3>
+                                <p>Reference photo</p>
+                            </div>
+                        </div>
+                        <div class="card-section-body">
+                            <div class="image-selector">
+                                <!-- Current Image -->
+                                <div class="current-image">
+                                    {% if row.image %}
+                                    <img src="{{ row.image.image.url }}" id="previewImg" class="preview-img">
+                                    {% else %}
+                                    <div class="no-image" id="noImage">
+                                        <i class="bi bi-image"></i>
+                                        <span>No image selected</span>
+                                    </div>
+                                    <img src="" id="previewImg" class="preview-img" style="display:none;">
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Image Select -->
+                                <div class="image-select-wrap">
+                                    <select name="image" class="field-input" id="imageSelect" onchange="updateImagePreview()">
+                                        <option value="">No Image</option>
+                                        {% for img in images %}
+                                        <option value="{{ img.id }}" 
+                                                data-url="{{ img.image.url }}"
+                                                {% if row.image and img.id == row.image.id %}selected{% endif %}>
+                                            {{ img.name|default:img.id }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 6: Specification -->
+                    <div class="edit-card">
+                        <div class="card-section-header">
+                            <div class="section-badge">
+                                <i class="bi bi-card-text"></i>
+                            </div>
+                            <div>
+                                <h3>Specification</h3>
+                                <p>Detailed description</p>
+                            </div>
+                        </div>
+                        <div class="card-section-body">
+                            <textarea name="specification" 
+                                      class="field-textarea" 
+                                      id="specTextarea"
+                                      placeholder="Enter detailed specification..."
+                                      rows="5">{{ row.specification }}</textarea>
+                            <div class="spec-footer">
+                                <span class="char-count">
+                                    <span id="charCount">{{ row.specification|length }}</span> chars
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-bar">
+                        <a href="{% url 'quotation_update' client.id %}" class="btn-cancel">
+                            <i class="bi bi-x-lg"></i>
+                            Cancel
+                        </a>
+                        <div class="action-right">
+                            <button type="submit" name="next" value="stay" class="btn-save-continue">
+                                <i class="bi bi-check"></i>
+                                Save & Continue
+                            </button>
+                            <button type="submit" class="btn-save">
+                                <i class="bi bi-check-circle"></i>
+                                Save & Back
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Datalists -->
+<datalist id="elementList">
+    <option value="Wardrobe">
+    <option value="Kitchen">
+    <option value="TV Unit">
+    <option value="Loft">
+    <option value="Bed Back Panel">
+    <option value="Study Table">
+    <option value="Shoe Rack">
+    <option value="Crockery Unit">
+    <option value="Dressing Table">
+    <option value="Bookshelf">
+</datalist>
+
+<datalist id="locationList">
+    <option value="Living Room">
+    <option value="Master Bedroom">
+    <option value="Guest Bedroom">
+    <option value="Kids Bedroom">
+    <option value="Kitchen">
+    <option value="Dining">
+    <option value="Foyer">
+</datalist>
+
+<datalist id="brandList">
+    <option value="Greenply">
+    <option value="Century">
+    <option value="Merino">
+    <option value="Hettich">
+    <option value="Hafele">
+</datalist>
+
+<datalist id="finishList">
+    <option value="Laminate">
+    <option value="Acrylic">
+    <option value="PU Paint">
+    <option value="Veneer">
+    <option value="Lacquer">
+    <option value="Membrane">
+</datalist>
+
+<datalist id="coreMaterialList">
+    <option value="BWR Plywood 18mm">
+    <option value="BWR Plywood 12mm">
+    <option value="MDF 18mm">
+    <option value="HDHMR 18mm">
+    <option value="Particle Board">
+</datalist>
+
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --primary-light: #eef2ff;
+        --success: #10b981;
+        --success-dark: #059669;
+        --success-light: #d1fae5;
+        --warning: #f59e0b;
+        --warning-light: #fef3c7;
+        --danger: #ef4444;
+        --g50: #f9fafb;
+        --g100: #f3f4f6;
+        --g200: #e5e7eb;
+        --g300: #d1d5db;
+        --g400: #9ca3af;
+        --g500: #6b7280;
+        --g600: #4b5563;
+        --g700: #374151;
+        --g800: #1f2937;
+        --g900: #111827;
+        --radius: 10px;
+        --radius-lg: 14px;
+        --shadow: 0 1px 3px rgba(0,0,0,0.1);
+        --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+        --transition: all 0.2s ease;
+    }
+
+    .row-edit-page {
+        background: var(--g50);
+        min-height: 100vh;
+        padding-bottom: 40px;
+    }
+
+    /* Top Bar */
+    .edit-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--danger);
+        height: 36px;
+        padding: 0 14px;
+        border-radius: var(--radius);
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 500;
+        transition: var(--transition);
+    }
+
+    .back-link:hover {
+        color: #fff;
+        transform: translateX(-3px);
+    }
+
+    .row-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .nav-btn {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary);
+        border: 1px solid var(--primary);
+        border-radius: var(--radius);
+        color: #fff;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .nav-btn:hover {
+        background: var(--primary-light);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .nav-btn.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .nav-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--g500);
+    }
+
+    .edit-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        background: var(--warning-light);
+        color: #92400e;
+        font-size: 0.7rem;
+        font-weight: 600;
+        border-radius: 50px;
+        text-transform: uppercase;
+    }
+
+    /* Header */
+    .edit-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding: 20px;
+        background: #fff;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--g200);
+        box-shadow: var(--shadow);
+    }
+
+    .edit-icon {
+        width: 52px;
+        height: 52px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+
+    .edit-info {
+        flex: 1;
+    }
+
+    .edit-info h1 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--g900);
+        margin: 0;
+    }
+
+    .edit-info p {
+        font-size: 0.82rem;
+        color: var(--g500);
+        margin: 4px 0 0;
+    }
+
+    .current-total {
+        text-align: right;
+    }
+
+    .current-total .total-label {
+        display: block;
+        font-size: 0.7rem;
+        color: var(--g400);
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .current-total .total-value {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--success);
+    }
+
+    /* Edit Card */
+    .edit-card {
+        background: #fff;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--g200);
+        margin-bottom: 16px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+    }
+
+    .edit-card:hover {
+        box-shadow: var(--shadow-md);
+    }
+
+    .card-section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        background: linear-gradient(to right, var(--g50), #fff);
+        border-bottom: 1px solid var(--g100);
+    }
+
+    .section-badge {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-light);
+        color: var(--primary);
+        border-radius: var(--radius);
+        font-size: 1rem;
+    }
+
+    .section-badge.accent {
+        background: var(--success-light);
+        color: var(--success-dark);
+    }
+
+    .card-section-header h3 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--g800);
+        margin: 0;
+    }
+
+    .card-section-header p {
+        font-size: 0.75rem;
+        color: var(--g400);
+        margin: 2px 0 0;
+    }
+
+    .card-section-body {
+        padding: 20px;
+    }
+
+    /* Field Groups */
+    .field-row {
+        display: grid;
+        gap: 16px;
+    }
+
+    .field-row.two { grid-template-columns: 1fr 1fr; }
+    .field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+    .field-row.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+    .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .field-group label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--g600);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .req {
+        color: var(--danger);
+    }
+
+    .field-input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 2px solid var(--g200);
+        border-radius: var(--radius);
+        font-size: 0.92rem;
+        color: var(--g800);
+        background: #fff;
+        transition: var(--transition);
+        outline: none;
+    }
+
+    .field-input:hover {
+        border-color: var(--g300);
+    }
+
+    .field-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    select.field-input {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath fill='%236b7280' d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
+        cursor: pointer;
+    }
+
+    .field-textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 2px solid var(--g200);
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+        color: var(--g800);
+        font-family: inherit;
+        resize: vertical;
+        min-height: 100px;
+        line-height: 1.6;
+        outline: none;
+        transition: var(--transition);
+    }
+
+    .field-textarea:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    /* Input with prefix */
+    .input-with-prefix {
+        position: relative;
+    }
+
+    .prefix {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--g500);
+        font-weight: 600;
+    }
+
+    .field-input.has-prefix {
+        padding-left: 34px;
+    }
+
+    /* Computed Value */
+    .computed-value {
+        padding: 11px 14px;
+        background: var(--g100);
+        border: 2px solid var(--g200);
+        border-radius: var(--radius);
+        font-size: 0.92rem;
+        color: var(--primary);
+        font-weight: 700;
+    }
+
+    /* Toggle */
+    .toggle-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 4px;
+    }
+
+    .toggle {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        cursor: pointer;
+    }
+
+    .toggle input {
+        display: none;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        inset: 0;
+        background: var(--g300);
+        border-radius: 50px;
+        transition: var(--transition);
+    }
+
+    .toggle-slider::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
+        background: #fff;
+        border-radius: 50%;
+        transition: var(--transition);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .toggle input:checked + .toggle-slider {
+        background: var(--warning);
+    }
+
+    .toggle input:checked + .toggle-slider::after {
+        left: 22px;
+    }
+
+    .toggle-text {
+        font-size: 0.82rem;
+        color: var(--g500);
+    }
+
+    /* Live Total Bar */
+    .live-total-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        margin-top: 20px;
+        background: linear-gradient(135deg, var(--g50), var(--success-light));
+        border-radius: var(--radius);
+        border: 1px solid var(--g200);
+    }
+
+    .calc-formula {
+        font-size: 0.8rem;
+        color: var(--g500);
+        font-family: monospace;
+    }
+
+    .total-result {
+        text-align: right;
+    }
+
+    .total-result .total-label {
+        display: block;
+        font-size: 0.68rem;
+        color: var(--g400);
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .total-result .total-amount {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--success-dark);
+    }
+
+    /* Image Selector */
+    .image-selector {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+    }
+
+    .current-image {
+        width: 120px;
+        flex-shrink: 0;
+    }
+
+    .preview-img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: var(--radius);
+        border: 2px solid var(--g200);
+    }
+
+    .no-image {
+        width: 120px;
+        height: 120px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: var(--g100);
+        border-radius: var(--radius);
+        border: 2px dashed var(--g300);
+        color: var(--g400);
+        font-size: 0.75rem;
+    }
+
+    .no-image i {
+        font-size: 1.5rem;
+    }
+
+    .image-select-wrap {
+        flex: 1;
+    }
+
+    /* Spec Footer */
+    .spec-footer {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 6px;
+    }
+
+    .char-count {
+        font-size: 0.72rem;
+        color: var(--g400);
+    }
+
+    /* Action Bar */
+    .action-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 16px;
+    }
+
+    .action-right {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-cancel,
+    .btn-save-continue,
+    .btn-save {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        border: none;
+        text-decoration: none;
+    }
+
+    .btn-cancel {
+        background:var(--danger);
+        border: 2px solid var(--g200);
+        color: #fff;
+    }
+
+    .btn-cancel:hover {
+        background: var(--danger);
+        border-color: var(--danger);
+        transform: translateY(-2px);
+    }
+
+    .btn-save-continue {
+        background: var(--primary-light);
+        color: var(--primary);
+        border: 2px solid transparent;
+    }
+
+    .btn-save-continue:hover {
+        background: var(--primary);
+        color: #fff;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, var(--success), var(--success-dark));
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .field-row.two,
+        .field-row.three,
+        .field-row.four {
+            grid-template-columns: 1fr;
+        }
+
+        .edit-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .current-total {
+            text-align: center;
+        }
+
+        .edit-topbar {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .action-bar {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .action-right {
+            width: 100%;
+            flex-direction: column;
+        }
+
+        .btn-cancel,
+        .btn-save-continue,
+        .btn-save {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .image-selector {
+            flex-direction: column;
+        }
+
+        .current-image {
+            width: 100%;
+        }
+
+        .preview-img, .no-image {
+            width: 100%;
+            height: 200px;
+        }
+    }
+</style>
+
+<script>
+    // ===== Live Calculation =====
+    function calcTotal() {
+        const length = parseFloat(document.getElementById('lengthInput').value) || 0;
+        const width = parseFloat(document.getElementById('widthInput').value) || 1;
+        const rate = parseFloat(document.getElementById('rateInput').value) || 0;
+        const qty = parseFloat(document.getElementById('qtyInput').value) || 1;
+
+        const area = length * width;
+        const total = area * rate * qty;
+
+        // Update area
+        document.getElementById('areaDisplay').textContent = area.toFixed(2) + ' sqft';
+
+        // Update formula
+        document.getElementById('calcFormula').textContent = 
+            `${length} × ${width} × ₹${rate.toLocaleString('en-IN')} × ${qty}`;
+
+        // Update total
+        document.getElementById('liveTotal').textContent = 
+            '₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // ===== Preset Rate from Series =====
+    function updatePresetRate() {
+        const select = document.getElementById('fullsemiSelect');
+        const option = select.options[select.selectedIndex];
+        const rate = option?.dataset?.rate;
+
+        if (rate && parseFloat(rate) > 0) {
+            document.getElementById('rateInput').value = rate;
+            calcTotal();
+        }
+    }
+
+    // ===== Image Preview =====
+    function updateImagePreview() {
+        const select = document.getElementById('imageSelect');
+        const option = select.options[select.selectedIndex];
+        const url = option?.dataset?.url;
+        const previewImg = document.getElementById('previewImg');
+        const noImage = document.getElementById('noImage');
+
+        if (url) {
+            previewImg.src = url;
+            previewImg.style.display = 'block';
+            if (noImage) noImage.style.display = 'none';
+        } else {
+            previewImg.style.display = 'none';
+            if (noImage) noImage.style.display = 'flex';
+        }
+    }
+
+    // ===== Character Count =====
+    document.getElementById('specTextarea')?.addEventListener('input', function() {
+        document.getElementById('charCount').textContent = this.value.length;
+    });
+
+    // ===== Keyboard Shortcuts =====
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+S: Save & Back
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            document.getElementById('rowEditForm').submit();
+        }
+
+        // Ctrl+Enter: Save & Continue
+        if (e.ctrlKey && e.key === 'Enter') {
+            e.preventDefault();
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'next';
+            hiddenInput.value = 'stay';
+            document.getElementById('rowEditForm').appendChild(hiddenInput);
+            document.getElementById('rowEditForm').submit();
+        }
+    });
+
+    // ===== Initial Calc =====
+    calcTotal();
+</script>
+
+{% endblock %}
