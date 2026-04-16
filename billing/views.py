@@ -915,6 +915,7 @@ def spend_list(request):
 
 
 
+
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from decimal import Decimal
@@ -1361,10 +1362,10 @@ def build_invoice_context(request, payment):
 
     invoice_number = f"INV-{client.id}{payment.id}{payment.date.strftime('%d%m%Y')}"
 
-    client_name = re.sub(r'[^A-Za-z0-9]+', '', client.name.upper())
-    project_code = f"{project.id}"
+    client_name = re.sub(r'[^A-Za-z0-9]+', '', client.name.capitalize())[:10]
+    project_code = f"inv"
     date_str = payment.date.strftime('%d-%m-%Y')
-    invoice_filename = f"{client_name}-{project_code}-{date_str}"
+    invoice_filename = f"{client_name}-{project_code}-({date_str}).pdf"
 
     invoice_url = request.build_absolute_uri(
         reverse('public_invoice', args=[payment.invoice_token])
@@ -2509,7 +2510,7 @@ def quotation_pdf(request, client_id):
         content_type="application/pdf"
     )
     
-    filename = f"QTN_{client.name}_{date.today().strftime('%Y%m%d')}.pdf"
+    filename = f"QTN_{client.name.capitalize()[:10]}_{date.today().strftime('%Y%m%d')}.pdf"
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     
     return response
