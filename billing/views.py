@@ -1985,28 +1985,59 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import QtnClient, QuotationItem, Image, FullSemi
 
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from decimal import Decimal
+from .models import QtnClient, QuotationItem
+
 @login_required
 def quotation_update(request, client_id):
-    """
-    Shows ALL rows for a client in a READ-ONLY list
-    Each row has an EDIT button that opens the single-row editor
-    """
+
     client = get_object_or_404(QtnClient, id=client_id)
-    
-    rows = QuotationItem.objects.filter(
-        client_id=client_id
-    ).select_related('client', 'image', 'full_semi').order_by('sort_order', 'id')
+
+    rows = (
+        QuotationItem.objects
+        .filter(client_id=client_id)
+        .select_related('client', 'image', 'full_semi')
+        .order_by('sort_order', 'id')
+    )
 
     if not rows.exists():
         return redirect("quotation_index")
 
-    subtotal = sum(r.total for r in rows)
+    # 🔥 HANDLE UPDATE (ONLY CLIENT INFO)
+    if request.method == "POST":
+
+        new_client_id = request.POST.get("client")
+        start_date = request.POST.get("estimate_start_date")
+        end_date = request.POST.get("estimate_end_date")
+
+        # ✅ Update client reference (if changed)
+        if new_client_id and str(new_client_id) != str(client.id):
+            new_client = get_object_or_404(QtnClient, id=new_client_id)
+
+            # 🔥 Move all rows to new client
+            rows.update(client=new_client)
+            client = new_client  # update reference
+
+        # ✅ Update dates
+        client.estimate_start_date = start_date
+        client.estimate_end_date = end_date
+        client.save(update_fields=["estimate_start_date", "estimate_end_date"])
+
+        return redirect("quotation_index")
+
+    # -------------------------
+    # Display
+    # -------------------------
+    subtotal = sum((r.total for r in rows), Decimal("0.00"))
 
     return render(request, "billing/quotation/update.html", {
         "client": client,
         "rows": rows,
         "subtotal": subtotal,
         "row_count": rows.count(),
+        "clients": QtnClient.objects.all(),  # 🔥 for dropdown
     })
 
 

@@ -1379,7 +1379,7 @@
     align-items: center;
     gap: 8px;
     padding: 10px 18px;
-    background: transparent;
+    background: rgba(255, 5, 5, 0.74);
     border: 1.5px solid rgba(255, 255, 255, 0.2);
     border-radius: 10px;
     font-size: 0.875rem;
@@ -1423,7 +1423,7 @@
 }
 
 .btn-discard:hover .btn-icon-wrap {
-    background: rgba(239, 68, 68, 0.25);
+    background: rgba(255, 255, 255, 0.97);
     transform: rotate(90deg);
 }
 
@@ -2739,7 +2739,7 @@
                             <select name="client" class="form-select-modern" id="clientSelect" required onchange="validateClientSection()">
                                 <option value="">Select a client...</option>
                                 {% for c in clients %}
-                                <option value="{{ c.id }}">{{ c.name }}</option>
+                                <option value="{{ c.id }}">{{ c.name }} ({{c.location|truncatechars:30}})</option>
                                 {% endfor %}
                             </select>
                             <i class="bi bi-chevron-down select-arrow"></i>
@@ -2836,7 +2836,7 @@
                                 <!-- Floor / Location -->
                                 <td>
                                     <input name="floor[]" class="table-input primary floor-input" placeholder="Floor (e.g. 1st)" required data-field="Floor" oninput="validateRow(this)">
-                                    <input name="location[]" list="locationList" class="table-input small" placeholder="Location" required style="margin-top: 0.375rem;" data-field="Location" oninput="validateRow(this)">
+                                    <input name="location[]" list="locationList" class="table-input" placeholder="Location" required style="margin-top: 0.375rem;color: #ff0000;font-weight: bold;" data-field="Location" oninput="validateRow(this)">
                                     <div class="floor-checkbox-wrapper">
                                         <input type="checkbox" class="floor-end-toggle">
                                         <label>Move to end</label>
