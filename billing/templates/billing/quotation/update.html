@@ -1738,6 +1738,13 @@
         .filter-chips { overflow-x: auto; flex-wrap: nowrap; }
         .view-toggle { align-self: flex-end; }
         .cards-grid { grid-template-columns: 1fr 1fr; }
+        .save-btn {
+            height: 28px;
+            padding: 0 16px;
+            border-radius: 6px;
+            font-weight: 300;
+            font-size: 0.75rem;
+        }
     }
 
     @media (max-width: 480px) {
@@ -1752,6 +1759,7 @@
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     margin-bottom: 20px;
+    overflow-x: auto;
 }
 
 .config-grid {
@@ -1771,6 +1779,8 @@
 
 .modern-input {
     height: 38px;
+    width : 100%;
+    padding: 0 12px;
     border-radius: 6px;
     border: 1px solid #e2e8f0;
     font-size: 14px;

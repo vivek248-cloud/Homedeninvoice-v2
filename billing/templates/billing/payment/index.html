@@ -634,8 +634,8 @@
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    flex-wrap: wrap;
-    overflow: hidden;                    /* ← FIX 1: contain children */
+   
+    overflow-x: scroll;                    /* ← FIX 1: contain children */
 }
 
 .toolbar-left {
@@ -652,6 +652,8 @@
     flex: 0 1 auto;                      /* ← FIX 5: allow shrinking */
     min-width: 0;
 }
+
+
 
 
 .client-select-wrap {
@@ -711,6 +713,7 @@
     flex: 1 1 180px;                     /* ← FIX 10: grow/shrink with 180px base */
     max-width: 150px;
 }
+
 
 
     .search-icon {
