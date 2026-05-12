@@ -736,10 +736,12 @@ def project_list(request):
         for p in project_list_qs
         if p.pending_amount > 0
     )
+    count = len(project_list_qs)
 
     return render(request, 'billing/project/index.html', {
         'projects': project_list_qs,
         'total_receivable': total_receivable,
+        'count': count,
         'today': today,
     })
 
