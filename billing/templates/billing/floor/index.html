@@ -228,7 +228,7 @@
             </div>
 
             <!-- Floor Distribution -->
-            <div class="info-card mb-3">
+            <div class="info-card mb-3 ">
                 <div class="info-card-header">
                     <div class="ich-icon ich-violet">
                         <i class="bi bi-building"></i>
@@ -500,7 +500,8 @@
         background: var(--surface);
         border: 1px solid var(--border-light);
         border-radius: var(--radius);
-        overflow: hidden;
+        height: 900px;
+        overflow-y: auto;
     }
 
     .master-table thead th {
@@ -640,6 +641,7 @@
         border-radius: var(--radius);
         padding: 1.25rem;
         transition: all 0.3s;
+        overflow-y: auto;
     }
 
     .info-card:hover {
@@ -809,6 +811,8 @@
     .floor-visual {
         display: flex;
         flex-direction: column;
+        height: 300px;
+        overflow-y: auto;
         gap: 6px;
     }
 
