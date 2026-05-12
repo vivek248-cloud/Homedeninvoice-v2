@@ -47,3 +47,14 @@ def humanize_views(value):
         return str(value)
     except:
         return value
+    
+
+
+
+
+register = template.Library()
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)

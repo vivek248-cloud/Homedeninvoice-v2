@@ -180,6 +180,7 @@
                         <th><div class="th-inner">Pending</div></th>
                         <th><div class="th-inner">Progress</div></th>
                         <th class="text-center"><div class="th-inner justify-content-center">Status</div></th>
+                        <th><div class="th-inner">Timeline</div></th>
                         <th class="text-end pe-4"><div class="th-inner justify-content-end">Actions</div></th>
                     </tr>
                 </thead>
@@ -274,7 +275,80 @@
                                 </span>
                             {% endif %}
                         </td>
+                        <!-- TIMELINE -->
+                 <td>
+                    <div class="timeline-cell">
+                        <div class="timeline-main">
 
+                            <!-- PROJECT CREATED DATE -->
+                            <div class="timeline-date">
+                                <div class="timeline-date-icon td-created">
+                                    <i class="bi bi-calendar-plus"></i>
+                                </div>
+                                <div class="timeline-date-content">
+                                    <span class="timeline-date-label">Project Created</span>
+                                    <span class="timeline-date-value">
+                                        {{ project.start_date|date:"d M Y" }}
+                                    </span>
+                                    <span class="timeline-date-ago">
+                                        {{ project.age_days }} day{{ project.age_days|pluralize }} ago
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- LATEST PAYMENT DATE -->
+                            {% if project.last_payment_date %}
+                            <div class="timeline-date">
+                                <div class="timeline-date-icon td-last-payment text-{% if project.last_activity_days > 30 %}danger{% elif project.last_activity_days > 15 %}warning{% else %}muted{% endif %}">
+                                    <i class="bi bi-wallet2"></i>
+                                </div>
+                                <div class="timeline-date-content">
+                                    <span class="timeline-date-label">Latest Payment</span>
+                                    <span class="timeline-date-value">
+                                        {{ project.last_payment_date|date:"d M Y" }}
+                                    </span>
+                                    <span class="timeline-date-ago
+                                        {% if project.last_activity_days > 30 %}ago-danger
+                                        {% elif project.last_activity_days > 15 %}ago-warning
+                                        {% endif %}">
+                                        {{ project.last_activity_days }} day{{ project.last_activity_days|pluralize }} ago
+                                    </span>
+                                </div>
+                            </div>
+
+                            {% if project.last_activity_days > 30 %}
+                            <div class="bg-danger-soft payment-warning">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                No payment in last {{ project.last_activity_days }} days
+                            </div>
+                            {% endif %}
+
+                            {% else %}
+
+                            <!-- NO PAYMENT YET -->
+                            <div class="timeline-date">
+                                <div class="timeline-date-icon td-last-payment bg-danger-soft text-danger">
+                                    <i class="bi bi-clock-history text-danger"></i>
+                                </div>
+                                <div class="timeline-date-content">
+                                    <span class="timeline-date-label">Latest Payment</span>
+                                    <span class="timeline-date-value">No payment yet</span>
+                                    <span class="timeline-date-ago">Not started</span>
+                                </div>
+                            </div>
+
+                            {% if project.show_payment_alert %}
+                            <div class="payment-warning">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                No payment received for {{ project.age_days }} days
+                            </div>
+                            {% endif %}
+
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </td>
                         <!-- ACTIONS -->
                         <td class="text-end pe-4">
                             <div class="action-group">
@@ -401,6 +475,84 @@
                             {% if project.budget > 0 %}{% widthratio project.total_paid project.budget 100 %}%{% else %}0%{% endif %} collected
                         </span>
                     </div>
+
+
+                    <!-- Timeline -->
+                    
+                    <!-- Timeline Section for Grid -->
+                        <div class="pgc-divider"></div>
+                        <div class="timeline-cell timeline-grid">
+                            <div class="timeline-main">
+
+                                <!-- PROJECT CREATED DATE -->
+                                <div class="timeline-date">
+                                    <div class="timeline-date-icon td-created">
+                                        <i class="bi bi-calendar-plus"></i>
+                                    </div>
+                                    <div class="timeline-date-content">
+                                        <span class="timeline-date-label">Project Created</span>
+                                        <span class="timeline-date-value">
+                                            {{ project.start_date|date:"d M Y" }}
+                                        </span>
+                                        <span class="timeline-date-ago">
+                                            {{ project.age_days }} day{{ project.age_days|pluralize }} ago
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- LATEST PAYMENT DATE -->
+                                {% if project.last_payment_date %}
+                                <div class="timeline-date">
+                                    <div class="timeline-date-icon td-last-payment">
+                                        <i class="bi bi-wallet2"></i>
+                                    </div>
+                                    <div class="timeline-date-content">
+                                        <span class="timeline-date-label">Latest Payment</span>
+                                        <span class="timeline-date-value">
+                                            {{ project.last_payment_date|date:"d M Y" }}
+                                        </span>
+                                        <span class="timeline-date-ago
+                                            {% if project.last_activity_days > 30 %}ago-danger
+                                            {% elif project.last_activity_days > 15 %}ago-warning
+                                            {% endif %}">
+                                            {{ project.last_activity_days }} day{{ project.last_activity_days|pluralize }} ago
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {% if project.last_activity_days > 30 %}
+                                <div class="payment-warning">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    No payment in last {{ project.last_activity_days }} days
+                                </div>
+                                {% endif %}
+
+                                {% else %}
+
+                                <!-- NO PAYMENT YET -->
+                                <div class="timeline-date">
+                                    <div class="timeline-date-icon td-last-payment">
+                                        <i class="bi bi-clock-history"></i>
+                                    </div>
+                                    <div class="timeline-date-content">
+                                        <span class="timeline-date-label">Latest Payment</span>
+                                        <span class="timeline-date-value text-muted">No payment yet</span>
+                                        <span class="timeline-date-ago">Not started</span>
+                                    </div>
+                                </div>
+
+                                {% if project.show_payment_alert %}
+                                <div class="payment-warning ">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    No payment for {{ project.age_days }} days
+                                </div>
+                                {% endif %}
+
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    
                 </div>
             </div>
             {% endfor %}
@@ -1652,6 +1804,317 @@
         height: 6px;
     }
 }
+
+/* ═══════════════════════════════════ */
+/*  TIMELINE UI                        */
+/* ═══════════════════════════════════ */
+
+.timeline-cell {
+    min-width: 230px;
+    max-width: 300px;
+}
+
+.timeline-main {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    padding: 2px 0;
+}
+
+/* Each timeline row */
+.timeline-date {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+/* Vertical connector line */
+.timeline-main .timeline-date:not(:last-of-type)::after {
+    content: "";
+    position: absolute;
+    left: 17px;
+    top: 38px;
+    width: 2px;
+    height: calc(100% + 8px);
+    background: linear-gradient(
+        to bottom,
+        rgba(148, 163, 184, 0.28),
+        rgba(148, 163, 184, 0.08)
+    );
+    border-radius: 10px;
+}
+
+/* Icon box */
+.timeline-date-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.saas-table tbody tr:hover .timeline-date-icon {
+    transform: translateY(-1px);
+}
+
+/* Created icon */
+.td-created {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(129, 140, 248, 0.06));
+    color: var(--indigo);
+    border-color: rgba(99, 102, 241, 0.14);
+    box-shadow: 0 6px 14px rgba(99, 102, 241, 0.10);
+}
+
+/* Latest payment icon */
+.td-last-payment {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(56, 189, 248, 0.06));
+    color: var(--sky);
+    border-color: rgba(14, 165, 233, 0.14);
+    box-shadow: 0 6px 14px rgba(14, 165, 233, 0.10);
+}
+
+/* Text area */
+.timeline-date-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 1px;
+}
+
+.timeline-date-label {
+    font-size: 0.60rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    line-height: 1.1;
+}
+
+.timeline-date-value {
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: var(--text-1);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+}
+
+.timeline-date-ago {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: fit-content;
+    margin-top: 2px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-light);
+    color: var(--text-2);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* Warning age */
+.timeline-date-ago.ago-warning {
+    background: rgba(245, 158, 11, 0.10);
+    border-color: rgba(245, 158, 11, 0.18);
+    color: #b45309;
+}
+
+/* Danger age */
+.timeline-date-ago.ago-danger {
+    background: rgba(244, 63, 94, 0.10);
+    border-color: rgba(244, 63, 94, 0.18);
+    color: var(--rose);
+}
+
+/* Warning alert */
+.payment-warning {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.08), rgba(251, 113, 133, 0.05));
+    border: 1px solid rgba(244, 63, 94, 0.14);
+    color: var(--rose);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.3;
+    width: fit-content;
+    max-width: 100%;
+    box-shadow: 0 8px 18px rgba(244, 63, 94, 0.08);
+}
+
+.payment-warning i {
+    font-size: 0.82rem;
+    flex-shrink: 0;
+}
+
+/* Make no-payment text slightly softer */
+.timeline-date-value.text-muted,
+.text-muted.timeline-date-value {
+    color: var(--text-3) !important;
+    font-weight: 700;
+}
+
+/* Optional: nicer cell alignment in table */
+.saas-table tbody td .timeline-cell {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .timeline-cell {
+        min-width: 190px;
+        max-width: 220px;
+    }
+
+    .timeline-date {
+        gap: 8px;
+    }
+
+    .timeline-date-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 0.74rem;
+        border-radius: 10px;
+    }
+
+    .timeline-main .timeline-date:not(:last-of-type)::after {
+        left: 15px;
+        top: 34px;
+    }
+
+    .timeline-date-value {
+        font-size: 0.78rem;
+    }
+
+    .timeline-date-ago {
+        font-size: 0.64rem;
+        padding: 3px 7px;
+    }
+
+    .payment-warning {
+        font-size: 0.68rem;
+        padding: 7px 9px;
+    }
+}
+
+@media (max-width: 480px) {
+    .timeline-cell {
+        min-width: 170px;
+    }
+
+    .timeline-date-label {
+        font-size: 0.56rem;
+    }
+
+    .timeline-date-value {
+        font-size: 0.74rem;
+    }
+
+    .timeline-date-ago {
+        font-size: 0.60rem;
+    }
+}
+
+
+/* ═══════════════════════════════════ */
+/*  GRID — TIMELINE OVERRIDES         */
+/* ═══════════════════════════════════ */
+
+.timeline-grid {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+}
+
+.project-grid-card .timeline-main {
+    gap: 10px;
+}
+
+.project-grid-card .timeline-date-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
+
+.project-grid-card .timeline-main .timeline-date:not(:last-of-type)::after {
+    left: 15px;
+    top: 34px;
+    height: calc(100% + 8px);
+}
+
+.project-grid-card .timeline-date-label {
+    font-size: 0.56rem;
+}
+
+.project-grid-card .timeline-date-value {
+    font-size: 0.78rem;
+}
+
+.project-grid-card .timeline-date-ago {
+    font-size: 0.62rem;
+    padding: 3px 7px;
+}
+
+.project-grid-card .payment-warning {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.68rem;
+    padding: 7px 10px;
+    border-radius: 10px;
+}
+
+/* ═══════════════════════════════════ */
+/*  GRID RESPONSIVE                    */
+/* ═══════════════════════════════════ */
+
+@media (max-width: 576px) {
+    .project-grid-card .timeline-date-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 0.68rem;
+        border-radius: 8px;
+    }
+
+    .project-grid-card .timeline-main .timeline-date:not(:last-of-type)::after {
+        left: 13px;
+        top: 30px;
+    }
+
+    .project-grid-card .timeline-date {
+        gap: 7px;
+    }
+
+    .project-grid-card .timeline-date-value {
+        font-size: 0.72rem;
+    }
+
+    .project-grid-card .timeline-date-ago {
+        font-size: 0.58rem;
+        padding: 2px 6px;
+    }
+
+    .project-grid-card .payment-warning {
+        font-size: 0.62rem;
+        padding: 6px 8px;
+    }
+}
+
 </style>
 
 <!-- ════════════════════════════════════════════ -->

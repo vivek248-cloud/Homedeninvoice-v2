@@ -591,31 +591,157 @@ def client_delete(request, pk):
 
 
 # 📌 Project List
+# def project_list(request):
+
+#     query = request.GET.get('q')
+
+#     projects = Project.objects.select_related('client').order_by('-id')
+
+#     # 🔍 Apply filter
+#     if query:
+#         projects = projects.filter(
+#             Q(name__icontains=query) |
+#             Q(client__name__icontains=query)
+#         )
+
+#     # 🔥 Calculate total receivable AFTER filtering
+#     total_receivable = Decimal("0.00")
+#     for project in projects:
+#         total_receivable += project.yet_to_receive
+
+#     context = {
+#         'projects': projects,
+#         'total_receivable': total_receivable,
+#         'query': query,
+#     }
+
+#     return render(request, 'billing/project/index.html', context)
+
+
+
+# views.py
+
+from datetime import date
+from decimal import Decimal
+from django.db.models import Sum, Min, Max
+from django.shortcuts import render
+
+
 def project_list(request):
 
-    query = request.GET.get('q')
+    projects = Project.objects.select_related('client').all().order_by('-id').annotate(
+        first_payment_date=Min('payments__date'),
+        last_payment_date=Max('payments__date'),
+        annotated_total_paid=Sum('payments__amount'),
+    )
 
-    projects = Project.objects.select_related('client').order_by('-id')
+    today = date.today()
 
-    # 🔍 Apply filter
-    if query:
-        projects = projects.filter(
-            Q(name__icontains=query) |
-            Q(client__name__icontains=query)
-        )
+    project_list_qs = list(projects)
 
-    # 🔥 Calculate total receivable AFTER filtering
-    total_receivable = Decimal("0.00")
-    for project in projects:
-        total_receivable += project.yet_to_receive
+    for project in project_list_qs:
 
-    context = {
-        'projects': projects,
+        # ═══════════════════════════════════
+        #  PROJECT START DATE
+        # ═══════════════════════════════════
+        if project.created_at:
+            created_date = project.created_at.date()
+            project.start_date = created_date
+            project.age_days = (today - created_date).days
+        else:
+            project.start_date = None
+            project.age_days = 0
+
+        # ═══════════════════════════════════
+        #  PAYMENT TIMELINE
+        # ═══════════════════════════════════
+        if project.first_payment_date:
+            delta = today - project.first_payment_date
+            project.days_elapsed = delta.days
+
+            if project.last_payment_date:
+                last_delta = today - project.last_payment_date
+                project.last_activity_days = last_delta.days
+            else:
+                project.last_activity_days = None
+
+            days = delta.days
+            if days == 0:
+                project.duration_label = "Today"
+            elif days == 1:
+                project.duration_label = "1 day"
+            elif days < 7:
+                project.duration_label = f"{days} days"
+            elif days < 30:
+                weeks = days // 7
+                project.duration_label = f"{weeks} week{'s' if weeks > 1 else ''}"
+            elif days < 365:
+                months = days // 30
+                extra_days = days % 30
+                if extra_days > 0:
+                    project.duration_label = f"{months}m {extra_days}d"
+                else:
+                    project.duration_label = f"{months} month{'s' if months > 1 else ''}"
+            else:
+                years = days // 365
+                months = (days % 365) // 30
+                project.duration_label = f"{years}y {months}m"
+
+            if days <= 30:
+                project.duration_status = "fresh"
+            elif days <= 90:
+                project.duration_status = "active"
+            elif days <= 180:
+                project.duration_status = "aging"
+            else:
+                project.duration_status = "old"
+
+        else:
+            project.days_elapsed = None
+            project.last_activity_days = None
+            project.duration_label = "Not started"
+            project.duration_status = "none"
+
+        # ═══════════════════════════════════
+        #  PENDING AMOUNT & PAYMENT STATUS
+        # ═══════════════════════════════════
+        paid = project.annotated_total_paid or Decimal("0.00")
+        raw_pending = project.budget - paid
+        project.pending_amount = raw_pending if raw_pending > 0 else Decimal("0.00")
+
+        if project.pending_amount <= 0:
+            project.payment_status = "paid"
+        elif project.last_activity_days is not None and project.last_activity_days <= 15:
+            project.payment_status = "healthy"
+        elif project.last_activity_days is not None and project.last_activity_days <= 30:
+            project.payment_status = "warning"
+        else:
+            project.payment_status = "danger"
+
+        # ═══════════════════════════════════
+        #  SHOW NO-PAYMENT ALERT (> 30 days)
+        # ═══════════════════════════════════
+        if not project.first_payment_date and project.age_days > 30:
+            project.show_payment_alert = True
+        elif project.last_activity_days is not None and project.last_activity_days > 30:
+            project.show_payment_alert = True
+        else:
+            project.show_payment_alert = False
+
+    # ═══════════════════════════════════
+    #  TOTAL RECEIVABLE STAT
+    # ═══════════════════════════════════
+    total_receivable = sum(
+        p.pending_amount
+        for p in project_list_qs
+        if p.pending_amount > 0
+    )
+
+    return render(request, 'billing/project/index.html', {
+        'projects': project_list_qs,
         'total_receivable': total_receivable,
-        'query': query,
-    }
-
-    return render(request, 'billing/project/index.html', context)
+        'today': today,
+    })
 
 
 
@@ -1473,6 +1599,131 @@ def payment_delete(request, pk):
         return redirect('payment_list')
 
     return render(request, 'billing/payment/delete.html', {'payment': payment})
+
+
+
+
+
+
+
+
+from django.db.models import Sum, Avg
+
+
+# views.py
+
+from django.db.models import Sum, Avg, Count, Q, Max
+from django.shortcuts import render
+from decimal import Decimal, ROUND_HALF_UP
+
+
+def invoice_dashboard(request):
+
+    client_id = request.GET.get("client")
+    project_id = request.GET.get("project")
+
+    clients = Client.objects.all().order_by("name")
+
+    projects = Payment.objects.none()
+    invoices = Payment.objects.none()
+
+    # ✅ Initialize all stats
+    stats = {
+        'total_received': Decimal('0.00'),
+        'total_gst_collected': Decimal('0.00'),
+        'total_discount_given': Decimal('0.00'),
+        'total_base_amount': Decimal('0.00'),
+        'total_grand_total': Decimal('0.00'),
+        'invoice_count': 0,
+        'most_used_gst': Decimal('0.00'),
+        'payment_mode_breakdown': {},
+    }
+
+    if client_id:
+        projects = Project.objects.filter(
+            client_id=client_id
+        ).order_by('-id')
+
+    if project_id:
+
+        invoices = (
+            Payment.objects
+            .select_related('project', 'project__client')
+            .filter(project_id=project_id)
+            .order_by('-date', '-id')
+        )
+
+        # ✅ Calculate correct stats
+        stats = _calculate_invoice_stats(invoices)
+
+    return render(request, 'billing/invoice/dashboard.html', {
+        'clients': clients,
+        'projects': projects,
+        'invoices': invoices,
+        'selected_client': client_id,
+        'selected_project': project_id,
+
+        # ✅ Pass correct stats
+        'stats': stats,
+
+        # ✅ Keep backward compatibility
+        'total_amount': stats['total_received'],
+        'avg_gst': stats['most_used_gst'],
+    })
+
+
+def _calculate_invoice_stats(invoices):
+    """
+    Calculate correct invoice statistics.
+    
+    Payment.amount = actual cash received (not base amount)
+    GST & discount are stored per payment to calculate grand total
+    """
+
+    total_received = Decimal('0.00')
+    total_gst_collected = Decimal('0.00')
+    total_discount_given = Decimal('0.00')
+    total_grand_total = Decimal('0.00')
+    total_base_amount = Decimal('0.00')
+    invoice_count = 0
+    gst_rates = []
+    payment_modes = {}
+
+    for payment in invoices:
+        invoice_count += 1
+
+        # ✅ Amount received in this payment
+        received = Decimal(str(payment.amount or 0))
+        total_received += received
+
+        # ✅ Track payment mode breakdown
+        mode = payment.get_payment_mode_display()
+        payment_modes[mode] = payment_modes.get(mode, Decimal('0')) + received
+
+        # ✅ Track GST rate used
+        if payment.gst_rate:
+            gst_rates.append(Decimal(str(payment.gst_rate)))
+
+    # ✅ Most used GST rate (mode, not average)
+    # Because using average of 18%, 18%, 0% = 12% which is wrong
+    most_used_gst = Decimal('0.00')
+    if gst_rates:
+        from collections import Counter
+        gst_counter = Counter([str(r) for r in gst_rates])
+        most_common_gst = gst_counter.most_common(1)[0][0]
+        most_used_gst = Decimal(most_common_gst)
+
+    return {
+        'total_received': total_received.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'total_gst_collected': total_gst_collected.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'total_discount_given': total_discount_given.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'total_grand_total': total_grand_total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'total_base_amount': total_base_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'invoice_count': invoice_count,
+        'most_used_gst': most_used_gst,
+        'payment_mode_breakdown': payment_modes,
+        'unique_gst_rates': sorted(set(str(r) for r in gst_rates)),
+    }
 
 
 

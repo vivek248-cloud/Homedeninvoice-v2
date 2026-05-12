@@ -1,0 +1,586 @@
+{% extends 'billing/layouts/base.html' %}
+{% load extra_filters %}
+{% load static %}
+
+{% block title %}Import Spend Data{% endblock %}
+{% block page_title %}Import Spend Data{% endblock %}
+
+{% block content %}
+
+<style>
+
+:root{
+    --bg:#f8f6f1;
+    --card:#ffffff;
+    --border:#e7e2d8;
+    --text:#1d1d1b;
+    --muted:#78716c;
+    --primary:#b45309;
+    --primary-soft:#fef3c7;
+    --radius:18px;
+    --shadow:0 10px 30px rgba(0,0,0,.05);
+}
+
+.import-page{
+    max-width:1400px;
+    margin:auto;
+    padding:24px;
+}
+
+.import-header{
+    margin-bottom:24px;
+}
+
+.import-title{
+    font-size:32px;
+    font-weight:800;
+    color:var(--text);
+}
+
+.import-subtitle{
+    color:var(--muted);
+    margin-top:6px;
+}
+
+.card-box{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:24px;
+    margin-bottom:24px;
+    box-shadow:var(--shadow);
+}
+
+/* ============================= */
+/* UPLOAD */
+/* ============================= */
+
+.upload-area{
+    border:2px dashed #d6d3d1;
+    border-radius:18px;
+    padding:50px 20px;
+    text-align:center;
+    background:#fafaf9;
+}
+
+.upload-icon{
+    font-size:60px;
+    color:var(--primary);
+    margin-bottom:14px;
+}
+
+.upload-title{
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:8px;
+}
+
+.upload-desc{
+    color:var(--muted);
+    margin-bottom:20px;
+}
+
+.file-input{
+    display:none;
+}
+
+.btn-upload{
+    border:none;
+    background:var(--primary);
+    color:#fff;
+    padding:14px 22px;
+    border-radius:12px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.btn-upload:hover{
+    background:#92400e;
+}
+
+.file-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+
+    background:var(--primary-soft);
+    color:#92400e;
+
+    padding:10px 14px;
+
+    border-radius:999px;
+
+    margin-top:20px;
+
+    font-size:14px;
+    font-weight:700;
+}
+
+/* ============================= */
+/* SECTION */
+/* ============================= */
+
+.section-title{
+    font-size:24px;
+    font-weight:800;
+    margin-bottom:20px;
+}
+
+/* ============================= */
+/* MAPPING GRID */
+/* ============================= */
+
+.mapping-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:18px;
+}
+
+.mapping-item{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.mapping-label{
+    font-size:13px;
+    font-weight:700;
+    color:var(--muted);
+}
+
+.mapping-select{
+    height:48px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:0 14px;
+    background:#fff;
+    outline:none;
+    font-size:14px;
+}
+
+.mapping-select:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(180,83,9,.1);
+}
+
+/* ============================= */
+/* TABLE */
+/* ============================= */
+
+.preview-wrap{
+    overflow:auto;
+    border-radius:16px;
+    border:1px solid #eee;
+}
+
+.preview-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1000px;
+}
+
+.preview-table thead th{
+    background:#f5f5f4;
+    color:#78716c;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    padding:14px;
+    text-align:left;
+    position:sticky;
+    top:0;
+    z-index:2;
+}
+
+.preview-table td{
+    padding:14px;
+    border-top:1px solid #f1f1f1;
+    font-size:14px;
+    vertical-align:top;
+    word-break:break-word;
+}
+
+.preview-table tr:hover{
+    background:#fafaf9;
+}
+
+/* ============================= */
+/* ACTIONS */
+/* ============================= */
+
+.actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:14px;
+    margin-top:24px;
+    flex-wrap:wrap;
+}
+
+.btn-secondary{
+    padding:13px 20px;
+    border-radius:12px;
+    border:1px solid #ddd;
+    background:#fff;
+    color:#555;
+    text-decoration:none;
+    font-weight:700;
+}
+
+.btn-primary{
+    border:none;
+    background:var(--primary);
+    color:#fff;
+    padding:13px 22px;
+    border-radius:12px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.btn-primary:hover{
+    background:#92400e;
+}
+
+/* ============================= */
+/* EMPTY */
+/* ============================= */
+
+.empty-state{
+    padding:60px 20px;
+    text-align:center;
+}
+
+.empty-icon{
+    font-size:60px;
+    color:#d6d3d1;
+    margin-bottom:12px;
+}
+
+/* ============================= */
+/* MOBILE */
+/* ============================= */
+
+@media(max-width:768px){
+
+    .import-page{
+        padding:14px;
+    }
+
+    .card-box{
+        padding:18px;
+    }
+
+    .import-title{
+        font-size:26px;
+    }
+
+    .actions{
+        flex-direction:column;
+    }
+
+    .btn-primary,
+    .btn-secondary{
+        width:100%;
+    }
+
+    .upload-title{
+        font-size:20px;
+    }
+
+}
+
+</style>
+
+<div class="import-page">
+
+    <!-- HEADER -->
+    <div class="import-header">
+
+        <div class="import-title">
+            Import Spend Data
+        </div>
+
+        <div class="import-subtitle">
+            Upload PDF, Excel, or CSV files and convert them into spend entries.
+        </div>
+
+    </div>
+
+    <!-- UPLOAD -->
+    <div class="card-box">
+
+        <form method="POST"
+              enctype="multipart/form-data">
+
+            {% csrf_token %}
+
+            <div class="upload-area">
+
+                <div class="upload-icon">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                </div>
+
+                <div class="upload-title">
+                    Upload PDF or Excel File
+                </div>
+
+                <div class="upload-desc">
+                    Supported formats: PDF, XLSX, XLS, CSV
+                </div>
+
+                <input type="file"
+                       name="file"
+                       id="fileInput"
+                       class="file-input"
+                       accept=".pdf,.xlsx,.xls,.csv">
+
+                <label for="fileInput" class="btn-upload">
+                    <i class="bi bi-upload"></i>
+                    Choose File
+                </label>
+
+                <div style="margin-top:16px;">
+                    <button type="submit" class="btn-primary">
+                        Upload & Extract
+                    </button>
+                </div>
+
+                {% if uploaded_filename %}
+                <div class="file-badge">
+                    <i class="bi bi-file-earmark-check"></i>
+                    {{ uploaded_filename }}
+                </div>
+                {% endif %}
+
+            </div>
+
+        </form>
+
+    </div>
+
+    {% if columns %}
+
+    <form method="POST"
+          action="{% url 'spend_import_save' %}">
+
+        {% csrf_token %}
+
+        <!-- MAPPING -->
+        <div class="card-box">
+
+            <div class="section-title">
+                Map File Columns
+            </div>
+
+            <div class="mapping-grid">
+
+                <!-- PROJECT -->
+                <div class="mapping-item">
+
+                    <label class="mapping-label">
+                        Project
+                    </label>
+
+                    <select name="project"
+                            class="mapping-select"
+                            required>
+
+                        <option value="">
+                            Select Project
+                        </option>
+
+                        {% for project in projects %}
+                        <option value="{{ project.id }}">
+                            {{ project.name }} - {{ project.client.name }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <!-- FLOOR -->
+                <div class="mapping-item">
+
+                    <label class="mapping-label">
+                        Floor Column
+                    </label>
+
+                    <select name="map_floor"
+                            class="mapping-select">
+
+                        {% for col in columns %}
+                        <option value="{{ col }}">
+                            {{ col }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <!-- ROOM -->
+                <div class="mapping-item">
+
+                    <label class="mapping-label">
+                        Room Column
+                    </label>
+
+                    <select name="map_room"
+                            class="mapping-select">
+
+                        {% for col in columns %}
+                        <option value="{{ col }}">
+                            {{ col }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <!-- ELEMENT -->
+                <div class="mapping-item">
+
+                    <label class="mapping-label">
+                        Elements Column
+                    </label>
+
+                    <select name="map_elements"
+                            class="mapping-select">
+
+                        {% for col in columns %}
+                        <option value="{{ col }}">
+                            {{ col }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <!-- QTY -->
+                <div class="mapping-item">
+
+                    <label class="mapping-label">
+                        Qty Column
+                    </label>
+
+                    <select name="map_qty"
+                            class="mapping-select">
+
+                        {% for col in columns %}
+                        <option value="{{ col }}">
+                            {{ col }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <!-- RATE -->
+                <div class="mapping-item">
+
+                    <label class="mapping-label">
+                        Rate Column
+                    </label>
+
+                    <select name="map_rate"
+                            class="mapping-select">
+
+                        {% for col in columns %}
+                        <option value="{{ col }}">
+                            {{ col }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="card-box">
+
+            <div class="section-title">
+                Data Preview
+            </div>
+
+            {% if rows %}
+
+            <div class="preview-wrap">
+
+                <table class="preview-table">
+
+                    <thead>
+                        <tr>
+
+                            {% for col in columns %}
+                            <th>{{ col }}</th>
+                            {% endfor %}
+
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for row in rows %}
+                        <tr>
+
+                            {% for col in columns %}
+                            <td>
+                                {{ row|get_item:col }}
+                            </td>
+                            {% endfor %}
+
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="empty-state">
+
+                <div class="empty-icon">
+                    <i class="bi bi-table"></i>
+                </div>
+
+                <p>
+                    No preview data available.
+                </p>
+
+            </div>
+
+            {% endif %}
+
+            <div class="actions">
+
+                <a href="" class="btn-secondary">
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn-primary">
+                    <i class="bi bi-database-add"></i>
+                    Import Spend Data
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

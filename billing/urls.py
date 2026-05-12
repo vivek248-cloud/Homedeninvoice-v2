@@ -31,7 +31,7 @@ urlpatterns = [
 
 
 
-
+    path('invoices/', views.invoice_dashboard, name='invoice_dashboard'),
 
     path('floors/', views.floor_list, name='floor_list'),
     path('floors/create/', views.floor_create, name='floor_create'),
@@ -64,6 +64,7 @@ urlpatterns = [
     path('spends/create/', views.spend_create, name='spend_create'),
     path('spends/update/<int:pk>/', views.spend_update, name='spend_update'),
     path('spends/delete/<int:pk>/', views.spend_delete, name='spend_delete'),
+
 
 
     path(

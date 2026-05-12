@@ -1,6 +1,3 @@
-
-
-```html
 {% extends 'billing/layouts/base.html' %}
 {% block title %}Update Entry | {{ spend.elements }}{% endblock %}
 {% block page_title %}Edit Spend Record{% endblock %}
@@ -2321,24 +2318,112 @@ function updateCounter(type, result) {
 
 // ===== Update Dropdowns on Page =====
 function updateDropdowns(type, result) {
-    if (!result.id || !result.name) return;
 
-    const dropdownMap = {
-        floor: 'select[name*="floor"]',
-        room: 'select[name*="room"]',
-        fullsemi: 'select[name*="fullsemi"]',
-    };
+    // ==========================================
+    // FLOOR
+    // ==========================================
 
-    const selector = dropdownMap[type];
-    if (!selector) return;
+    if (type === 'floor') {
 
-    document.querySelectorAll(selector).forEach(select => {
-        const option = document.createElement('option');
-        option.value = result.id;
-        option.textContent = result.name + (result.rate ? ` (₹${result.rate}/sqft)` : '');
-        option.selected = true;
-        select.appendChild(option);
-    });
+        document.querySelectorAll('select[name="floor[]"]')
+
+        .forEach(select => {
+
+            // ✅ SAVE CURRENT VALUE
+            const currentValue = select.value;
+
+            // ✅ CHECK DUPLICATE
+            const exists = [...select.options]
+
+                .some(opt => opt.value == result.id);
+
+            // ✅ ADD NEW OPTION
+            if (!exists) {
+
+                const option = new Option(
+                    result.name,
+                    result.id
+                );
+
+                select.add(option);
+
+            }
+
+            // ✅ RESTORE OLD VALUE
+            select.value = currentValue;
+
+        });
+
+    }
+
+    // ==========================================
+    // ROOM
+    // ==========================================
+
+    else if (type === 'room') {
+
+        document.querySelectorAll('select[name="room[]"]')
+
+        .forEach(select => {
+
+            const currentValue = select.value;
+
+            const exists = [...select.options]
+
+                .some(opt => opt.value == result.id);
+
+            if (!exists) {
+
+                const option = new Option(
+                    result.name,
+                    result.id
+                );
+
+                select.add(option);
+
+            }
+
+            select.value = currentValue;
+
+        });
+
+    }
+
+    // ==========================================
+    // FULLSEMI
+    // ==========================================
+
+    else if (type === 'fullsemi') {
+
+        document.querySelectorAll('select[name="fullsemi[]"]')
+
+        .forEach(select => {
+
+            const currentValue = select.value;
+
+            const exists = [...select.options]
+
+                .some(opt => opt.value == result.id);
+
+            if (!exists) {
+
+                const option = new Option(
+                    `${result.name} (₹${result.rate})`,
+                    result.id
+                );
+
+                option.dataset.rate = result.rate;
+
+                select.add(option);
+
+            }
+
+            select.value = currentValue;
+
+        });
+
+    }
+
 }
 
 // ===== Image File Handling =====
