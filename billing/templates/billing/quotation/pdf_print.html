@@ -174,6 +174,25 @@ opacity:0.6;
     cursor: grabbing;
 }
 
+
+
+.location-group{
+    page-break-inside: avoid;
+}
+
+.floor-row{
+    page-break-after: avoid;
+    page-break-inside: avoid;
+}
+
+.location-row{
+    page-break-after: avoid;
+    page-break-inside: avoid;
+}
+
+.item-row{
+    page-break-inside: avoid;
+}
 </style>
 </head>
 
@@ -251,6 +270,8 @@ opacity:0.6;
 {% regroup floor.list by location_lower as location_list %}
 
 {% for location in location_list %}
+
+<tbody class="location-group">
 
 <tr class="location-row draggable-row" data-type="location">
 <td colspan="7">
