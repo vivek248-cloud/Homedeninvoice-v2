@@ -301,7 +301,8 @@ tr{
     data-id="{{ r.id }}">
 
 <td class="text-center">
-{{ forloop.parentloop.counter }}.{{ forloop.counter }}
+{% comment %} {{ forloop.parentloop.counter }}.{{ forloop.counter }} {% endcomment %}
+{{ forloop.counter }}
 </td>
 
 <td style="width:240px;vertical-align:top;font-size:11px;line-height:1.5;">
