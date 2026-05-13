@@ -325,7 +325,7 @@ tr{
 <td style="width:240px;vertical-align:top;font-size:11px;line-height:1.5;">
 <b>{{ r.element }} :</b><br>
 
-<p class="spec-text">{{ r.specification|pdf_wrap|safe }}</p>
+{{ r.specification|pdf_wrap|safe }}
 
 {% if r.image %}
 <br>
