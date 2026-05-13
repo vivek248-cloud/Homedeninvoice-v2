@@ -1154,6 +1154,25 @@ tr{
 
             .toast { font-size: 11px; padding: 8px 14px; }
         }
+
+
+        /* ===== Specification cell ===== */
+.spec-text{
+    font-size:11px;
+    line-height:1.45;
+    margin:4px 0 0 0;
+    padding:0;
+
+    text-align:left;
+
+    white-space:normal;
+    word-break:normal;
+    overflow-wrap:break-word;
+
+    hyphens:auto;
+}
+
+
     </style>
 </head>
 <body>
@@ -1319,7 +1338,7 @@ tr{
                                 <td class="text-center">{{ forloop.counter }}</td>
                                 <td>
                                     <div class="item-name">{{ r.element }}</div>
-                                    <div class="item-spec text-justify">{{ r.specification|truncatewords:20 }}</div>
+                                    <div class="item-spec spec-text">{{ r.specification|truncatewords:20 }}</div>
                                 </td>
                                 <td>
                                     {% if r.image %}

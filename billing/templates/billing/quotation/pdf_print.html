@@ -208,6 +208,23 @@ tr{
 .item-row{
     page-break-inside: avoid;
 }
+
+
+.spec-text{
+    font-size:11px;
+    line-height:1.45;
+    margin:4px 0 0 0;
+    padding:0;
+
+    text-align:left;
+
+    white-space:normal;
+    word-break:normal;
+    overflow-wrap:break-word;
+
+    hyphens:auto;
+}
+
 </style>
 </head>
 
@@ -305,10 +322,10 @@ tr{
 {{ forloop.counter }}
 </td>
 
-<td style="width:240px;vertical-align:top;font-size:11px;line-height:1.5;text-align:justify;">
+<td style="width:240px;vertical-align:top;font-size:11px;line-height:1.5;">
 <b>{{ r.element }} :</b><br>
 
-{{ r.specification|pdf_wrap|safe }}
+<p class="spec-text">{{ r.specification|pdf_wrap|safe }}</p>
 
 {% if r.image %}
 <br>
