@@ -174,6 +174,69 @@ opacity:0.6;
     cursor: grabbing;
 }
 
+/* =========================================
+   GROUPED TABLE PRINT SAFETY
+========================================= */
+
+.product-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.product-table thead {
+    display: table-header-group;
+}
+
+.product-table tfoot {
+    display: table-footer-group;
+}
+
+.product-table tr,
+.product-table td,
+.product-table th {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
+/* ✅ keep floor + location + its items together as much as possible */
+.product-table tbody.print-group {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
+/* ✅ prevent header rows from separating from following item rows */
+.product-table .floor-row,
+.product-table .location-row {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+}
+
+/* ✅ do not allow first item after header to move away */
+.product-table .floor-row + tr,
+.product-table .location-row + tr {
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+}
+
+/* Optional: cleaner visual grouping */
+.product-table .floor-row td {
+    background: #dff4e8;
+    font-weight: bold;
+    text-align: center;
+}
+
+.product-table .location-row td {
+    background: #eefaf3;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* If a row is dragged in preview */
+.dragging {
+    opacity: 0.6;
+    background: #fef3c7 !important;
+}
+
 </style>
 </head>
 
@@ -221,81 +284,83 @@ opacity:0.6;
 <h3>PRODUCT SUMMARY</h3>
 
 <table class="product-table">
-<thead>
-<tr>
-    <th rowspan="2" style="width:35px;">S.No</th>
-    <th rowspan="2" style="width:240px;">Item</th>
-    <th rowspan="2" style="width:90px;">Core Material</th>
-    <th rowspan="2" style="width:80px;">Brand</th>
-    <th colspan="2" style="width:100px;">Size</th>
-    <th rowspan="2" style="width:100px;">Price</th>
-</tr>
-<tr>
-    <th>Length</th>
-    <th>Width / Height</th>
-</tr>
-</thead>
+    <thead>
+        <tr>
+            <th rowspan="2" style="width:35px;">S.No</th>
+            <th rowspan="2" style="width:240px;">Item</th>
+            <th rowspan="2" style="width:90px;">Core Material</th>
+            <th rowspan="2" style="width:80px;">Brand</th>
+            <th colspan="2" style="width:100px;">Size</th>
+            <th rowspan="2" style="width:100px;">Price</th>
+        </tr>
+        <tr>
+            <th>Length</th>
+            <th>Width / Height</th>
+        </tr>
+    </thead>
 
-<tbody id="quotationRows">
+    {% regroup rows by floor_lower as floor_list %}
 
-{% regroup rows by floor_lower as floor_list %}
+    {% for floor in floor_list %}
+        {% regroup floor.list by location_lower as location_list %}
 
-{% for floor in floor_list %}
+        {% for location in location_list %}
+        <tbody class="print-group" data-floor="{{ floor.list.0.floor|default:'' }}" data-location="{{ location.list.0.location|default:'' }}">
 
-<tr class="floor-row draggable-row" data-type="floor">
-<td colspan="7">
-{{ floor.list.0.floor|upper }}
-</td>
-</tr>
+            {% if forloop.first %}
+            <tr class="floor-row draggable-row" data-type="floor">
+                <td colspan="7">
+                    {{ floor.list.0.floor|upper }}
+                </td>
+            </tr>
+            {% endif %}
 
-{% regroup floor.list by location_lower as location_list %}
+            <tr class="location-row draggable-row" data-type="location">
+                <td colspan="7">
+                    {{ location.list.0.location|upper }}
+                </td>
+            </tr>
 
-{% for location in location_list %}
+            {% for r in location.list %}
+            <tr class="item-row draggable-row"
+                data-type="item"
+                data-id="{{ r.id }}">
 
-<tr class="location-row draggable-row" data-type="location">
-<td colspan="7">
-{{ location.list.0.location|upper }}
-</td>
-</tr>
+                <td class="text-center">
+                    {{ forloop.parentloop.counter }}.{{ forloop.counter }}
+                </td>
 
-{% for r in location.list %}
+                <td style="width:240px; vertical-align:top; font-size:11px; line-height:1.5;">
+                    <b>{{ r.element }} :</b><br>
 
-<tr class="item-row draggable-row"
-    data-type="item"
-    data-id="{{ r.id }}">
+                    {{ r.specification|pdf_wrap|safe }}
 
-<td class="text-center">
-{{ forloop.parentloop.counter }}.{{ forloop.counter }}
-</td>
+                    {% if r.image %}
+                        <br>
+                        <img src="{{ r.image.image.url }}"
+                             style="width:55px; border:1px solid #ccc;">
+                    {% endif %}
+                </td>
 
-<td style="width:240px;vertical-align:top;font-size:11px;line-height:1.5;">
-<b>{{ r.element }} :</b><br>
+                <td>
+                    {{ r.core_material }}<br>/ {{ r.finish_material }}
+                </td>
 
-{{ r.specification|pdf_wrap|safe }}
+                <td>{{ r.brand }}</td>
 
-{% if r.image %}
-<br>
-<img src="{{ r.image.image.url }}" style="width:55px;border:1px solid #ccc;">
-{% endif %}
-</td>
+                <td class="text-center">{{ r.length }}</td>
+                <td class="text-center">{{ r.width }}</td>
 
-<td>{{ r.core_material }}<br>/ {{r.finish_material }}</td>
-<td>{{ r.brand }}</td>
+                <td class="text-right">
+                    Rs. {{ r.total|indian_currency }}
+                </td>
 
-<td class="text-center">{{ r.length }}</td>
-<td class="text-center">{{ r.width }}</td>
+            </tr>
+            {% endfor %}
 
-<td class="text-right">
-Rs. {{ r.total|indian_currency }}
-</td>
-
-</tr>
-
-{% endfor %}
-{% endfor %}
-{% endfor %}
-
-</tbody>
+        </tbody>
+        {% endfor %}
+    {% endfor %}
 </table>
 
 <div class="total-wrapper">
