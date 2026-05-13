@@ -1796,27 +1796,104 @@
             } catch (e) { showToast("Error saving", "error"); }
         }
 
-        // ===== DOWNLOAD PDF =====
+       // ===== DOWNLOAD PDF =====
         async function downloadMergedPDF() {
-            const overlay = document.getElementById("loadingOverlay"); overlay.classList.add("show");
-            const steps = ["step1","step2","step3","step4"];
-            function step(i) { steps.forEach((id, j) => { const el = document.getElementById(id); el.classList.remove("active","done"); if (j < i) el.classList.add("done"); if (j === i) el.classList.add("active"); }); }
+            const overlay = document.getElementById("loadingOverlay");
+            overlay.classList.add("show");
+
+            const steps = ["step1", "step2", "step3", "step4"];
+
+            function step(i) {
+                steps.forEach((id, j) => {
+                    const el = document.getElementById(id);
+                    el.classList.remove("active", "done");
+                    if (j < i) el.classList.add("done");
+                    if (j === i) el.classList.add("active");
+                });
+            }
+
+            function getFilenameFromDisposition(disposition) {
+                if (!disposition) return "quotation.pdf";
+
+                // filename*=UTF-8''...
+                let match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+                if (match && match[1]) {
+                    return decodeURIComponent(match[1].replace(/['"]/g, "").trim());
+                }
+
+                // filename="..."
+                match = disposition.match(/filename="?([^"]+)"?/i);
+                if (match && match[1]) {
+                    return match[1].trim();
+                }
+
+                return "quotation.pdf";
+            }
+
             try {
-                step(0); await new Promise(r => setTimeout(r, 400));
+                step(0);
+                await new Promise(r => setTimeout(r, 400));
+
                 const order = getCurrentOrder();
-                await fetch("{% url 'save_quotation_order' client.id %}", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken }, body: JSON.stringify({ order }) });
-                step(1); await new Promise(r => setTimeout(r, 400));
+
+                await fetch("{% url 'save_quotation_order' client.id %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken
+                    },
+                    body: JSON.stringify({ order })
+                });
+
+                step(1);
+                await new Promise(r => setTimeout(r, 400));
+
                 step(2);
-                const res = await fetch("{% url 'quotation_pdf' client.id %}", { method: "POST", headers: { "X-CSRFToken": csrftoken, "Content-Type": "application/json" }, body: JSON.stringify({ order }) });
-                if (!res.ok) throw new Error("PDF failed");
+
+                const res = await fetch("{% url 'quotation_pdf' client.id %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrftoken,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ order })
+                });
+
+                if (!res.ok) {
+                    throw new Error("PDF failed");
+                }
+
                 step(3);
-                const blob = await res.blob(), url = URL.createObjectURL(blob);
-                const a = document.createElement("a"); a.href = url; a.download = `QTN_{{ client.name }}_{{ today|date:"Ymd" }}.pdf`;
-                document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove();
-                steps.forEach(id => { document.getElementById(id).classList.remove("active"); document.getElementById(id).classList.add("done"); });
+
+                const disposition = res.headers.get("Content-Disposition");
+                const filename = getFilenameFromDisposition(disposition);
+
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename;   // ✅ use backend filename
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+                steps.forEach(id => {
+                    document.getElementById(id).classList.remove("active");
+                    document.getElementById(id).classList.add("done");
+                });
+
                 await new Promise(r => setTimeout(r, 800));
-                overlay.classList.remove("show"); showToast("PDF downloaded!");
-            } catch (e) { overlay.classList.remove("show"); showToast("PDF failed", "error"); }
+                overlay.classList.remove("show");
+                showToast(`PDF downloaded: ${filename}`);
+
+            } catch (e) {
+                console.error(e);
+                overlay.classList.remove("show");
+                showToast("PDF failed", "error");
+            }
         }
 
         // ===== KEYBOARD =====

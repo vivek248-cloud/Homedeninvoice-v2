@@ -292,26 +292,74 @@ def client_logout(request):
     return redirect("login")
 
 
+# from django.shortcuts import get_object_or_404, render, redirect
+# from django.db.models import Sum
+# from decimal import Decimal
+
+# def client_dashboard(request):
+
+#     client_id = request.session.get("client_id")
+
+#     if not client_id:
+#         return redirect("client_login")
+
+#     client = get_object_or_404(Client, id=client_id)
+
+#     projects = Project.objects.filter(client=client)
+
+#     latest_project = projects.order_by('-id').first()
+#     project_status = latest_project.status if latest_project else None
+
+#     # ✅ CORRECT
+#     completed_projects = projects.filter(status="Completed").exists()
+
+#     payments = (
+#         Payment.objects
+#         .filter(project__client=client)
+#         .select_related("project")
+#         .order_by("-date")
+#     )
+
+#     total_paid = payments.aggregate(
+#         total=Sum("amount")
+#     )["total"] or Decimal("0.00")
+
+#     total_budget = projects.aggregate(
+#         total=Sum("budget")
+#     )["total"] or Decimal("0.00")
+
+#     total_receivable = total_budget - total_paid
+
+#     return render(request, "billing/client_auth/dashboard.html", {
+#         "client": client,
+#         "projects": projects,
+#         "payments": payments,
+#         "total_paid": total_paid,
+#         "total_budget": total_budget,
+#         "total_receivable": total_receivable,
+#         "project_status": project_status,
+#         "has_completed_projects": completed_projects,
+#     })
+
+
+
 from django.shortcuts import get_object_or_404, render, redirect
 from django.db.models import Sum
 from decimal import Decimal
+from datetime import date, timedelta
 
 def client_dashboard(request):
-
     client_id = request.session.get("client_id")
 
     if not client_id:
         return redirect("client_login")
 
     client = get_object_or_404(Client, id=client_id)
-
     projects = Project.objects.filter(client=client)
-
     latest_project = projects.order_by('-id').first()
     project_status = latest_project.status if latest_project else None
 
-    # ✅ CORRECT
-    completed_projects = projects.filter(status="Completed").exists()
+    completed_projects = projects.filter(status="completed").exists()
 
     payments = (
         Payment.objects
@@ -320,19 +368,190 @@ def client_dashboard(request):
         .order_by("-date")
     )
 
-    total_paid = payments.aggregate(
-        total=Sum("amount")
-    )["total"] or Decimal("0.00")
-
-    total_budget = projects.aggregate(
-        total=Sum("budget")
-    )["total"] or Decimal("0.00")
-
+    total_paid = payments.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    total_budget = projects.aggregate(total=Sum("budget"))["total"] or Decimal("0.00")
     total_receivable = total_budget - total_paid
+
+    # ═══════════════════════════════════════════
+    #  PROJECT MILESTONES & TIMELINE
+    # ═══════════════════════════════════════════
+    enriched_projects = []
+    
+    for project in projects:
+        # Calculate payment percentage
+        if project.budget > 0:
+            payment_progress = float((project.total_paid / project.budget) * 100)
+        else:
+            payment_progress = 0
+
+        # Define milestones based on status
+        if project.status == "completed":
+            milestones = [
+                {"name": "Initial Consultation", "status": "completed", "icon": "bi-chat-dots-fill"},
+                {"name": "Site Measurement", "status": "completed", "icon": "bi-rulers"},
+                {"name": "Design Approval", "status": "completed", "icon": "bi-pencil-square"},
+                {"name": "Material Selection", "status": "completed", "icon": "bi-palette-fill"},
+                {"name": "Production Completed", "status": "completed", "icon": "bi-hammer"},
+                {"name": "Installation Done", "status": "completed", "icon": "bi-tools"},
+                {"name": "Final Handover", "status": "completed", "icon": "bi-house-check-fill"},
+            ]
+        elif project.status == "ongoing":
+            # Dynamic milestones based on payment progress
+            if payment_progress < 20:
+                milestones = [
+                    {"name": "Initial Consultation", "status": "completed", "icon": "bi-chat-dots-fill"},
+                    {"name": "Site Measurement", "status": "ongoing", "icon": "bi-rulers"},
+                    {"name": "Design Approval", "status": "pending", "icon": "bi-pencil-square"},
+                    {"name": "Material Selection", "status": "pending", "icon": "bi-palette-fill"},
+                    {"name": "Production Started", "status": "pending", "icon": "bi-hammer"},
+                    {"name": "Installation", "status": "pending", "icon": "bi-tools"},
+                    {"name": "Final Handover", "status": "pending", "icon": "bi-house-check-fill"},
+                ]
+            elif payment_progress < 40:
+                milestones = [
+                    {"name": "Initial Consultation", "status": "completed", "icon": "bi-chat-dots-fill"},
+                    {"name": "Site Measurement", "status": "completed", "icon": "bi-rulers"},
+                    {"name": "Design Approval", "status": "ongoing", "icon": "bi-pencil-square"},
+                    {"name": "Material Selection", "status": "pending", "icon": "bi-palette-fill"},
+                    {"name": "Production Started", "status": "pending", "icon": "bi-hammer"},
+                    {"name": "Installation", "status": "pending", "icon": "bi-tools"},
+                    {"name": "Final Handover", "status": "pending", "icon": "bi-house-check-fill"},
+                ]
+            elif payment_progress < 60:
+                milestones = [
+                    {"name": "Initial Consultation", "status": "completed", "icon": "bi-chat-dots-fill"},
+                    {"name": "Site Measurement", "status": "completed", "icon": "bi-rulers"},
+                    {"name": "Design Approval", "status": "completed", "icon": "bi-pencil-square"},
+                    {"name": "Material Selection", "status": "ongoing", "icon": "bi-palette-fill"},
+                    {"name": "Production Started", "status": "pending", "icon": "bi-hammer"},
+                    {"name": "Installation", "status": "pending", "icon": "bi-tools"},
+                    {"name": "Final Handover", "status": "pending", "icon": "bi-house-check-fill"},
+                ]
+            elif payment_progress < 80:
+                milestones = [
+                    {"name": "Initial Consultation", "status": "completed", "icon": "bi-chat-dots-fill"},
+                    {"name": "Site Measurement", "status": "completed", "icon": "bi-rulers"},
+                    {"name": "Design Approval", "status": "completed", "icon": "bi-pencil-square"},
+                    {"name": "Material Selection", "status": "completed", "icon": "bi-palette-fill"},
+                    {"name": "Production Started", "status": "ongoing", "icon": "bi-hammer"},
+                    {"name": "Installation", "status": "pending", "icon": "bi-tools"},
+                    {"name": "Final Handover", "status": "pending", "icon": "bi-house-check-fill"},
+                ]
+            else:
+                milestones = [
+                    {"name": "Initial Consultation", "status": "completed", "icon": "bi-chat-dots-fill"},
+                    {"name": "Site Measurement", "status": "completed", "icon": "bi-rulers"},
+                    {"name": "Design Approval", "status": "completed", "icon": "bi-pencil-square"},
+                    {"name": "Material Selection", "status": "completed", "icon": "bi-palette-fill"},
+                    {"name": "Production Started", "status": "completed", "icon": "bi-hammer"},
+                    {"name": "Installation", "status": "ongoing", "icon": "bi-tools"},
+                    {"name": "Final Handover", "status": "pending", "icon": "bi-house-check-fill"},
+                ]
+        else:  # on_hold
+            milestones = [
+                {"name": "Initial Consultation", "status": "completed", "icon": "bi-chat-dots-fill"},
+                {"name": "Site Measurement", "status": "completed", "icon": "bi-rulers"},
+                {"name": "Design Approval", "status": "hold", "icon": "bi-pencil-square"},
+                {"name": "Material Selection", "status": "pending", "icon": "bi-palette-fill"},
+                {"name": "Production Started", "status": "pending", "icon": "bi-hammer"},
+                {"name": "Installation", "status": "pending", "icon": "bi-tools"},
+                {"name": "Final Handover", "status": "pending", "icon": "bi-house-check-fill"},
+            ]
+
+        # ═══════════════════════════════════════════
+        #  PROJECT HEALTH SCORE
+        # ═══════════════════════════════════════════
+        project_health = {
+            "status": "on_track",
+            "label": "On Track",
+            "color": "success",
+            "icon": "bi-check-circle-fill",
+            "reasons": []
+        }
+
+        # Check payment health
+        if payment_progress < 30 and project.status == "ongoing":
+            project_health = {
+                "status": "critical",
+                "label": "Critical",
+                "color": "danger",
+                "icon": "bi-exclamation-triangle-fill",
+                "reasons": ["Low payment progress", "Project may stall"]
+            }
+        elif payment_progress < 50 and project.status == "ongoing":
+            project_health = {
+                "status": "attention",
+                "label": "Attention Needed",
+                "color": "warning",
+                "icon": "bi-exclamation-circle-fill",
+                "reasons": ["Payment pending", "Material procurement delayed"]
+            }
+        elif project.status == "hold":
+            project_health = {
+                "status": "attention",
+                "label": "On Hold",
+                "color": "secondary",
+                "icon": "bi-pause-circle-fill",
+                "reasons": ["Project paused", "Awaiting approval"]
+            }
+        else:
+            project_health["reasons"] = [
+                "Payments on schedule",
+                "Timeline healthy",
+                "Work progressing"
+            ]
+
+        # ═══════════════════════════════════════════
+        #  PROJECT COUNTDOWN (Expected handover)
+        # ═══════════════════════════════════════════
+        # Calculate expected handover (estimate: 90 days from creation for ongoing)
+        if project.status == "ongoing":
+            expected_handover = project.created_at.date() + timedelta(days=90)
+            days_remaining = (expected_handover - date.today()).days
+            
+            if days_remaining < 0:
+                countdown = {
+                    "date": expected_handover,
+                    "days": abs(days_remaining),
+                    "status": "overdue",
+                    "label": f"{abs(days_remaining)} days overdue"
+                }
+            else:
+                countdown = {
+                    "date": expected_handover,
+                    "days": days_remaining,
+                    "status": "active",
+                    "label": f"{days_remaining} days remaining"
+                }
+        elif project.status == "completed":
+            # Use last payment date as handover date
+            last_payment = payments.filter(project=project).order_by('-date').first()
+            handover_date = last_payment.date if last_payment else project.created_at.date()
+            countdown = {
+                "date": handover_date,
+                "days": 0,
+                "status": "completed",
+                "label": "Project Delivered"
+            }
+        else:
+            countdown = {
+                "date": None,
+                "days": 0,
+                "status": "pending",
+                "label": "Timeline pending"
+            }
+
+        enriched_projects.append({
+            "project": project,
+            "milestones": milestones,
+            "payment_progress": round(payment_progress, 1),
+            "health": project_health,
+            "countdown": countdown,
+        })
 
     return render(request, "billing/client_auth/dashboard.html", {
         "client": client,
-        "projects": projects,
+        "projects": enriched_projects,
         "payments": payments,
         "total_paid": total_paid,
         "total_budget": total_budget,
@@ -340,8 +559,6 @@ def client_dashboard(request):
         "project_status": project_status,
         "has_completed_projects": completed_projects,
     })
-
-
 
 
 
@@ -2769,19 +2986,19 @@ def quotation_pdf(request, client_id):
     GET: Preview/Edit page with drag & drop
     POST: Generate merged PDF with custom order
     """
-    
+
     client = get_object_or_404(QtnClient, id=client_id)
-    
-    # Check if custom order is provided (POST request)
+
+    # ── Parse custom order ──
     custom_order = None
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             custom_order = data.get("order", [])
-        except:
+        except Exception:
             custom_order = request.POST.getlist("order[]")
-    
-    # Get rows
+
+    # ── Fetch rows ──
     rows = list(
         QuotationItem.objects
         .filter(client_id=client_id)
@@ -2798,111 +3015,256 @@ def quotation_pdf(request, client_id):
             "id"
         )
     )
-    
-    # Reorder rows if custom order provided
+
+    # ── Apply custom order ──
     if custom_order:
-        rows_dict = {str(r.id): r for r in rows}
-        ordered_rows = []
-        for item_id in custom_order:
-            if str(item_id) in rows_dict:
-                ordered_rows.append(rows_dict[str(item_id)])
-        # Add any remaining rows not in the order
-        for r in rows:
-            if r not in ordered_rows:
-                ordered_rows.append(r)
-        rows = ordered_rows
-    
-    # Calculate totals
-    subtotal = sum((r.total for r in rows), Decimal("0.00"))
-    gst_rate = Decimal(client.gst or 0)
-    gst_amount = (subtotal * gst_rate) / Decimal("100")
+        rows_dict    = {str(r.id): r for r in rows}
+        ordered_rows = [rows_dict[str(i)] for i in custom_order if str(i) in rows_dict]
+        remaining    = [r for r in rows if r not in ordered_rows]
+        rows         = ordered_rows + remaining
+
+    # ── Calculate totals ──
+    subtotal       = sum((r.total for r in rows), Decimal("0.00"))
+    gst_rate       = Decimal(client.gst or 0)
+    gst_amount     = (subtotal * gst_rate) / Decimal("100")
     total_with_gst = subtotal + gst_amount
-    
-    # Discount
+
     if client.discount_mode == "percent":
-        percent = Decimal(client.discount_percent or 0)
+        percent         = Decimal(client.discount_percent or 0)
         discount_amount = (subtotal * percent) / Decimal("100")
     else:
         discount_amount = Decimal(client.discount_amount or 0)
-    
-    grand_total = max(total_with_gst - discount_amount, Decimal("0.00"))
+
+    grand_total      = max(total_with_gst - discount_amount, Decimal("0.00"))
     quotation_number = f"QTN-{client.id}-{date.today().strftime('%m%y')}"
-    
+
     context = {
-        "client": client,
-        "rows": rows,
-        "total_amount": subtotal,
-        "gst_rate": gst_rate,
-        "gst_amount": gst_amount,
-        "discount": discount_amount,
-        "grand_total": grand_total,
+        "client":           client,
+        "rows":             rows,
+        "total_amount":     subtotal,
+        "gst_rate":         gst_rate,
+        "gst_amount":       gst_amount,
+        "discount":         discount_amount,
+        "grand_total":      grand_total,
         "quotation_number": quotation_number,
-        "total_with_gst": total_with_gst,
-        "today": date.today(),
+        "total_with_gst":   total_with_gst,
+        "today":            date.today(),
     }
-    
-    # If preview mode (GET with preview=1 or just GET)
+
+    # ── GET: Preview ──
     if request.method == "GET":
         if request.GET.get("print") == "1":
-            # Return clean print version
             context["print_mode"] = True
             return render(request, "billing/quotation/pdf_print.html", context)
-        else:
-            # Return editable preview
-            context["edit_mode"] = True
-            return render(request, "billing/quotation/pdf.html", context)
-    
-    # POST: Generate PDF with merged front/back
-    # Use print template (clean, no editing UI)
+        context["edit_mode"] = True
+        return render(request, "billing/quotation/pdf.html", context)
+
+    # ── POST: Generate PDF ──
+
+    # 1. Render HTML
     template = get_template("billing/quotation/pdf_print.html")
-    html = template.render(context)
-    
-    # Generate quotation PDF
+    html     = template.render(context)
+
+    # 2. Generate quotation PDF
     quotation_buffer = BytesIO()
     pisa_status = pisa.CreatePDF(
         html,
         dest=quotation_buffer,
         link_callback=fetch_resources
     )
-    
+
     if pisa_status.err:
         return JsonResponse({"error": "PDF generation failed"}, status=500)
-    
+
     quotation_buffer.seek(0)
-    
-    # Merge PDFs
+
+    # 3. Merge front + quotation + back
     front_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "front.pdf")
-    back_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "back.pdf")
-    
+    back_pdf  = os.path.join(settings.MEDIA_ROOT, "pdfs",  "back.pdf")
+
     merger = PdfMerger()
-    
-    # Add front page if exists
+
     if os.path.exists(front_pdf):
         merger.append(front_pdf)
-    
-    # Add quotation
+
     merger.append(quotation_buffer)
-    
-    # Add back page if exists
+
     if os.path.exists(back_pdf):
         merger.append(back_pdf)
-    
-    # Write final PDF
+
     final_buffer = BytesIO()
     merger.write(final_buffer)
     merger.close()
     final_buffer.seek(0)
-    
-    # Return PDF response
-    response = HttpResponse(
-        final_buffer.read(),
-        content_type="application/pdf"
-    )
-    
-    filename = f"QTN_{client.name.capitalize()[:10]}_{date.today().strftime('%Y%m%d')}.pdf"
+
+    # 4. Professional filename
+    filename = _build_quotation_filename(client, quotation_number)
+
+    response = HttpResponse(final_buffer.read(), content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    
     return response
+
+
+# ════════════════════════════════════════════════════
+#  FILENAME HELPER
+# ════════════════════════════════════════════════════
+
+def _build_quotation_filename(client, quotation_number):
+    """
+    Output: HomeDenInterior_Quote_Rajesh-Kumar_QTN-42-0124.pdf
+    """
+    import re
+    import unicodedata
+
+    # ── Clean client name ──
+    raw_name = getattr(client, 'name', 'Client') or 'Client'
+
+    name = unicodedata.normalize('NFKD', raw_name)
+    name = name.encode('ascii', 'ignore').decode('ascii')
+    name = name.strip().title()
+    name = re.sub(r'[^\w\s-]', '', name)
+    name = re.sub(r'\s+', '-', name)
+    name = re.sub(r'-{2,}', '-', name)
+    name = name[:20].strip('-')
+
+    # ── Clean quotation number ──
+    qtn_ref = re.sub(r'[^\w-]', '', str(quotation_number))
+
+    # ── Assemble ──
+    # HomeDenInteriorFirm_Quote_Rajesh-Kumar_QTN-42-0124.pdf
+    filename = f"HomeDenInteriorFirm_Quote_{name}_{qtn_ref}.pdf"
+
+    return filename
+
+# # @login_required
+# def quotation_pdf_debug(request, client_id):
+#     import traceback
+#     from io import BytesIO
+#     import os
+
+#     results = {}
+
+#     # ── Step 1: Check PDF files ──
+#     front_pdf = os.path.join(settings.MEDIA_ROOT, "pdfs", "front.pdf")
+#     back_pdf  = os.path.join(settings.MEDIA_ROOT, "pdfs", "back.pdf")
+
+#     results['front_pdf_exists'] = os.path.exists(front_pdf)
+#     results['back_pdf_exists']  = os.path.exists(back_pdf)
+#     results['front_pdf_size']   = os.path.getsize(front_pdf) if results['front_pdf_exists'] else 0
+#     results['back_pdf_size']    = os.path.getsize(back_pdf)  if results['back_pdf_exists']  else 0
+
+#     # ── Step 2: Check template tag loads ──
+#     try:
+#         from billing.templatetags.extra_filters import indian_currency
+#         results['filter_load'] = "✅ extra_filters loaded OK"
+#         results['filter_test'] = str(indian_currency(123456.78))
+#     except Exception as e:
+#         results['filter_load']  = f"❌ FAILED: {e}"
+#         results['filter_trace'] = traceback.format_exc()
+#         return JsonResponse(results, json_dumps_params={'indent': 2})
+
+#     # ── Step 3: Render template ──
+#     try:
+#         client = get_object_or_404(QtnClient, id=client_id)
+#         rows   = list(QuotationItem.objects.filter(client_id=client_id))
+
+#         subtotal       = sum((getattr(r, 'total', 0) or 0 for r in rows), Decimal("0.00"))
+#         gst_rate       = Decimal(str(getattr(client, 'gst', 0) or 0))
+#         gst_amount     = (subtotal * gst_rate) / Decimal("100")
+#         total_with_gst = subtotal + gst_amount
+#         grand_total    = total_with_gst
+
+#         context = {
+#             "client":           client,
+#             "rows":             rows,
+#             "total_amount":     subtotal,
+#             "gst_rate":         gst_rate,
+#             "gst_amount":       gst_amount,
+#             "discount":         Decimal("0.00"),
+#             "grand_total":      grand_total,
+#             "quotation_number": f"QTN-{client_id}",
+#             "total_with_gst":   total_with_gst,
+#             "today":            date.today(),
+#         }
+
+#         html = get_template("billing/quotation/pdf_print.html").render(context)
+#         results['template_render'] = "✅ OK"
+#         results['html_length']     = len(html)
+
+#     except Exception as e:
+#         results['template_render'] = f"❌ FAILED: {e}"
+#         results['template_trace']  = traceback.format_exc()
+#         return JsonResponse(results, json_dumps_params={'indent': 2})
+
+#     # ── Step 4: pisa PDF ──
+#     try:
+#         from xhtml2pdf import pisa
+#         buf    = BytesIO()
+#         result = pisa.CreatePDF(
+#             html,
+#             dest=buf,
+#             link_callback=fetch_resources,
+#             encoding='utf-8'
+#         )
+#         results['pisa_errors']  = result.err
+#         results['pisa_status']  = "✅ OK" if not result.err else f"❌ pisa error: {result.err}"
+#         results['pisa_pdf_size'] = buf.tell()
+#         buf.seek(0)
+#         qtn_bytes = buf.read()
+
+#     except Exception as e:
+#         results['pisa_status'] = f"❌ EXCEPTION: {e}"
+#         results['pisa_trace']  = traceback.format_exc()
+#         return JsonResponse(results, json_dumps_params={'indent': 2})
+
+#     # ── Step 5: Merge ──
+#     try:
+#         try:
+#             from pypdf import PdfMerger
+#             results['merger_lib'] = "pypdf"
+#         except ImportError:
+#             from PyPDF2 import PdfMerger
+#             results['merger_lib'] = "PyPDF2"
+
+#         merger = PdfMerger()
+
+#         if results['front_pdf_exists']:
+#             merger.append(front_pdf)
+#             results['merge_front'] = "✅ Added"
+#         else:
+#             results['merge_front'] = "⚠️ Skipped"
+
+#         merger.append(BytesIO(qtn_bytes))
+#         results['merge_quotation'] = "✅ Added"
+
+#         if results['back_pdf_exists']:
+#             merger.append(back_pdf)
+#             results['merge_back'] = "✅ Added"
+#         else:
+#             results['merge_back'] = "⚠️ Skipped"
+
+#         out = BytesIO()
+#         merger.write(out)
+#         merger.close()
+#         out.seek(0)
+#         final_bytes = out.read()
+
+#         results['merge_status']   = "✅ OK"
+#         results['final_pdf_size'] = len(final_bytes)
+
+#     except Exception as e:
+#         results['merge_status'] = f"❌ FAILED: {e}"
+#         results['merge_trace']  = traceback.format_exc()
+
+#     results['overall'] = "✅ ALL STEPS PASSED" if all(
+#         "✅" in str(v) for k, v in results.items()
+#         if k.endswith('_status') or k.endswith('_render') or k.endswith('_load')
+#     ) else "❌ SOME STEPS FAILED"
+
+#     return JsonResponse(results, json_dumps_params={'indent': 2})
+
+
+
 
 
 @login_required

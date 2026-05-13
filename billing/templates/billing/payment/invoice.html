@@ -640,6 +640,225 @@ body.public-invoice .no-print {
     opacity: 0.6;
 }
 
+
+@media print {
+
+    body {
+        background: white;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .invoice-container {
+        max-width: 100%;
+        padding: 3mm;
+        min-height: auto;
+    }
+
+    /* ═══════════════════════════════════ */
+    /*  FORCE SECTIONS TO START NEW PAGE  */
+    /* ═══════════════════════════════════ */
+
+    .section-title {
+        page-break-before: auto;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        margin-top: 20px;
+        font-weight: bold;
+        font-size: 14px;
+        border-bottom: 2px solid #2ba58b;
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+    }
+
+    /* Keep section title with at least 3 rows of content */
+    .section-title + table {
+        page-break-before: auto;
+    }
+
+    /* ═══════════════════════════════════ */
+    /*  TABLE HEADERS STAY WITH CONTENT    */
+    /* ═══════════════════════════════════ */
+
+    table {
+        page-break-inside: auto !important;
+    }
+
+    thead {
+        display: table-header-group !important;
+        page-break-inside: avoid !important;
+        page-break-after: avoid !important;
+        break-inside: avoid !important;
+        break-after: avoid !important;
+    }
+
+    tbody {
+        page-break-inside: auto;
+    }
+
+    /* ═══════════════════════════════════ */
+    /*  ROW BREAK CONTROL                  */
+    /* ═══════════════════════════════════ */
+
+    tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* Keep floor headers with at least one room */
+    .floor-row {
+        page-break-inside: avoid !important;
+        page-break-after: avoid !important;
+        break-inside: avoid !important;
+        break-after: avoid !important;
+    }
+
+    /* Keep room headers with at least one item */
+    .room-row {
+        page-break-inside: avoid !important;
+        page-break-after: avoid !important;
+        break-inside: avoid !important;
+        break-after: avoid !important;
+    }
+
+    /* Keep floor + first room together */
+    .floor-row + .room-row {
+        page-break-before: avoid !important;
+        break-before: avoid !important;
+    }
+
+    /* Keep room + first item together */
+    .room-row + tr:not(.room-row):not(.floor-row) {
+        page-break-before: avoid !important;
+        break-before: avoid !important;
+    }
+
+    /* ═══════════════════════════════════ */
+    /*  TOTALS & PAYMENT SECTIONS          */
+    /* ═══════════════════════════════════ */
+
+    .total-table,
+    .payment-table {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .total-table tr,
+    .payment-table tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* Keep totals section together */
+    .totals-section {
+        page-break-before: auto;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* Keep payment section together */
+    .payment-section {
+        page-break-before: auto;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* ═══════════════════════════════════ */
+    /*  BOTTOM SECTIONS                    */
+    /* ═══════════════════════════════════ */
+
+    .thank-section,
+    .bottom-row,
+    .footer {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .invoice-bottom {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* ═══════════════════════════════════ */
+    /*  HIDE INTERACTIVE ELEMENTS          */
+    /* ═══════════════════════════════════ */
+
+    .print-btn,
+    .no-print {
+        display: none !important;
+    }
+
+    .print-only {
+        display: inline !important;
+    }
+
+    /* Hide selection styles */
+    .selected-total-display,
+    .clipboard-indicator {
+        display: none !important;
+    }
+
+    .td-selected,
+    .row-copied,
+    .row-selected-for-copy,
+    .insert-point {
+        background: inherit !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    .td-selected::after,
+    .row-copied::before,
+    .insert-point::after {
+        display: none !important;
+    }
+
+    /* ═══════════════════════════════════ */
+    /*  PAGE SETTINGS                      */
+    /* ═══════════════════════════════════ */
+
+    @page {
+        size: A4;
+        margin: 10mm 8mm;
+    }
+
+    /* Ensure borders print */
+    table, th, td {
+        border: 1.5px solid #000 !important;
+    }
+
+    /* Force background colors to print */
+    .floor-row,
+    .room-row,
+    th,
+    .highlight {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+/* ═══════════════════════════════════════════ */
+/*  SECTION TITLE STYLE (for both screen & print) */
+/* ═══════════════════════════════════════════ */
+
+.section-title {
+    font-weight: bold;
+    font-size: 14px;
+    border-bottom: 2px solid #2ba58b;
+    padding-bottom: 5px;
+    margin-top: 25px;
+    margin-bottom: 10px;
+}
+
+/* ═══════════════════════════════════════════ */
+/*  WRAPPER CLASSES FOR BETTER CONTROL         */
+/* ═══════════════════════════════════════════ */
+
+.totals-section,
+.payment-section {
+    margin-top: 20px;
+}
+
     </style>
 </head>
 

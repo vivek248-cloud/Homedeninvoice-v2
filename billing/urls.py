@@ -128,6 +128,8 @@ urlpatterns = [
     
     path('quotation/<int:client_id>/pdf/', views.quotation_pdf, name='quotation_pdf'),
 
+    # path('quotation/<int:client_id>/pdf/debug/', views.quotation_pdf_debug, name='quotation_pdf_debug'),
+
     path('quotation/<int:client_id>/save-order/', views.save_quotation_order, name='save_quotation_order'),
 
     path("quotation/clients/", views.qtn_client_index, name="qtn_client_index"),
