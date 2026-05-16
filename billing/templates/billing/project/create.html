@@ -8,7 +8,7 @@
     <!-- Page Header -->
     <div class="page-header fade-in fi-1">
         <div class="page-header-left">
-            <a href="{% url 'project_list' %}" class="back-btn">
+            <a href="{% url 'project_list' %}" class="back-btn bg-danger text-white">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div class="page-icon-wrap pi-primary">
@@ -106,7 +106,7 @@
                                 </div>
                             </div>
 
-                            <!-- Budget -->
+                            {% comment %} <!-- Budget -->
                             <div class="form-group">
                                 <label class="field-label">
                                     Initial Budget <span class="req">*</span>
@@ -132,7 +132,7 @@
                                     <i class="bi bi-info-circle"></i>
                                     Can be updated later as scope changes
                                 </p>
-                            </div>
+                            </div> {% endcomment %}
 
                             <!-- Status -->
                             <div class="form-group">
@@ -234,10 +234,10 @@
                             <div class="cl-check"><i class="bi bi-circle"></i></div>
                             <span>Project name</span>
                         </div>
-                        <div class="cl-item" id="cl-budget">
+                        {% comment %} <div class="cl-item" id="cl-budget">
                             <div class="cl-check"><i class="bi bi-circle"></i></div>
                             <span>Budget amount</span>
-                        </div>
+                        </div> {% endcomment %}
                     </div>
                     <div class="progress-section">
                         <div class="ps-label">Completion</div>
@@ -560,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const budget = parseFloat(budgetInput?.value);
         if (!isNaN(budget) && budget >= 0) filled++;
 
-        const pct = Math.round((filled / 3) * 100);
+        const pct = Math.round((filled /2) * 100); //temporarily using 2 since budget is optional if inculuded then change to 3
         const fill = document.getElementById('progressFill');
         const text = document.getElementById('progressText');
         if (fill) {

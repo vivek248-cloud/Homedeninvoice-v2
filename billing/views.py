@@ -972,7 +972,7 @@ def project_create(request):
         Project.objects.create(
             client_id=request.POST.get('client'),
             name=request.POST.get('name'),
-            budget=request.POST.get('budget'),
+            budget=request.POST.get('budget') or 0,
             status=request.POST.get('status'),
         )
         return redirect('project_list')
