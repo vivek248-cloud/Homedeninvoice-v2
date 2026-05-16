@@ -2163,33 +2163,183 @@ def qtn_client_index(request):
 
 
 
+# @login_required
+# def qtn_client_create(request):
+
+#     if request.method == "POST":
+
+#         QtnClient.objects.create(
+#             name=request.POST.get("name"),
+#             phone1=request.POST.get("phone1"),
+#             phone2=request.POST.get("phone2"),
+#             email=request.POST.get("email"),
+#             location=request.POST.get("location"),
+
+#             gst=request.POST.get("gst"),
+
+#             discount_percent=request.POST.get("discount_percent") or 0,
+#             discount_amount=request.POST.get("discount_amount") or 0,
+#             discount_mode=request.POST.get("discount_mode") or "percent",
+
+#             notes=request.POST.get("notes"),
+
+#             estimate_start_date=request.POST.get("estimate_start_date"),
+#             estimate_end_date=request.POST.get("estimate_end_date"),
+#         )
+
+#         return redirect("qtn_client_index")
+
+#     return render(request, "billing/clientQT/create.html")
+
+
+
 @login_required
 def qtn_client_create(request):
 
     if request.method == "POST":
 
-        QtnClient.objects.create(
-            name=request.POST.get("name"),
-            phone1=request.POST.get("phone1"),
-            phone2=request.POST.get("phone2"),
-            email=request.POST.get("email"),
-            location=request.POST.get("location"),
-
-            gst=request.POST.get("gst"),
-
-            discount_percent=request.POST.get("discount_percent") or 0,
-            discount_amount=request.POST.get("discount_amount") or 0,
-            discount_mode=request.POST.get("discount_mode") or "percent",
-
-            notes=request.POST.get("notes"),
-
-            estimate_start_date=request.POST.get("estimate_start_date"),
-            estimate_end_date=request.POST.get("estimate_end_date"),
+        # ── Create Quotation Client ──
+        qtn_client = QtnClient.objects.create(
+            name             = request.POST.get("name")     or "",
+            phone1           = request.POST.get("phone1")   or "",
+            phone2           = request.POST.get("phone2")   or "",
+            email            = request.POST.get("email")    or "",
+            location         = request.POST.get("location") or "",
+            gst              = request.POST.get("GST")      or "",
+            discount_percent = request.POST.get("discount") or 0,
+            discount_mode    = "percent",
+            notes            = request.POST.get("notes")    or "",
         )
+
+        sync_result = None  # Track what happened
+
+        # ── Sync to Main Clients ──
+        if request.POST.get("create_main_client"):
+            try:
+                existing = Client.objects.filter(
+                    mobile_1=qtn_client.phone1
+                ).first()
+
+                if existing:
+                    updated_fields = []
+
+                    if not existing.name or existing.name == "Unknown":
+                        existing.name = qtn_client.name
+                        updated_fields.append("Name")
+
+                    if not existing.email and qtn_client.email:
+                        existing.email = qtn_client.email
+                        updated_fields.append("Email")
+
+                    if not existing.mobile_2 and qtn_client.phone2:
+                        existing.mobile_2 = qtn_client.phone2
+                        updated_fields.append("Phone 2")
+
+                    if not existing.address or existing.address == "No Address":
+                        existing.address = qtn_client.location
+                        updated_fields.append("Address")
+
+                    if not existing.gst_number and qtn_client.gst:
+                        existing.gst_number = qtn_client.gst
+                        updated_fields.append("GST")
+
+                    if qtn_client.notes:
+                        if existing.notes:
+                            existing.notes += f"\n\n[QTN-{qtn_client.id}] {qtn_client.notes}"
+                        else:
+                            existing.notes = qtn_client.notes
+                        updated_fields.append("Notes")
+
+                    if updated_fields:
+                        existing.save()
+                        sync_result = {
+                            "type": "updated",
+                            "name": existing.name,
+                            "phone": qtn_client.phone1,
+                            "fields": updated_fields,
+                        }
+                    else:
+                        sync_result = {
+                            "type": "exists",
+                            "name": existing.name,
+                            "phone": qtn_client.phone1,
+                        }
+
+                else:
+                    Client.objects.create(
+                        name       = qtn_client.name             or "Unknown",
+                        mobile_1   = qtn_client.phone1           or "0000000000",
+                        mobile_2   = qtn_client.phone2           or "",
+                        address    = qtn_client.location         or "No Address",
+                        email      = qtn_client.email            or "",
+                        notes      = qtn_client.notes            or "",
+                        gst_number = qtn_client.gst              or "",
+                        discount   = qtn_client.discount_percent or 0,
+                    )
+                    sync_result = {
+                        "type": "created",
+                        "name": qtn_client.name,
+                    }
+
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                sync_result = {
+                    "type": "error",
+                    "error": str(e),
+                }
+
+        # ── Build response based on result ──
+        if sync_result:
+            if sync_result["type"] == "error":
+                # Stay on page, show error
+                messages.error(
+                    request,
+                    f"⚠️ Quotation client '{qtn_client.name}' was created, "
+                    f"but Main Client sync failed: {sync_result['error']}"
+                )
+                return render(request, "billing/clientQT/create.html", {
+                    "sync_result": sync_result,
+                    "created_client": qtn_client,
+                })
+
+            elif sync_result["type"] == "exists":
+                messages.warning(
+                    request,
+                    f"✅ Quotation client created. "
+                    f"Main client '{sync_result['name']}' already exists "
+                    f"with phone {sync_result['phone']} — no updates needed."
+                )
+
+            elif sync_result["type"] == "updated":
+                fields_str = ", ".join(sync_result["fields"])
+                messages.info(
+                    request,
+                    f"✅ Quotation client created. "
+                    f"Existing main client '{sync_result['name']}' updated: {fields_str}"
+                )
+
+            elif sync_result["type"] == "created":
+                messages.success(
+                    request,
+                    f"✅ '{sync_result['name']}' created in both Quotation and Main systems."
+                )
+
+        else:
+            messages.success(
+                request,
+                f"✅ '{qtn_client.name}' created as Quotation Client."
+            )
 
         return redirect("qtn_client_index")
 
     return render(request, "billing/clientQT/create.html")
+
+
+
+
+
+
 
 @login_required
 def qtn_client_update(request, id):
@@ -2236,7 +2386,7 @@ def qtn_client_delete(request, id):
 
     if request.method == "POST":
         client.delete()
-        return redirect("quotation_index")
+        return redirect("qtn_client_index")
 
     return render(
         request,
