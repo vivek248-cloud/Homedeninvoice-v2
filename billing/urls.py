@@ -66,6 +66,19 @@ urlpatterns = [
     path('spends/delete/<int:pk>/', views.spend_delete, name='spend_delete'),
 
 
+    path(
+        'spend/bulk-update/',
+        views.spend_bulk_update,
+        name='spend_bulk_update'
+    ),
+
+    path(
+        'spend/bulk-delete/',
+        views.spend_bulk_delete,
+        name='spend_bulk_delete'
+    ),
+
+
 
     path(
         "payments/check-duplicate/",

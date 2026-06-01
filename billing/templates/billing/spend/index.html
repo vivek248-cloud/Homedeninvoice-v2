@@ -20,12 +20,10 @@
             </div>
             <div class="sp-text">
                 <h6 class="sp-title">Client Selection Required</h6>
-                <p class="sp-desc">Choose a client from the dropdown below to view their itemized cost breakdown and financial data.</p>
+                <p class="sp-desc">Choose a client from the dropdown below to view their itemized cost breakdown.</p>
             </div>
         </div>
-        <div class="sp-arrow">
-            <i class="bi bi-arrow-down-circle"></i>
-        </div>
+        <div class="sp-arrow"><i class="bi bi-arrow-down-circle"></i></div>
     </div>
     {% endif %}
 
@@ -34,17 +32,14 @@
     <!-- ═══════════════════════════════════ -->
     <div class="page-header fade-in fi-2">
         <div class="page-header-left">
-            <div class="page-icon-wrap">
-                <i class="bi bi-receipt-cutoff"></i>
-            </div>
+            <div class="page-icon-wrap"><i class="bi bi-receipt-cutoff"></i></div>
             <div>
                 <h1 class="page-title">Spend Entries</h1>
                 <p class="page-subtitle">Itemized costs — work, materials & dimensions breakdown</p>
             </div>
         </div>
         <a href="{% url 'spend_create' %}" class="btn-add-new">
-            <i class="bi bi-plus-lg"></i>
-            <span>Add Spend</span>
+            <i class="bi bi-plus-lg"></i><span>Add Spend</span>
         </a>
     </div>
 
@@ -53,7 +48,6 @@
     <!-- ═══════════════════════════════════ -->
     <div class="toolbar-card fade-in fi-3">
         <div class="toolbar-left">
-            <!-- Client Dropdown -->
             <form method="GET" class="client-filter-form">
                 <div class="client-select-wrap">
                     <i class="bi bi-person-fill cs-icon"></i>
@@ -62,33 +56,26 @@
                         {% for client in clients %}
                         <option value="{{ client.id }}"
                             {% if client.id|stringformat:"s" == selected_client %}selected{% endif %}>
-                             {{ client.name }} ({{ client.address|truncatewords:4 }})
+                            {{ client.name }} ({{ client.address|truncatewords:4 }})
                         </option>
                         {% endfor %}
                     </select>
                     <i class="bi bi-chevron-down cs-chevron"></i>
                 </div>
             </form>
-
-            <!-- Search -->
             <div class="search-wrap">
                 <i class="bi bi-search search-icon"></i>
                 <input type="text" id="liveSearch" class="search-input" placeholder="Search entries..." autocomplete="off">
                 <kbd class="search-kbd">⌘K</kbd>
             </div>
         </div>
-
         <div class="toolbar-right">
             <div class="result-count">
                 <span id="visibleCount">{{ spends|length }}</span> entries
             </div>
             <div class="view-toggle">
-                <button class="vt-btn active" data-view="table" title="Table">
-                    <i class="bi bi-list-ul"></i>
-                </button>
-                <button class="vt-btn" data-view="grid" title="Cards">
-                    <i class="bi bi-grid-3x3-gap-fill"></i>
-                </button>
+                <button class="vt-btn active" data-view="table" title="Table"><i class="bi bi-list-ul"></i></button>
+                <button class="vt-btn" data-view="grid" title="Cards"><i class="bi bi-grid-3x3-gap-fill"></i></button>
             </div>
         </div>
     </div>
@@ -146,6 +133,51 @@
     {% endif %}
 
     <!-- ═══════════════════════════════════ -->
+    <!--  BULK EDIT FLOATING BAR            -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="bulk-bar" id="bulkBar">
+        <div class="bulk-bar-inner">
+
+            <!-- Left: Selection Info -->
+            <div class="bulk-bar-left">
+                <div class="bulk-check-icon">
+                    <i class="bi bi-check2-square"></i>
+                </div>
+                <div class="bulk-info">
+                    <span class="bulk-count"><span id="bulkCount">0</span> selected</span>
+                    <span class="bulk-hint">Choose an action below</span>
+                </div>
+            </div>
+
+            <!-- Center: Actions -->
+            <div class="bulk-bar-center">
+
+                <!-- Bulk Edit Button -->
+                <button type="button" class="bulk-action-btn bulk-edit-btn" onclick="openBulkEditModal()">
+                    <i class="bi bi-pencil-square"></i>
+                    <span>Bulk Edit</span>
+                </button>
+
+                <!-- Bulk Delete -->
+                <button type="button" class="bulk-action-btn bulk-delete-btn" onclick="confirmBulkDelete()">
+                    <i class="bi bi-trash3"></i>
+                    <span>Delete</span>
+                </button>
+
+            </div>
+
+            <!-- Right: Deselect -->
+            <div class="bulk-bar-right">
+                <button type="button" class="bulk-deselect-btn" onclick="deselectAll()">
+                    <i class="bi bi-x-lg"></i>
+                    <span>Clear</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
     <!--  TABLE VIEW                        -->
     <!-- ═══════════════════════════════════ -->
     <div class="table-card fade-in fi-5" id="tableView">
@@ -153,7 +185,16 @@
             <table class="table saas-table align-middle mb-0">
                 <thead>
                     <tr>
-                        <th class="ps-4">Project & Location</th>
+                        <!-- Bulk Select All -->
+                        <th class="th-check">
+                            <label class="bulk-checkbox-wrap">
+                                <input type="checkbox" id="selectAll" class="bulk-checkbox">
+                                <span class="bulk-checkbox-custom">
+                                    <i class="bi bi-check2"></i>
+                                </span>
+                            </label>
+                        </th>
+                        <th class="ps-2">Project & Location</th>
                         <th>Element</th>
                         <th>Description</th>
                         <th class="text-center">Dimensions</th>
@@ -166,14 +207,31 @@
                 <tbody id="spendTableBody">
                     {% for spend in spends %}
                     <tr class="spend-row"
+                        data-id="{{ spend.id }}"
                         data-project="{{ spend.project.name|lower }}"
                         data-client="{{ spend.project.client.name|lower }}"
                         data-element="{{ spend.elements|lower|default:'' }}"
                         data-desc="{{ spend.description|lower|default:'' }}"
-                        data-amount="{{ spend.total_amount }}">
+                        data-amount="{{ spend.total_amount }}"
+                        data-floor="{{ spend.floor_id|default:'' }}"
+                        data-room="{{ spend.room_id|default:'' }}"
+                        data-fullsemi="{{ spend.fullsemi_id|default:'' }}"
+                        data-rate="{{ spend.rate|default:'0' }}"
+                        data-qty="{{ spend.qty|default:'1' }}"
+                        data-unit="{{ spend.unit|default:'sqft' }}">
+
+                        <!-- CHECKBOX -->
+                        <td class="td-check">
+                            <label class="bulk-checkbox-wrap">
+                                <input type="checkbox" class="bulk-checkbox row-checkbox" value="{{ spend.id }}">
+                                <span class="bulk-checkbox-custom">
+                                    <i class="bi bi-check2"></i>
+                                </span>
+                            </label>
+                        </td>
 
                         <!-- PROJECT & LOCATION -->
-                        <td class="ps-4 py-3">
+                        <td class="ps-2 py-3">
                             <div class="cell-project">
                                 <div class="cell-avatar ca-{% cycle 'indigo' 'emerald' 'amber' 'rose' 'sky' %}">
                                     {{ spend.project.name|slice:":2"|upper }}
@@ -234,14 +292,10 @@
                         </td>
 
                         <!-- RATE -->
-                        <td>
-                            <span class="rate-text">₹{{ spend.rate|default:"0" }}</span>
-                        </td>
+                        <td><span class="rate-text">₹{{ spend.rate|default:"0" }}</span></td>
 
                         <!-- TOTAL AMOUNT -->
-                        <td class="text-end">
-                            <span class="amount-text">₹{{ spend.total_amount }}</span>
-                        </td>
+                        <td class="text-end"><span class="amount-text">₹{{ spend.total_amount }}</span></td>
 
                         <!-- ACTIONS -->
                         <td class="text-end pe-4">
@@ -255,63 +309,15 @@
                             </div>
                         </td>
                     </tr>
-
-                    <!-- DELETE MODAL -->
-                    {% comment %} <div class="modal fade" id="delSpend{{ spend.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content del-modal">
-                                <div class="modal-body p-0">
-                                    <div class="dm-header">
-                                        <div class="dm-icon-wrap">
-                                            <i class="bi bi-exclamation-triangle-fill"></i>
-                                        </div>
-                                    </div>
-                                    <div class="dm-body">
-                                        <h4 class="dm-title">Delete Spend Entry</h4>
-                                        <p class="dm-desc">
-                                            This will permanently remove this cost entry from
-                                            <strong>{{ spend.project.name }}</strong>.
-                                        </p>
-                                        <div class="dm-info-box">
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Element</span>
-                                                <span class="dm-val">{{ spend.elements|default:"-" }}</span>
-                                            </div>
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Location</span>
-                                                <span class="dm-val">{{ spend.floor.name|default:"-" }} • {{ spend.room.name|default:"-" }}</span>
-                                            </div>
-                                            <div class="dm-info-row">
-                                                <span class="dm-label">Amount</span>
-                                                <span class="dm-val dm-amount">₹{{ spend.total_amount }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="dm-footer">
-                                        <button type="button" class="dm-btn dm-cancel" data-bs-dismiss="modal">Cancel</button>
-                                        <a href="{% url 'spend_delete' spend.id %}" class="dm-btn dm-delete">
-                                            <i class="bi bi-trash3 me-1"></i> Delete Entry
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> {% endcomment %}
-
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center py-5">
+                        <td colspan="9" class="text-center py-5">
                             <div class="empty-state">
-                                <div class="empty-circle">
-                                    <i class="bi bi-receipt-cutoff"></i>
-                                </div>
+                                <div class="empty-circle"><i class="bi bi-receipt-cutoff"></i></div>
                                 <h5 class="empty-title">No spend entries found</h5>
                                 <p class="empty-desc">
-                                    {% if selected_client %}
-                                    No cost items recorded for this client yet.
-                                    {% else %}
-                                    Select a client above, or start by adding your first entry.
-                                    {% endif %}
+                                    {% if selected_client %}No cost items recorded for this client yet.
+                                    {% else %}Select a client above, or start by adding your first entry.{% endif %}
                                 </p>
                                 <a href="{% url 'spend_create' %}" class="btn-add-first">
                                     <i class="bi bi-plus-lg me-2"></i> Add First Entry
@@ -325,7 +331,8 @@
                 {% if spends %}
                 <tfoot>
                     <tr class="total-row">
-                        <td class="ps-4 py-3" colspan="6">
+                        <td></td>
+                        <td class="ps-2 py-3" colspan="6">
                             <div class="total-label">
                                 <i class="bi bi-calculator-fill me-2"></i>
                                 Grand Total
@@ -350,66 +357,49 @@
         <div class="row g-3" id="spendGridBody">
             {% for spend in spends %}
             <div class="col-12 col-sm-6 col-lg-4 col-xl-3 grid-item"
+                 data-id="{{ spend.id }}"
                  data-project="{{ spend.project.name|lower }}"
                  data-element="{{ spend.elements|lower|default:'' }}"
                  data-desc="{{ spend.description|lower|default:'' }}">
                 <div class="spend-grid-card">
                     <div class="sgc-top">
+                        <!-- Grid checkbox -->
+                        <label class="bulk-checkbox-wrap grid-check">
+                            <input type="checkbox" class="bulk-checkbox grid-row-checkbox" value="{{ spend.id }}">
+                            <span class="bulk-checkbox-custom"><i class="bi bi-check2"></i></span>
+                        </label>
                         <div class="sgc-avatar ca-{% cycle 'indigo' 'emerald' 'amber' 'rose' 'sky' %}">
                             {{ spend.project.name|slice:":2"|upper }}
                         </div>
                         <div class="sgc-actions">
-                            <a href="{% url 'spend_update' spend.id %}" class="sgc-act" title="Edit">
-                                <i class="bi bi-pencil-square"></i>
-                            </a>
-                            <button class="sgc-act sgc-del"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#delSpend{{ spend.id }}" title="Delete">
-                                <i class="bi bi-trash3"></i>
-                            </button>
+                            <a href="{% url 'spend_update' spend.id %}" class="sgc-act" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                            <a href="{% url 'spend_delete' spend.id %}" class="sgc-act sgc-del" title="Delete"><i class="bi bi-trash3"></i></a>
                         </div>
                     </div>
-
                     <h6 class="sgc-project">{{ spend.project.name }}</h6>
                     <p class="sgc-client"><i class="bi bi-person-fill"></i> {{ spend.project.client.name }}</p>
-
                     {% if spend.floor.name or spend.room.name %}
                     <div class="sgc-location">
                         <i class="bi bi-geo-alt-fill"></i>
                         {{ spend.floor.name|default:"" }} {{ spend.room.name|default:"" }}
                     </div>
                     {% endif %}
-
                     <div class="sgc-divider"></div>
-
                     <div class="sgc-element">
                         <span class="sgc-el-name">{{ spend.elements|default:"-" }}</span>
                         <span class="element-tag et-sky">{{ spend.fullsemi.name|default:"Standard" }}</span>
                     </div>
-
                     {% if spend.description %}
                     <p class="sgc-desc">{{ spend.description|truncatewords:10 }}</p>
                     {% endif %}
-
                     <div class="sgc-divider"></div>
-
                     <div class="sgc-finance">
-                        <div class="sgc-fin-row">
-                            <span class="sgc-fin-label">Qty</span>
-                            <span class="sgc-fin-value">{{ spend.qty }} units</span>
-                        </div>
+                        <div class="sgc-fin-row"><span class="sgc-fin-label">Qty</span><span class="sgc-fin-value">{{ spend.qty }} units</span></div>
                         {% if spend.length or spend.width %}
-                        <div class="sgc-fin-row">
-                            <span class="sgc-fin-label">Dimensions</span>
-                            <span class="sgc-fin-value">{{ spend.length }} × {{ spend.width }}</span>
-                        </div>
+                        <div class="sgc-fin-row"><span class="sgc-fin-label">Dimensions</span><span class="sgc-fin-value">{{ spend.length }} × {{ spend.width }}</span></div>
                         {% endif %}
-                        <div class="sgc-fin-row">
-                            <span class="sgc-fin-label">Rate</span>
-                            <span class="sgc-fin-value">₹{{ spend.rate|default:"0" }}</span>
-                        </div>
+                        <div class="sgc-fin-row"><span class="sgc-fin-label">Rate</span><span class="sgc-fin-value">₹{{ spend.rate|default:"0" }}</span></div>
                     </div>
-
                     <div class="sgc-total-bar">
                         <span class="sgc-total-label">Total</span>
                         <span class="sgc-total-value">₹{{ spend.total_amount }}</span>
@@ -420,13 +410,865 @@
         </div>
     </div>
 
+</div><!-- end spend-page -->
+
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  BULK EDIT MODAL — Editable Rows           -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="modal fade" id="bulkEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bem-content">
+
+            <!-- Header -->
+            <div class="bem-header">
+                <div class="bem-header-left">
+                    <div class="bem-header-icon">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <div>
+                        <h5 class="bem-title">Bulk Edit</h5>
+                        <p class="bem-subtitle">
+                            Editing <strong id="bemCount">0</strong> selected items
+                        </p>
+                    </div>
+                </div>
+                <button type="button" class="bem-close" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <form method="POST" action="{% url 'spend_bulk_update' %}"
+                  id="bulkEditForm">
+                {% csrf_token %}
+                <div id="bulkIdsContainer"></div>
+
+                <div class="bem-body">
+
+                    <!-- Info -->
+                    <div class="bem-info-banner">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span>
+                            Edit each row individually below, or use
+                            <strong>Apply to All</strong> to set one value
+                            across all selected rows at once.
+                        </span>
+                    </div>
+
+                    <!-- Apply to All -->
+                    <div class="bem-apply-all-bar">
+                        <span class="bem-apply-label">
+                            <i class="bi bi-lightning-fill me-1"></i>
+                            Apply to All Rows:
+                        </span>
+
+                        <div class="bem-apply-controls">
+
+                            <!-- Floor -->
+                            <div class="bem-apply-item">
+                                <select id="applyFloor" class="bem-apply-select">
+                                    <option value="">Floor…</option>
+                                    {% for floor in floors %}
+                                    <option value="{{ floor.id }}">{{ floor.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" class="bem-apply-btn"
+                                        onclick="applyToAll('floor', 'applyFloor')">
+                                    Apply
+                                </button>
+                            </div>
+
+                            <!-- Room -->
+                            <div class="bem-apply-item">
+                                <select id="applyRoom" class="bem-apply-select">
+                                    <option value="">Room…</option>
+                                    {% for room in rooms %}
+                                    <option value="{{ room.id }}">{{ room.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" class="bem-apply-btn"
+                                        onclick="applyToAll('room', 'applyRoom')">
+                                    Apply
+                                </button>
+                            </div>
+
+                            <!-- Series -->
+                            <div class="bem-apply-item">
+                                <select id="applyFullsemi" class="bem-apply-select">
+                                    <option value="">Series…</option>
+                                    {% for fs in fullsemis %}
+                                    <option value="{{ fs.id }}"
+                                            data-rate="{{ fs.rate }}">
+                                        {{ fs.name }} (₹{{ fs.rate }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" class="bem-apply-btn"
+                                        onclick="applyToAll('fullsemi', 'applyFullsemi')">
+                                    Apply
+                                </button>
+                            </div>
+
+                            <!-- Rate -->
+                            <div class="bem-apply-item">
+                                <input type="number" id="applyRate"
+                                       class="bem-apply-input"
+                                       placeholder="Rate ₹"
+                                       step="0.01">
+                                <button type="button" class="bem-apply-btn"
+                                        onclick="applyToAll('rate', 'applyRate')">
+                                    Apply
+                                </button>
+                            </div>
+
+                            <!-- Qty -->
+                            <div class="bem-apply-item">
+                                <input type="number" id="applyQty"
+                                       class="bem-apply-input"
+                                       placeholder="Qty"
+                                       step="0.01" min="0.01">
+                                <button type="button" class="bem-apply-btn"
+                                        onclick="applyToAll('qty', 'applyQty')">
+                                    Apply
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Editable Rows Table -->
+                    <div class="bem-rows-scroll custom-scrollbar">
+                        <table class="bem-rows-table">
+                            <thead>
+                                <tr>
+                                    <th class="bem-th-sno">#</th>
+                                    <th>Element</th>
+                                    <th>Floor</th>
+                                    <th>Room</th>
+                                    <th>Series</th>
+                                    <th>Rate (₹)</th>
+                                    <th>Qty</th>
+                                    <th>Unit</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-center">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bemRowsBody">
+                                <!-- Filled by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+                <!-- Footer -->
+                <div class="bem-footer">
+                    <div class="bem-footer-left">
+                        <span class="bem-grand-total-label">
+                            <i class="bi bi-calculator-fill me-1"></i>
+                            Grand Total:
+                        </span>
+                        <span class="bem-grand-total-val" id="bemGrandTotal">₹ 0.00</span>
+                    </div>
+                    <div class="bem-footer-right">
+                        <button type="button" class="bem-btn bem-btn-cancel"
+                                data-bs-dismiss="modal">
+                            <i class="bi bi-x me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="bem-btn bem-btn-save"
+                                id="bemSaveBtn">
+                            <i class="bi bi-check2-circle me-1"></i>
+                            Save <span id="bemSaveCount">0</span> Items
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
 </div>
+
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  BULK DELETE MODAL — Item List             -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+        <div class="modal-content bem-content">
+            <form method="POST" action="{% url 'spend_bulk_delete' %}"
+                  id="bulkDeleteForm">
+                {% csrf_token %}
+                <div id="bulkDeleteIdsContainer"></div>
+
+                <!-- Header -->
+                <div class="bdm-header">
+                    <div class="bdm-icon-wrap">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="bdm-title">
+                            Delete <span id="bdmCount">0</span>
+                            item<span id="bdmPlural"></span>?
+                        </h5>
+                        <p class="bdm-subtitle">
+                            This action cannot be undone.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Items -->
+                <div class="bdm-body">
+
+                    <!-- Warning -->
+                    <div class="bdm-warning-banner">
+                        <i class="bi bi-shield-exclamation"></i>
+                        All listed entries will be
+                        <strong>permanently removed</strong> from the system.
+                    </div>
+
+                    <!-- Item list -->
+                    <div class="bdm-item-list custom-scrollbar"
+                         id="bdmItemList">
+                        <!-- Filled by JS -->
+                    </div>
+
+                    <!-- Total -->
+                    <div class="bdm-total-row">
+                        <span class="bdm-total-label">
+                            <i class="bi bi-calculator-fill me-1"></i>
+                            Total being removed:
+                        </span>
+                        <span class="bdm-total-val" id="bdmTotalAmount">₹ 0.00</span>
+                    </div>
+
+                </div>
+
+                <!-- Footer -->
+                <div class="bdm-footer">
+                    <button type="button" class="bem-btn bem-btn-cancel"
+                            data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="bem-btn bem-btn-delete">
+                        <i class="bi bi-trash3 me-1"></i>
+                        Delete <span id="bdmFooterCount">0</span>
+                        item<span id="bdmFooterPlural"></span>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+
 
 <!-- ════════════════════════════════════════════ -->
 <!--  STYLES                                     -->
 <!-- ════════════════════════════════════════════ -->
 <style>
-    :root {
+/* ══════════════════════════
+   EXISTING STYLES (keep all your existing CSS above)
+   Just add these new styles below
+══════════════════════════ */
+
+/* ── Checkbox Column ── */
+.th-check, .td-check {
+    width: 44px;
+    min-width: 44px;
+    text-align: center;
+    padding: 0 8px !important;
+}
+
+.bulk-checkbox-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+}
+
+.bulk-checkbox {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.bulk-checkbox-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    color: transparent;
+    font-size: 0.72rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bulk-checkbox:checked + .bulk-checkbox-custom {
+    background: var(--indigo);
+    border-color: var(--indigo);
+    color: white;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    transform: scale(1.05);
+}
+
+.bulk-checkbox-custom:hover {
+    border-color: var(--indigo);
+    background: var(--indigo-soft);
+}
+
+/* Selected row highlight */
+.spend-row.row-selected {
+    background: rgba(99, 102, 241, 0.04) !important;
+    border-left: 3px solid var(--indigo);
+}
+
+.spend-row.row-selected .cell-avatar {
+    box-shadow: 0 0 0 2px var(--indigo);
+}
+
+/* Grid checkbox */
+.grid-check {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.spend-grid-card {
+    position: relative;
+}
+
+.spend-grid-card:hover .grid-check,
+.grid-row-checkbox:checked + .bulk-checkbox-custom {
+    opacity: 1 !important;
+}
+
+.grid-item.grid-selected .spend-grid-card {
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 3px var(--indigo-soft), 0 8px 25px -5px rgba(0,0,0,0.08);
+}
+
+/* ══════════════════════════
+   BULK ACTION BAR (Floating)
+══════════════════════════ */
+.bulk-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    z-index: 1060;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.bulk-bar.bulk-bar-visible {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.bulk-bar-inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px 10px 14px;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-radius: 16px;
+    box-shadow:
+        0 20px 50px -10px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+    min-width: 420px;
+}
+
+.bulk-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bulk-check-icon {
+    width: 38px;
+    height: 38px;
+    background: rgba(99, 102, 241, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #818cf8;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.bulk-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.bulk-count {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: white;
+}
+
+.bulk-hint {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 500;
+}
+
+.bulk-bar-center {
+    display: flex;
+    gap: 6px;
+    padding: 0 12px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bulk-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.bulk-edit-btn {
+    background: rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+}
+
+.bulk-edit-btn:hover {
+    background: var(--indigo);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+}
+
+.bulk-delete-btn {
+    background: rgba(244, 63, 94, 0.15);
+    color: #fb7185;
+}
+
+.bulk-delete-btn:hover {
+    background: var(--rose);
+    color: white;
+    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4);
+    transform: translateY(-1px);
+}
+
+.bulk-bar-right {
+    flex-shrink: 0;
+}
+
+.bulk-deselect-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.bulk-deselect-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+}
+
+/* ══════════════════════════
+   BULK EDIT MODAL
+══════════════════════════ */
+.bem-content {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.25);
+}
+
+.bem-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.bem-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bem-header-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--indigo);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.bem-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-1);
+    margin: 0;
+}
+
+.bem-subtitle {
+    font-size: 0.78rem;
+    color: var(--text-3);
+    margin: 2px 0 0;
+}
+
+.bem-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.bem-close:hover {
+    background: var(--rose);
+    color: white;
+    border-color: var(--rose);
+    transform: rotate(90deg);
+}
+
+.bem-body {
+    padding: 20px 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Info Banner */
+.bem-info-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    color: #1d4ed8;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.bem-info-banner i {
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+/* Selected Preview */
+.bem-selected-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+    max-height: 80px;
+    overflow-y: auto;
+    padding: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+}
+
+.bem-preview-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-2);
+}
+
+.bem-preview-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--indigo);
+    flex-shrink: 0;
+}
+
+/* Fields Grid */
+.bem-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.bem-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bem-field-full {
+    grid-column: 1 / -1;
+}
+
+.bem-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s;
+}
+
+.bem-label:hover {
+    color: var(--text-1);
+}
+
+/* Toggle Checkbox */
+.bem-toggle {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.bem-toggle-box {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    font-size: 0.65rem;
+    transition: all 0.2s;
+    background: white;
+}
+
+.bem-toggle:checked + .bem-toggle-box {
+    background: var(--indigo);
+    border-color: var(--indigo);
+    color: white;
+}
+
+.bem-input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 0.83rem;
+    color: var(--text-1);
+    background: var(--surface-2);
+    font-family: inherit;
+    transition: all 0.2s;
+    appearance: none;
+}
+
+.bem-input:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: var(--surface-2);
+}
+
+.bem-input:not(:disabled) {
+    background: white;
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 3px var(--indigo-soft);
+}
+
+.bem-input:focus {
+    outline: none;
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 3px var(--indigo-soft);
+}
+
+.bem-textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* Modal Footer */
+.bem-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-light);
+    background: var(--surface-2);
+}
+
+.bem-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.83rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    text-decoration: none;
+}
+
+.bem-btn-cancel {
+    background: white;
+    color: var(--text-2);
+    border: 1px solid var(--border);
+}
+
+.bem-btn-cancel:hover {
+    background: var(--surface-2);
+}
+
+.bem-btn-save {
+    background: var(--indigo);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.bem-btn-save:hover:not(:disabled) {
+    background: #4f46e5;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+}
+
+.bem-btn-save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.bem-btn-delete {
+    background: var(--rose);
+    color: white;
+    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+}
+
+.bem-btn-delete:hover {
+    background: #e11d48;
+    transform: translateY(-1px);
+}
+
+/* ── Bulk Delete Modal ── */
+.bdm-body {
+    padding: 2rem;
+    text-align: center;
+}
+
+.bdm-icon-wrap {
+    width: 56px;
+    height: 56px;
+    background: var(--rose-soft);
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: var(--rose);
+    margin-bottom: 16px;
+    animation: bounceIn 0.5s ease;
+}
+
+.bdm-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-1);
+    margin-bottom: 8px;
+}
+
+.bdm-desc {
+    font-size: 0.82rem;
+    color: var(--text-3);
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.bdm-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.bdm-actions .bem-btn {
+    flex: 1;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .bulk-bar-inner {
+        min-width: auto;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px;
+    }
+    .bulk-bar-center {
+        border: none;
+        padding: 0;
+    }
+    .bem-fields-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .bulk-bar {
+        left: 12px;
+        right: 12px;
+        transform: translateX(0) translateY(100px);
+    }
+    .bulk-bar.bulk-bar-visible {
+        transform: translateX(0) translateY(0);
+    }
+}
+
+
+:root {
         --indigo: #6366f1;
         --indigo-soft: rgba(99, 102, 241, 0.08);
         --amber: #f59e0b;
@@ -1587,158 +2429,1166 @@
     .table-responsive::-webkit-scrollbar { height: 4px; }
     .table-responsive::-webkit-scrollbar-track { background: transparent; }
     .table-responsive::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
+
+
+/* ══════════════════════════════════════
+   BULK EDIT — APPLY ALL BAR
+══════════════════════════════════════ */
+.bem-apply-all-bar {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f0f4ff, #eef2ff);
+    border: 1px solid var(--indigo-soft);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.bem-apply-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--indigo);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    padding-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.bem-apply-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1;
+}
+
+.bem-apply-item {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.bem-apply-select,
+.bem-apply-input {
+    height: 34px;
+    padding: 0 10px;
+    border: 1.5px solid var(--border-light);
+    border-radius: 8px;
+    background: white;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-1);
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s;
+    appearance: none;
+    min-width: 110px;
+}
+
+.bem-apply-select:focus,
+.bem-apply-input:focus {
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 3px var(--indigo-soft);
+}
+
+.bem-apply-btn {
+    height: 34px;
+    padding: 0 12px;
+    background: var(--indigo);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.bem-apply-btn:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(99,102,241,0.3);
+}
+
+/* ══════════════════════════════════════
+   BULK EDIT — ROWS TABLE
+══════════════════════════════════════ */
+.bem-rows-scroll {
+    overflow-x: auto;
+    max-height: 50vh;
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+}
+
+.bem-rows-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.bem-rows-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.bem-rows-table thead tr {
+    background: var(--surface-2);
+    border-bottom: 2px solid var(--border-light);
+}
+
+.bem-rows-table thead th {
+    padding: 10px 10px;
+    font-size: 0.63rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-3);
+    border: none;
+    white-space: nowrap;
+    background: var(--surface-2);
+}
+
+.bem-th-sno { width: 36px; text-align: center; }
+
+.bem-rows-table tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.15s ease;
+}
+
+.bem-rows-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.bem-rows-table tbody tr:hover {
+    background: rgba(99,102,241,0.02);
+}
+
+.bem-rows-table tbody td {
+    padding: 8px 10px;
+    vertical-align: middle;
+    border: none;
+}
+
+/* Serial */
+.bem-row-serial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: var(--surface-2);
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--text-3);
+}
+
+/* Element display */
+.bem-row-element {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-1);
+    white-space: nowrap;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.bem-row-project {
+    font-size: 0.65rem;
+    color: var(--text-3);
+    font-weight: 500;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+/* Inline inputs inside table */
+.bem-row-select,
+.bem-row-input {
+    width: 100%;
+    min-width: 110px;
+    padding: 6px 8px;
+    border: 1.5px solid var(--border-light);
+    border-radius: 7px;
+    background: var(--surface-2);
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-1);
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s;
+    appearance: none;
+}
+
+.bem-row-select:focus,
+.bem-row-input:focus {
+    border-color: var(--indigo);
+    background: white;
+    box-shadow: 0 0 0 2px var(--indigo-soft);
+}
+
+.bem-row-input-sm {
+    min-width: 70px;
+    text-align: center;
+}
+
+/* Row total */
+.bem-row-total {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--emerald);
+    font-family: 'Monaco', 'Menlo', monospace;
+    white-space: nowrap;
+}
+
+/* Remove row btn */
+.bem-row-remove {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border-light);
+    border-radius: 7px;
+    background: white;
+    color: var(--text-3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+    margin: 0 auto;
+}
+
+.bem-row-remove:hover {
+    background: var(--rose-soft);
+    color: var(--rose);
+    border-color: var(--rose);
+    transform: scale(1.1);
+}
+
+/* Footer */
+.bem-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 24px;
+    border-top: 1px solid var(--border-light);
+    background: var(--surface-2);
+    flex-wrap: wrap;
+}
+
+.bem-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bem-footer-right {
+    display: flex;
+    gap: 10px;
+}
+
+.bem-grand-total-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.bem-grand-total-val {
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--emerald);
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/* ══════════════════════════════════════
+   BULK DELETE MODAL
+══════════════════════════════════════ */
+.bdm-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 22px 14px;
+    background: linear-gradient(135deg, #fef2f2, #fff1f2);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.bdm-icon-wrap {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    background: var(--rose-soft);
+    border: 2px solid rgba(244,63,94,0.15);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: var(--rose);
+    animation: bounceIn 0.4s ease;
+}
+
+.bdm-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-1);
+    margin: 0 0 2px;
+}
+
+.bdm-subtitle {
+    font-size: 0.72rem;
+    color: var(--text-3);
+    margin: 0;
+}
+
+.bdm-body {
+    padding: 16px 22px;
+}
+
+.bdm-warning-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    font-size: 0.76rem;
+    color: #92400e;
+    font-weight: 500;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+.bdm-warning-banner i {
+    font-size: 0.95rem;
+    color: #d97706;
+    flex-shrink: 0;
+}
+
+.bdm-item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 260px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+}
+
+.bdm-item-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    transition: all 0.15s ease;
+}
+
+.bdm-item-row:hover {
+    border-color: var(--rose);
+    background: var(--rose-soft);
+}
+
+.bdm-item-num {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    background: var(--rose-soft);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--rose);
+}
+
+.bdm-item-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.bdm-item-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bdm-item-project {
+    font-size: 0.68rem;
+    color: var(--text-3);
+    font-weight: 500;
+}
+
+.bdm-item-amount {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--rose);
+    font-family: 'Monaco','Menlo',monospace;
+    background: var(--rose-soft);
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.bdm-total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--rose-soft);
+    border: 1px solid rgba(244,63,94,0.15);
+    border-radius: 10px;
+    margin-top: 4px;
+}
+
+.bdm-total-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--rose);
+    display: flex;
+    align-items: center;
+}
+
+.bdm-total-val {
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: var(--rose);
+    font-family: 'Monaco','Menlo',monospace;
+}
+
+.bdm-footer {
+    display: flex;
+    gap: 10px;
+    padding: 14px 22px;
+    border-top: 1px solid var(--border-light);
+    background: var(--surface-2);
+}
+
+.bdm-footer .bem-btn { flex: 1; justify-content: center; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .bem-apply-all-bar { flex-direction: column; }
+    .bem-apply-controls { flex-direction: column; }
+}
+
+
+
 </style>
+
 
 <!-- ════════════════════════════════════════════ -->
 <!--  SCRIPTS                                    -->
 <!-- ════════════════════════════════════════════ -->
 <script>
+
+/* ════════════════════════════════════════════════════════
+   FLOOR / ROOM / FULLSEMI DATA  (from Django context)
+════════════════════════════════════════════════════════ */
+const FLOOR_DATA = [
+    {% for floor in floors %}
+    { id: "{{ floor.id }}", name: "{{ floor.name }}" },
+    {% endfor %}
+];
+
+const ROOM_DATA = [
+    {% for room in rooms %}
+    { id: "{{ room.id }}", name: "{{ room.name }}" },
+    {% endfor %}
+];
+
+const FULLSEMI_DATA = [
+    {% for fs in fullsemis %}
+    { id: "{{ fs.id }}", name: "{{ fs.name }}", rate: "{{ fs.rate }}" },
+    {% endfor %}
+];
+
+/* ── Build <select> options ── */
+function buildOptions(data, selectedId = '') {
+    const blankLabel = data === FULLSEMI_DATA ? '— keep series —' : '— keep —';
+    const opts = data.map(item => {
+        const label = item.rate
+            ? `${item.name} (₹${item.rate})`
+            : item.name;
+        const rateAttr = item.rate ? `data-rate="${item.rate}"` : '';
+        const sel = String(item.id) === String(selectedId) ? 'selected' : '';
+        return `<option value="${item.id}" ${sel} ${rateAttr}>${label}</option>`;
+    }).join('');
+    return `<option value="">${blankLabel}</option>${opts}`;
+}
+
+/* ════════════════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════════════════ */
+function _capFirst(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function _inrFormat(val) {
+    const n = parseFloat(val) || 0;
+    return '₹\u00A0' + n.toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+/* ════════════════════════════════════════════════════════
+   GET SELECTED IDS  (global — used by onclick handlers)
+════════════════════════════════════════════════════════ */
+function getSelectedIds() {
+    const ids = new Set();
+    document.querySelectorAll('.row-checkbox:checked').forEach(cb => ids.add(cb.value));
+    document.querySelectorAll('.grid-row-checkbox:checked').forEach(cb => ids.add(cb.value));
+    return [...ids];
+}
+
+/* ════════════════════════════════════════════════════════
+   GET SELECTED ROWS — full data objects (global)
+════════════════════════════════════════════════════════ */
+function getSelectedRowsData() {
+    return getSelectedIds().map(id => {
+
+        const tr = document.querySelector(`.spend-row[data-id="${id}"]`);
+        if (tr) {
+            return {
+                id:          id,
+                element:     _capFirst(tr.dataset.element)  || ('Item #' + id),
+                project:     _capFirst(tr.dataset.project)  || '',
+                client:      _capFirst(tr.dataset.client)   || '',
+                amount:      tr.dataset.amount              || '0',
+                rate:        tr.dataset.rate                || '',
+                qty:         tr.dataset.qty                 || '1',
+                unit:        tr.dataset.unit                || 'sqft',
+                area:        tr.dataset.area                || '0',
+                floor_id:    tr.dataset.floor               || '',
+                room_id:     tr.dataset.room                || '',
+                fullsemi_id: tr.dataset.fullsemi            || '',
+            };
+        }
+
+        const gi = document.querySelector(`.grid-item[data-id="${id}"]`);
+        if (gi) {
+            return {
+                id:          id,
+                element:     _capFirst(gi.dataset.element)  || ('Item #' + id),
+                project:     _capFirst(gi.dataset.project)  || '',
+                client:      '',
+                amount:      '0',
+                rate:        '',
+                qty:         '1',
+                unit:        'sqft',
+                area:        '0',
+                floor_id:    '',
+                room_id:     '',
+                fullsemi_id: '',
+            };
+        }
+
+        return null;
+    }).filter(Boolean);
+}
+
+/* ════════════════════════════════════════════════════════
+   DESELECT ALL  (global — called from onclick)
+════════════════════════════════════════════════════════ */
+function deselectAll() {
+    document.querySelectorAll('.row-checkbox, .grid-row-checkbox')
+            .forEach(cb => { cb.checked = false; });
+
+    const sa = document.getElementById('selectAll');
+    if (sa) { sa.checked = false; sa.indeterminate = false; }
+
+    document.querySelectorAll('.spend-row').forEach(r => r.classList.remove('row-selected'));
+    document.querySelectorAll('.grid-item').forEach(i => i.classList.remove('grid-selected'));
+
+    const bar = document.getElementById('bulkBar');
+    if (bar) bar.classList.remove('bulk-bar-visible');
+
+    const bc = document.getElementById('bulkCount');
+    if (bc) bc.textContent = '0';
+}
+
+/* ════════════════════════════════════════════════════════
+   BULK EDIT — ROW TOTAL CALC
+════════════════════════════════════════════════════════ */
+function calcBemRowTotal(tr) {
+    const rate  = parseFloat(tr.querySelector('.bem-row-rate')?.value)         || 0;
+    const qty   = parseFloat(tr.querySelector('.bem-row-qty')?.value)          || 1;
+    const area  = parseFloat(tr.querySelector('.bem-row-area-hidden')?.value)  || 0;
+    const total = area > 0 ? (area * rate * qty) : (rate * qty);
+
+    const display = tr.querySelector('.bem-row-total-display');
+    const hidden  = tr.querySelector('.bem-row-total-hidden');
+
+    if (display) display.textContent = _inrFormat(total);
+    if (hidden)  hidden.value        = total.toFixed(2);
+
+    updateBemGrandTotal();
+}
+
+/* ════════════════════════════════════════════════════════
+   BULK EDIT — GRAND TOTAL
+════════════════════════════════════════════════════════ */
+function updateBemGrandTotal() {
+    let grand = 0;
+    document.querySelectorAll('#bemRowsBody .bem-row-total-hidden')
+            .forEach(inp => { grand += parseFloat(inp.value) || 0; });
+
+    const el = document.getElementById('bemGrandTotal');
+    if (el) el.textContent = _inrFormat(grand);
+
+    // Update save count
+    const count = document.querySelectorAll('#bemRowsBody tr').length;
+    const sc = document.getElementById('bemSaveCount');
+    if (sc) sc.textContent = count;
+}
+
+/* ════════════════════════════════════════════════════════
+   BULK EDIT — REMOVE ONE ROW FROM MODAL
+════════════════════════════════════════════════════════ */
+function removeBemRow(btn) {
+    const tbody = document.getElementById('bemRowsBody');
+    if (tbody.querySelectorAll('tr').length <= 1) return; // keep at least 1
+
+    const tr = btn.closest('tr');
+    tr.style.cssText = 'transition:all .25s ease;opacity:0;transform:translateX(18px);';
+
+    setTimeout(() => {
+        tr.remove();
+        // Re-number
+        tbody.querySelectorAll('tr').forEach((row, i) => {
+            const s = row.querySelector('.bem-row-serial');
+            if (s) s.textContent = i + 1;
+        });
+        updateBemGrandTotal();
+
+        const count = tbody.querySelectorAll('tr').length;
+        const el    = document.getElementById('bemCount');
+        if (el) el.textContent = count;
+    }, 250);
+}
+
+/* ════════════════════════════════════════════════════════
+   BULK EDIT — APPLY TO ALL ROWS
+════════════════════════════════════════════════════════ */
+function applyToAll(field, sourceId) {
+    const src = document.getElementById(sourceId);
+    if (!src || !src.value) return;
+
+    document.querySelectorAll('#bemRowsBody tr').forEach(tr => {
+
+        if (field === 'floor') {
+            const s = tr.querySelector('.bem-row-floor');
+            if (s) s.value = src.value;
+
+        } else if (field === 'room') {
+            const s = tr.querySelector('.bem-row-room');
+            if (s) s.value = src.value;
+
+        } else if (field === 'fullsemi') {
+            const s   = tr.querySelector('.bem-row-fullsemi');
+            if (s) {
+                s.value = src.value;
+                const opt  = s.selectedOptions[0];
+                const rate = opt?.dataset.rate;
+                if (rate) {
+                    const ri = tr.querySelector('.bem-row-rate');
+                    if (ri) ri.value = rate;
+                }
+            }
+
+        } else if (field === 'rate') {
+            const i = tr.querySelector('.bem-row-rate');
+            if (i) i.value = src.value;
+
+        } else if (field === 'qty') {
+            const i = tr.querySelector('.bem-row-qty');
+            if (i) i.value = src.value;
+        }
+
+        calcBemRowTotal(tr);
+    });
+
+    // Visual feedback on button
+    const btn = src.closest('.bem-apply-item')?.querySelector('.bem-apply-btn');
+    if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = '✓ Done';
+        btn.style.background = '#10b981';
+        setTimeout(() => {
+            btn.textContent  = orig;
+            btn.style.background = '';
+        }, 1200);
+    }
+}
+
+/* ════════════════════════════════════════════════════════
+   OPEN BULK EDIT MODAL
+════════════════════════════════════════════════════════ */
+function openBulkEditModal() {
+    const rows = getSelectedRowsData();
+    if (rows.length === 0) return;
+
+    // ── Counts ──
+    const bemCount = document.getElementById('bemCount');
+    const bemSave  = document.getElementById('bemSaveCount');
+    if (bemCount) bemCount.textContent = rows.length;
+    if (bemSave)  bemSave.textContent  = rows.length;
+
+    // ── Hidden IDs container ──
+    const idsContainer = document.getElementById('bulkIdsContainer');
+    if (idsContainer) idsContainer.innerHTML = '';
+
+    // ── Build editable rows ──
+    const tbody = document.getElementById('bemRowsBody');
+    tbody.innerHTML = '';
+
+    rows.forEach((row, index) => {
+        // Add hidden ID
+        if (idsContainer) {
+            const inp = document.createElement('input');
+            inp.type  = 'hidden';
+            inp.name  = 'spend_ids';
+            inp.value = row.id;
+            idsContainer.appendChild(inp);
+        }
+
+        const amount = parseFloat(row.amount) || 0;
+
+        const tr = document.createElement('tr');
+        tr.dataset.id = row.id;
+        tr.innerHTML  = `
+
+            <!-- # -->
+            <td style="text-align:center;padding:8px 6px;">
+                <span class="bem-row-serial">${index + 1}</span>
+            </td>
+
+            <!-- Element + Project (info only) -->
+            <td style="padding:8px 10px;min-width:130px;">
+                <span class="bem-row-element" title="${row.element}">
+                    ${row.element}
+                </span>
+                ${row.project
+                    ? `<span class="bem-row-project">${row.project}</span>`
+                    : ''
+                }
+                <!-- Hidden passthrough fields -->
+                <input type="hidden" name="row_id[]"        value="${row.id}">
+                <input type="hidden" name="row_area[]"
+                       class="bem-row-area-hidden"          value="${row.area}">
+                <input type="hidden" name="total_amount[]"
+                       class="bem-row-total-hidden"         value="${amount.toFixed(2)}">
+            </td>
+
+            <!-- Floor -->
+            <td style="padding:8px 6px;">
+                <select name="row_floor[]"
+                        class="bem-row-select bem-row-floor">
+                    ${buildOptions(FLOOR_DATA, row.floor_id)}
+                </select>
+            </td>
+
+            <!-- Room -->
+            <td style="padding:8px 6px;">
+                <select name="row_room[]"
+                        class="bem-row-select bem-row-room">
+                    ${buildOptions(ROOM_DATA, row.room_id)}
+                </select>
+            </td>
+
+            <!-- Series -->
+            <td style="padding:8px 6px;">
+                <select name="row_fullsemi[]"
+                        class="bem-row-select bem-row-fullsemi">
+                    ${buildOptions(FULLSEMI_DATA, row.fullsemi_id)}
+                </select>
+            </td>
+
+            <!-- Rate -->
+            <td style="padding:8px 6px;">
+                <input type="number"
+                       name="row_rate[]"
+                       class="bem-row-input bem-row-input-sm bem-row-rate"
+                       value="${row.rate}"
+                       placeholder="₹ Rate"
+                       step="0.01" min="0">
+            </td>
+
+            <!-- Qty -->
+            <td style="padding:8px 6px;">
+                <input type="number"
+                       name="row_qty[]"
+                       class="bem-row-input bem-row-input-sm bem-row-qty"
+                       value="${row.qty}"
+                       placeholder="Qty"
+                       step="0.01" min="0.01">
+            </td>
+
+            <!-- Unit -->
+            <td style="padding:8px 6px;">
+                <input type="text"
+                       name="row_unit[]"
+                       class="bem-row-input bem-row-input-sm"
+                       value="${row.unit}"
+                       placeholder="sqft"
+                       style="min-width:60px;">
+            </td>
+
+            <!-- Row Total -->
+            <td style="padding:8px 10px;text-align:right;">
+                <span class="bem-row-total-display">${_inrFormat(amount)}</span>
+            </td>
+
+            <!-- Remove -->
+            <td style="padding:8px 6px;text-align:center;">
+                <button type="button"
+                        class="bem-row-remove"
+                        onclick="removeBemRow(this)"
+                        title="Remove from edit list">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+
+        // ── Bind live events ──
+        const rateInp = tr.querySelector('.bem-row-rate');
+        const qtyInp  = tr.querySelector('.bem-row-qty');
+        const fsSelect = tr.querySelector('.bem-row-fullsemi');
+
+        if (rateInp) rateInp.addEventListener('input', () => calcBemRowTotal(tr));
+        if (qtyInp)  qtyInp.addEventListener('input',  () => calcBemRowTotal(tr));
+
+        if (fsSelect) {
+            fsSelect.addEventListener('change', function () {
+                const opt  = this.selectedOptions[0];
+                const rate = opt?.dataset.rate;
+                if (rate && rateInp) {
+                    rateInp.value = rate;
+                    calcBemRowTotal(tr);
+                }
+            });
+        }
+    });
+
+    updateBemGrandTotal();
+
+    new bootstrap.Modal(document.getElementById('bulkEditModal')).show();
+}
+
+/* ════════════════════════════════════════════════════════
+   CONFIRM BULK DELETE
+════════════════════════════════════════════════════════ */
+function confirmBulkDelete() {
+    const rows = getSelectedRowsData();
+    if (rows.length === 0) return;
+
+    const count = rows.length;
+
+    // ── Labels ──
+    ['bdmCount', 'bdmFooterCount'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = count;
+    });
+    ['bdmPlural', 'bdmFooterPlural'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = count !== 1 ? 's' : '';
+    });
+
+    // ── Hidden IDs ──
+    const container = document.getElementById('bulkDeleteIdsContainer');
+    if (container) {
+        container.innerHTML = '';
+        rows.forEach(row => {
+            const inp = document.createElement('input');
+            inp.type  = 'hidden';
+            inp.name  = 'spend_ids';
+            inp.value = row.id;
+            container.appendChild(inp);
+        });
+    }
+
+    // ── Item list ──
+    const listEl = document.getElementById('bdmItemList');
+    if (listEl) {
+        listEl.innerHTML = '';
+        let grandTotal   = 0;
+
+        rows.forEach((row, index) => {
+            const amount = parseFloat(row.amount) || 0;
+            grandTotal  += amount;
+
+            const div = document.createElement('div');
+            div.className = 'bdm-item-row';
+            div.innerHTML = `
+                <div class="bdm-item-num">${index + 1}</div>
+
+                <div class="bdm-item-info">
+                    <span class="bdm-item-name" title="${row.element}">
+                        ${row.element}
+                    </span>
+                    ${(row.project || row.client)
+                        ? `<span class="bdm-item-project">
+                               ${[row.project, row.client].filter(Boolean).join(' · ')}
+                           </span>`
+                        : ''
+                    }
+                </div>
+
+                ${amount > 0
+                    ? `<span class="bdm-item-amount">${_inrFormat(amount)}</span>`
+                    : ''
+                }
+            `;
+            listEl.appendChild(div);
+        });
+
+        // ── Grand total being deleted ──
+        const totalEl = document.getElementById('bdmTotalAmount');
+        if (totalEl) totalEl.textContent = _inrFormat(grandTotal);
+    }
+
+    new bootstrap.Modal(document.getElementById('bulkDeleteModal')).show();
+}
+
+/* ════════════════════════════════════════════════════════
+   DOM CONTENT LOADED — all event bindings
+════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ═══════════════════════════════
-    //  LIVE SEARCH
-    // ═══════════════════════════════
-    const searchInput = document.getElementById('liveSearch');
-    const tableRows = document.querySelectorAll('.spend-row');
-    const gridItems = document.querySelectorAll('.grid-item');
-    const visibleCount = document.getElementById('visibleCount');
+    // ── References ──
+    const selectAllCb    = document.getElementById('selectAll');
+    const rowCheckboxes  = document.querySelectorAll('.row-checkbox');
+    const gridCheckboxes = document.querySelectorAll('.grid-row-checkbox');
+    const bulkBar        = document.getElementById('bulkBar');
+    const bulkCountEl    = document.getElementById('bulkCount');
+    const searchInput    = document.getElementById('liveSearch');
+    const tableRows      = document.querySelectorAll('.spend-row');
+    const gridItems      = document.querySelectorAll('.grid-item');
+    const visibleCount   = document.getElementById('visibleCount');
 
-    function performSearch() {
-        const query = searchInput.value.toLowerCase().trim();
-        let count = 0;
+    /* ─── Internal: get selected IDs (scoped) ─── */
+    function _getIds() {
+        const ids = new Set();
+        document.querySelectorAll('.row-checkbox:checked').forEach(cb => ids.add(cb.value));
+        document.querySelectorAll('.grid-row-checkbox:checked').forEach(cb => ids.add(cb.value));
+        return [...ids];
+    }
 
-        function matchItem(el) {
-            const project = el.dataset.project || '';
-            const client = el.dataset.client || '';
-            const element = el.dataset.element || '';
-            const desc = el.dataset.desc || '';
+    /* ─── Highlight selected rows + update bar ─── */
+    function updateBulkBar() {
+        const selected = _getIds();
+        const count    = selected.length;
 
-            return project.includes(query) ||
-                   client.includes(query) ||
-                   element.includes(query) ||
-                   desc.includes(query);
+        if (bulkCountEl) bulkCountEl.textContent = count;
+
+        if (bulkBar) {
+            bulkBar.classList.toggle('bulk-bar-visible', count > 0);
         }
 
         tableRows.forEach(row => {
-            const show = matchItem(row);
+            row.classList.toggle('row-selected', selected.includes(row.dataset.id));
+        });
+
+        gridItems.forEach(item => {
+            item.classList.toggle('grid-selected', selected.includes(item.dataset.id));
+        });
+
+        // ── Sync select-all checkbox state ──
+        const visibleCbs = [...rowCheckboxes].filter(cb => {
+            return cb.closest('.spend-row').style.display !== 'none';
+        });
+
+        const allChecked  = visibleCbs.length > 0 && visibleCbs.every(cb => cb.checked);
+        const someChecked = visibleCbs.some(cb => cb.checked);
+
+        if (selectAllCb) {
+            selectAllCb.checked       = allChecked;
+            selectAllCb.indeterminate = !allChecked && someChecked;
+        }
+    }
+
+    /* ─── Select All ─── */
+    if (selectAllCb) {
+        selectAllCb.addEventListener('change', function () {
+            rowCheckboxes.forEach(cb => {
+                if (cb.closest('.spend-row').style.display !== 'none') {
+                    cb.checked = this.checked;
+                }
+            });
+            updateBulkBar();
+        });
+    }
+
+    /* ─── Individual row checkboxes ─── */
+    rowCheckboxes.forEach(cb => cb.addEventListener('change', updateBulkBar));
+    gridCheckboxes.forEach(cb => cb.addEventListener('change', updateBulkBar));
+
+    /* ─── Shift+Click range select ─── */
+    let lastCheckedIdx = null;
+
+    rowCheckboxes.forEach((cb, idx) => {
+        cb.addEventListener('click', function (e) {
+            if (e.shiftKey && lastCheckedIdx !== null) {
+                const lo = Math.min(lastCheckedIdx, idx);
+                const hi = Math.max(lastCheckedIdx, idx);
+                for (let i = lo; i <= hi; i++) {
+                    rowCheckboxes[i].checked = this.checked;
+                }
+            }
+            lastCheckedIdx = idx;
+            updateBulkBar();
+        });
+    });
+
+    /* ─── Keyboard shortcuts ─── */
+    document.addEventListener('keydown', function (e) {
+
+        // Escape → clear selection
+        if (e.key === 'Escape') {
+            deselectAll();
+            return;
+        }
+
+        // Ctrl/Cmd + A → select all visible
+        if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+            if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
+            e.preventDefault();
+            rowCheckboxes.forEach(cb => {
+                if (cb.closest('.spend-row').style.display !== 'none') {
+                    cb.checked = true;
+                }
+            });
+            updateBulkBar();
+        }
+
+        // Ctrl/Cmd + K → focus search
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            if (searchInput) { searchInput.focus(); searchInput.select(); }
+        }
+    });
+
+    /* ─── Live Search ─── */
+    function performSearch() {
+        const q = (searchInput.value || '').toLowerCase().trim();
+        let count = 0;
+
+        function match(el) {
+            return (el.dataset.project || '').includes(q) ||
+                   (el.dataset.client  || '').includes(q) ||
+                   (el.dataset.element || '').includes(q) ||
+                   (el.dataset.desc    || '').includes(q);
+        }
+
+        tableRows.forEach(row => {
+            const show = match(row);
             row.style.display = show ? '' : 'none';
             if (show) count++;
         });
 
         gridItems.forEach(item => {
-            item.style.display = matchItem(item) ? '' : 'none';
+            item.style.display = match(item) ? '' : 'none';
         });
 
         if (visibleCount) visibleCount.textContent = count;
     }
 
-    if (searchInput) {
-        searchInput.addEventListener('input', performSearch);
+    if (searchInput) searchInput.addEventListener('input', performSearch);
 
-        document.addEventListener('keydown', function (e) {
-            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                e.preventDefault();
-                searchInput.focus();
-                searchInput.select();
-            }
-        });
-    }
-
-    // ═══════════════════════════════
-    //  VIEW TOGGLE
-    // ═══════════════════════════════
-    const viewBtns = document.querySelectorAll('.vt-btn');
-    const tableView = document.getElementById('tableView');
-    const gridView = document.getElementById('gridView');
-
-    viewBtns.forEach(btn => {
+    /* ─── View Toggle (table / grid) ─── */
+    document.querySelectorAll('.vt-btn').forEach(btn => {
         btn.addEventListener('click', function () {
-            viewBtns.forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.vt-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
 
+            const tv = document.getElementById('tableView');
+            const gv = document.getElementById('gridView');
+
             if (this.dataset.view === 'table') {
-                tableView.style.display = '';
-                gridView.style.display = 'none';
+                if (tv) tv.style.display = '';
+                if (gv) gv.style.display = 'none';
             } else {
-                tableView.style.display = 'none';
-                gridView.style.display = '';
+                if (tv) tv.style.display = 'none';
+                if (gv) gv.style.display = '';
             }
         });
     });
 
-    // ═══════════════════════════════
-    //  COUNTER ANIMATION
-    // ═══════════════════════════════
+    /* ─── Stats ─── */
+
+    // Animated counters
     document.querySelectorAll('.sc-value[data-count]').forEach(el => {
-        const target = parseInt(el.getAttribute('data-count')) || 0;
-        let current = 0;
-        const step = Math.max(1, Math.ceil(target / 30));
-        const timer = setInterval(() => {
-            current += step;
-            if (current >= target) { current = target; clearInterval(timer); }
-            el.textContent = current;
+        const target = parseInt(el.dataset.count) || 0;
+        let cur      = 0;
+        const step   = Math.max(1, Math.ceil(target / 30));
+        const t      = setInterval(() => {
+            cur += step;
+            if (cur >= target) { cur = target; clearInterval(t); }
+            el.textContent = cur;
         }, 30);
     });
 
-    // ═══════════════════════════════
-    //  COMPUTE STATS
-    // ═══════════════════════════════
-    let totalSpend = 0;
-    let totalRate = 0;
-    let rateCount = 0;
+    // Totals
+    let totalSpend   = 0;
     const projectSet = new Set();
 
     tableRows.forEach(row => {
-        const amount = parseFloat(row.dataset.amount) || 0;
-        totalSpend += amount;
-
-        const project = row.dataset.project || '';
-        if (project) projectSet.add(project);
-
-        // Rate calculation from amount cells
-        rateCount++;
+        totalSpend += parseFloat(row.dataset.amount) || 0;
+        const p = row.dataset.project;
+        if (p) projectSet.add(p);
     });
 
-    // Grand total
     const grandEl = document.getElementById('grandTotal');
-    if (grandEl) {
-        grandEl.textContent = '₹' + totalSpend.toLocaleString('en-IN', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
+    if (grandEl) grandEl.textContent = _inrFormat(totalSpend);
+
+    const tsEl = document.getElementById('totalSpendVal');
+    if (tsEl) tsEl.textContent = '₹' + Math.round(totalSpend).toLocaleString('en-IN');
+
+    const arEl = document.getElementById('avgRateVal');
+    if (arEl && tableRows.length > 0) {
+        arEl.textContent = '₹' + Math.round(totalSpend / tableRows.length).toLocaleString('en-IN');
     }
 
-    // Total spend stat
-    const totalSpendEl = document.getElementById('totalSpendVal');
-    if (totalSpendEl) {
-        totalSpendEl.textContent = '₹' + totalSpend.toLocaleString('en-IN', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        });
-    }
-
-    // Avg rate
-    const avgRateEl = document.getElementById('avgRateVal');
-    if (avgRateEl && rateCount > 0) {
-        const avg = totalSpend / rateCount;
-        avgRateEl.textContent = '₹' + avg.toLocaleString('en-IN', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        });
-    }
-
-    // Projects covered
     const projEl = document.getElementById('projectsCovered');
     if (projEl) {
         let c = 0;
         const target = projectSet.size;
-        const s = Math.max(1, Math.ceil(target / 20));
-        const t = setInterval(() => {
-            c += s;
+        const step   = Math.max(1, Math.ceil(target / 20));
+        const t      = setInterval(() => {
+            c += step;
             if (c >= target) { c = target; clearInterval(t); }
             projEl.textContent = c;
         }, 40);
     }
-});
+
+}); // end DOMContentLoaded
+
 </script>
 {% endblock %}

@@ -1372,6 +1372,30 @@ def fullsemi_delete(request, pk):
 
 
 
+# # 📌 Spend List
+# def spend_list(request):
+#     client_id = request.GET.get('client')
+
+#     spends = Spend.objects.none()
+
+#     if client_id:
+#         spends = (
+#             Spend.objects
+#             .select_related('project__client', 'floor', 'room', 'fullsemi')
+#             .filter(project__client_id=client_id)
+#             .order_by('-id')
+#         )
+
+#     clients = Client.objects.all()
+
+#     return render(request, 'billing/spend/index.html', {
+#         'spends': spends,
+#         'clients': clients,
+#         'selected_client': client_id,
+#     })
+
+
+
 # 📌 Spend List
 def spend_list(request):
     client_id = request.GET.get('client')
@@ -1386,13 +1410,123 @@ def spend_list(request):
             .order_by('-id')
         )
 
-    clients = Client.objects.all()
+    clients   = Client.objects.all()
+    floors    = FloorType.objects.all()
+    rooms     = RoomType.objects.all()
+    fullsemis = FullSemi.objects.all()
+    projects  = Project.objects.select_related('client').all()
 
     return render(request, 'billing/spend/index.html', {
-        'spends': spends,
-        'clients': clients,
+        'spends':          spends,
+        'clients':         clients,
         'selected_client': client_id,
+
+        # ── For bulk edit dropdowns ──
+        'floors':    floors,
+        'rooms':     rooms,
+        'fullsemis': fullsemis,
+        'projects':  projects,
     })
+
+
+
+
+# views.py
+
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.views.decorators.http import require_POST
+from decimal import Decimal
+
+
+@login_required
+@require_POST
+def spend_bulk_update(request):
+    """Bulk update — per-row individual edits."""
+
+    row_ids      = request.POST.getlist('row_id[]')
+    row_floors   = request.POST.getlist('row_floor[]')
+    row_rooms    = request.POST.getlist('row_room[]')
+    row_fullsemis = request.POST.getlist('row_fullsemi[]')
+    row_rates    = request.POST.getlist('row_rate[]')
+    row_qtys     = request.POST.getlist('row_qty[]')
+    row_units    = request.POST.getlist('row_unit[]')
+
+    if not row_ids:
+        messages.warning(request, 'No items to update.')
+        return redirect(request.META.get('HTTP_REFERER', 'spend_list'))
+
+    updated = 0
+
+    for i, spend_id in enumerate(row_ids):
+        try:
+            spend = Spend.objects.get(id=spend_id)
+        except Spend.DoesNotExist:
+            continue
+
+        # Floor
+        floor_val = row_floors[i] if i < len(row_floors) else ''
+        if floor_val:
+            spend.floor_id = int(floor_val)
+
+        # Room
+        room_val = row_rooms[i] if i < len(row_rooms) else ''
+        if room_val:
+            spend.room_id = int(room_val)
+
+        # FullSemi
+        fs_val = row_fullsemis[i] if i < len(row_fullsemis) else ''
+        if fs_val:
+            spend.fullsemi_id = int(fs_val)
+
+        # Rate
+        rate_val = row_rates[i] if i < len(row_rates) else ''
+        if rate_val:
+            spend.rate = Decimal(rate_val)
+
+        # Qty
+        qty_val = row_qtys[i] if i < len(row_qtys) else ''
+        if qty_val:
+            spend.qty = Decimal(qty_val)
+
+        # Unit
+        unit_val = row_units[i] if i < len(row_units) else ''
+        if unit_val:
+            spend.unit = unit_val.strip()
+
+        spend.save()  # triggers area/total recalc
+        updated += 1
+
+    messages.success(request, f'Successfully updated {updated} item(s).')
+
+    return redirect(request.META.get('HTTP_REFERER', 'spend_list'))
+
+
+@login_required
+@require_POST
+def spend_bulk_delete(request):
+    """Bulk delete selected spend entries."""
+
+    spend_ids = request.POST.getlist('spend_ids')
+
+    if not spend_ids:
+        messages.warning(request, 'No items selected.')
+        return redirect('spend_index')
+
+    deleted_count, _ = Spend.objects.filter(
+        id__in=spend_ids
+    ).delete()
+
+    messages.success(
+        request,
+        f'Successfully deleted {deleted_count} items.'
+    )
+
+    referer = request.META.get('HTTP_REFERER', '')
+    if referer:
+        return redirect(referer)
+    return redirect('spend_index')
+
 
 
 
@@ -1537,6 +1671,12 @@ def spend_create(request):
         "rooms": rooms,
         "fullsemis": fullsemis
     })
+
+
+
+
+
+
 
 
 
@@ -1961,54 +2101,234 @@ import urllib.parse
 
 
 
+
+from collections import OrderedDict
+
+# ═══════════════════════════════════════
+# CUSTOM SORT ORDERS
+# ═══════════════════════════════════════
+
+FLOOR_ORDER = {
+    'ground floor':  1,
+    'first floor':   2,
+    'second floor':  3,
+    'third floor':   4,
+    'fourth floor':  5,
+    'fifth floor':   6,
+    'false ceiling': 7,
+    'total':         8,
+}
+
+ROOM_ORDER = {
+    'living hall':   1,
+    'kitchen':       2,
+    'bedroom':       3,
+    'kids bedroom':  4,
+    'guest bedroom': 5,
+    'utility':       6,
+    'others':        7,
+}
+
+
+def get_floor_sort_key(floor_name):
+    """
+    Returns sort priority for a floor.
+    Unknown floors get 99 (pushed to end).
+    """
+    if not floor_name:
+        return 99
+
+    name = floor_name.strip().lower()
+
+    # Exact match
+    if name in FLOOR_ORDER:
+        return FLOOR_ORDER[name]
+
+    # Partial match (e.g. "Ground Floor - Block A")
+    for key, order in FLOOR_ORDER.items():
+        if key in name:
+            return order
+
+    return 99
+
+
+def get_room_sort_key(room_name):
+    """
+    Returns sort priority for a room.
+    Unknown rooms get 99 (pushed to end).
+    """
+    if not room_name:
+        return 99
+
+    name = room_name.strip().lower()
+
+    # Exact match
+    if name in ROOM_ORDER:
+        return ROOM_ORDER[name]
+
+    # Partial match (e.g. "Kids Bedroom 2")
+    for key, order in ROOM_ORDER.items():
+        if key in name:
+            return order
+
+    return 99
+
+
+def group_spends_by_floor_room(spends):
+    """
+    Groups spends by Floor → Room with custom ordering.
+    Returns OrderedDict:
+    {
+        'Ground Floor': {
+            'Living Hall': [spend1, spend2],
+            'Kitchen': [spend3],
+            ...
+        },
+        'First Floor': { ... },
+    }
+    """
+
+    # ── Sort spends using custom keys ──
+    sorted_spends = sorted(
+        spends,
+        key=lambda s: (
+            get_floor_sort_key(
+                s.floor.name if s.floor else ''
+            ),
+            get_room_sort_key(
+                s.room.name if s.room else ''
+            ),
+            s.id,
+        )
+    )
+
+    # ── Group into nested OrderedDict ──
+    grouped = OrderedDict()
+
+    for spend in sorted_spends:
+
+        floor_name = spend.floor.name if spend.floor else 'Unassigned'
+        room_name  = spend.room.name  if spend.room  else 'General'
+
+        if floor_name not in grouped:
+            grouped[floor_name] = OrderedDict()
+
+        if room_name not in grouped[floor_name]:
+            grouped[floor_name][room_name] = []
+
+        grouped[floor_name][room_name].append(spend)
+
+    return grouped
+
+
 def build_invoice_context(request, payment):
 
     project = payment.project
-    client = project.client
+    client  = project.client
 
     invoice_number = f"INV-{client.id}{payment.id}{payment.date.strftime('%d%m%Y')}"
 
-    client_name = re.sub(r'[^A-Za-z0-9]+', '', client.name.capitalize())[:10]
-    project_code = f"inv"
-    date_str = payment.date.strftime('%d-%m-%Y')
+    # client_name = re.sub(
+    #     r'[^A-Za-z0-9]+', '',
+    #     client.name.capitalize()
+    # )[:20]
+
+    client_name = client.name.strip()
+
+    # Keep letters, numbers, spaces and dots
+    client_name = re.sub(r'[^A-Za-z0-9.\s]', '', client_name)
+
+    # Remove extra spaces
+    client_name = re.sub(r'\s+', '_', client_name)
+
+    client_name = client_name[:20]
+
+    project_code = "invoice"
+    date_str     = payment.date.strftime('%d-%m-%Y')
+
     invoice_filename = f"{client_name}-{project_code}-({date_str}).pdf"
 
     invoice_url = request.build_absolute_uri(
         reverse('public_invoice', args=[payment.invoice_token])
     )
 
-    spends = project.spends.select_related(
+    # ═══════════════════════════════════════
+    # SPENDS — CUSTOM FLOOR + ROOM ORDER
+    # ═══════════════════════════════════════
+
+    spends_qs = project.spends.select_related(
         'floor', 'room', 'fullsemi'
-    ).order_by(
-        'floor__name',
-        'room__name',
-        'id'
+    ).all()
+
+    # ── Flat sorted list (for table rendering) ──
+    spends = sorted(
+        spends_qs,
+        key=lambda s: (
+            get_floor_sort_key(
+                s.floor.name if s.floor else ''
+            ),
+            get_room_sort_key(
+                s.room.name if s.room else ''
+            ),
+            s.id,
+        )
     )
 
-    total_spent = project.total_spent
-    # GST based on client GST registration
+    # ── Grouped by Floor → Room ──
+    grouped_spends = group_spends_by_floor_room(spends_qs)
 
-    # ✅ Use saved values if exist, else defaults
+    # ── Floor subtotals ──
+    floor_totals = OrderedDict()
+    for floor_name, rooms in grouped_spends.items():
+        floor_total = sum(
+            spend.total_amount or Decimal('0.00')
+            for room_spends in rooms.values()
+            for spend in room_spends
+        )
+        floor_totals[floor_name] = floor_total
+
+    # ── Room subtotals (nested) ──
+    room_totals = OrderedDict()
+    for floor_name, rooms in grouped_spends.items():
+        room_totals[floor_name] = OrderedDict()
+        for room_name, room_spends in rooms.items():
+            room_totals[floor_name][room_name] = sum(
+                spend.total_amount or Decimal('0.00')
+                for spend in room_spends
+            )
+
+    # ═══════════════════════════════════════
+    # TOTALS & GST
+    # ═══════════════════════════════════════
+
+    total_spent = project.total_spent
+
     gst_rate = payment.gst_rate or (
-        Decimal("0.00") if client.gst_number else Decimal("0.00")
+        Decimal("0.00") if client.gst_number
+        else Decimal("0.00")
     )
 
     gst_amount = (total_spent * gst_rate) / Decimal("100")
 
     discount_value = payment.discount_value or Decimal("0.00")
-    discount_type = payment.discount_type or "percent"
+    discount_type  = payment.discount_type  or "percent"
 
     if discount_type == "percent":
-        discount = (total_spent + gst_amount) * discount_value / Decimal("100")
+        discount = (
+            (total_spent + gst_amount) * discount_value / Decimal("100")
+        )
     else:
         discount = discount_value
 
     grand_total = total_spent + gst_amount - discount
 
+    # ═══════════════════════════════════════
+    # PAYMENT HISTORY
+    # ═══════════════════════════════════════
+
     payments = project.payments.filter(
         date__lte=payment.date
     ).order_by('date', 'id')
-
 
     phone = f"91{client.mobile_1}"
 
@@ -2021,9 +2341,8 @@ def build_invoice_context(request, payment):
         f"https://wa.me/{phone}?text={urllib.parse.quote(message)}"
     )
 
-
-    payment_rows = []
-    running_total = Decimal("0.00")
+    payment_rows    = []
+    running_total   = Decimal("0.00")
 
     for p in payments:
 
@@ -2035,32 +2354,151 @@ def build_invoice_context(request, payment):
         running_total += p.amount
 
         payment_rows.append({
-            'token': p.invoice_token,
-            'id': p.id,
-            'date': p.date,
+            'token':         p.invoice_token,
+            'id':            p.id,
+            'date':          p.date,
             'previous_paid': previous_paid,
-            'now_paid': p.amount,
-            'total_paid': running_total,
+            'now_paid':      p.amount,
+            'total_paid':    running_total,
             'balance_after': grand_total - running_total,
-            'mode': p.get_payment_mode_display(),
+            'mode':          p.get_payment_mode_display(),
         })
 
+    # ═══════════════════════════════════════
+    # RETURN CONTEXT
+    # ═══════════════════════════════════════
 
     return {
-        'project': project,
-        'payment': payment,
-        'spends': spends,
-        'total_spent': total_spent,
-        'gst_rate': gst_rate,
-        'gst_amount': gst_amount,
-        'discount': discount,
-        'grand_total': grand_total,
-        'payment_rows': payment_rows,
-        'invoice_number': invoice_number,
-        'invoice_filename': invoice_filename,
-        'invoice_url': invoice_url,
-        'whatsapp_url': whatsapp_url,
+        'project':       project,
+        'payment':       payment,
+
+        # Flat sorted spends
+        'spends':        spends,
+
+        # Grouped: Floor → Room → [spends]
+        'grouped_spends': grouped_spends,
+
+        # Subtotals
+        'floor_totals':  floor_totals,
+        'room_totals':   room_totals,
+
+        'total_spent':   total_spent,
+        'gst_rate':      gst_rate,
+        'gst_amount':    gst_amount,
+        'discount':      discount,
+        'grand_total':   grand_total,
+
+        'payment_rows':      payment_rows,
+        'invoice_number':    invoice_number,
+        'invoice_filename':  invoice_filename,
+        'invoice_url':       invoice_url,
+        'whatsapp_url':      whatsapp_url,
     }
+
+
+
+
+
+# def build_invoice_context(request, payment):
+
+#     project = payment.project
+#     client = project.client
+
+#     invoice_number = f"INV-{client.id}{payment.id}{payment.date.strftime('%d%m%Y')}"
+
+#     client_name = re.sub(r'[^A-Za-z0-9]+', '', client.name.capitalize())[:10]
+#     project_code = f"inv"
+#     date_str = payment.date.strftime('%d-%m-%Y')
+#     invoice_filename = f"{client_name}-{project_code}-({date_str}).pdf"
+
+#     invoice_url = request.build_absolute_uri(
+#         reverse('public_invoice', args=[payment.invoice_token])
+#     )
+
+#     spends = project.spends.select_related(
+#         'floor', 'room', 'fullsemi'
+#     ).order_by(
+#         'floor__name',
+#         'room__name',
+#         'id'
+#     )
+
+#     total_spent = project.total_spent
+#     # GST based on client GST registration
+
+#     # ✅ Use saved values if exist, else defaults
+#     gst_rate = payment.gst_rate or (
+#         Decimal("0.00") if client.gst_number else Decimal("0.00")
+#     )
+
+#     gst_amount = (total_spent * gst_rate) / Decimal("100")
+
+#     discount_value = payment.discount_value or Decimal("0.00")
+#     discount_type = payment.discount_type or "percent"
+
+#     if discount_type == "percent":
+#         discount = (total_spent + gst_amount) * discount_value / Decimal("100")
+#     else:
+#         discount = discount_value
+
+#     grand_total = total_spent + gst_amount - discount
+
+#     payments = project.payments.filter(
+#         date__lte=payment.date
+#     ).order_by('date', 'id')
+
+
+#     phone = f"91{client.mobile_1}"
+
+#     message = (
+#         f"Hello {client.name}, "
+#         f"Your invoice is ready. Click to view: {invoice_url}"
+#     )
+
+#     whatsapp_url = (
+#         f"https://wa.me/{phone}?text={urllib.parse.quote(message)}"
+#     )
+
+
+#     payment_rows = []
+#     running_total = Decimal("0.00")
+
+#     for p in payments:
+
+#         if not p.invoice_token:
+#             p.invoice_token = uuid.uuid4()
+#             p.save(update_fields=['invoice_token'])
+
+#         previous_paid = running_total
+#         running_total += p.amount
+
+#         payment_rows.append({
+#             'token': p.invoice_token,
+#             'id': p.id,
+#             'date': p.date,
+#             'previous_paid': previous_paid,
+#             'now_paid': p.amount,
+#             'total_paid': running_total,
+#             'balance_after': grand_total - running_total,
+#             'mode': p.get_payment_mode_display(),
+#         })
+
+
+#     return {
+#         'project': project,
+#         'payment': payment,
+#         'spends': spends,
+#         'total_spent': total_spent,
+#         'gst_rate': gst_rate,
+#         'gst_amount': gst_amount,
+#         'discount': discount,
+#         'grand_total': grand_total,
+#         'payment_rows': payment_rows,
+#         'invoice_number': invoice_number,
+#         'invoice_filename': invoice_filename,
+#         'invoice_url': invoice_url,
+#         'whatsapp_url': whatsapp_url,
+#     }
 
 
 @login_required

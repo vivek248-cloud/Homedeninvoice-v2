@@ -263,8 +263,8 @@
         {% csrf_token %}
 
         <div class="row g-4">
-            <!-- Main Content -->
-            <div class="col-xl-9 col-lg-8">
+            <!-- Main Content --> <!-- col-xl-9 col-lg-8-->
+            <div class="">
 
                 <!-- Project Selection Card -->
                 <div class="form-card fade-in fi-2" id="projectCard">
@@ -515,86 +515,6 @@
                 </div>
             </div>
 
-            <!-- Sidebar -->
-            <div class="col-xl-3 col-lg-4 fade-in fi-4">
-                <!-- Summary Card -->
-                <div class="sidebar-card mb-3">
-                    <div class="sc-header">
-                        <div class="sc-icon sc-emerald"><i class="bi bi-speedometer2"></i></div>
-                        <h6 class="sc-title">Live Summary</h6>
-                    </div>
-                    <div class="summary-grid">
-                        <div class="sg-item">
-                            <span class="sg-label">Items</span>
-                            <span class="sg-value" id="summaryItems">1</span>
-                        </div>
-                        <div class="sg-item">
-                            <span class="sg-label">Area</span>
-                            <span class="sg-value" id="summaryArea">0.00</span>
-                        </div>
-                        <div class="sg-item sg-full">
-                            <span class="sg-label">Progress</span>
-                            <div class="progress-wrap">
-                                <div class="progress-bar">
-                                    <div class="progress-fill" id="progressFill"></div>
-                                </div>
-                                <span class="progress-text" id="progressText">0%</span>
-                            </div>
-                        </div>
-                        <div class="sg-item sg-full sg-total">
-                            <span class="sg-label">Total</span>
-                            <span class="sg-value">₹ <span id="summaryTotal">0.00</span></span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Checklist Card -->
-                <div class="sidebar-card mb-3">
-                    <div class="sc-header">
-                        <div class="sc-icon sc-rose"><i class="bi bi-list-check"></i></div>
-                        <h6 class="sc-title">Required Fields</h6>
-                    </div>
-                    <div class="checklist">
-                        <div class="cl-item" id="cl-project">
-                            <div class="cl-check"><i class="bi bi-circle"></i></div>
-                            <span>Project selected</span>
-                        </div>
-                        <div class="cl-item" id="cl-floor">
-                            <div class="cl-check"><i class="bi bi-circle"></i></div>
-                            <span>Floor assigned</span>
-                        </div>
-                        <div class="cl-item" id="cl-element">
-                            <div class="cl-check"><i class="bi bi-circle"></i></div>
-                            <span>Element named</span>
-                        </div>
-                        <div class="cl-item" id="cl-series">
-                            <div class="cl-check"><i class="bi bi-circle"></i></div>
-                            <span>Series selected</span>
-                        </div>
-                        <div class="cl-item" id="cl-rate">
-                            <div class="cl-check"><i class="bi bi-circle"></i></div>
-                            <span>Rate entered</span>
-                        </div>
-                        <div class="cl-item" id="cl-dimensions">
-                            <div class="cl-check"><i class="bi bi-circle"></i></div>
-                            <span>Dimensions set</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tips Card -->
-                <div class="sidebar-card mb-3">
-                    <div class="sc-header">
-                        <div class="sc-icon sc-amber"><i class="bi bi-lightbulb"></i></div>
-                        <h6 class="sc-title">Tips</h6>
-                    </div>
-                    <div class="tips-list">
-                        <div class="tip"><i class="bi bi-check2"></i> Fields with <strong>*</strong> are required</div>
-                        <div class="tip"><i class="bi bi-check2"></i> Select series to auto-fill rate</div>
-                        <div class="tip"><i class="bi bi-check2"></i> Use duplicate for similar items</div>
-                        <div class="tip"><i class="bi bi-check2"></i> Area calculates automatically</div>
-                    </div>
-                </div>
 
                 <!-- Pro Tip -->
                 <div class="pro-tip">
