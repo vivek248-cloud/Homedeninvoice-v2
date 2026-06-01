@@ -333,7 +333,7 @@
                         </div>
                         <div class="fc-header-right">
                             <span class="item-badge">
-                                <i class="bi bi-layers"></i>
+                                <i class="bi bi-layers text-white"></i>
                                 <span id="rowCount">1</span>
                             </span>
                             <button type="button" class="add-item-btn" onclick="addRow()">
@@ -457,7 +457,7 @@
                                         <!-- Qty -->
                                         <td class="text-center">
                                             <div class="input-wrap qty-wrap">
-                                                <input name="qty[]" value="1" class="qty-input qty required-input" min="1" required>
+                                                <input name="qty[]" value="1" class="qty-input qty required-input"  required>
                                                 <span class="input-indicator"></span>
                                             </div>
                                         </td>
@@ -711,7 +711,7 @@
 .required-tag { display: flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--rose-soft); color: var(--rose); border-radius: 100px; font-size: .58rem; font-weight: 700; text-transform: uppercase; }
 .required-tag i { font-size: .45rem; }
 
-.item-badge { display: flex; align-items: center; gap: 4px; padding: 5px 10px; background: var(--surface); border: 1px solid var(--border-light); border-radius: 100px; font-size: .68rem; font-weight: 700; color: var(--text-3); }
+.item-badge { display: flex; align-items: center; gap: 4px; padding: 5px 10px; background:blue; border: 1px solid var(--border-light); border-radius: 100px; font-size: .68rem; font-weight: 700; color: white; }
 .item-badge i { color: var(--violet); }
 
 .add-item-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; background: var(--text-1); color: #fff; border: none; border-radius: 8px; font-size: .7rem; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; }
@@ -1563,9 +1563,23 @@ function validateRow(row) {
         if (w <= 0) { width.classList.add('invalid'); valid = false; }
     }
     
-    const qty = row.querySelector('.qty');
-    if (qty && (parseFloat(qty.value) || 0) < 1) { qty.classList.add('invalid'); valid = false; }
+    //const qty = row.querySelector('.qty');
+    //if (qty && (parseFloat(qty.value) || 0) < 1) { qty.classList.add('invalid'); valid = false; }
     
+    const qty = row.querySelector('.qty');
+
+    if (qty && qty.value !== '') {
+
+        const qtyValue = parseFloat(qty.value);
+
+        if (isNaN(qtyValue) || qtyValue === 0) {
+            qty.classList.add('invalid');
+            valid = false;
+        } else {
+            qty.classList.remove('invalid');
+        }
+    }
+
     row.classList.toggle('row-error', !valid);
     return valid;
 }

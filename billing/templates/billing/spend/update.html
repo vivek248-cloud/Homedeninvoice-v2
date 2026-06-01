@@ -376,6 +376,8 @@
                                 </thead>
                                 <tbody id="tableBody">
                                     <tr class="spend-row" data-row="1">
+                                        
+
                                         <!-- Floor / Room -->
                                         <td class="ps-4">
                                             <div class="cell-stack">
@@ -1592,9 +1594,23 @@ function validateRow(row) {
         if (w <= 0) { width.classList.add('invalid'); valid = false; }
     }
     
-    const qty = row.querySelector('.qty');
-    if (qty && (parseFloat(qty.value) || 0) < 1) { qty.classList.add('invalid'); valid = false; }
+    //const qty = row.querySelector('.qty');
+    //if (qty && (parseFloat(qty.value) || 0) < 1) { qty.classList.add('invalid'); valid = false; }
     
+    const qty = row.querySelector('.qty');
+
+    if (qty && qty.value !== '') {
+
+        const qtyValue = parseFloat(qty.value);
+
+        if (isNaN(qtyValue) || qtyValue === 0) {
+            qty.classList.add('invalid');
+            valid = false;
+        } else {
+            qty.classList.remove('invalid');
+        }
+    }
+
     row.classList.toggle('row-error', !valid);
     return valid;
 }
