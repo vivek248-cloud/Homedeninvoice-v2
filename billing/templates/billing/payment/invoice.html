@@ -1065,6 +1065,38 @@ tr:hover .row-action-btns {
 }
 
 
+.btn-row-delete{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+
+    padding:3px 10px;
+
+    font-size:11px;
+    font-weight:600;
+
+    color:#c62828;
+    background:#ffebee;
+
+    border:1.5px solid #ef9a9a;
+
+    border-radius:20px;
+
+    cursor:pointer;
+
+    transition:all .15s ease;
+}
+
+.btn-row-delete:hover{
+    background:#c62828;
+    color:#fff;
+    border-color:#c62828;
+
+    transform:translateY(-1px);
+
+    box-shadow:0 3px 8px rgba(198,40,40,.30);
+}
+
 
     </style>
 </head>
@@ -1127,16 +1159,34 @@ tr:hover .row-action-btns {
                     {{ floor.grouper.name|default:"General" }}
 
                             <!-- ADD THIS ONLY -->
-                    <span class="no-print row-action-btns">
-                        <button class="btn-row-copy" onclick="copyRow(this)" title="Copy this row">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" 
-                                stroke="currentColor" stroke-width="2.5">
-                                <rect x="9" y="9" width="13" height="13" rx="2"/>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                            </svg>
-                            Copy Row
-                        </button>
-                    </span>
+                        <span class="no-print row-action-btns">
+
+                            <button class="btn-row-copy"
+                                    onclick="copyRow(this)"
+                                    title="Copy this row">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5">
+                                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                </svg>
+                                Copy
+                            </button>
+
+                            <button class="btn-row-delete"
+                                    onclick="deleteRow(this)"
+                                    title="Delete this row">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6L18 20a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                    <path d="M10 11v6"/>
+                                    <path d="M14 11v6"/>
+                                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                </svg>
+                                Delete
+                            </button>
+
+                        </span>
 
                 </td>
             </tr>
@@ -1147,16 +1197,34 @@ tr:hover .row-action-btns {
                 <tr class="room-row draggable-row selectable copyable-row">
                     <td colspan="7">
                         {{ room.grouper.name|default:"Room" }}
-                                <span class="no-print row-action-btns">
-                                    <button class="btn-row-copy" onclick="copyRow(this)" title="Copy this row">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" 
-                                            stroke="currentColor" stroke-width="2.5">
-                                            <rect x="9" y="9" width="13" height="13" rx="2"/>
-                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                                        </svg>
-                                        Copy Row
-                                    </button>
-                                </span>
+                            <span class="no-print row-action-btns">
+
+                                <button class="btn-row-copy"
+                                        onclick="copyRow(this)"
+                                        title="Copy this row">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5">
+                                        <rect x="9" y="9" width="13" height="13" rx="2"/>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                    </svg>
+                                    Copy
+                                </button>
+
+                                <button class="btn-row-delete"
+                                        onclick="deleteRow(this)"
+                                        title="Delete this row">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6L18 20a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                        <path d="M10 11v6"/>
+                                        <path d="M14 11v6"/>
+                                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                    </svg>
+                                    Delete
+                                </button>
+
+                            </span>
 
                     </td>
                 </tr>
@@ -2120,71 +2188,118 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /* ── COPY ROW (triggered by button click) ── */
-    window.copyRow = function (btn) {
-        const row = btn.closest('tr');
-        if (!row) return;
+        /* ── COPY ROW (triggered by button click) ── */
+        window.copyRow = function (btn) {
+            const row = btn.closest('tr');
+            if (!row) return;
 
-        // Clear any previous copy state
-        clearCopiedState();
-        removeToolbar();
+            // Clear any previous copy state
+            clearCopiedState();
+            removeToolbar();
 
-        // Clone the row (deep clone keeps all content)
-        copiedRow = row.cloneNode(true);
+            // Clone the row (deep clone keeps all content)
+            copiedRow = row.cloneNode(true);
 
-        // Remove the copy buttons from the clone
-        // (they'll be re-attached by the hover CSS naturally,
-        //  but we strip them so pasted row is clean)
-        copiedRow.querySelectorAll('.row-action-btns')
-            .forEach(el => el.remove());
+            // Remove the copy buttons from the clone
+            // (they'll be re-attached by the hover CSS naturally,
+            //  but we strip them so pasted row is clean)
+            copiedRow.querySelectorAll('.row-action-btns')
+                .forEach(el => el.remove());
 
-        // Re-add the copy button to the cloned row
-        // so the pasted row also gets a copy button
-        const firstTd = copiedRow.querySelector('td');
-        if (firstTd) {
-            const btnSpan = document.createElement('span');
-            btnSpan.className = 'no-print row-action-btns';
-            btnSpan.innerHTML = `
-                <button class="btn-row-copy" onclick="copyRow(this)" title="Copy this row">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" 
-                         stroke="currentColor" stroke-width="2.5">
-                        <rect x="9" y="9" width="13" height="13" rx="2"/>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                    </svg>
-                    Copy Row
-                </button>`;
+            // Re-add the copy button to the cloned row
+            // so the pasted row also gets a copy button
+            const firstTd = copiedRow.querySelector('td');
+            if (firstTd) {
+                const btnSpan = document.createElement('span');
+                btnSpan.className = 'no-print row-action-btns';
+                    btnSpan.innerHTML = `
 
-            // For item rows put the button in the last td
-            const isItemRow = !row.classList.contains('floor-row') &&
-                              !row.classList.contains('room-row');
-            if (isItemRow) {
-                const lastTd = copiedRow.querySelector('td:last-child');
-                if (lastTd) lastTd.appendChild(btnSpan);
-            } else {
-                firstTd.appendChild(btnSpan);
+                    <button class="btn-row-copy"
+                            onclick="copyRow(this)">
+                        Copy
+                    </button>
+
+                    <button class="btn-row-delete"
+                            onclick="deleteRow(this)">
+                        Delete
+                    </button>
+
+                    `;
+
+                // For item rows put the button in the last td
+                const isItemRow = !row.classList.contains('floor-row') &&
+                                !row.classList.contains('room-row');
+                if (isItemRow) {
+                    const lastTd = copiedRow.querySelector('td:last-child');
+                    if (lastTd) lastTd.appendChild(btnSpan);
+                } else {
+                    firstTd.appendChild(btnSpan);
+                }
             }
-        }
 
-        // Mark original row
-        row.classList.add('row-is-copied');
+            // Mark original row
+            row.classList.add('row-is-copied');
 
-        // Enter paste mode
-        pasteMode = true;
-        document.body.classList.add('paste-mode');
+            // Enter paste mode
+            pasteMode = true;
+            document.body.classList.add('paste-mode');
 
-        const label = getCopiedRowLabel(row);
-        showPasteToolbar(label);
+            const label = getCopiedRowLabel(row);
+            showPasteToolbar(label);
+
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'info',
+                title: 'Row copied!',
+                text: 'Now click any row to paste after it',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        };
+
+
+        window.deleteRow = function(btn){
+
+        const row = btn.closest('tr');
+
+        if(!row) return;
 
         Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'info',
-            title: 'Row copied!',
-            text: 'Now click any row to paste after it',
-            showConfirmButton: false,
-            timer: 2000
+
+            title: 'Delete Row?',
+            text: 'This row will be removed.',
+            icon: 'warning',
+
+            showCancelButton: true,
+
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+
+            confirmButtonText: 'Delete',
+            cancelButtonText: 'Cancel'
+
+        }).then((result)=>{
+
+            if(result.isConfirmed){
+
+                row.remove();
+
+                Swal.fire({
+                    toast:true,
+                    position:'top-end',
+                    icon:'success',
+                    title:'Row deleted',
+                    timer:1200,
+                    showConfirmButton:false
+                });
+
+            }
+
         });
+
     };
+
 
     /* ── PASTE ROW (triggered by clicking a row while in paste mode) ── */
     function handlePasteClick(e) {
