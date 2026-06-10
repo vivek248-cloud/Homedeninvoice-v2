@@ -859,6 +859,213 @@ body.public-invoice .no-print {
     margin-top: 20px;
 }
 
+
+
+/* ========================= */
+/* ROW COPY / PASTE STYLES   */
+/* ========================= */
+
+/* Copy button shown on row hover */
+.row-action-btns {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 10px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    vertical-align: middle;
+}
+
+tr:hover .row-action-btns {
+    opacity: 1;
+}
+
+.btn-row-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #1565c0;
+    background: #e3f2fd;
+    border: 1.5px solid #90caf9;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.btn-row-copy:hover {
+    background: #1565c0;
+    color: #fff;
+    border-color: #1565c0;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(21,101,192,.3);
+}
+
+/* Smaller version for item rows */
+.btn-row-copy-sm {
+    padding: 2px 6px;
+    font-size: 10px;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    justify-content: center;
+}
+
+/* Row that has been copied — blue tint */
+.row-is-copied {
+    background: #e3f2fd !important;
+    outline: 2px dashed #1976d2;
+    outline-offset: -2px;
+    position: relative;
+}
+
+.row-is-copied::after {
+    content: "📋 Copied";
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #1565c0;
+    font-weight: 700;
+    background: #bbdefb;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+/* Paste target row — orange bottom border indicator */
+.paste-target {
+    position: relative;
+}
+
+.paste-target::after {
+    content: "▼ Paste here";
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #e65100;
+    font-weight: 700;
+    background: #fff3e0;
+    border: 1px solid #ffb74d;
+    padding: 2px 10px;
+    border-radius: 10px;
+    z-index: 20;
+    white-space: nowrap;
+}
+
+.paste-target td {
+    border-bottom: 3px solid #ff6f00 !important;
+}
+
+/* Flash animation when row is pasted */
+@keyframes pasteFlash {
+    0%   { background: #fff9c4 !important; }
+    40%  { background: #ffeb3b !important; }
+    100% { background: inherit; }
+}
+
+.paste-flash {
+    animation: pasteFlash 0.6s ease forwards;
+}
+
+/* Floating paste toolbar */
+.paste-toolbar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #1565c0, #1976d2);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 6px 24px rgba(21,101,192,.45);
+    z-index: 9999;
+    font-size: 13px;
+    font-weight: 600;
+    animation: toolbarSlide 0.3s ease;
+    white-space: nowrap;
+}
+
+@keyframes toolbarSlide {
+    from { transform: translateX(-50%) translateY(60px); opacity: 0; }
+    to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+}
+
+.paste-toolbar-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.9;
+}
+
+.paste-toolbar-label svg {
+    flex-shrink: 0;
+}
+
+.btn-toolbar-paste {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 18px;
+    background: white;
+    color: #1565c0;
+    border: none;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-toolbar-paste:hover {
+    background: #e3f2fd;
+    transform: scale(1.04);
+}
+
+.btn-toolbar-cancel {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    background: rgba(255,255,255,.15);
+    color: white;
+    border: 1.5px solid rgba(255,255,255,.35);
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-toolbar-cancel:hover {
+    background: rgba(255,255,255,.25);
+}
+
+/* Row hover — show paste button when toolbar is active */
+.paste-mode tr.selectable:hover td {
+    cursor: pointer;
+    background: rgba(255, 235, 59, 0.18) !important;
+}
+
+.paste-mode tr.selectable:hover td:first-child::before {
+    content: "↓";
+    color: #e65100;
+    font-weight: 900;
+    font-size: 14px;
+    margin-right: 4px;
+}
+
+
+
     </style>
 </head>
 
@@ -918,6 +1125,19 @@ body.public-invoice .no-print {
             <tr class="floor-row draggable-row selectable copyable-row">
                 <td colspan="7">
                     {{ floor.grouper.name|default:"General" }}
+
+                            <!-- ADD THIS ONLY -->
+                    <span class="no-print row-action-btns">
+                        <button class="btn-row-copy" onclick="copyRow(this)" title="Copy this row">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" 
+                                stroke="currentColor" stroke-width="2.5">
+                                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                            Copy Row
+                        </button>
+                    </span>
+
                 </td>
             </tr>
 
@@ -927,6 +1147,17 @@ body.public-invoice .no-print {
                 <tr class="room-row draggable-row selectable copyable-row">
                     <td colspan="7">
                         {{ room.grouper.name|default:"Room" }}
+                                <span class="no-print row-action-btns">
+                                    <button class="btn-row-copy" onclick="copyRow(this)" title="Copy this row">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" 
+                                            stroke="currentColor" stroke-width="2.5">
+                                            <rect x="9" y="9" width="13" height="13" rx="2"/>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                        </svg>
+                                        Copy Row
+                                    </button>
+                                </span>
+
                     </td>
                 </tr>
 
@@ -940,7 +1171,19 @@ body.public-invoice .no-print {
                     <td>{{ spend.area|floatformat:2 }}</td>
                     <td>{{ spend.unit|upper }}</td>
                     <td>₹{{ spend.rate|floatformat:2 }}</td>
-                    <td class="right selectable-amount" data-amount="{{ spend.total_amount }}">₹{{ spend.total_amount }}</td>
+                    <td class="right selectable-amount" data-amount="{{ spend.total_amount }}">₹{{ spend.total_amount }}
+                                <span class="no-print row-action-btns">
+                                    <button class="btn-row-copy btn-row-copy-sm" 
+                                            onclick="copyRow(this)" title="Copy this row">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" 
+                                            stroke="currentColor" stroke-width="2.5">
+                                            <rect x="9" y="9" width="13" height="13" rx="2"/>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                        </svg>
+                                    </button>
+                                </span>
+
+                    </td>
                 </tr>
                 {% endfor %}
 
@@ -1767,6 +2010,254 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script>
+
+
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   SIMPLE ROW COPY & PASTE  — left-click driven
+   
+   Flow:
+   1. User clicks "Copy Row" button  →  row is stored
+   2. Floating toolbar appears        →  "Paste After ..."
+   3. User clicks any row             →  paste happens
+   4. Flash animation confirms paste
+═══════════════════════════════════════════════════════ */
+(function () {
+
+    /* ── State ── */
+    let copiedRow    = null;   // the cloned <tr>
+    let pasteMode    = false;  // are we waiting for paste target?
+    let toolbar      = null;   // the floating toolbar element
+
+    /* ── Helpers ── */
+
+    function getCopiedRowLabel(row) {
+        // Returns a short label for the toolbar description
+        const td = row.querySelector('td');
+        if (!td) return 'row';
+        // Strip button text, get just the visible text
+        const clone = td.cloneNode(true);
+        clone.querySelectorAll('.row-action-btns, button').forEach(el => el.remove());
+        return clone.textContent.trim().slice(0, 40) || 'row';
+    }
+
+    function flashRow(row) {
+        row.classList.remove('paste-flash');
+        // Force reflow so animation restarts
+        void row.offsetWidth;
+        row.classList.add('paste-flash');
+        row.addEventListener('animationend', () => {
+            row.classList.remove('paste-flash');
+        }, { once: true });
+    }
+
+    function clearCopiedState() {
+        if (copiedRow) {
+            // Remove copied highlight from original row if still visible
+            document.querySelectorAll('.row-is-copied')
+                .forEach(r => r.classList.remove('row-is-copied'));
+        }
+        copiedRow = null;
+        pasteMode = false;
+        document.body.classList.remove('paste-mode');
+    }
+
+    function removeToolbar() {
+        if (toolbar) {
+            toolbar.remove();
+            toolbar = null;
+        }
+    }
+
+    /* ── Show floating paste toolbar ── */
+    function showPasteToolbar(label) {
+        removeToolbar();
+
+        toolbar = document.createElement('div');
+        toolbar.className = 'paste-toolbar no-print';
+        toolbar.innerHTML = `
+            <div class="paste-toolbar-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" 
+                     stroke="currentColor" stroke-width="2.5">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span>Copied: <strong>"${label}"</strong></span>
+            </div>
+            <button class="btn-toolbar-paste" id="toolbarPasteBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" 
+                     stroke="currentColor" stroke-width="2.5">
+                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7
+                             a2 2 0 0 0-2-2h-2"/>
+                    <rect x="9" y="3" width="6" height="4" rx="1"/>
+                    <line x1="12" y1="12" x2="12" y2="18"/>
+                    <line x1="9"  y1="15" x2="15" y2="15"/>
+                </svg>
+                Click a row to paste after it
+            </button>
+            <button class="btn-toolbar-cancel" id="toolbarCancelBtn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" 
+                     stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6"  y1="6" x2="18" y2="18"/>
+                </svg>
+                Cancel
+            </button>
+        `;
+
+        document.body.appendChild(toolbar);
+
+        // Cancel button
+        document.getElementById('toolbarCancelBtn').addEventListener('click', function () {
+            clearCopiedState();
+            removeToolbar();
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'info',
+                title: 'Copy cancelled',
+                showConfirmButton: false, timer: 1000
+            });
+        });
+    }
+
+    /* ── COPY ROW (triggered by button click) ── */
+    window.copyRow = function (btn) {
+        const row = btn.closest('tr');
+        if (!row) return;
+
+        // Clear any previous copy state
+        clearCopiedState();
+        removeToolbar();
+
+        // Clone the row (deep clone keeps all content)
+        copiedRow = row.cloneNode(true);
+
+        // Remove the copy buttons from the clone
+        // (they'll be re-attached by the hover CSS naturally,
+        //  but we strip them so pasted row is clean)
+        copiedRow.querySelectorAll('.row-action-btns')
+            .forEach(el => el.remove());
+
+        // Re-add the copy button to the cloned row
+        // so the pasted row also gets a copy button
+        const firstTd = copiedRow.querySelector('td');
+        if (firstTd) {
+            const btnSpan = document.createElement('span');
+            btnSpan.className = 'no-print row-action-btns';
+            btnSpan.innerHTML = `
+                <button class="btn-row-copy" onclick="copyRow(this)" title="Copy this row">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" 
+                         stroke="currentColor" stroke-width="2.5">
+                        <rect x="9" y="9" width="13" height="13" rx="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    Copy Row
+                </button>`;
+
+            // For item rows put the button in the last td
+            const isItemRow = !row.classList.contains('floor-row') &&
+                              !row.classList.contains('room-row');
+            if (isItemRow) {
+                const lastTd = copiedRow.querySelector('td:last-child');
+                if (lastTd) lastTd.appendChild(btnSpan);
+            } else {
+                firstTd.appendChild(btnSpan);
+            }
+        }
+
+        // Mark original row
+        row.classList.add('row-is-copied');
+
+        // Enter paste mode
+        pasteMode = true;
+        document.body.classList.add('paste-mode');
+
+        const label = getCopiedRowLabel(row);
+        showPasteToolbar(label);
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'info',
+            title: 'Row copied!',
+            text: 'Now click any row to paste after it',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    };
+
+    /* ── PASTE ROW (triggered by clicking a row while in paste mode) ── */
+    function handlePasteClick(e) {
+
+        // Only act when in paste mode
+        if (!pasteMode || !copiedRow) return;
+
+        // Don't paste if user clicked a copy button or cancel button
+        if (e.target.closest('.btn-row-copy, .btn-toolbar-cancel, .btn-toolbar-paste')) return;
+
+        const targetRow = e.target.closest('tr');
+        if (!targetRow) return;
+
+        // Must be inside the summary table
+        const tbody = document.querySelector('.summary-table tbody');
+        if (!tbody.contains(targetRow)) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Clone the copied row (so we can paste multiple times)
+        const newRow = copiedRow.cloneNode(true);
+
+        // Insert after the clicked row
+        if (targetRow.nextSibling) {
+            tbody.insertBefore(newRow, targetRow.nextSibling);
+        } else {
+            tbody.appendChild(newRow);
+        }
+
+        // Flash the new row
+        flashRow(newRow);
+
+        // Clean up
+        clearCopiedState();
+        removeToolbar();
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Row pasted!',
+            showConfirmButton: false,
+            timer: 1200
+        });
+    }
+
+    /* ── Escape key to cancel paste mode ── */
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && pasteMode) {
+            clearCopiedState();
+            removeToolbar();
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'info',
+                title: 'Paste cancelled',
+                showConfirmButton: false, timer: 1000
+            });
+        }
+    });
+
+    /* ── Attach click listener to the table body ── */
+    document.addEventListener('DOMContentLoaded', function () {
+        const tbody = document.querySelector('.summary-table tbody');
+        if (tbody) {
+            tbody.addEventListener('click', handlePasteClick);
+        }
+    });
+
+})();
+</script>
+
+
+
 
 
 <script>
