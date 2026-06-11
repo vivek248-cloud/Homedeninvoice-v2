@@ -2301,7 +2301,10 @@ def build_invoice_context(request, payment):
     # TOTALS & GST
     # ═══════════════════════════════════════
 
-    total_spent = project.total_spent
+    total_spent = project.total_spent.quantize(
+        Decimal("1"),
+        rounding=ROUND_HALF_UP
+    )
 
     gst_rate = payment.gst_rate or (
         Decimal("0.00") if client.gst_number
@@ -2321,7 +2324,7 @@ def build_invoice_context(request, payment):
         discount = discount_value
 
     grand_total = (
-    total_spent + gst_amount - discount
+        total_spent + gst_amount - discount
     ).quantize(
         Decimal("1"),
         rounding=ROUND_HALF_UP
