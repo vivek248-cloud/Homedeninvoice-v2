@@ -3569,13 +3569,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const grandEl = document.getElementById('grandTotal');
     if (grandEl) grandEl.textContent = _inrFormat(totalSpend);
 
+    console.log("totalSpend =", totalSpend);
+
     const tsEl = document.getElementById('totalSpendVal');
 
     if (tsEl) {
-        const roundedTotal = Math.round(parseFloat(totalSpend) || 0);
-
         tsEl.textContent =
-            '₹' + roundedTotal.toLocaleString('en-IN');
+            '₹' + Math.round(totalSpend).toLocaleString('en-IN');
     }
 
     const arEl = document.getElementById('avgRateVal');
