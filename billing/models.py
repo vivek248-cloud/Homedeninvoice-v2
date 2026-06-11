@@ -125,7 +125,7 @@ class Project(models.Model):
         )['total'] or Decimal("0.00")
 
         return total.quantize(
-            Decimal("0.01"),
+            Decimal("1"),
             rounding=ROUND_HALF_UP
         )
 
