@@ -111,16 +111,23 @@ class Project(models.Model):
 
     @property
     def total_spent(self):
+
         total = self.spends.aggregate(
             total=Sum(
                 ExpressionWrapper(
-                    F('area') * F('rate') * F('qty'),
-                    output_field=DecimalField(max_digits=18, decimal_places=2)
+                    F('qty') * F('rate') * F('length') * F('width'),
+                    output_field=DecimalField(
+                        max_digits=18,
+                        decimal_places=2
+                    )
                 )
             )
         )['total'] or Decimal("0.00")
 
-        return total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return total.quantize(
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP
+        )
 
     @property
     def yet_to_receive(self):
