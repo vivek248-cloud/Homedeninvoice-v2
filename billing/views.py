@@ -2320,7 +2320,12 @@ def build_invoice_context(request, payment):
     else:
         discount = discount_value
 
-    grand_total = total_spent + gst_amount - discount
+    grand_total = (
+    total_spent + gst_amount - discount
+    ).quantize(
+        Decimal("1"),
+        rounding=ROUND_HALF_UP
+    )
 
     # ═══════════════════════════════════════
     # PAYMENT HISTORY
