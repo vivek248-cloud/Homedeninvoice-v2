@@ -3557,11 +3557,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Totals
-    let totalSpend   = 0;
+    const totalSpend = Number('{{ total_spent|default:0 }}');
     const projectSet = new Set();
 
     tableRows.forEach(row => {
-        totalSpend += parseFloat(row.dataset.amount) || 0;
         const p = row.dataset.project;
         if (p) projectSet.add(p);
     });
