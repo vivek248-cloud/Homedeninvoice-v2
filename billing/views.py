@@ -1397,10 +1397,46 @@ def fullsemi_delete(request, pk):
 
 
 # 📌 Spend List
+# def spend_list(request):
+#     client_id = request.GET.get('client')
+
+#     spends = Spend.objects.none()
+
+#     if client_id:
+#         spends = (
+#             Spend.objects
+#             .select_related('project__client', 'floor', 'room', 'fullsemi')
+#             .filter(project__client_id=client_id)
+#             .order_by('-id')
+#         )
+
+#     clients   = Client.objects.all()
+#     floors    = FloorType.objects.all()
+#     rooms     = RoomType.objects.all()
+#     fullsemis = FullSemi.objects.all()
+#     projects  = Project.objects.select_related('client').all()
+
+#     return render(request, 'billing/spend/index.html', {
+#         'spends':          spends,
+#         'clients':         clients,
+#         'selected_client': client_id,
+
+#         # ── For bulk edit dropdowns ──
+#         'floors':    floors,
+#         'rooms':     rooms,
+#         'fullsemis': fullsemis,
+#         'projects':  projects,
+#     })
+
+
+
+from decimal import Decimal, ROUND_HALF_UP
+
 def spend_list(request):
     client_id = request.GET.get('client')
 
     spends = Spend.objects.none()
+    total_spent = Decimal("0")
 
     if client_id:
         spends = (
@@ -1410,6 +1446,21 @@ def spend_list(request):
             .order_by('-id')
         )
 
+        total_spent = spends.aggregate(
+            total=Sum(
+                ExpressionWrapper(
+                    F('qty') * F('rate') * F('length') * F('width'),
+                    output_field=DecimalField(max_digits=18, decimal_places=2)
+                )
+            )
+        )['total'] or Decimal("0")
+
+        # Round to whole rupee
+        total_spent = total_spent.quantize(
+            Decimal("1"),
+            rounding=ROUND_HALF_UP
+        )
+
     clients   = Client.objects.all()
     floors    = FloorType.objects.all()
     rooms     = RoomType.objects.all()
@@ -1417,18 +1468,17 @@ def spend_list(request):
     projects  = Project.objects.select_related('client').all()
 
     return render(request, 'billing/spend/index.html', {
-        'spends':          spends,
-        'clients':         clients,
+        'spends': spends,
+        'clients': clients,
         'selected_client': client_id,
 
-        # ── For bulk edit dropdowns ──
-        'floors':    floors,
-        'rooms':     rooms,
+        'floors': floors,
+        'rooms': rooms,
         'fullsemis': fullsemis,
-        'projects':  projects,
+        'projects': projects,
+
+        'total_spent': total_spent,
     })
-
-
 
 
 # views.py

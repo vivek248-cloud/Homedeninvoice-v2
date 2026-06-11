@@ -3570,7 +3570,13 @@ document.addEventListener('DOMContentLoaded', function () {
     if (grandEl) grandEl.textContent = _inrFormat(totalSpend);
 
     const tsEl = document.getElementById('totalSpendVal');
-    if (tsEl) tsEl.textContent = '₹' + Math.round(totalSpend).toLocaleString('en-IN');
+
+    if (tsEl) {
+        const roundedTotal = Math.round(parseFloat(totalSpend) || 0);
+
+        tsEl.textContent =
+            '₹' + roundedTotal.toLocaleString('en-IN');
+    }
 
     const arEl = document.getElementById('avgRateVal');
     if (arEl && tableRows.length > 0) {
