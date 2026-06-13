@@ -92,7 +92,39 @@ urlpatterns = [
 
     path('payments/<int:pk>/invoice/', views.payment_invoice, name='payment_invoice'),
     path('invoice/<uuid:token>/', views.public_invoice, name='public_invoice'),
-        path(
+
+    path(
+        "client/invoices/",
+        views.client_invoice_list,
+        name="client_invoice_list"
+    ),
+    path(
+    "invoice-archive/",
+    views.invoice_archive,
+    name="invoice_archive"
+    ),
+
+    path(
+        "invoice/unarchive/<int:pk>/",
+        views.unarchive_invoice,
+        name="unarchive_invoice"
+    ),
+
+    path(
+    "invoice/archive/<int:pk>/",
+        views.archive_invoice,
+        name="archive_invoice"
+    ),
+
+    path(
+        "invoice-archive/delete/<int:pk>/",
+        views.delete_invoice_pdf,
+        name="delete_invoice_pdf"
+    ),
+
+
+
+    path(
         "payments/<int:pk>/save-adjustments/",
         views.save_invoice_adjustments,
         name="save_invoice_adjustments"

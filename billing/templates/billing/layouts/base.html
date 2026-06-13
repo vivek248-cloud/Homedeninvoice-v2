@@ -1521,7 +1521,19 @@ body.loading {
             <a class="s-nav-link {% if request.resolver_match.url_name == 'invoice_dashboard' %}active{% endif %}"
                href="{% url 'invoice_dashboard' %}">
                 <i class="bi bi-file-earmark-fill"></i>
-                    <span>Invoices</span>       
+                    <span>Edit Invoices</span>       
+            </a>
+
+            <a class="s-nav-link {% if request.resolver_match.url_name == 'client_invoice_list' %}active{% endif %}"
+               href="{% url 'client_invoice_list' %}">
+                <i class="bi bi-file-earmark-fill"></i>
+                    <span>Invoices PDF</span>       
+            </a>
+
+            <a class="s-nav-link {% if request.resolver_match.url_name == 'invoice_archive' %}active{% endif %}"
+   href="{% url 'invoice_archive' %}">
+                <i class="bi bi-file-earmark-fill"></i>
+                    <span>Unarchived Invoices</span>       
             </a>
 
             <!-- QUOTATION HUB -->

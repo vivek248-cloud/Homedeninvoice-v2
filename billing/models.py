@@ -7,6 +7,8 @@ from decimal import Decimal
 from decimal import Decimal, ROUND_HALF_UP
 import uuid
 
+from billing.utils import delete_project_invoices
+
 class Client(models.Model):
     name = models.CharField(max_length=200)
     mobile_1 = models.CharField(max_length=15)
@@ -272,13 +274,41 @@ class Payment(models.Model):
     invoice_locked = models.BooleanField(
         default=False
     )
+    invoice_archived = models.BooleanField(
+        default=False
+    )
+    
     date = models.DateField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
+
         if not self.invoice_token:
             self.invoice_token = uuid.uuid4()
+
         super().save(*args, **kwargs)
 
+        project = self.project
+
+        # ===================================
+        # CONDITION 1
+        # Project Completed
+        # ===================================
+
+        if project.status == "completed":
+
+            delete_project_invoices(project)
+            return
+
+        # ===================================
+        # CONDITION 2
+        # Fully Paid
+        # ===================================
+
+        if project.total_paid >= project.total_spent:
+
+            delete_project_invoices(project)
+            
+            
     def __str__(self):
         return f"{self.project.name} - {self.amount}"
 

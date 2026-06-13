@@ -1,0 +1,772 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Invoice Listing | HomeDen{% endblock %}
+
+{% block content %}
+
+<div class="inv-page-wrapper">
+
+    <!-- Page Header -->
+    <div class="inv-page-header">
+        <div class="inv-header-left">
+            <div class="inv-header-icon">
+                <i class="bi bi-receipt-cutoff"></i>
+            </div>
+            <div>
+                <h4 class="inv-title">My Invoices</h4>
+                <p class="inv-subtitle">View, download, and manage all your invoices</p>
+            </div>
+        </div>
+        <div class="inv-header-stats">
+            <div class="inv-stat-pill">
+                <i class="bi bi-file-earmark-text me-1"></i>
+                <strong id="invoiceCount">{{ invoices|length }}</strong>
+                <span>Invoice{{ invoices|length|pluralize }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Sort Bar -->
+    <div class="inv-filter-bar">
+        <form method="get" id="filterForm" class="inv-filter-form">
+
+            <!-- Search -->
+            <div class="inv-search-wrap">
+                <i class="bi bi-search inv-search-icon"></i>
+                <input type="text"
+                       name="q"
+                       value="{{ request.GET.q }}"
+                       class="inv-search-input"
+                       placeholder="Search project name..."
+                       autocomplete="off">
+                {% if request.GET.q %}
+                <a href="?" class="inv-search-clear"><i class="bi bi-x-circle"></i></a>
+                {% endif %}
+            </div>
+
+            <!-- Project Filter -->
+            <div class="inv-select-wrap">
+                <i class="bi bi-folder2 inv-select-icon"></i>
+                <select name="project" class="inv-select" onchange="this.form.submit()">
+                    <option value="">All Projects</option>
+                    {% for project in projects %}
+                    <option value="{{ project.id }}"
+                        {% if selected_project == project.id|stringformat:"s" %}selected{% endif %}>
+                        {{ project.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <i class="bi bi-chevron-down inv-select-arrow"></i>
+            </div>
+
+            <!-- Sort Order -->
+            <div class="inv-sort-toggle">
+                <button type="submit" name="sort" value="{% if current_sort == 'newest' %}oldest{% else %}newest{% endif %}"
+                        class="inv-sort-btn" title="Sort by date">
+                    {% if current_sort == 'oldest' %}
+                    <i class="bi bi-sort-up me-1"></i> Oldest First
+                    {% else %}
+                    <i class="bi bi-sort-down me-1"></i> Newest First
+                    {% endif %}
+                </button>
+            </div>
+
+            <!-- Apply -->
+            <button type="submit" class="inv-btn inv-btn-primary inv-btn-sm">
+                <i class="bi bi-funnel me-1"></i> Filter
+            </button>
+
+            {% if request.GET.q or request.GET.project or request.GET.sort %}
+            <a href="{% url 'client_invoice_list' %}" class="inv-btn inv-btn-ghost inv-btn-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+            </a>
+            {% endif %}
+
+        </form>
+    </div>
+
+    <!-- Invoice Grid -->
+    <div class="inv-grid" id="invoiceGrid">
+        {% for invoice in invoices %}
+        <div class="inv-card" data-aos="fade-up" style="animation-delay: {{ forloop.counter0 }}50ms">
+            <!-- Card Accent -->
+            <div class="inv-card-accent"></div>
+
+            <div class="inv-card-body">
+                <!-- Top Row -->
+                <div class="inv-card-top">
+                    <div class="inv-card-icon-wrap">
+                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                    </div>
+                    <div class="inv-card-date-badge">
+                        <i class="bi bi-calendar3 me-1"></i>
+                        {{ invoice.date|date:"d M Y" }}
+                    </div>
+                </div>
+
+                <!-- Project & Amount -->
+                <div class="inv-card-main">
+                    <h6 class="inv-card-project">{{ invoice.project.name }}</h6>
+                    <div class="inv-card-amount">₹{{ invoice.amount|floatformat:2 }}</div>
+                </div>
+
+                <!-- Invoice ID -->
+                <div class="inv-card-meta">
+                    <span class="inv-meta-label">
+                        <i class="bi bi-hash me-1"></i>INV-{{ invoice.id|stringformat:"04d" }}
+                    </span>
+                </div>
+
+                <!-- Actions -->
+                <div class="inv-card-actions">
+                    <a href="{{ invoice.invoice_pdf.url }}"
+                       target="_blank"
+                       class="inv-action-btn inv-action-view"
+                       data-bs-toggle="tooltip"
+                       title="View Invoice">
+                        <i class="bi bi-eye"></i>
+                        <span>View</span>
+                    </a>
+                    <a href="{{ invoice.invoice_pdf.url }}"
+                       download
+                       class="inv-action-btn inv-action-download"
+                       data-bs-toggle="tooltip"
+                       title="Download PDF">
+                        <i class="bi bi-download"></i>
+                        <span>Download</span>
+                    </a>
+                    <a href="{% url 'archive_invoice' invoice.id %}"
+                       class="inv-action-btn inv-action-archive"
+                       onclick="return confirmArchive(event, '{{ invoice.project.name }}', '{{ invoice.date|date:"d M Y" }}')"
+                       data-bs-toggle="tooltip"
+                       title="Archive Invoice">
+                        <i class="bi bi-archive"></i>
+                        <span>Archive</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="inv-empty-state">
+            <div class="inv-empty-icon-wrap">
+                <div class="inv-empty-icon">
+                    <i class="bi bi-file-earmark-x"></i>
+                </div>
+                <div class="inv-empty-ring inv-empty-ring-1"></div>
+                <div class="inv-empty-ring inv-empty-ring-2"></div>
+            </div>
+            <h5>No Invoices Found</h5>
+            <p>There are no invoices matching your criteria</p>
+            {% if request.GET.q or request.GET.project %}
+            <a href="{% url 'client_invoice_list' %}" class="inv-btn inv-btn-primary inv-btn-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Clear Filters
+            </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- List View (Alternative) -->
+    <div class="inv-list-view" id="invoiceList" style="display:none;">
+        <div class="inv-table-card">
+            <div class="inv-table-responsive custom-scrollbar">
+                <table class="inv-table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">#</th>
+                            <th>Date</th>
+                            <th>Project</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                        <tr class="inv-table-row">
+                            <td class="ps-4">
+                                <span class="inv-row-id">INV-{{ invoice.id|stringformat:"04d" }}</span>
+                            </td>
+                            <td>
+                                <span class="inv-date-badge-sm">
+                                    <i class="bi bi-calendar3 me-1"></i>{{ invoice.date|date:"d M Y" }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="inv-project-cell">
+                                    <div class="inv-project-avatar">{{ invoice.project.name|first }}</div>
+                                    <span class="inv-project-name">{{ invoice.project.name }}</span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <span class="inv-amount-cell">₹{{ invoice.amount|floatformat:2 }}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="inv-table-actions">
+                                    <a href="{{ invoice.invoice_pdf.url }}" target="_blank"
+                                       class="inv-tbl-btn inv-tbl-view" data-bs-toggle="tooltip" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ invoice.invoice_pdf.url }}" download
+                                       class="inv-tbl-btn inv-tbl-download" data-bs-toggle="tooltip" title="Download">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                    <a href="{% url 'archive_invoice' invoice.id %}"
+                                       class="inv-tbl-btn inv-tbl-archive"
+                                       onclick="return confirmArchive(event, '{{ invoice.project.name }}', '{{ invoice.date|date:"d M Y" }}')"
+                                       data-bs-toggle="tooltip" title="Archive">
+                                        <i class="bi bi-archive"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Toggle -->
+    <div class="inv-view-toggle">
+        <button class="inv-view-btn active" id="gridViewBtn" onclick="switchView('grid')" title="Grid View">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+        </button>
+        <button class="inv-view-btn" id="listViewBtn" onclick="switchView('list')" title="List View">
+            <i class="bi bi-list-ul"></i>
+        </button>
+    </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// View Toggle
+function switchView(view) {
+    const grid = document.getElementById('invoiceGrid');
+    const list = document.getElementById('invoiceList');
+    const gridBtn = document.getElementById('gridViewBtn');
+    const listBtn = document.getElementById('listViewBtn');
+
+    if (view === 'grid') {
+        grid.style.display = '';
+        list.style.display = 'none';
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
+    } else {
+        grid.style.display = 'none';
+        list.style.display = '';
+        listBtn.classList.add('active');
+        gridBtn.classList.remove('active');
+    }
+    localStorage.setItem('invoiceView', view);
+}
+
+// Restore saved view
+document.addEventListener('DOMContentLoaded', function () {
+    const saved = localStorage.getItem('invoiceView');
+    if (saved) switchView(saved);
+
+    // Tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+
+    // Search auto-submit
+    const searchInput = document.querySelector('.inv-search-input');
+    let timer;
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(() => document.getElementById('filterForm').submit(), 700);
+        });
+    }
+});
+
+// Archive Confirmation
+function confirmArchive(event, projectName, date) {
+    event.preventDefault();
+    const url = event.currentTarget.href;
+
+    Swal.fire({
+        title: '<span style="font-size:1.1rem;font-weight:700;">Archive Invoice?</span>',
+        html: `
+            <div style="margin-top:8px; font-size:0.9rem; color:#64748b;">
+                <p>This will move the invoice to archives:</p>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-top:8px;">
+                    <div style="font-weight:600; color:#1e293b;">${projectName}</div>
+                    <div style="font-size:0.8rem; color:#94a3b8; margin-top:2px;">${date}</div>
+                </div>
+            </div>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-archive me-1"></i> Yes, Archive',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#d97706',
+        cancelButtonColor: '#94a3b8',
+        customClass: {
+            popup: 'inv-swal-popup',
+            confirmButton: 'inv-swal-btn',
+            cancelButton: 'inv-swal-btn'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Archiving...',
+                allowOutsideClick: false,
+                customClass: { popup: 'inv-swal-popup' },
+                didOpen: () => Swal.showLoading()
+            });
+            window.location.href = url;
+        }
+    });
+
+    return false;
+}
+</script>
+
+<style>
+/* =============================================
+   INVOICE LISTING – SAAS LEVEL STYLESHEET
+   ============================================= */
+
+:root {
+    --inv-primary: #4f46e5;
+    --inv-primary-light: #eef2ff;
+    --inv-primary-dark: #3730a3;
+    --inv-success: #059669;
+    --inv-success-light: #ecfdf5;
+    --inv-danger: #dc2626;
+    --inv-danger-light: #fef2f2;
+    --inv-warning: #d97706;
+    --inv-warning-light: #fffbeb;
+    --inv-gray-50: #f8fafc;
+    --inv-gray-100: #f1f5f9;
+    --inv-gray-200: #e2e8f0;
+    --inv-gray-300: #cbd5e1;
+    --inv-gray-400: #94a3b8;
+    --inv-gray-500: #64748b;
+    --inv-gray-600: #475569;
+    --inv-gray-700: #334155;
+    --inv-gray-800: #1e293b;
+    --inv-radius-sm: 8px;
+    --inv-radius-md: 12px;
+    --inv-radius-lg: 16px;
+    --inv-radius-xl: 20px;
+    --inv-shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --inv-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+    --inv-shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.08);
+    --inv-transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+.inv-page-wrapper { max-width: 1200px; margin: 0 auto; }
+
+/* ---- Header ---- */
+.inv-page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
+}
+
+.inv-header-left { display: flex; align-items: center; gap: 16px; }
+
+.inv-header-icon {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, var(--inv-primary), var(--inv-primary-dark));
+    border-radius: var(--inv-radius-md);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 1.4rem;
+    box-shadow: 0 4px 14px rgba(79,70,229,0.3); flex-shrink: 0;
+}
+
+.inv-title {
+    font-size: 1.45rem; font-weight: 700; color: var(--inv-gray-800);
+    margin: 0; letter-spacing: -0.02em;
+}
+
+.inv-subtitle { font-size: 0.83rem; color: var(--inv-gray-500); margin: 3px 0 0; }
+
+.inv-stat-pill {
+    display: flex; align-items: center; gap: 4px;
+    padding: 6px 14px; background: var(--inv-primary-light);
+    border: 1px solid rgba(79,70,229,0.15); border-radius: 20px;
+    font-size: 0.8rem; color: var(--inv-primary); font-weight: 500;
+}
+
+/* ---- Filter Bar ---- */
+.inv-filter-bar {
+    background: white; border: 1px solid var(--inv-gray-200);
+    border-radius: var(--inv-radius-lg); padding: 14px 20px;
+    margin-bottom: 24px; box-shadow: var(--inv-shadow-sm);
+}
+
+.inv-filter-form {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+
+.inv-search-wrap {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--inv-gray-50); border: 1.5px solid var(--inv-gray-200);
+    border-radius: var(--inv-radius-sm); padding: 0 12px;
+    transition: var(--inv-transition); flex: 1; min-width: 200px;
+}
+
+.inv-search-wrap:focus-within {
+    border-color: var(--inv-primary);
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    background: white;
+}
+
+.inv-search-icon { color: var(--inv-gray-400); font-size: 0.9rem; }
+
+.inv-search-input {
+    flex: 1; border: none; outline: none; background: transparent;
+    padding: 9px 0; font-size: 0.85rem; color: var(--inv-gray-800);
+}
+
+.inv-search-input::placeholder { color: var(--inv-gray-400); }
+
+.inv-search-clear { color: var(--inv-gray-400); transition: var(--inv-transition); }
+.inv-search-clear:hover { color: var(--inv-danger); }
+
+.inv-select-wrap {
+    position: relative; min-width: 180px;
+}
+
+.inv-select-icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--inv-gray-400); font-size: 0.85rem; pointer-events: none;
+}
+
+.inv-select {
+    width: 100%; padding: 9px 36px 9px 34px;
+    border: 1.5px solid var(--inv-gray-200); border-radius: var(--inv-radius-sm);
+    font-size: 0.85rem; color: var(--inv-gray-800); background: white;
+    appearance: none; -webkit-appearance: none;
+    transition: var(--inv-transition); cursor: pointer;
+}
+
+.inv-select:focus {
+    outline: none; border-color: var(--inv-primary);
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+}
+
+.inv-select-arrow {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--inv-gray-400); font-size: 0.65rem; pointer-events: none;
+}
+
+.inv-sort-btn {
+    display: flex; align-items: center; gap: 4px;
+    padding: 9px 16px; border: 1.5px solid var(--inv-gray-200);
+    border-radius: var(--inv-radius-sm); background: white;
+    font-size: 0.82rem; font-weight: 600; color: var(--inv-gray-600);
+    cursor: pointer; transition: var(--inv-transition); white-space: nowrap;
+}
+
+.inv-sort-btn:hover {
+    background: var(--inv-gray-50); border-color: var(--inv-gray-300);
+}
+
+/* ---- Buttons ---- */
+.inv-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 10px 22px; border-radius: var(--inv-radius-md);
+    font-weight: 600; font-size: 0.875rem; border: none;
+    cursor: pointer; transition: var(--inv-transition); text-decoration: none;
+}
+
+.inv-btn-primary {
+    background: linear-gradient(135deg, var(--inv-primary), var(--inv-primary-dark));
+    color: white; box-shadow: 0 4px 12px rgba(79,70,229,0.25);
+}
+
+.inv-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79,70,229,0.3); color: white; }
+
+.inv-btn-ghost {
+    background: white; color: var(--inv-gray-600); border: 1.5px solid var(--inv-gray-200);
+}
+
+.inv-btn-ghost:hover { background: var(--inv-gray-50); border-color: var(--inv-gray-300); color: var(--inv-gray-800); }
+
+.inv-btn-sm { padding: 8px 16px; font-size: 0.8rem; border-radius: var(--inv-radius-sm); }
+
+/* ---- Invoice Grid ---- */
+.inv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+/* ---- Invoice Card ---- */
+.inv-card {
+    background: white; border: 1px solid var(--inv-gray-200);
+    border-radius: var(--inv-radius-lg); overflow: hidden;
+    transition: var(--inv-transition); position: relative;
+    box-shadow: var(--inv-shadow-sm);
+    animation: invFadeUp 0.4s ease both;
+}
+
+.inv-card:hover {
+    transform: translateY(-4px); box-shadow: var(--inv-shadow-lg);
+    border-color: var(--inv-gray-300);
+}
+
+.inv-card-accent {
+    height: 4px; width: 100%;
+    background: linear-gradient(90deg, var(--inv-primary), #818cf8, #a78bfa);
+}
+
+.inv-card-body { padding: 20px; }
+
+.inv-card-top {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+}
+
+.inv-card-icon-wrap {
+    width: 44px; height: 44px;
+    background: var(--inv-danger-light); color: var(--inv-danger);
+    border-radius: var(--inv-radius-sm);
+    display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+}
+
+.inv-card-date-badge {
+    display: flex; align-items: center;
+    padding: 4px 10px; background: var(--inv-gray-100);
+    border-radius: 6px; font-size: 0.72rem; font-weight: 500; color: var(--inv-gray-500);
+}
+
+.inv-card-main { margin-bottom: 12px; }
+
+.inv-card-project {
+    font-weight: 700; color: var(--inv-gray-800); font-size: 1rem;
+    margin: 0 0 6px; letter-spacing: -0.01em;
+}
+
+.inv-card-amount {
+    font-size: 1.5rem; font-weight: 800; color: var(--inv-primary);
+    letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+}
+
+.inv-card-meta { margin-bottom: 16px; }
+
+.inv-meta-label {
+    font-size: 0.72rem; color: var(--inv-gray-400); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+/* ---- Card Actions ---- */
+.inv-card-actions {
+    display: flex; gap: 8px; border-top: 1px solid var(--inv-gray-100); padding-top: 14px;
+}
+
+.inv-action-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px 12px; border-radius: var(--inv-radius-sm);
+    font-size: 0.78rem; font-weight: 600; text-decoration: none;
+    transition: var(--inv-transition); border: 1.5px solid transparent;
+}
+
+.inv-action-btn span { display: inline; }
+
+.inv-action-view {
+    background: var(--inv-primary-light); color: var(--inv-primary);
+    border-color: rgba(79,70,229,0.15);
+}
+
+.inv-action-view:hover {
+    background: var(--inv-primary); color: white;
+    box-shadow: 0 4px 10px rgba(79,70,229,0.25);
+}
+
+.inv-action-download {
+    background: var(--inv-success-light); color: var(--inv-success);
+    border-color: rgba(5,150,105,0.15);
+}
+
+.inv-action-download:hover {
+    background: var(--inv-success); color: white;
+    box-shadow: 0 4px 10px rgba(5,150,105,0.25);
+}
+
+.inv-action-archive {
+    background: var(--inv-warning-light); color: var(--inv-warning);
+    border-color: rgba(217,119,6,0.15);
+}
+
+.inv-action-archive:hover {
+    background: var(--inv-warning); color: white;
+    box-shadow: 0 4px 10px rgba(217,119,6,0.25);
+}
+
+/* ---- Table View ---- */
+.inv-table-card {
+    background: white; border: 1px solid var(--inv-gray-200);
+    border-radius: var(--inv-radius-lg); overflow: hidden;
+    box-shadow: var(--inv-shadow-md);
+}
+
+.inv-table-responsive { overflow: auto; max-height: 65vh; }
+
+.custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: var(--inv-gray-100); }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--inv-gray-300); border-radius: 10px; }
+
+.inv-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; }
+
+.inv-table thead { position: sticky; top: 0; z-index: 10; }
+
+.inv-table thead tr {
+    background: var(--inv-gray-50); border-bottom: 2px solid var(--inv-gray-200);
+}
+
+.inv-table thead th {
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--inv-gray-500);
+    padding: 12px 14px; white-space: nowrap; border: none; background: var(--inv-gray-50);
+}
+
+.inv-table tbody tr {
+    border-bottom: 1px solid var(--inv-gray-100); transition: var(--inv-transition);
+}
+
+.inv-table tbody tr:hover { background: var(--inv-primary-light); }
+.inv-table tbody tr:last-child { border-bottom: none; }
+
+.inv-table tbody td {
+    padding: 14px; vertical-align: middle; border: none; color: var(--inv-gray-700);
+}
+
+.inv-table-row { animation: invFadeUp 0.3s ease both; }
+
+.inv-row-id {
+    font-size: 0.78rem; font-weight: 600; color: var(--inv-gray-500);
+    font-family: monospace;
+}
+
+.inv-date-badge-sm {
+    display: inline-flex; align-items: center;
+    padding: 3px 8px; background: var(--inv-gray-100);
+    border-radius: 5px; font-size: 0.75rem; color: var(--inv-gray-500);
+}
+
+.inv-project-cell { display: flex; align-items: center; gap: 10px; }
+
+.inv-project-avatar {
+    width: 34px; height: 34px; min-width: 34px;
+    background: linear-gradient(135deg, var(--inv-primary-light), #ddd6fe);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--inv-primary); font-size: 0.85rem;
+}
+
+.inv-project-name { font-weight: 600; color: var(--inv-gray-800); font-size: 0.85rem; }
+
+.inv-amount-cell {
+    font-weight: 700; color: var(--inv-primary);
+    font-variant-numeric: tabular-nums; font-size: 0.92rem;
+}
+
+.inv-table-actions { display: flex; gap: 6px; justify-content: center; }
+
+.inv-tbl-btn {
+    width: 34px; height: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 8px; border: 1px solid var(--inv-gray-200);
+    background: white; color: var(--inv-gray-500); font-size: 0.85rem;
+    transition: var(--inv-transition); text-decoration: none;
+}
+
+.inv-tbl-view:hover { background: var(--inv-primary-light); color: var(--inv-primary); border-color: var(--inv-primary); }
+.inv-tbl-download:hover { background: var(--inv-success-light); color: var(--inv-success); border-color: var(--inv-success); }
+.inv-tbl-archive:hover { background: var(--inv-warning-light); color: var(--inv-warning); border-color: var(--inv-warning); }
+
+/* ---- View Toggle ---- */
+.inv-view-toggle {
+    position: fixed; bottom: 84px; right: 24px; z-index: 100;
+    display: flex; gap: 4px;
+    background: white; border: 1.5px solid var(--inv-gray-200);
+    border-radius: 12px; padding: 4px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.inv-view-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; border-radius: 8px; background: transparent;
+    color: var(--inv-gray-400); font-size: 1rem;
+    cursor: pointer; transition: var(--inv-transition);
+}
+
+.inv-view-btn:hover { background: var(--inv-gray-100); color: var(--inv-gray-600); }
+
+.inv-view-btn.active {
+    background: var(--inv-primary); color: white;
+    box-shadow: 0 2px 8px rgba(79,70,229,0.3);
+}
+
+/* ---- Empty State ---- */
+.inv-empty-state {
+    grid-column: 1 / -1; text-align: center; padding: 60px 24px;
+}
+
+.inv-empty-icon-wrap { position: relative; display: inline-block; margin-bottom: 20px; }
+
+.inv-empty-icon {
+    width: 80px; height: 80px; background: var(--inv-gray-100); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; color: var(--inv-gray-400); position: relative; z-index: 2;
+}
+
+.inv-empty-ring {
+    position: absolute; border-radius: 50%; border: 1.5px solid var(--inv-gray-200);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+}
+
+.inv-empty-ring-1 { width: 100px; height: 100px; animation: invRingPulse 2s ease-in-out infinite; }
+.inv-empty-ring-2 { width: 120px; height: 120px; animation: invRingPulse 2s ease-in-out infinite 0.5s; }
+
+@keyframes invRingPulse {
+    0%,100% { opacity: 0.3; transform: translate(-50%,-50%) scale(0.95); }
+    50% { opacity: 0.7; transform: translate(-50%,-50%) scale(1.05); }
+}
+
+.inv-empty-state h5 { font-weight: 700; color: var(--inv-gray-700); margin-bottom: 6px; }
+.inv-empty-state p { color: var(--inv-gray-500); font-size: 0.875rem; margin-bottom: 20px; }
+
+/* ---- SweetAlert ---- */
+.inv-swal-popup {
+    border-radius: 20px !important;
+    border: 1px solid var(--inv-gray-200) !important;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.12) !important;
+}
+
+.inv-swal-btn {
+    border-radius: 10px !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+}
+
+/* ---- Animations ---- */
+@keyframes invFadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .inv-page-header { flex-direction: column; align-items: flex-start; }
+    .inv-filter-form { flex-direction: column; }
+    .inv-search-wrap { min-width: 100%; }
+    .inv-select-wrap { min-width: 100%; }
+    .inv-sort-btn { width: 100%; justify-content: center; }
+    .inv-grid { grid-template-columns: 1fr; }
+    .inv-action-btn span { display: none; }
+    .inv-view-toggle { bottom: 16px; right: 16px; }
+}
+
+@media (max-width: 576px) {
+    .inv-card-amount { font-size: 1.25rem; }
+    .inv-filter-form .inv-btn { width: 100%; }
+}
+</style>
+
+{% endblock %}

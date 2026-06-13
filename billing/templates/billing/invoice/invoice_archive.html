@@ -1,0 +1,914 @@
+{% extends 'billing/layouts/base.html' %}
+{% block title %}Invoice Archive | HomeDen{% endblock %}
+
+{% block content %}
+
+<div class="arc-page-wrapper">
+
+    <!-- Page Header -->
+    <div class="arc-page-header">
+        <div class="arc-header-left">
+            <div class="arc-header-icon">
+                <i class="bi bi-archive-fill"></i>
+            </div>
+            <div>
+                <h4 class="arc-title">Invoice Archive</h4>
+                <p class="arc-subtitle">Manage and restore archived invoice PDFs</p>
+            </div>
+        </div>
+        <div class="arc-header-right">
+            <div class="arc-stat-group">
+                <div class="arc-stat-pill arc-pill-total">
+                    <i class="bi bi-archive me-1"></i>
+                    <strong>{{ invoices.count }}</strong>
+                    <span>Archived</span>
+                </div>
+            </div>
+            <a href="{% url 'client_invoice_list' %}" class="arc-btn arc-btn-ghost arc-btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Invoices
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="arc-filter-bar">
+        <form method="get" id="arcFilterForm" class="arc-filter-form">
+
+            <!-- Search -->
+            <div class="arc-search-wrap">
+                <i class="bi bi-search arc-search-icon"></i>
+                <input type="text"
+                       name="q"
+                       value="{{ request.GET.q }}"
+                       class="arc-search-input"
+                       placeholder="Search by client or project..."
+                       autocomplete="off">
+                {% if request.GET.q %}
+                <a href="?" class="arc-search-clear"><i class="bi bi-x-circle"></i></a>
+                {% endif %}
+            </div>
+
+            <!-- Client Filter -->
+            <div class="arc-select-wrap">
+                <i class="bi bi-person arc-select-icon"></i>
+                <select name="client" class="arc-select" onchange="this.form.submit()">
+                    <option value="">All Clients</option>
+                    {% for client in clients %}
+                    <option value="{{ client.id }}"
+                        {% if selected_client == client.id|stringformat:"s" %}selected{% endif %}>
+                        {{ client.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <i class="bi bi-chevron-down arc-select-arrow"></i>
+            </div>
+
+            <!-- Project Filter -->
+            <div class="arc-select-wrap">
+                <i class="bi bi-folder2 arc-select-icon"></i>
+                <select name="project" class="arc-select" onchange="this.form.submit()">
+                    <option value="">All Projects</option>
+                    {% for project in projects %}
+                    <option value="{{ project.id }}"
+                        {% if selected_project == project.id|stringformat:"s" %}selected{% endif %}>
+                        {{ project.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <i class="bi bi-chevron-down arc-select-arrow"></i>
+            </div>
+
+            <!-- Sort -->
+            <button type="submit" name="sort"
+                    value="{% if current_sort == 'newest' %}oldest{% else %}newest{% endif %}"
+                    class="arc-sort-btn">
+                {% if current_sort == 'oldest' %}
+                <i class="bi bi-sort-up me-1"></i> Oldest First
+                {% else %}
+                <i class="bi bi-sort-down me-1"></i> Newest First
+                {% endif %}
+            </button>
+
+            <button type="submit" class="arc-btn arc-btn-primary arc-btn-sm">
+                <i class="bi bi-funnel me-1"></i> Filter
+            </button>
+
+            {% if request.GET.q or request.GET.client or request.GET.project or request.GET.sort %}
+            <a href="{% url 'invoice_archive' %}" class="arc-btn arc-btn-ghost arc-btn-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+            </a>
+            {% endif %}
+
+        </form>
+    </div>
+
+    <!-- Archive Warning Banner -->
+    <div class="arc-warning-banner">
+        <div class="arc-warning-icon">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div class="arc-warning-content">
+            <span class="arc-warning-title">Archived Items</span>
+            <span class="arc-warning-text">These invoices are archived and hidden from clients. You can restore or permanently delete them.</span>
+        </div>
+    </div>
+
+    <!-- Archive Grid -->
+    <div class="arc-grid" id="archiveGrid">
+        {% for invoice in invoices %}
+        <div class="arc-card" style="animation-delay: {{ forloop.counter0 }}50ms">
+            <!-- Archive ribbon -->
+            <div class="arc-ribbon">
+                <i class="bi bi-archive-fill"></i> Archived
+            </div>
+
+            <div class="arc-card-body">
+                <!-- Card Top -->
+                <div class="arc-card-top">
+                    <div class="arc-card-icon">
+                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                    </div>
+                    <span class="arc-card-id">INV-{{ invoice.id|stringformat:"04d" }}</span>
+                </div>
+
+                <!-- Invoice Info -->
+                <div class="arc-card-info">
+                    <h6 class="arc-card-project">{{ invoice.project.name }}</h6>
+                    <div class="arc-card-client">
+                        <div class="arc-client-avatar">{{ invoice.project.client.name|first }}</div>
+                        <span>{{ invoice.project.client.name }}</span>
+                    </div>
+                </div>
+
+                <!-- Meta Row -->
+                <div class="arc-card-meta-row">
+                    <span class="arc-meta-item">
+                        <i class="bi bi-calendar3 me-1"></i>
+                        {{ invoice.date|date:"d M Y" }}
+                    </span>
+                    <span class="arc-meta-amount">₹{{ invoice.amount|floatformat:2 }}</span>
+                </div>
+
+                <!-- Actions -->
+                <div class="arc-card-actions">
+                    <a href="{{ invoice.invoice_pdf.url }}"
+                       target="_blank"
+                       class="arc-action-btn arc-action-view"
+                       data-bs-toggle="tooltip" title="Preview PDF">
+                        <i class="bi bi-eye"></i>
+                        <span>Preview</span>
+                    </a>
+                    <a href="{% url 'unarchive_invoice' invoice.id %}"
+                       class="arc-action-btn arc-action-restore"
+                       onclick="return confirmRestore(event, '{{ invoice.project.name }}', '{{ invoice.project.client.name }}')"
+                       data-bs-toggle="tooltip" title="Restore Invoice">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        <span>Restore</span>
+                    </a>
+                    <a href="{% url 'delete_invoice_pdf' invoice.id %}"
+                       class="arc-action-btn arc-action-delete"
+                       onclick="return confirmDelete(event, '{{ invoice.project.name }}', '{{ invoice.project.client.name }}')"
+                       data-bs-toggle="tooltip" title="Permanently Delete">
+                        <i class="bi bi-trash3"></i>
+                        <span>Delete</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="arc-empty-state">
+            <div class="arc-empty-icon-wrap">
+                <div class="arc-empty-icon">
+                    <i class="bi bi-folder-x"></i>
+                </div>
+                <div class="arc-empty-ring arc-empty-ring-1"></div>
+                <div class="arc-empty-ring arc-empty-ring-2"></div>
+            </div>
+            <h5>Archive is Empty</h5>
+            <p>No archived invoices found. Archived items will appear here.</p>
+            <a href="{% url 'client_invoice_list' %}" class="arc-btn arc-btn-primary arc-btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Invoices
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- List View -->
+    <div class="arc-list-view" id="archiveList" style="display:none;">
+        <div class="arc-table-card">
+            <div class="arc-table-responsive custom-scrollbar">
+                <table class="arc-table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">ID</th>
+                            <th>Date</th>
+                            <th>Client</th>
+                            <th>Project</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                        <tr class="arc-table-row">
+                            <td class="ps-4">
+                                <span class="arc-row-id">INV-{{ invoice.id|stringformat:"04d" }}</span>
+                            </td>
+                            <td>
+                                <span class="arc-date-sm">
+                                    <i class="bi bi-calendar3 me-1"></i>{{ invoice.date|date:"d M Y" }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="arc-client-cell">
+                                    <div class="arc-client-avatar-sm">{{ invoice.project.client.name|first }}</div>
+                                    <span class="arc-client-name-sm">{{ invoice.project.client.name }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="arc-project-cell">
+                                    <div class="arc-project-avatar">{{ invoice.project.name|first }}</div>
+                                    <span class="arc-project-name-sm">{{ invoice.project.name }}</span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <span class="arc-amount-sm">₹{{ invoice.amount|floatformat:2 }}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="arc-tbl-actions">
+                                    <a href="{{ invoice.invoice_pdf.url }}" target="_blank"
+                                       class="arc-tbl-btn arc-tbl-view" data-bs-toggle="tooltip" title="Preview">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'unarchive_invoice' invoice.id %}"
+                                       class="arc-tbl-btn arc-tbl-restore"
+                                       onclick="return confirmRestore(event, '{{ invoice.project.name }}', '{{ invoice.project.client.name }}')"
+                                       data-bs-toggle="tooltip" title="Restore">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                    </a>
+                                    <a href="{% url 'delete_invoice_pdf' invoice.id %}"
+                                       class="arc-tbl-btn arc-tbl-delete"
+                                       onclick="return confirmDelete(event, '{{ invoice.project.name }}', '{{ invoice.project.client.name }}')"
+                                       data-bs-toggle="tooltip" title="Delete">
+                                        <i class="bi bi-trash3"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Toggle FAB -->
+    <div class="arc-view-toggle">
+        <button class="arc-view-btn active" id="arcGridBtn" onclick="switchArcView('grid')" title="Grid View">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+        </button>
+        <button class="arc-view-btn" id="arcListBtn" onclick="switchArcView('list')" title="List View">
+            <i class="bi bi-list-ul"></i>
+        </button>
+    </div>
+
+</div>
+
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// ---- View Toggle ----
+function switchArcView(view) {
+    const grid = document.getElementById('archiveGrid');
+    const list = document.getElementById('archiveList');
+    const gridBtn = document.getElementById('arcGridBtn');
+    const listBtn = document.getElementById('arcListBtn');
+
+    if (view === 'grid') {
+        grid.style.display = '';
+        list.style.display = 'none';
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
+    } else {
+        grid.style.display = 'none';
+        list.style.display = '';
+        listBtn.classList.add('active');
+        gridBtn.classList.remove('active');
+    }
+    localStorage.setItem('archiveView', view);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const saved = localStorage.getItem('archiveView');
+    if (saved) switchArcView(saved);
+
+    // Tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+
+    // Auto search
+    const searchInput = document.querySelector('.arc-search-input');
+    let timer;
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(() => document.getElementById('arcFilterForm').submit(), 700);
+        });
+    }
+});
+
+// ---- Restore Confirmation ----
+function confirmRestore(event, projectName, clientName) {
+    event.preventDefault();
+    const url = event.currentTarget.href;
+
+    Swal.fire({
+        title: '<span style="font-size:1.1rem;font-weight:700;color:#1e293b;">Restore Invoice?</span>',
+        html: `
+            <div style="font-size:0.88rem; color:#64748b; margin-top:8px;">
+                <p>This invoice will be moved back to active invoices and become visible to the client.</p>
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px; margin-top:10px; text-align:left;">
+                    <div style="font-weight:700; color:#059669; font-size:0.85rem; margin-bottom:4px;">
+                        <i class="bi bi-arrow-counterclockwise"></i> Restoring:
+                    </div>
+                    <div style="font-weight:600; color:#1e293b;">${projectName}</div>
+                    <div style="color:#94a3b8; font-size:0.8rem; margin-top:2px;">${clientName}</div>
+                </div>
+            </div>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-arrow-counterclockwise me-1"></i> Yes, Restore',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#94a3b8',
+        customClass: {
+            popup: 'arc-swal-popup',
+            confirmButton: 'arc-swal-btn',
+            cancelButton: 'arc-swal-btn'
+        }
+    }).then(result => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Restoring...',
+                allowOutsideClick: false,
+                customClass: { popup: 'arc-swal-popup' },
+                didOpen: () => Swal.showLoading()
+            });
+            window.location.href = url;
+        }
+    });
+    return false;
+}
+
+// ---- Delete Confirmation ----
+function confirmDelete(event, projectName, clientName) {
+    event.preventDefault();
+    const url = event.currentTarget.href;
+
+    Swal.fire({
+        title: '<span style="font-size:1.1rem;font-weight:700;color:#dc2626;">Permanently Delete?</span>',
+        html: `
+            <div style="font-size:0.88rem; color:#64748b; margin-top:8px;">
+                <p>This action <strong style="color:#dc2626;">cannot be undone</strong>. The invoice PDF will be permanently deleted.</p>
+                <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:10px; padding:12px; margin-top:10px; text-align:left;">
+                    <div style="font-weight:700; color:#dc2626; font-size:0.85rem; margin-bottom:4px;">
+                        <i class="bi bi-trash3"></i> Deleting:
+                    </div>
+                    <div style="font-weight:600; color:#1e293b;">${projectName}</div>
+                    <div style="color:#94a3b8; font-size:0.8rem; margin-top:2px;">${clientName}</div>
+                </div>
+            </div>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-trash3 me-1"></i> Yes, Delete Forever',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#94a3b8',
+        customClass: {
+            popup: 'arc-swal-popup',
+            confirmButton: 'arc-swal-btn',
+            cancelButton: 'arc-swal-btn'
+        }
+    }).then(result => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Deleting...',
+                allowOutsideClick: false,
+                customClass: { popup: 'arc-swal-popup' },
+                didOpen: () => Swal.showLoading()
+            });
+            window.location.href = url;
+        }
+    });
+    return false;
+}
+</script>
+
+<style>
+/* =============================================
+   INVOICE ARCHIVE – SAAS LEVEL STYLESHEET
+   ============================================= */
+
+:root {
+    --arc-primary: #4f46e5;
+    --arc-primary-light: #eef2ff;
+    --arc-primary-dark: #3730a3;
+    --arc-success: #059669;
+    --arc-success-light: #ecfdf5;
+    --arc-danger: #dc2626;
+    --arc-danger-light: #fef2f2;
+    --arc-warning: #d97706;
+    --arc-warning-light: #fffbeb;
+    --arc-archive: #7c3aed;
+    --arc-archive-light: #f5f3ff;
+    --arc-gray-50: #f8fafc;
+    --arc-gray-100: #f1f5f9;
+    --arc-gray-200: #e2e8f0;
+    --arc-gray-300: #cbd5e1;
+    --arc-gray-400: #94a3b8;
+    --arc-gray-500: #64748b;
+    --arc-gray-600: #475569;
+    --arc-gray-700: #334155;
+    --arc-gray-800: #1e293b;
+    --arc-radius-sm: 8px;
+    --arc-radius-md: 12px;
+    --arc-radius-lg: 16px;
+    --arc-shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --arc-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+    --arc-shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.08);
+    --arc-transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+.arc-page-wrapper { max-width: 1200px; margin: 0 auto; }
+
+/* ---- Header ---- */
+.arc-page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
+}
+
+.arc-header-left { display: flex; align-items: center; gap: 16px; }
+
+.arc-header-icon {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, var(--arc-archive), #6d28d9);
+    border-radius: var(--arc-radius-md);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 1.4rem;
+    box-shadow: 0 4px 14px rgba(124,58,237,0.3); flex-shrink: 0;
+}
+
+.arc-title {
+    font-size: 1.45rem; font-weight: 700; color: var(--arc-gray-800);
+    margin: 0; letter-spacing: -0.02em;
+}
+
+.arc-subtitle { font-size: 0.83rem; color: var(--arc-gray-500); margin: 3px 0 0; }
+
+.arc-header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.arc-stat-pill {
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 0.8rem; font-weight: 500;
+}
+
+.arc-pill-total {
+    background: var(--arc-archive-light);
+    border: 1px solid rgba(124,58,237,0.15);
+    color: var(--arc-archive);
+}
+
+/* ---- Buttons ---- */
+.arc-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 10px 22px; border-radius: var(--arc-radius-md);
+    font-weight: 600; font-size: 0.875rem; border: none;
+    cursor: pointer; transition: var(--arc-transition); text-decoration: none;
+}
+
+.arc-btn-primary {
+    background: linear-gradient(135deg, var(--arc-primary), var(--arc-primary-dark));
+    color: white; box-shadow: 0 4px 12px rgba(79,70,229,0.25);
+}
+
+.arc-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79,70,229,0.3); color: white; }
+
+.arc-btn-ghost {
+    background: white; color: var(--arc-gray-600);
+    border: 1.5px solid var(--arc-gray-200);
+}
+
+.arc-btn-ghost:hover { background: var(--arc-gray-50); color: var(--arc-gray-800); border-color: var(--arc-gray-300); }
+
+.arc-btn-sm { padding: 8px 16px; font-size: 0.8rem; border-radius: var(--arc-radius-sm); }
+
+/* ---- Filter Bar ---- */
+.arc-filter-bar {
+    background: white; border: 1px solid var(--arc-gray-200);
+    border-radius: var(--arc-radius-lg); padding: 14px 20px;
+    margin-bottom: 20px; box-shadow: var(--arc-shadow-sm);
+}
+
+.arc-filter-form {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+
+.arc-search-wrap {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--arc-gray-50); border: 1.5px solid var(--arc-gray-200);
+    border-radius: var(--arc-radius-sm); padding: 0 12px;
+    transition: var(--arc-transition); flex: 1; min-width: 200px;
+}
+
+.arc-search-wrap:focus-within {
+    border-color: var(--arc-archive);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.1); background: white;
+}
+
+.arc-search-icon { color: var(--arc-gray-400); font-size: 0.9rem; }
+
+.arc-search-input {
+    flex: 1; border: none; outline: none; background: transparent;
+    padding: 9px 0; font-size: 0.85rem; color: var(--arc-gray-800);
+}
+
+.arc-search-input::placeholder { color: var(--arc-gray-400); }
+
+.arc-search-clear { color: var(--arc-gray-400); transition: var(--arc-transition); }
+.arc-search-clear:hover { color: var(--arc-danger); }
+
+.arc-select-wrap { position: relative; min-width: 170px; }
+
+.arc-select-icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--arc-gray-400); font-size: 0.85rem; pointer-events: none;
+}
+
+.arc-select {
+    width: 100%; padding: 9px 36px 9px 34px;
+    border: 1.5px solid var(--arc-gray-200); border-radius: var(--arc-radius-sm);
+    font-size: 0.85rem; color: var(--arc-gray-800); background: white;
+    appearance: none; -webkit-appearance: none;
+    transition: var(--arc-transition); cursor: pointer;
+}
+
+.arc-select:focus {
+    outline: none; border-color: var(--arc-archive);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+}
+
+.arc-select-arrow {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--arc-gray-400); font-size: 0.65rem; pointer-events: none;
+}
+
+.arc-sort-btn {
+    display: flex; align-items: center; gap: 4px;
+    padding: 9px 16px; border: 1.5px solid var(--arc-gray-200);
+    border-radius: var(--arc-radius-sm); background: white;
+    font-size: 0.82rem; font-weight: 600; color: var(--arc-gray-600);
+    cursor: pointer; transition: var(--arc-transition); white-space: nowrap;
+}
+
+.arc-sort-btn:hover { background: var(--arc-gray-50); border-color: var(--arc-gray-300); }
+
+/* ---- Warning Banner ---- */
+.arc-warning-banner {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--arc-warning-light); border: 1px solid rgba(217,119,6,0.2);
+    border-radius: var(--arc-radius-md); padding: 12px 18px;
+    margin-bottom: 20px;
+}
+
+.arc-warning-icon {
+    width: 36px; height: 36px; min-width: 36px;
+    background: rgba(217,119,6,0.15); color: var(--arc-warning);
+    border-radius: var(--arc-radius-sm);
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+}
+
+.arc-warning-title {
+    display: block; font-weight: 700; font-size: 0.82rem;
+    color: var(--arc-warning); text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+.arc-warning-text {
+    display: block; font-size: 0.8rem; color: var(--arc-gray-600); margin-top: 1px;
+}
+
+/* ---- Archive Grid ---- */
+.arc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 16px; margin-bottom: 24px;
+}
+
+/* ---- Archive Card ---- */
+.arc-card {
+    background: white; border: 1px solid var(--arc-gray-200);
+    border-radius: var(--arc-radius-lg); overflow: hidden;
+    transition: var(--arc-transition); position: relative;
+    box-shadow: var(--arc-shadow-sm);
+    animation: arcFadeUp 0.4s ease both;
+}
+
+.arc-card:hover {
+    transform: translateY(-4px); box-shadow: var(--arc-shadow-lg);
+    border-color: rgba(124,58,237,0.2);
+}
+
+/* ---- Ribbon ---- */
+.arc-ribbon {
+    background: linear-gradient(135deg, var(--arc-archive), #6d28d9);
+    color: white; font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 5px 14px;
+    display: flex; align-items: center; gap: 5px;
+}
+
+.arc-card-body { padding: 18px 20px; }
+
+.arc-card-top {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+
+.arc-card-icon {
+    width: 42px; height: 42px;
+    background: var(--arc-archive-light); color: var(--arc-archive);
+    border-radius: var(--arc-radius-sm);
+    display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+}
+
+.arc-card-id {
+    font-size: 0.72rem; font-weight: 700; color: var(--arc-gray-500);
+    font-family: monospace;
+    background: var(--arc-gray-100); padding: 3px 10px; border-radius: 6px;
+}
+
+.arc-card-info { margin-bottom: 14px; }
+
+.arc-card-project {
+    font-weight: 700; color: var(--arc-gray-800); font-size: 0.98rem;
+    margin: 0 0 8px; letter-spacing: -0.01em;
+}
+
+.arc-card-client {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.82rem; color: var(--arc-gray-500); font-weight: 500;
+}
+
+.arc-client-avatar {
+    width: 26px; height: 26px; min-width: 26px;
+    background: linear-gradient(135deg, var(--arc-archive-light), #ddd6fe);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--arc-archive); font-size: 0.75rem;
+}
+
+.arc-card-meta-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-top: 1px solid var(--arc-gray-100);
+    border-bottom: 1px solid var(--arc-gray-100); margin-bottom: 14px;
+}
+
+.arc-meta-item {
+    font-size: 0.76rem; color: var(--arc-gray-400);
+    display: flex; align-items: center;
+}
+
+.arc-meta-amount {
+    font-size: 1.1rem; font-weight: 800; color: var(--arc-archive);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---- Card Actions ---- */
+.arc-card-actions {
+    display: flex; gap: 6px;
+}
+
+.arc-action-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px 10px; border-radius: var(--arc-radius-sm);
+    font-size: 0.76rem; font-weight: 600; text-decoration: none;
+    transition: var(--arc-transition); border: 1.5px solid transparent;
+}
+
+.arc-action-btn span { display: inline; }
+
+.arc-action-view {
+    background: var(--arc-primary-light); color: var(--arc-primary);
+    border-color: rgba(79,70,229,0.15);
+}
+
+.arc-action-view:hover {
+    background: var(--arc-primary); color: white;
+    box-shadow: 0 4px 10px rgba(79,70,229,0.25);
+}
+
+.arc-action-restore {
+    background: var(--arc-success-light); color: var(--arc-success);
+    border-color: rgba(5,150,105,0.15);
+}
+
+.arc-action-restore:hover {
+    background: var(--arc-success); color: white;
+    box-shadow: 0 4px 10px rgba(5,150,105,0.25);
+}
+
+.arc-action-delete {
+    background: var(--arc-danger-light); color: var(--arc-danger);
+    border-color: rgba(220,38,38,0.15);
+}
+
+.arc-action-delete:hover {
+    background: var(--arc-danger); color: white;
+    box-shadow: 0 4px 10px rgba(220,38,38,0.25);
+}
+
+/* ---- Table View ---- */
+.arc-table-card {
+    background: white; border: 1px solid var(--arc-gray-200);
+    border-radius: var(--arc-radius-lg); overflow: hidden;
+    box-shadow: var(--arc-shadow-md);
+}
+
+.arc-table-responsive { overflow: auto; max-height: 65vh; }
+
+.custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: var(--arc-gray-100); }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--arc-gray-300); border-radius: 10px; }
+
+.arc-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; }
+
+.arc-table thead { position: sticky; top: 0; z-index: 10; }
+
+.arc-table thead tr {
+    background: var(--arc-gray-50); border-bottom: 2px solid var(--arc-gray-200);
+}
+
+.arc-table thead th {
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--arc-gray-500);
+    padding: 12px 14px; white-space: nowrap; border: none; background: var(--arc-gray-50);
+}
+
+.arc-table tbody tr {
+    border-bottom: 1px solid var(--arc-gray-100); transition: var(--arc-transition);
+}
+
+.arc-table tbody tr:hover { background: var(--arc-archive-light); }
+.arc-table tbody tr:last-child { border-bottom: none; }
+
+.arc-table tbody td {
+    padding: 13px 14px; vertical-align: middle; border: none; color: var(--arc-gray-700);
+}
+
+.arc-table-row { animation: arcFadeUp 0.3s ease both; }
+
+.arc-row-id { font-size: 0.78rem; font-weight: 700; color: var(--arc-archive); font-family: monospace; }
+
+.arc-date-sm {
+    display: inline-flex; align-items: center; padding: 3px 8px;
+    background: var(--arc-gray-100); border-radius: 5px;
+    font-size: 0.75rem; color: var(--arc-gray-500);
+}
+
+.arc-client-cell { display: flex; align-items: center; gap: 8px; }
+
+.arc-client-avatar-sm {
+    width: 30px; height: 30px; min-width: 30px;
+    background: linear-gradient(135deg, var(--arc-archive-light), #ddd6fe);
+    border-radius: 7px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--arc-archive); font-size: 0.8rem;
+}
+
+.arc-client-name-sm { font-weight: 600; font-size: 0.85rem; color: var(--arc-gray-800); }
+
+.arc-project-cell { display: flex; align-items: center; gap: 8px; }
+
+.arc-project-avatar {
+    width: 30px; height: 30px; min-width: 30px;
+    background: var(--arc-gray-100); border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--arc-gray-500); font-size: 0.8rem;
+}
+
+.arc-project-name-sm { font-weight: 600; font-size: 0.85rem; color: var(--arc-gray-700); }
+
+.arc-amount-sm {
+    font-weight: 700; color: var(--arc-archive);
+    font-variant-numeric: tabular-nums; font-size: 0.9rem;
+}
+
+.arc-tbl-actions { display: flex; gap: 6px; justify-content: center; }
+
+.arc-tbl-btn {
+    width: 34px; height: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 8px; border: 1px solid var(--arc-gray-200);
+    background: white; color: var(--arc-gray-500); font-size: 0.85rem;
+    transition: var(--arc-transition); text-decoration: none;
+}
+
+.arc-tbl-view:hover { background: var(--arc-primary-light); color: var(--arc-primary); border-color: var(--arc-primary); }
+.arc-tbl-restore:hover { background: var(--arc-success-light); color: var(--arc-success); border-color: var(--arc-success); }
+.arc-tbl-delete:hover { background: var(--arc-danger-light); color: var(--arc-danger); border-color: var(--arc-danger); }
+
+/* ---- View Toggle FAB ---- */
+.arc-view-toggle {
+    position: fixed; bottom: 84px; right: 24px; z-index: 100;
+    display: flex; gap: 4px; background: white;
+    border: 1.5px solid var(--arc-gray-200); border-radius: 12px;
+    padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.arc-view-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; border-radius: 8px; background: transparent;
+    color: var(--arc-gray-400); font-size: 1rem;
+    cursor: pointer; transition: var(--arc-transition);
+}
+
+.arc-view-btn:hover { background: var(--arc-gray-100); color: var(--arc-gray-600); }
+
+.arc-view-btn.active {
+    background: var(--arc-archive); color: white;
+    box-shadow: 0 2px 8px rgba(124,58,237,0.3);
+}
+
+/* ---- Empty State ---- */
+.arc-empty-state {
+    grid-column: 1 / -1; text-align: center; padding: 60px 24px;
+}
+
+.arc-empty-icon-wrap { position: relative; display: inline-block; margin-bottom: 20px; }
+
+.arc-empty-icon {
+    width: 80px; height: 80px; background: var(--arc-gray-100); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; color: var(--arc-gray-400); position: relative; z-index: 2;
+}
+
+.arc-empty-ring {
+    position: absolute; border-radius: 50%; border: 1.5px solid var(--arc-gray-200);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+}
+
+.arc-empty-ring-1 { width: 100px; height: 100px; animation: arcRingPulse 2s ease-in-out infinite; }
+.arc-empty-ring-2 { width: 120px; height: 120px; animation: arcRingPulse 2s ease-in-out infinite 0.5s; }
+
+@keyframes arcRingPulse {
+    0%,100% { opacity: 0.3; transform: translate(-50%,-50%) scale(0.95); }
+    50% { opacity: 0.7; transform: translate(-50%,-50%) scale(1.05); }
+}
+
+.arc-empty-state h5 { font-weight: 700; color: var(--arc-gray-700); margin-bottom: 6px; }
+.arc-empty-state p { color: var(--arc-gray-500); font-size: 0.875rem; margin-bottom: 20px; }
+
+/* ---- SweetAlert ---- */
+.arc-swal-popup {
+    border-radius: 20px !important;
+    border: 1px solid var(--arc-gray-200) !important;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.12) !important;
+}
+
+.arc-swal-btn {
+    border-radius: 10px !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+}
+
+/* ---- Animations ---- */
+@keyframes arcFadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.arc-card:nth-child(1) { animation-delay: 0.03s; }
+.arc-card:nth-child(2) { animation-delay: 0.06s; }
+.arc-card:nth-child(3) { animation-delay: 0.09s; }
+.arc-card:nth-child(4) { animation-delay: 0.12s; }
+.arc-card:nth-child(5) { animation-delay: 0.15s; }
+.arc-card:nth-child(6) { animation-delay: 0.18s; }
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .arc-page-header { flex-direction: column; align-items: flex-start; }
+    .arc-header-right { width: 100%; justify-content: space-between; }
+    .arc-filter-form { flex-direction: column; }
+    .arc-search-wrap { min-width: 100%; }
+    .arc-select-wrap { min-width: 100%; }
+    .arc-sort-btn { width: 100%; justify-content: center; }
+    .arc-grid { grid-template-columns: 1fr; }
+    .arc-action-btn span { display: none; }
+    .arc-view-toggle { bottom: 16px; right: 16px; }
+}
+
+@media (max-width: 576px) {
+    .arc-filter-form .arc-btn { width: 100%; }
+}
+</style>
+
+{% endblock %}
