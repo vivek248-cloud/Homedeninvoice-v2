@@ -94,7 +94,7 @@ urlpatterns = [
     path('invoice/<uuid:token>/', views.public_invoice, name='public_invoice'),
 
     path(
-        "invoices/",
+        "pdfinvoices/",
         views.client_invoice_list,
         name="client_invoice_list"
     ),

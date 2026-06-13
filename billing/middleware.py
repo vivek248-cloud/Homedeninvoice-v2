@@ -1,8 +1,8 @@
-from django.shortcuts import redirect
 from django.conf import settings
+from django.contrib.auth import logout
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.contrib.auth import logout
 
 
 class LoginRequiredMiddleware:
@@ -12,64 +12,89 @@ class LoginRequiredMiddleware:
 
     def __call__(self, request):
 
-        # Allow static files
+        # ==================================
+        # STATIC FILES
+        # ==================================
         if request.path.startswith(settings.STATIC_URL):
             return self.get_response(request)
 
-        # Allow media files
-        if hasattr(settings, "MEDIA_URL") and request.path.startswith(settings.MEDIA_URL):
+        # ==================================
+        # MEDIA FILES
+        # ==================================
+        if (
+            hasattr(settings, "MEDIA_URL")
+            and request.path.startswith(settings.MEDIA_URL)
+        ):
             return self.get_response(request)
 
-        # Allow admin
+        # ==================================
+        # ADMIN
+        # ==================================
         if request.path.startswith("/admin/"):
             return self.get_response(request)
 
-        # Allowed public URLs
+        # ==================================
+        # PUBLIC URLS
+        # ==================================
         allowed_urls = [
             reverse("login"),
             reverse("logout"),
             reverse("client_login"),
             reverse("client_logout"),
-            
         ]
 
         if request.path in allowed_urls:
             return self.get_response(request)
 
-        # allow client invoice links with token
-        
-
-        # allow client invoice links with token
-        if request.path.startswith("/client/invoice/"):
-            return self.get_response(request)
-
-        # ✅ IMPORTANT FIX
+        # ==================================
+        # PUBLIC INVOICE TOKEN LINKS
+        # ==================================
         if request.path.startswith("/invoice/"):
             return self.get_response(request)
 
-        # allow client dashboard
-        if request.path.startswith("/client/dashboard"):
+        # ==================================
+        # CLIENT SESSION LOGIN
+        # ==================================
+        if request.session.get("client_id"):
             return self.get_response(request)
 
-        # If user not logged in
-        if not request.user.is_authenticated:
-            return redirect(settings.LOGIN_URL)
+        # ==================================
+        # DJANGO ADMIN LOGIN
+        # ==================================
+        if request.user.is_authenticated:
 
-        # Idle timeout check
-        timeout = getattr(settings, "SESSION_IDLE_TIMEOUT", 3600)
-        last_activity = request.session.get("last_activity")
+            timeout = getattr(
+                settings,
+                "SESSION_IDLE_TIMEOUT",
+                3600
+            )
 
-        now_ts = timezone.now().timestamp()
+            last_activity = request.session.get(
+                "last_activity"
+            )
 
-        if last_activity:
-            idle_time = now_ts - last_activity
+            now_ts = timezone.now().timestamp()
 
-            # 🔑 IMPORTANT: allow POST request (form submission)
-            if idle_time > timeout and request.method != "POST":
-                logout(request)
-                return redirect(settings.LOGIN_URL)
+            if last_activity:
 
-        # Update activity timestamp
-        request.session["last_activity"] = now_ts
+                idle_time = now_ts - last_activity
 
-        return self.get_response(request)
+                if (
+                    idle_time > timeout
+                    and request.method != "POST"
+                ):
+                    logout(request)
+                    return redirect(
+                        settings.LOGIN_URL
+                    )
+
+            request.session[
+                "last_activity"
+            ] = now_ts
+
+            return self.get_response(request)
+
+        # ==================================
+        # NOT LOGGED IN
+        # ==================================
+        return redirect(settings.LOGIN_URL)

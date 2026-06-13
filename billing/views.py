@@ -315,55 +315,6 @@ def client_logout(request):
     return redirect("login")
 
 
-# from django.shortcuts import get_object_or_404, render, redirect
-# from django.db.models import Sum
-# from decimal import Decimal
-
-# def client_dashboard(request):
-
-#     client_id = request.session.get("client_id")
-
-#     if not client_id:
-#         return redirect("client_login")
-
-#     client = get_object_or_404(Client, id=client_id)
-
-#     projects = Project.objects.filter(client=client)
-
-#     latest_project = projects.order_by('-id').first()
-#     project_status = latest_project.status if latest_project else None
-
-#     # ✅ CORRECT
-#     completed_projects = projects.filter(status="Completed").exists()
-
-#     payments = (
-#         Payment.objects
-#         .filter(project__client=client)
-#         .select_related("project")
-#         .order_by("-date")
-#     )
-
-#     total_paid = payments.aggregate(
-#         total=Sum("amount")
-#     )["total"] or Decimal("0.00")
-
-#     total_budget = projects.aggregate(
-#         total=Sum("budget")
-#     )["total"] or Decimal("0.00")
-
-#     total_receivable = total_budget - total_paid
-
-#     return render(request, "billing/client_auth/dashboard.html", {
-#         "client": client,
-#         "projects": projects,
-#         "payments": payments,
-#         "total_paid": total_paid,
-#         "total_budget": total_budget,
-#         "total_receivable": total_receivable,
-#         "project_status": project_status,
-#         "has_completed_projects": completed_projects,
-#     })
-
 
 
 from django.shortcuts import get_object_or_404, render, redirect
@@ -2189,61 +2140,63 @@ def _calculate_invoice_stats(invoices):
 @login_required
 def client_invoice_list(request):
 
-    client_id = request.session.get("client_id")
-
-    if not client_id:
-        return redirect("client_login")
-
-    # Base queryset
     invoices = (
         Payment.objects
-        .filter(
-            project__client_id=client_id,
-            invoice_archived=False
-        )
+        .filter(invoice_archived=False)
         .exclude(invoice_pdf="")
         .exclude(invoice_pdf__isnull=True)
-        .select_related("project")
+        .select_related(
+            "project",
+            "project__client"
+        )
     )
 
-    # ---- Search Filter ----
+    # Search
     query = request.GET.get("q", "").strip()
+
     if query:
         invoices = invoices.filter(
             project__name__icontains=query
         )
 
-    # ---- Project Filter ----
-    selected_project = request.GET.get("project", "")
+    # Project Filter
+    selected_project = request.GET.get(
+        "project",
+        ""
+    )
+
     if selected_project:
         invoices = invoices.filter(
             project_id=selected_project
         )
 
-    # ---- Sort (Newest / Oldest) ----
-    current_sort = request.GET.get("sort", "newest")
+    # Sort
+    current_sort = request.GET.get(
+        "sort",
+        "newest"
+    )
+
     if current_sort == "oldest":
         invoices = invoices.order_by("date")
     else:
         invoices = invoices.order_by("-date")
 
-    # ---- Get unique projects for filter dropdown ----
-    projects = (
+    # Projects Dropdown
+    project_ids = (
         Payment.objects
-        .filter(
-            project__client_id=client_id,
-            invoice_archived=False
-        )
+        .filter(invoice_archived=False)
         .exclude(invoice_pdf="")
         .exclude(invoice_pdf__isnull=True)
-        .values_list("project", flat=True)
+        .values_list(
+            "project_id",
+            flat=True
+        )
         .distinct()
     )
 
-
     project_list = (
         Project.objects
-        .filter(id__in=projects)
+        .filter(id__in=project_ids)
         .order_by("name")
     )
 
@@ -2258,22 +2211,16 @@ def client_invoice_list(request):
         }
     )
 
+
 @login_required
 def archive_invoice(request, pk):
 
-    client_id = request.session.get("client_id")
-
-    if not client_id:
-        return redirect("client_login")
-
     payment = get_object_or_404(
         Payment,
-        pk=pk,
-        project__client_id=client_id
+        pk=pk
     )
 
     payment.invoice_archived = True
-
     payment.save(
         update_fields=["invoice_archived"]
     )
@@ -2286,22 +2233,16 @@ def archive_invoice(request, pk):
     return redirect("client_invoice_list")
 
 
+
 @login_required
 def unarchive_invoice(request, pk):
 
-    client_id = request.session.get("client_id")
-
-    if not client_id:
-        return redirect("client_login")
-
     payment = get_object_or_404(
         Payment,
-        pk=pk,
-        project__client_id=client_id
+        pk=pk
     )
 
     payment.invoice_archived = False
-
     payment.save(
         update_fields=["invoice_archived"]
     )
@@ -2319,69 +2260,95 @@ def unarchive_invoice(request, pk):
 
 
 
+
 @login_required
 def invoice_archive(request):
 
-    client_id = request.session.get("client_id")
-    if not client_id:
-        return redirect("client_login")
-
-    # Base queryset
     invoices = (
         Payment.objects
-        .filter(project__client_id=client_id, invoice_archived=True)
+        .filter(invoice_archived=True)
         .exclude(invoice_pdf="")
         .exclude(invoice_pdf__isnull=True)
-        .select_related("project", "project__client")
+        .select_related(
+            "project",
+            "project__client"
+        )
     )
 
-    # ---- Search ----
+    # Search
     query = request.GET.get("q", "").strip()
+
     if query:
         invoices = invoices.filter(
             Q(project__name__icontains=query) |
             Q(project__client__name__icontains=query)
         )
 
-    # ---- Client Filter ----
-    selected_client = request.GET.get("client", "")
-    if selected_client:
-        invoices = invoices.filter(project__client_id=selected_client)
-
-    # ---- Project Filter ----
-    selected_project = request.GET.get("project", "")
-    if selected_project:
-        invoices = invoices.filter(project_id=selected_project)
-
-    # ---- Sort ----
-    current_sort = request.GET.get("sort", "newest")
-    invoices = invoices.order_by("date" if current_sort == "oldest" else "-date")
-
-
-
-    archived_ids = (
-        Payment.objects
-        .filter(project__client_id=client_id, invoice_archived=True)
-        .exclude(invoice_pdf="")
-        .exclude(invoice_pdf__isnull=True)
+    # Client Filter
+    selected_client = request.GET.get(
+        "client",
+        ""
     )
 
-    project_list = Project.objects.filter(
-        id__in=archived_ids.values_list("project_id", flat=True)
-    ).order_by("name")
+    if selected_client:
+        invoices = invoices.filter(
+            project__client_id=selected_client
+        )
 
-    client_list = Client.objects.filter(
-        id__in=project_list.values_list("client_id", flat=True)
-    ).order_by("name")
+    # Project Filter
+    selected_project = request.GET.get(
+        "project",
+        ""
+    )
 
-    return render(request, "billing/invoice/invoice_archive.html", {
-        "invoices": invoices,
-        "projects": project_list,
-        "clients": client_list,
-        "selected_client": selected_client,
-        "selected_project": selected_project,
-        "current_sort": current_sort,
-    })
+    if selected_project:
+        invoices = invoices.filter(
+            project_id=selected_project
+        )
+
+    # Sort
+    current_sort = request.GET.get(
+        "sort",
+        "newest"
+    )
+
+    if current_sort == "oldest":
+        invoices = invoices.order_by("date")
+    else:
+        invoices = invoices.order_by("-date")
+
+    # Dropdown Data
+    project_list = (
+        Project.objects
+        .filter(
+            payments__invoice_archived=True
+        )
+        .distinct()
+        .order_by("name")
+    )
+
+    client_list = (
+        Client.objects
+        .filter(
+            projects__payments__invoice_archived=True
+        )
+        .distinct()
+        .order_by("name")
+    )
+
+    return render(
+        request,
+        "billing/invoice/invoice_archive.html",
+        {
+            "invoices": invoices,
+            "projects": project_list,
+            "clients": client_list,
+            "selected_client": selected_client,
+            "selected_project": selected_project,
+            "current_sort": current_sort,
+        }
+    )
+
 
 @login_required
 def delete_invoice_pdf(request, pk):
@@ -2394,25 +2361,25 @@ def delete_invoice_pdf(request, pk):
     try:
 
         if (
-            payment.invoice_pdf
-            and os.path.exists(
-                payment.invoice_pdf.path
-            )
+            payment.invoice_pdf and
+            os.path.exists(payment.invoice_pdf.path)
         ):
             os.remove(
                 payment.invoice_pdf.path
             )
 
     except Exception as e:
-        print(e)
+        print("PDF DELETE ERROR:", e)
 
     payment.invoice_pdf = None
     payment.invoice_locked = False
+    payment.invoice_archived = False
 
     payment.save(
         update_fields=[
             "invoice_pdf",
-            "invoice_locked"
+            "invoice_locked",
+            "invoice_archived",
         ]
     )
 
