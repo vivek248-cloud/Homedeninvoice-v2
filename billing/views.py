@@ -2186,7 +2186,7 @@ def _calculate_invoice_stats(invoices):
     }
 
 
-
+@login_required
 def client_invoice_list(request):
 
     client_id = request.session.get("client_id")
@@ -2258,7 +2258,7 @@ def client_invoice_list(request):
         }
     )
 
-
+@login_required
 def archive_invoice(request, pk):
 
     client_id = request.session.get("client_id")
@@ -2286,7 +2286,7 @@ def archive_invoice(request, pk):
     return redirect("client_invoice_list")
 
 
-
+@login_required
 def unarchive_invoice(request, pk):
 
     client_id = request.session.get("client_id")
@@ -2319,7 +2319,7 @@ def unarchive_invoice(request, pk):
 
 
 
-
+@login_required
 def invoice_archive(request):
 
     client_id = request.session.get("client_id")
