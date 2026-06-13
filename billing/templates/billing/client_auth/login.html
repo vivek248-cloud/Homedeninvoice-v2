@@ -246,37 +246,84 @@
         <form method="POST">
             {% csrf_token %}
 
+            <!-- Mobile Number -->
             <div class="mb-4">
-                <label class="form-label">Registered Mobile</label>
+                <label class="form-label">
+                    <i class="bi bi-phone me-1"></i>
+                    Registered Mobile Number
+                </label>
+
                 <div class="input-group-custom">
                     <i class="bi bi-phone"></i>
-                    <input type="text" name="username" class="form-control" placeholder="Enter mobile number" required autofocus>
+                    <input
+                        type="text"
+                        name="username"
+                        class="form-control"
+                        placeholder="Enter your registered mobile number"
+                        required
+                        autofocus
+                    >
                 </div>
             </div>
 
+            <!-- Password -->
             <div class="mb-4">
-                <label class="form-label fw-bold small">Secure Password</label>
-                <div class="input-group-custom shadow-sm">
-                    <i class="bi bi-shield-lock"></i>
-                    <input type="password" name="password" class="form-control border-0" placeholder="••••••••" required>
+                <label class="form-label">
+                    <i class="bi bi-shield-lock me-1"></i>
+                    Secure Password
+                </label>
+
+                <div class="input-group-custom">
+                    <i class="bi bi-key"></i>
+
+                    <input
+                        type="password"
+                        name="password"
+                        class="form-control border-0"
+                        placeholder="Enter your password"
+                        required
+                    >
                 </div>
+
+                <!-- Password Hint -->
                 <div class="security-note d-flex align-items-center mt-2 p-2 rounded bg-light border">
+
                     <i class="bi bi-info-circle-fill text-primary me-2"></i>
-                    <span class="small text-muted"><b>Default password:</b> 
-                        <strong id="defaultPassword" 
-                                class="text-primary"
-                                style="cursor: pointer; text-decoration: underline dotted;" 
-                                onclick="copyToClipboard('homeden@2025')">homeden@2025</strong>
-                    </span>
-                    <button type="button" class="btn p-0 border-0 ms-auto text-primary" onclick="copyToClipboard('homeden@2025')">
-                        <i class="bi bi-clipboard-check-fill" id="copyIcon"></i>
+
+                    <div class="flex-grow-1">
+                        <div class="small text-muted">
+                            <b>Password Format:</b>
+                            <span class="text-primary fw-semibold">
+                                Your Name + Last 4 Digits of Mobile Number
+                            </span>
+                        </div>
+
+                        <div class="small mt-1">
+                            <span class="text-muted">Example:</span>
+                            <span class="text-success fw-semibold">
+                                vivek3210
+                            </span>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm border-0 text-primary"
+                        onclick="showPasswordInfo()"
+                        title="Password Help"
+                    >
+                        <i class="bi bi-question-circle-fill"></i>
                     </button>
+
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-login">
-                Log In <i class="bi bi-arrow-right"></i>
+            <!-- Login Button -->
+            <button type="submit" class="btn btn-login w-100">
+                <i class="bi bi-box-arrow-in-right me-2"></i>
+                Log In
             </button>
+
         </form>
 
         <div class="divider"></div>
@@ -302,6 +349,42 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+
+function showPasswordInfo() {
+
+    Swal.fire({
+        icon: "info",
+        title: "Password Information",
+        html: `
+            <div style="text-align:left">
+                <p><b>Password Format:</b></p>
+
+                <p>
+                    Your Name (without spaces)
+                    + Last 4 digits of your mobile number
+                </p>
+
+                <hr>
+
+                <p><b>Examples:</b></p>
+
+                <p>
+                    Vivek + 3210 =
+                    <strong>vivek3210</strong>
+                </p>
+
+                <p>
+                    John Doe + 6789 =
+                    <strong>johndoe6789</strong>
+                </p>
+            </div>
+        `,
+        confirmButtonText: "Got it"
+    });
+
+}
+
+
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
         const icon = document.getElementById('copyIcon');

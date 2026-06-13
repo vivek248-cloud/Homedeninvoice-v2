@@ -98,7 +98,11 @@ urlpatterns = [
         name="save_invoice_adjustments"
     ),
 
-
+    path(
+        "payments/<int:pk>/freeze/",
+        views.freeze_invoice,
+        name="freeze_invoice"
+    ),
 
 
     path('backup/download/', views.download_backup, name='download_backup'),

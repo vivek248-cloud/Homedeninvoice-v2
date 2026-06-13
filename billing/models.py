@@ -263,6 +263,15 @@ class Payment(models.Model):
         unique=True
     )
 
+    invoice_pdf = models.FileField(
+        upload_to="invoices/",
+        blank=True,
+        null=True
+    )
+
+    invoice_locked = models.BooleanField(
+        default=False
+    )
     date = models.DateField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

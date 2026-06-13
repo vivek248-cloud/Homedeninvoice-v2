@@ -283,30 +283,51 @@
                 <div class="sidebar-body">
                     <div class="activity-feed">
                         {% for pay in payments|slice:":10" %}
-                        <div class="feed-item">
-                            <div class="feed-icon">
-                                <i class="bi bi-check2"></i>
-                            </div>
-                            <div class="feed-details">
-                                <div class="feed-title">{{ pay.project.name|truncatechars:25 }}</div>
-                                <div class="feed-meta">
-                                    <span class="feed-date">{{ pay.date|date:"d M Y" }}</span>
-                                    <span class="feed-amount">₹{{ pay.amount|floatformat:0 }}</span>
+                            <div class="feed-item">
+                                <div class="feed-icon">
+                                    <i class="bi bi-check2"></i>
                                 </div>
+
+                                <div class="feed-details">
+                                    <div class="feed-title">
+                                        {{ pay.project.name|truncatechars:25 }}
+                                    </div>
+
+                                    <div class="feed-meta">
+                                        <span class="feed-date">
+                                            {{ pay.date|date:"d M Y" }}
+                                        </span>
+
+                                        <span class="feed-amount">
+                                            ₹{{ pay.amount|floatformat:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {% if pay.invoice_pdf %}
+                                    <a href="{{ pay.invoice_pdf.url }}"
+                                    class="feed-action text-danger"
+                                    target="_blank"
+                                    download
+                                    title="Download PDF">
+                                        <i class="bi bi-file-earmark-pdf-fill "></i>
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'client_invoice_view' pay.invoice_token %}"
+                                    class="feed-action"
+                                    target="_blank"
+                                    title="View Invoice">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                {% endif %}
+
                             </div>
-                            <a href="{% url 'client_invoice_view' pay.invoice_token %}" 
-                               class="feed-action" 
-                               target="_blank"
-                               title="Download">
-                                <i class="bi bi-download"></i>
-                            </a>
-                        </div>
-                        {% empty %}
-                        <div class="feed-empty">
-                            <i class="bi bi-inbox"></i>
-                            <p>No payments yet</p>
-                        </div>
-                        {% endfor %}
+                            {% empty %}
+                            <div class="feed-empty">
+                                <i class="bi bi-inbox"></i>
+                                <p>No payments yet</p>
+                            </div>
+                            {% endfor %}
                     </div>
                 </div>
             </div>
@@ -1041,7 +1062,6 @@ body {
 .feed-item:hover {
     background: white;
     box-shadow: var(--shadow);
-    transform: translateX(4px);
 }
 
 .feed-icon {
@@ -1088,7 +1108,7 @@ body {
 .feed-action {
     width: 36px;
     height: 36px;
-    background: var(--primary);
+    background: red;
     color: white;
     border-radius: 0.75rem;
     display: flex;
@@ -1099,7 +1119,7 @@ body {
 }
 
 .feed-action:hover {
-    background: var(--primary-dark);
+    background: #ff0000;
     transform: scale(1.1);
 }
 

@@ -1429,7 +1429,10 @@ tr:hover .row-action-btns {
                 Print / Download
             </button>
 
-
+            <button onclick="freezeInvoice({{ payment.id }})">
+                Freeze Invoice
+            </button>
+            
             <br><br>
 
             <a href="{% url 'project_detail' project.id %}" class="btn-back">
@@ -1457,6 +1460,57 @@ tr:hover .row-action-btns {
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+function freezeInvoice(){
+
+    let finalHtml = document.documentElement.outerHTML;
+
+    finalHtml = finalHtml.replaceAll(
+        '/static/',
+        window.location.origin + '/static/'
+    );
+
+    fetch(
+        "{% url 'freeze_invoice' payment.id %}",
+        {
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json",
+                "X-CSRFToken":"{{ csrf_token }}"
+            },
+
+            body: JSON.stringify({
+                html: finalHtml
+            })
+        }
+    )
+    .then(r => r.json())
+    .then(data => {
+
+        if(data.success){
+
+            Swal.fire({
+                icon:"success",
+                title:"Invoice Frozen",
+                text:"PDF saved successfully"
+            });
+
+        }else{
+
+            Swal.fire({
+                icon:"error",
+                title:"Error",
+                text:data.error || "Freeze failed"
+            });
+
+        }
+
+    });
+
+}
+</script>
 
 
 <script>

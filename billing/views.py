@@ -252,12 +252,45 @@ from .models import Client, Project
 
 
 
+# from django.contrib import messages
+# from django.views.decorators.http import require_http_methods
+# from django.shortcuts import render, redirect
+# from .models import Client
+
+# CLIENT_FIXED_PASSWORD = "homeden@2025"
+
+
+# @require_http_methods(["GET", "POST"])
+# def client_login(request):
+
+#     if request.session.get("client_id"):
+#         return redirect("client_dashboard")
+
+#     if request.method == "POST":
+#         username = request.POST.get("username")
+#         password = request.POST.get("password")
+
+#         # 🔥 use filter instead of get
+#         client = Client.objects.filter(mobile_1=username).first()
+
+#         if not client:
+#             messages.error(request, "Mobile number not registered")
+#             return render(request, "billing/client_auth/login.html")
+
+#         if password == "homeden@2025":
+#             request.session["client_id"] = client.id
+#             return redirect("client_dashboard")
+#         else:
+#             messages.error(request, "Invalid password")
+
+#     return render(request, "billing/client_auth/login.html")
+
+
+
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import render, redirect
 from .models import Client
-
-CLIENT_FIXED_PASSWORD = "homeden@2025"
 
 
 @require_http_methods(["GET", "POST"])
@@ -267,25 +300,42 @@ def client_login(request):
         return redirect("client_dashboard")
 
     if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
 
-        # 🔥 use filter instead of get
-        client = Client.objects.filter(mobile_1=username).first()
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "").strip()
+
+        client = Client.objects.filter(
+            mobile_1=username
+        ).first()
 
         if not client:
             messages.error(request, "Mobile number not registered")
-            return render(request, "billing/client_auth/login.html")
+            return render(
+                request,
+                "billing/client_auth/login.html"
+            )
 
-        if password == "homeden@2025":
+        # Password = client name + last 4 digits
+        expected_password = (
+            client.name.strip().replace(" ", "").lower()
+            + client.mobile_1[-4:]
+        )
+
+        if password.lower() == expected_password.lower():
+
             request.session["client_id"] = client.id
+
             return redirect("client_dashboard")
-        else:
-            messages.error(request, "Invalid password")
 
-    return render(request, "billing/client_auth/login.html")
+        messages.error(request, "Invalid password")
+
+    return render(
+        request,
+        "billing/client_auth/login.html"
+    )
 
 
+    
 
 def client_logout(request):
     request.session.pop("client_id", None)
@@ -2455,108 +2505,148 @@ def build_invoice_context(request, payment):
 
 
 
+import os
+import json
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+
+from .models import Payment
 
 
-# def build_invoice_context(request, payment):
+@login_required
+def freeze_invoice(request, pk):
 
-#     project = payment.project
-#     client = project.client
+    if request.method != "POST":
+        return JsonResponse({
+            "success": False,
+            "error": "POST request required"
+        })
 
-#     invoice_number = f"INV-{client.id}{payment.id}{payment.date.strftime('%d%m%Y')}"
+    try:
 
-#     client_name = re.sub(r'[^A-Za-z0-9]+', '', client.name.capitalize())[:10]
-#     project_code = f"inv"
-#     date_str = payment.date.strftime('%d-%m-%Y')
-#     invoice_filename = f"{client_name}-{project_code}-({date_str}).pdf"
+        payment = get_object_or_404(
+            Payment,
+            pk=pk
+        )
 
-#     invoice_url = request.build_absolute_uri(
-#         reverse('public_invoice', args=[payment.invoice_token])
-#     )
+        data = json.loads(request.body)
 
-#     spends = project.spends.select_related(
-#         'floor', 'room', 'fullsemi'
-#     ).order_by(
-#         'floor__name',
-#         'room__name',
-#         'id'
-#     )
+        html = data.get("html")
 
-#     total_spent = project.total_spent
-#     # GST based on client GST registration
+        if not html:
+            return JsonResponse({
+                "success": False,
+                "error": "No HTML received"
+            })
 
-#     # ✅ Use saved values if exist, else defaults
-#     gst_rate = payment.gst_rate or (
-#         Decimal("0.00") if client.gst_number else Decimal("0.00")
-#     )
+        # ==========================
+        # CREATE MEDIA/INVOICES
+        # ==========================
 
-#     gst_amount = (total_spent * gst_rate) / Decimal("100")
+        invoice_dir = settings.MEDIA_ROOT / "invoices"
 
-#     discount_value = payment.discount_value or Decimal("0.00")
-#     discount_type = payment.discount_type or "percent"
+        invoice_dir.mkdir(
+            parents=True,
+            exist_ok=True
+        )
 
-#     if discount_type == "percent":
-#         discount = (total_spent + gst_amount) * discount_value / Decimal("100")
-#     else:
-#         discount = discount_value
+        # ==========================
+        # FILE NAME
+        # ==========================
 
-#     grand_total = total_spent + gst_amount - discount
+        filename = f"INV-{payment.id}.pdf"
 
-#     payments = project.payments.filter(
-#         date__lte=payment.date
-#     ).order_by('date', 'id')
+        pdf_path = invoice_dir / filename
+
+        # ==========================
+        # DELETE OLD PDF
+        # ==========================
+
+        if pdf_path.exists():
+            try:
+                os.remove(pdf_path)
+            except Exception:
+                pass
+
+        # ==========================
+        # GENERATE PDF
+        # ==========================
+
+        generate_invoice_pdf(
+            html,
+            str(pdf_path)
+        )
+
+        # ==========================
+        # SAVE DATABASE
+        # ==========================
+
+        payment.invoice_pdf = f"invoices/{filename}"
+        payment.invoice_locked = True
+
+        payment.save(
+            update_fields=[
+                "invoice_pdf",
+                "invoice_locked"
+            ]
+        )
+
+        print("=" * 50)
+        print("INVOICE FROZEN")
+        print("PAYMENT:", payment.id)
+        print("PDF:", pdf_path)
+        print("=" * 50)
+
+        return JsonResponse({
+            "success": True,
+            "file": payment.invoice_pdf.url
+        })
+
+    except Exception as e:
+
+        print("FREEZE ERROR:", str(e))
+
+        return JsonResponse({
+            "success": False,
+            "error": str(e)
+        })
 
 
-#     phone = f"91{client.mobile_1}"
+from playwright.sync_api import sync_playwright
 
-#     message = (
-#         f"Hello {client.name}, "
-#         f"Your invoice is ready. Click to view: {invoice_url}"
-#     )
-
-#     whatsapp_url = (
-#         f"https://wa.me/{phone}?text={urllib.parse.quote(message)}"
-#     )
+from playwright.sync_api import sync_playwright
 
 
-#     payment_rows = []
-#     running_total = Decimal("0.00")
+def generate_invoice_pdf(html, output_path):
 
-#     for p in payments:
+    with sync_playwright() as p:
 
-#         if not p.invoice_token:
-#             p.invoice_token = uuid.uuid4()
-#             p.save(update_fields=['invoice_token'])
+        browser = p.chromium.launch()
 
-#         previous_paid = running_total
-#         running_total += p.amount
+        page = browser.new_page()
 
-#         payment_rows.append({
-#             'token': p.invoice_token,
-#             'id': p.id,
-#             'date': p.date,
-#             'previous_paid': previous_paid,
-#             'now_paid': p.amount,
-#             'total_paid': running_total,
-#             'balance_after': grand_total - running_total,
-#             'mode': p.get_payment_mode_display(),
-#         })
+        page.set_content(
+            html,
+            wait_until="networkidle"
+        )
 
+        page.pdf(
+            path=output_path,
+            format="A4",
+            print_background=True,
+            margin={
+                "top": "10mm",
+                "bottom": "10mm",
+                "left": "10mm",
+                "right": "10mm"
+            }
+        )
 
-#     return {
-#         'project': project,
-#         'payment': payment,
-#         'spends': spends,
-#         'total_spent': total_spent,
-#         'gst_rate': gst_rate,
-#         'gst_amount': gst_amount,
-#         'discount': discount,
-#         'grand_total': grand_total,
-#         'payment_rows': payment_rows,
-#         'invoice_number': invoice_number,
-#         'invoice_filename': invoice_filename,
-#         'invoice_url': invoice_url,
-#         'whatsapp_url': whatsapp_url,
-#     }
+        browser.close()
+
 
 
 @login_required
