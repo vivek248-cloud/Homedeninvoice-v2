@@ -247,20 +247,34 @@ def dashboard(request):
 
 import re
 
-def get_client_password(client):
+import re
 
+def get_client_password(client):
     name = client.name.lower().strip()
 
-    name = re.sub(
-        r'^(mr|mrs|ms|miss)\.?\s*',
-        '',
-        name,
-        flags=re.IGNORECASE
-    )
+    # Remove common prefixes
+    prefixes = [
+        "miss",
+        "mrs",
+        "mr",
+        "ms",
+        "dr",
+    ]
 
-    name = re.sub(r'[^a-z0-9]', '', name)
+    for prefix in prefixes:
+        if name.startswith(prefix):
+            name = name[len(prefix):]
+            break
 
-    return f"{name}{client.mobile_1[-4:]}"
+    # Remove spaces, dots, hyphens, underscores, etc.
+    name = re.sub(r'[^a-z]', '', name)
+
+    # Keep only digits from mobile number
+    mobile = re.sub(r'\D', '', str(client.mobile_1))
+
+    return f"{name}{mobile[-4:]}"
+
+
 
 
 from django.contrib import messages

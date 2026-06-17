@@ -105,7 +105,7 @@
 
                 <!-- Project & Amount -->
                 <div class="inv-card-main">
-                    <h6 class="inv-card-project">{{ invoice.project.name }}</h6>
+                    <h6 class="inv-card-project">{{ invoice.project.client.name }}<small>({{invoice.project.client.address|truncatechars:20}})</small></h6>
                     <div class="inv-card-amount">₹{{ invoice.amount|floatformat:2 }}</div>
                 </div>
 
@@ -136,7 +136,7 @@
                     </a>
                     <a href="{% url 'archive_invoice' invoice.id %}"
                        class="inv-action-btn inv-action-archive"
-                       onclick="return confirmArchive(event, '{{ invoice.project.name }}', '{{ invoice.date|date:"d M Y" }}')"
+                       onclick="return confirmArchive(event, '{{ invoice.project.client.name }} ({{invoice.project.client.address}})', '{{ invoice.date|date:"d M Y" }}')"
                        data-bs-toggle="tooltip"
                        title="Archive Invoice">
                         <i class="bi bi-archive"></i>
@@ -193,7 +193,7 @@
                             <td>
                                 <div class="inv-project-cell">
                                     <div class="inv-project-avatar">{{ invoice.project.name|first }}</div>
-                                    <span class="inv-project-name">{{ invoice.project.name }}</span>
+                                    <span class="inv-project-name">{{ invoice.project.client.name }}<small>({{invoice.project.client.address|truncatechars:20}})</small></span>
                                 </div>
                             </td>
                             <td class="text-end">
@@ -211,7 +211,7 @@
                                     </a>
                                     <a href="{% url 'archive_invoice' invoice.id %}"
                                        class="inv-tbl-btn inv-tbl-archive"
-                                       onclick="return confirmArchive(event, '{{ invoice.project.name }}', '{{ invoice.date|date:"d M Y" }}')"
+                                       onclick="return confirmArchive(event, '{{ invoice.project.client.name }} ({{invoice.project.client.address}})', '{{ invoice.date|date:"d M Y" }}')"
                                        data-bs-toggle="tooltip" title="Archive">
                                         <i class="bi bi-archive"></i>
                                     </a>

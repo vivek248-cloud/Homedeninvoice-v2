@@ -24,7 +24,7 @@
                     <span>Archived</span>
                 </div>
             </div>
-            <a href="{% url 'client_invoice_list' %}" class="arc-btn arc-btn-ghost arc-btn-sm">
+            <a href="{% url 'client_invoice_list' %}" class="arc-btn arc-btn-ghost bg-primary text-white arc-btn-sm">
                 <i class="bi bi-arrow-left me-1"></i> Back to Invoices
             </a>
         </div>
@@ -136,7 +136,7 @@
                     <h6 class="arc-card-project">{{ invoice.project.name }}</h6>
                     <div class="arc-card-client">
                         <div class="arc-client-avatar">{{ invoice.project.client.name|first }}</div>
-                        <span>{{ invoice.project.client.name }}</span>
+                        <span>{{ invoice.project.client.name }} ({{invoice.project.client.address}})</span>
                     </div>
                 </div>
 
@@ -160,14 +160,14 @@
                     </a>
                     <a href="{% url 'unarchive_invoice' invoice.id %}"
                        class="arc-action-btn arc-action-restore"
-                       onclick="return confirmRestore(event, '{{ invoice.project.name }}', '{{ invoice.project.client.name }}')"
+                       onclick="return confirmRestore(event, '{{ invoice.project.client.name }} ({{invoice.project.client.address}})', '{{ invoice.project.client.name }}')"
                        data-bs-toggle="tooltip" title="Restore Invoice">
                         <i class="bi bi-arrow-counterclockwise"></i>
                         <span>Restore</span>
                     </a>
                     <a href="{% url 'delete_invoice_pdf' invoice.id %}"
                        class="arc-action-btn arc-action-delete"
-                       onclick="return confirmDelete(event, '{{ invoice.project.name }}', '{{ invoice.project.client.name }}')"
+                       onclick="return confirmDelete(event, '{{ invoice.project.client.name }} ({{invoice.project.client.address}})', '{{ invoice.project.client.name }}')"
                        data-bs-toggle="tooltip" title="Permanently Delete">
                         <i class="bi bi-trash3"></i>
                         <span>Delete</span>
@@ -228,7 +228,7 @@
                             <td>
                                 <div class="arc-project-cell">
                                     <div class="arc-project-avatar">{{ invoice.project.name|first }}</div>
-                                    <span class="arc-project-name-sm">{{ invoice.project.name }}</span>
+                                    <span class="arc-project-name-sm">{{ invoice.project.client.name }} ({{invoice.project.client.address}})</span>
                                 </div>
                             </td>
                             <td class="text-end">
@@ -242,13 +242,13 @@
                                     </a>
                                     <a href="{% url 'unarchive_invoice' invoice.id %}"
                                        class="arc-tbl-btn arc-tbl-restore"
-                                       onclick="return confirmRestore(event, '{{ invoice.project.name }}', '{{ invoice.project.client.name }}')"
+                                       onclick="return confirmRestore(event, '{{ invoice.project.client.name }} ({{invoice.project.client.address}})', '{{ invoice.project.client.name }}')"
                                        data-bs-toggle="tooltip" title="Restore">
                                         <i class="bi bi-arrow-counterclockwise"></i>
                                     </a>
                                     <a href="{% url 'delete_invoice_pdf' invoice.id %}"
                                        class="arc-tbl-btn arc-tbl-delete"
-                                       onclick="return confirmDelete(event, '{{ invoice.project.name }}', '{{ invoice.project.client.name }}')"
+                                       onclick="return confirmDelete(event, '{{ invoice.project.client.name }} ({{invoice.project.client.address}})', '{{ invoice.project.client.name }}')"
                                        data-bs-toggle="tooltip" title="Delete">
                                         <i class="bi bi-trash3"></i>
                                     </a>

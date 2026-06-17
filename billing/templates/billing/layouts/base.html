@@ -331,13 +331,13 @@
         .sidebar-help-card .help-icon {
             width: 36px;
             height: 36px;
-            background: var(--brand-soft);
-            border-radius: 10px;
+            background: #6366f1;
+            border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-size: 0.9rem;
-            color: var(--brand);
+            color: white;
             margin-bottom: 0.5rem;
         }
 
@@ -1520,21 +1520,21 @@ body.loading {
 
             <a class="s-nav-link {% if request.resolver_match.url_name == 'invoice_dashboard' %}active{% endif %}"
                href="{% url 'invoice_dashboard' %}">
-                <i class="bi bi-file-earmark-fill"></i>
+                <i class="bi bi-pencil-square"></i>
                     <span>Edit Invoices</span>       
             </a>
 
             <a class="s-nav-link {% if request.resolver_match.url_name == 'client_invoice_list' %}active{% endif %}"
                href="{% url 'client_invoice_list' %}">
-                <i class="bi bi-file-earmark-fill"></i>
-                    <span>Invoices PDF</span>       
+                <i class="bi bi-filetype-pdf"></i>
+                    <span>All Invoices PDF</span>       
             </a>
 
             <a class="s-nav-link {% if request.resolver_match.url_name == 'invoice_archive' %}active{% endif %}"
-   href="{% url 'invoice_archive' %}">
-                <i class="bi bi-file-earmark-fill"></i>
-                    <span>Unarchived Invoices</span>       
-            </a>
+            href="{% url 'invoice_archive' %}">
+                            <i class="bi bi-archive"></i>
+                                <span>rchived Invoices</span>       
+                        </a>
 
             <!-- QUOTATION HUB -->
             <p class="nav-heading">Quotation Hub</p>
