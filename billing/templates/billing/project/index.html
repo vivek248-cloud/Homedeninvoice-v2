@@ -1,4 +1,5 @@
 {% extends 'billing/layouts/base.html' %}
+{% load extra_filters%}
 {% block title %}Projects Overview | HomeDen{% endblock %}
 {% block page_title %}Project Portfolio{% endblock %}
 
@@ -94,7 +95,7 @@
                 </div>
                 <p class="sc-label">Total Receivable</p>
                 <h3 class="sc-value">
-                    ₹{% if total_receivable %}{{ total_receivable|floatformat:2 }}{% else %}0.00{% endif %}
+                    ₹{% if total_receivable %}{{ total_receivable|indian_currency }}{% else %}0.00{% endif %}
                 </h3>
                 <div class="sc-bar">
                     <div class="sc-bar-fill" style="width: 60%;"></div>
@@ -220,21 +221,21 @@
 
                         <!-- SPENT -->
                         <td>
-                            <span class="money-text mt-spent">₹{{ project.total_spent }}</span>
+                            <span class="money-text mt-spent">₹{{ project.total_spent|indian_currency }}</span>
                         </td>
 
                         <!-- COLLECTED -->
                         <td>
                             <div class="collected-chip">
                                 <i class="bi bi-check-circle-fill"></i>
-                                ₹{{ project.total_paid }}
+                                ₹{{ project.total_paid|indian_currency }}
                             </div>
                         </td>
 
                         <!-- PENDING -->
                         <td>
                             <span class="pending-amount {% if project.yet_to_receive > 0 %}has-pending{% endif %}">
-                                ₹{{ project.yet_to_receive }}
+                                ₹{{ project.yet_to_receive|indian_currency }}
                             </span>
                         </td>
 
