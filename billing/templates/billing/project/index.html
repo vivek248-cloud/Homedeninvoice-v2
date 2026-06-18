@@ -174,7 +174,7 @@
                         <th class="ps-4">
                             <div class="th-inner">Project & Client</div>
                         </th>
-                        <th><div class="th-inner">Budget</div></th>
+                        {% comment %} <th><div class="th-inner">Budget</div></th> {% endcomment %}
                         <th><div class="th-inner">Spent</div></th>
                         <th><div class="th-inner">Collected</div></th>
                         <th><div class="th-inner">Pending</div></th>
@@ -214,9 +214,9 @@
                         </td>
 
                         <!-- BUDGET -->
-                        <td>
+                        {% comment %} <td>
                             <span class="money-text">₹{{ project.budget }}</span>
-                        </td>
+                        </td> {% endcomment %}
 
                         <!-- SPENT -->
                         <td>

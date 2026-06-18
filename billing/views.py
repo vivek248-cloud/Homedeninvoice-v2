@@ -979,39 +979,56 @@ def should_clear_invoices(project):
 
 
 # 📌 Project Update
+from decimal import Decimal, InvalidOperation
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import Project, Client
-from .utils import delete_project_invoices   # if helper is in utils.py
+from django.contrib import messages
 
 def project_update(request, pk):
 
-    project = get_object_or_404(Project, pk=pk)
+    project = get_object_or_404(
+        Project,
+        pk=pk
+    )
+
     clients = Client.objects.all()
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
-        project.client_id = request.POST.get('client')
-        project.name = request.POST.get('name')
-        project.budget = request.POST.get('budget')
-        project.status = request.POST.get('status')
+        project.client_id = request.POST.get("client")
+        project.name = request.POST.get("name")
+
+        try:
+            project.budget = Decimal(
+                request.POST.get("budget", "0")
+            )
+        except InvalidOperation:
+            project.budget = Decimal("0")
+
+        project.status = request.POST.get("status")
 
         project.save()
 
         # ==================================
-        # DELETE ALL PROJECT INVOICES
-        # WHEN PROJECT IS COMPLETED
+        # DELETE PROJECT INVOICES
         # ==================================
-    if should_clear_invoices(project):
-        delete_project_invoices(project)
+        if should_clear_invoices(project):
+            delete_project_invoices(project)
 
-        return redirect('project_list')
+        messages.success(
+            request,
+            "Project updated successfully."
+        )
+
+        return redirect(
+            "project_list"
+        )
 
     return render(
         request,
-        'billing/project/update.html',
+        "billing/project/update.html",
         {
-            'project': project,
-            'clients': clients
+            "project": project,
+            "clients": clients
         }
     )
 
@@ -1649,12 +1666,22 @@ def check_duplicate_spend(request):
 from decimal import Decimal, InvalidOperation
 from django.contrib import messages
 from django.shortcuts import render, redirect
-from .models import Spend, Project, FloorType, RoomType, FullSemi
+
+from .models import (
+    Spend,
+    Project,
+    FloorType,
+    RoomType,
+    FullSemi
+)
 
 
 def spend_create(request):
 
-    projects = Project.objects.select_related('client').all()
+    projects = Project.objects.select_related(
+        "client"
+    ).all()
+
     floors = FloorType.objects.all()
     rooms = RoomType.objects.all()
     fullsemis = FullSemi.objects.all()
@@ -1664,7 +1691,10 @@ def spend_create(request):
         project_id = request.POST.get("project")
 
         if not project_id:
-            messages.error(request, "Please select a project.")
+            messages.error(
+                request,
+                "Please select a project."
+            )
             return redirect("spend_create")
 
         floors_list = request.POST.getlist("floor[]")
@@ -1680,9 +1710,7 @@ def spend_create(request):
 
         units = request.POST.getlist("unit[]")
         rates = request.POST.getlist("rate[]")
-
         qtys = request.POST.getlist("qty[]")
-        totals = request.POST.getlist("total_amount[]")
 
         rows = []
 
@@ -1692,12 +1720,36 @@ def spend_create(request):
                 continue
 
             try:
-                length = Decimal(lengths[i]) if lengths[i] else None
-                width = Decimal(widths[i]) if widths[i] else None
-                area = Decimal(areas[i]) if areas[i] else None
-                rate = Decimal(rates[i]) if rates[i] else None
-                qty = Decimal(qtys[i]) if qtys[i] else Decimal("1")
-                
+
+                length = (
+                    Decimal(lengths[i])
+                    if lengths[i]
+                    else None
+                )
+
+                width = (
+                    Decimal(widths[i])
+                    if widths[i]
+                    else None
+                )
+
+                area = (
+                    Decimal(areas[i])
+                    if areas[i]
+                    else None
+                )
+
+                rate = (
+                    Decimal(rates[i])
+                    if rates[i]
+                    else None
+                )
+
+                qty = (
+                    Decimal(qtys[i])
+                    if qtys[i]
+                    else Decimal("1")
+                )
 
             except InvalidOperation:
                 continue
@@ -1716,27 +1768,32 @@ def spend_create(request):
                     unit=units[i] if units else "sqft",
                     rate=rate,
                     qty=qty,
-                    
                 )
             )
 
         if rows:
             Spend.objects.bulk_create(rows)
 
-        # update project budget
-        project = Project.objects.get(id=project_id)
-        project.budget += sum(r.total_amount for r in rows if r.total_amount)
-        project.save()
+        messages.success(
+            request,
+            "Spend entries created successfully."
+        )
 
-        messages.success(request, "Spend entries created successfully.")
-        return redirect("spend_list")
+        return redirect(
+            "spend_list"
+        )
 
-    return render(request, "billing/spend/create.html", {
-        "projects": projects,
-        "floors": floors,
-        "rooms": rooms,
-        "fullsemis": fullsemis
-    })
+    return render(
+        request,
+        "billing/spend/create.html",
+        {
+            "projects": projects,
+            "floors": floors,
+            "rooms": rooms,
+            "fullsemis": fullsemis,
+        }
+    )
+
 
 
 
@@ -1751,12 +1808,13 @@ def spend_create(request):
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
-from .models import Spend, Project, FloorType, RoomType, FullSemi
-
 
 def spend_update(request, pk):
 
-    spend = get_object_or_404(Spend, pk=pk)
+    spend = get_object_or_404(
+        Spend,
+        pk=pk
+    )
 
     projects = Project.objects.select_related("client").all()
     floors = FloorType.objects.all()
@@ -1768,11 +1826,14 @@ def spend_update(request, pk):
         project_id = request.POST.get("project")
 
         if not project_id:
-            messages.error(request, "Project is required.")
-            return redirect("spend_update", pk=pk)
-
-        # 🔹 Calculate OLD spend total for this record
-        old_total = spend.total_amount or Decimal("0")
+            messages.error(
+                request,
+                "Project is required."
+            )
+            return redirect(
+                "spend_update",
+                pk=pk
+            )
 
         floors_list = request.POST.getlist("floor[]")
         rooms_list = request.POST.getlist("room[]")
@@ -1787,7 +1848,6 @@ def spend_update(request, pk):
 
         rate_list = request.POST.getlist("rate[]")
         qty_list = request.POST.getlist("qty[]")
-        total_list = request.POST.getlist("total_amount[]")
 
         unit_list = request.POST.getlist("unit[]")
 
@@ -1799,11 +1859,35 @@ def spend_update(request, pk):
                 continue
 
             try:
-                length = Decimal(length_list[i]) if length_list[i] else None
-                width = Decimal(width_list[i]) if width_list[i] else None
-                area = Decimal(area_list[i]) if area_list[i] else None
-                rate = Decimal(rate_list[i]) if rate_list[i] else None
-                qty = Decimal(qty_list[i]) if qty_list[i] else Decimal("1")
+                length = (
+                    Decimal(length_list[i])
+                    if length_list[i]
+                    else None
+                )
+
+                width = (
+                    Decimal(width_list[i])
+                    if width_list[i]
+                    else None
+                )
+
+                area = (
+                    Decimal(area_list[i])
+                    if area_list[i]
+                    else None
+                )
+
+                rate = (
+                    Decimal(rate_list[i])
+                    if rate_list[i]
+                    else None
+                )
+
+                qty = (
+                    Decimal(qty_list[i])
+                    if qty_list[i]
+                    else Decimal("1")
+                )
 
             except (InvalidOperation, IndexError):
                 continue
@@ -1825,22 +1909,18 @@ def spend_update(request, pk):
                 )
             )
 
-        # 🔹 Delete old spend row
-        Spend.objects.filter(pk=pk).delete()
+        # Delete original spend
+        spend.delete()
 
-        # 🔹 Create new rows
-        Spend.objects.bulk_create(rows)
+        # Create updated rows
+        if rows:
+            Spend.objects.bulk_create(rows)
 
-        # 🔹 Calculate new spend total
-        new_total = sum(r.total_amount for r in rows if r.total_amount)
+        messages.success(
+            request,
+            "Spend entries updated successfully."
+        )
 
-        project = Project.objects.get(id=project_id)
-
-        # 🔹 Correct budget adjustment
-        project.budget = project.budget - old_total + new_total
-        project.save()
-
-        messages.success(request, "Spend entries updated successfully.")
         return redirect("spend_list")
 
     return render(
@@ -1858,25 +1938,36 @@ def spend_update(request, pk):
 
 
 # 📌 Spend Delete
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+
 def spend_delete(request, pk):
-    spend = get_object_or_404(Spend, pk=pk)
 
-    if request.method == 'POST':
+    spend = get_object_or_404(
+        Spend,
+        pk=pk
+    )
 
-        project = spend.project
-        amount = spend.total_amount
+    if request.method == "POST":
 
         spend.delete()
 
-        # 🔥 Subtract from budget
-        project.budget -= amount
-        project.save()
+        messages.success(
+            request,
+            "Spend deleted successfully."
+        )
 
-        messages.success(request, "Spend deleted successfully.")
-        return redirect('spend_list')
+        return redirect(
+            "spend_list"
+        )
 
-    return render(request, 'billing/spend/delete.html', {'spend': spend})
-
+    return render(
+        request,
+        "billing/spend/delete.html",
+        {
+            "spend": spend
+        }
+    )
 
 
 

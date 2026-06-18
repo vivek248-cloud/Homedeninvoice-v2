@@ -91,6 +91,11 @@ class Image(models.Model):
 
 
 
+from decimal import Decimal, ROUND_HALF_UP
+from django.db import models
+from django.db.models import Sum
+
+
 class Project(models.Model):
 
     STATUS_CHOICES = (
@@ -99,32 +104,46 @@ class Project(models.Model):
         ('hold', 'On Hold'),
     )
 
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='projects')
+    client = models.ForeignKey(
+        Client,
+        on_delete=models.CASCADE,
+        related_name='projects'
+    )
+
     name = models.CharField(max_length=200)
-    budget = models.DecimalField(max_digits=12, decimal_places=2)  # Contract Value
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ongoing')
-    created_at = models.DateTimeField(auto_now_add=True)
+
+    # Contract Value
+    budget = models.DecimalField(
+        max_digits=12,
+        decimal_places=2
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='ongoing'
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
 
     @property
     def total_paid(self):
-        return self.payments.aggregate(
-            total=Sum('amount')
-        )['total'] or Decimal("0.0")
+        return (
+            self.payments.aggregate(
+                total=Sum('amount')
+            )['total']
+            or Decimal("0.00")
+        )
 
     @property
     def total_spent(self):
 
-        total = self.spends.aggregate(
-            total=Sum(
-                ExpressionWrapper(
-                    F('qty') * F('rate') * F('length') * F('width'),
-                    output_field=DecimalField(
-                        max_digits=18,
-                        decimal_places=2
-                    )
-                )
-            )
-        )['total'] or Decimal("0.00")
+        total = sum(
+            spend.total_amount
+            for spend in self.spends.all()
+        )
 
         return total.quantize(
             Decimal("1"),
@@ -132,15 +151,27 @@ class Project(models.Model):
         )
 
     @property
+    def remaining_budget(self):
+        return (
+            self.budget - self.total_spent
+        )
+
+    @property
     def yet_to_receive(self):
-        return self.budget - self.total_paid
+
+        balance = self.total_spent - self.total_paid
+
+        return balance if balance > 0 else Decimal("0.00")
 
     @property
     def profit(self):
-        return self.budget - self.total_spent
+        return (
+            self.total_paid - self.total_spent
+        )
 
     def __str__(self):
         return f"{self.name} - {self.client.name}"
+    
 
 
 
@@ -168,50 +199,124 @@ class FullSemi(models.Model):
     def __str__(self):
         return f"{self.name} - {self.rate}"
 
+def check_project_invoice_cleanup(project):
+
+    if project.status == "completed":
+        delete_project_invoices(project)
+        return
+
+    if project.total_paid >= project.total_spent:
+        delete_project_invoices(project)
 
 
 
 from decimal import Decimal
 
+from decimal import Decimal, ROUND_HALF_UP
+
 class Spend(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='spends')
-    floor = models.ForeignKey(FloorType, on_delete=models.SET_NULL, null=True, blank=True)
-    room = models.ForeignKey(RoomType, on_delete=models.SET_NULL, null=True, blank=True)
-    fullsemi = models.ForeignKey(FullSemi, on_delete=models.SET_NULL, null=True, blank=True)
 
-    # 🔥 NEW COLUMN
-    elements = models.CharField(max_length=200, null=True, blank=True)
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='spends'
+    )
 
-    description = models.TextField(blank=True, null=True)
+    floor = models.ForeignKey(
+        FloorType,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
 
-    length = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    width = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    area = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    room = models.ForeignKey(
+        RoomType,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
 
-    unit = models.CharField(max_length=50, default="sqft")
+    fullsemi = models.ForeignKey(
+        FullSemi,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
 
-    rate = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    elements = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True
+    )
 
-    qty = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    description = models.TextField(
+        blank=True,
+        null=True
+    )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    length = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    width = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    area = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    unit = models.CharField(
+        max_length=50,
+        default="sqft"
+    )
+
+    rate = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    qty = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=1
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
 
     def save(self, *args, **kwargs):
 
-        # Calculate area
         if self.length is not None and self.width is not None:
             self.area = self.length * self.width
         else:
             self.area = None
 
-        # Auto assign rate from FullSemi
         if self.fullsemi:
             self.rate = self.fullsemi.rate
 
         super().save(*args, **kwargs)
 
+        # Check invoice cleanup after save
+        check_project_invoice_cleanup(
+            self.project
+        )
+
     @property
     def total_amount(self):
+
         area = self.area or Decimal("0.00")
         rate = self.rate or Decimal("0.00")
         qty = self.qty or Decimal("0.00")
@@ -221,11 +326,24 @@ class Spend(models.Model):
         else:
             total = rate * qty
 
-        return total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return total.quantize(
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP
+        )
 
     def __str__(self):
-        type_name = self.fullsemi.name if self.fullsemi else "No Type"
+
+        type_name = (
+            self.fullsemi.name
+            if self.fullsemi
+            else "No Type"
+        )
+
         return f"{self.project.name} - {type_name}"
+
+
+
+
 
 
 
@@ -253,11 +371,18 @@ class Payment(models.Model):
         default="percent"
     )
 
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='payments')
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
 
     amount = models.DecimalField(max_digits=12, decimal_places=2)
 
-    payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODES)
+    payment_mode = models.CharField(
+        max_length=20,
+        choices=PAYMENT_MODES
+    )
 
     invoice_token = models.UUIDField(
         editable=False,
@@ -271,14 +396,24 @@ class Payment(models.Model):
         null=True
     )
 
-    invoice_locked = models.BooleanField(
-        default=False
-    )
-    invoice_archived = models.BooleanField(
-        default=False
-    )
-    
+    invoice_locked = models.BooleanField(default=False)
+
+    invoice_archived = models.BooleanField(default=False)
+
     date = models.DateField(auto_now_add=True)
+
+    def check_project_invoice_cleanup(self):
+
+        project = self.project
+
+        # Project completed
+        if project.status == "completed":
+            delete_project_invoices(project)
+            return
+
+        # Fully paid
+        if project.total_paid >= project.total_spent:
+            delete_project_invoices(project)
 
     def save(self, *args, **kwargs):
 
@@ -287,30 +422,11 @@ class Payment(models.Model):
 
         super().save(*args, **kwargs)
 
-        project = self.project
+        self.check_project_invoice_cleanup()
 
-        # ===================================
-        # CONDITION 1
-        # Project Completed
-        # ===================================
-
-        if project.status == "completed":
-
-            delete_project_invoices(project)
-            return
-
-        # ===================================
-        # CONDITION 2
-        # Fully Paid
-        # ===================================
-
-        if project.total_paid >= project.total_spent:
-
-            delete_project_invoices(project)
-            
-            
     def __str__(self):
         return f"{self.project.name} - {self.amount}"
+    
 
 
 
