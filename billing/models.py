@@ -89,7 +89,8 @@ class Image(models.Model):
         return self.name
 
 
-
+    from decimal import Decimal, ROUND_HALF_UP
+    from django.db.models import Sum, F, ExpressionWrapper, DecimalField
 
 from decimal import Decimal, ROUND_HALF_UP
 from django.db import models
@@ -137,16 +138,27 @@ class Project(models.Model):
             or Decimal("0.00")
         )
 
+
+
     @property
     def total_spent(self):
 
-        total = sum(
-            spend.total_amount
-            for spend in self.spends.all()
-        )
+        total = self.spends.aggregate(
+            total=Sum(
+                ExpressionWrapper(
+                    F('qty') * F('rate') * F('length') * F('width'),
+                    output_field=DecimalField(
+                        max_digits=18,
+                        decimal_places=2
+                    )
+                )
+            )
+        )['total']
+
+        total = Decimal(str(total or 0))
 
         return total.quantize(
-            Decimal("1"),
+            Decimal("0.01"),
             rounding=ROUND_HALF_UP
         )
 
