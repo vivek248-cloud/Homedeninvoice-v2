@@ -1395,6 +1395,347 @@
 .freeze-loading:hover::after {
     opacity: 1;
 }
+
+
+/* ══════════════════════════════════════
+   CTRL+CLICK MULTI-SELECT & GROUP DRAG
+══════════════════════════════════════ */
+
+/* ── Ctrl-selected row ── */
+#invoiceTbody tr.row-ctrl-selected {
+    background: rgba(99,102,241,0.05) !important;
+    outline: 2px solid rgba(99,102,241,0.35) !important;
+    outline-offset: -1px;
+    position: relative;
+    z-index: 1;
+}
+
+#invoiceTbody tr.row-ctrl-selected td:first-child::before {
+    content: "✓";
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    background: #6366f1;
+    color: #fff;
+    border-radius: 4px;
+    font-size: 0.55rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    z-index: 2;
+}
+
+/* ── Dragging state ── */
+#invoiceTbody tr.direct-dragging {
+    opacity: 0.25 !important;
+    background: rgba(99,102,241,0.04) !important;
+    outline: 2px dashed rgba(99,102,241,0.4) !important;
+    outline-offset: -1px;
+}
+
+/* ── Drop target indicators ── */
+#invoiceTbody tr.drag-over-top {
+    box-shadow: inset 0 3px 0 0 #6366f1;
+    background: rgba(99,102,241,0.025) !important;
+}
+
+#invoiceTbody tr.drag-over-bottom {
+    box-shadow: inset 0 -3px 0 0 #6366f1;
+    background: rgba(99,102,241,0.025) !important;
+}
+
+/* ── Drop indicator row ── */
+.drop-indicator-row {
+    pointer-events: none !important;
+    height: 4px !important;
+}
+
+.drop-indicator-td {
+    padding: 0 !important;
+    height: 4px !important;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        #6366f1 20%,
+        #8b5cf6 80%,
+        transparent 100%
+    ) !important;
+    border: none !important;
+    border-radius: 2px;
+    animation: dropLinePulse 1s ease infinite;
+}
+
+@keyframes dropLinePulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.55; }
+}
+
+/* ── Cursor states ── */
+#invoiceTbody tr[draggable="true"] { cursor: grab; }
+#invoiceTbody tr[draggable="true"]:active { cursor: grabbing; }
+#invoiceTbody tr button,
+#invoiceTbody tr a,
+#invoiceTbody tr input { cursor: pointer; }
+
+body.paste-group-mode #invoiceTbody tr { cursor: copy !important; }
+body.paste-group-mode #invoiceTbody tr:hover {
+    background: rgba(99,102,241,0.04) !important;
+    outline: 1.5px dashed rgba(99,102,241,0.3);
+    outline-offset: -1px;
+}
+
+/* ══════════════════════════════════════
+   GROUP SELECT BAR (Fixed Bottom)
+══════════════════════════════════════ */
+.group-select-bar {
+    position: fixed;
+    bottom: 90px;        /* above the FAB */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 18px;
+    background: #0f172a;
+    border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 16px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+    min-width: 360px;
+    max-width: 90vw;
+    animation: barSlideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+@keyframes barSlideUp {
+    from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+    to   { transform: translateX(-50%) translateY(0);   opacity: 1; }
+}
+
+.gsb-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gsb-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(99,102,241,0.15);
+    border: 1px solid rgba(99,102,241,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: #6366f1;
+    flex-shrink: 0;
+}
+
+.gsb-count {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.01em;
+}
+
+.gsb-count span {
+    color: #818cf8;
+    font-size: 1rem;
+}
+
+.gsb-hint {
+    font-size: 0.62rem;
+    color: rgba(255,255,255,0.35);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.gsb-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gsb-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 13px;
+    border-radius: 9px;
+    border: none;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.gsb-copy {
+    background: rgba(99,102,241,0.15);
+    color: #818cf8;
+    border: 1px solid rgba(99,102,241,0.2);
+}
+
+.gsb-copy:hover {
+    background: rgba(99,102,241,0.25);
+    color: #a5b4fc;
+    border-color: rgba(99,102,241,0.35);
+}
+
+.gsb-delete {
+    background: rgba(244,63,94,0.12);
+    color: #fb7185;
+    border: 1px solid rgba(244,63,94,0.2);
+}
+
+.gsb-delete:hover {
+    background: rgba(244,63,94,0.22);
+    color: #fda4af;
+    border-color: rgba(244,63,94,0.35);
+}
+
+.gsb-clear {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.45);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.gsb-clear:hover {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+}
+
+/* ══════════════════════════════════════
+   FLOATING AMOUNT TOTAL (updated)
+══════════════════════════════════════ */
+.selected-total-display {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 1050;
+    background: #0f172a;
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 14px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+    display: none;
+    animation: barSlideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.std-inner { padding: 12px 16px; }
+
+.std-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 4px;
+}
+
+.std-count {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.std-clear {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.25);
+    cursor: pointer;
+    font-size: 0.65rem;
+    padding: 2px 4px;
+    transition: color 0.2s;
+}
+
+.std-clear:hover { color: #f43f5e; }
+
+.std-amount {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #10b981;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+.std-hint {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.std-hint span {
+    font-size: 0.58rem;
+    color: rgba(255,255,255,0.25);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+kbd {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 5px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 4px;
+    font-size: 0.56rem;
+    font-family: inherit;
+    color: rgba(255,255,255,0.5);
+    font-weight: 700;
+}
+
+/* ══════════════════════════════════════
+   PASTE FLASH
+══════════════════════════════════════ */
+@keyframes pasteFlash {
+    0%   { background: rgba(99,102,241,0.14) !important; }
+    100% { background: transparent !important; }
+}
+
+.paste-flash {
+    animation: pasteFlash 0.75s ease forwards !important;
+}
+
+/* ══════════════════════════════════════
+   PASTE TOOLBAR (group variant)
+══════════════════════════════════════ */
+.paste-group-toolbar {
+    border-color: rgba(99,102,241,0.3) !important;
+    background: linear-gradient(135deg, #0f172a, #1e1b4b) !important;
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 640px) {
+    .group-select-bar {
+        bottom: 16px;
+        min-width: unset;
+        width: calc(100vw - 32px);
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .gsb-actions { width: 100%; justify-content: flex-end; }
+
+    .selected-total-display {
+        bottom: auto;
+        top: 80px;
+        left: 16px;
+        right: 16px;
+    }
+}
     </style>
 </head>
 
@@ -1912,7 +2253,6 @@ window.copyRow = function (btn) {
     window._copiedRow = row.cloneNode(true);
     window._pasteMode = true;
     document.body.classList.add('paste-mode');
-
     row.classList.add('row-is-copied');
 
     const label = (function () {
@@ -1939,71 +2279,254 @@ window.deleteRow = function (btn) {
 
     Swal.fire({
         title: 'Delete Row?',
-        text: 'This row will be removed.',
+        text: 'This row will be removed from the invoice.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Delete',
-        cancelButtonText: 'Cancel'
+        confirmButtonColor: '#f43f5e',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: '<i class="bi bi-trash3 me-1"></i> Delete',
+        cancelButtonText: 'Cancel',
+        customClass: { popup: 'rounded-4' }
     }).then(result => {
         if (result.isConfirmed) {
-            row.remove();
-            Swal.fire({
-                toast: true, position: 'top-end', icon: 'success',
-                title: 'Row deleted', timer: 1200, showConfirmButton: false
-            });
+            row.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(12px)';
+            setTimeout(() => {
+                row.remove();
+                Swal.fire({
+                    toast: true, position: 'top-end', icon: 'success',
+                    title: 'Row deleted', timer: 1200, showConfirmButton: false
+                });
+            }, 250);
         }
     });
 };
 </script>
 
 <!-- ── MAIN INVOICE INTERACTIONS ── -->
+<!-- ── MAIN INVOICE INTERACTIONS ── -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const tableBody = document.getElementById('invoiceTbody');
 
-    let selectedRows = [];
-    let undoStack = [];
-    let redoStack = [];
-    const HISTORY_LIMIT = 30;
+    /* ═══════════════════════════════════
+       STATE
+    ═══════════════════════════════════ */
+    let undoStack   = [];
+    let redoStack   = [];
+    const HISTORY_LIMIT = 40;
     let selectedTds = [];
 
-    window._copiedRow = null;
-    window._pasteMode = false;
+    /* Multi-select group drag state */
+    let selectedRows    = new Set();  /* ctrl+clicked rows */
+    let dragSrc         = null;       /* single-row drag source */
+    let isDragGroup     = false;      /* dragging a group */
+    let groupDragRows   = [];         /* ordered array of group rows */
+    let dragOver        = null;
+    let dropAbove       = true;
+
+    window._copiedRow    = null;
+    window._pasteMode    = false;
     window._pasteToolbar = null;
     window._insertionPoint = null;
 
-    const clipboardIndicator = document.getElementById('clipboardIndicator');
-    const clipboardText = document.getElementById('clipboardText');
-
-    // Floating total display
+    /* ═══════════════════════════════════
+       FLOATING AMOUNT TOTAL
+    ═══════════════════════════════════ */
     const totalDisplay = document.createElement('div');
     totalDisplay.id = 'selectedTotalDisplay';
     totalDisplay.className = 'selected-total-display';
     totalDisplay.style.display = 'none';
     totalDisplay.innerHTML = `
-        <div class="count">0 items selected</div>
-        <div class="amount">₹ 0.00</div>
-        <div class="hint">Backspace: Remove last &nbsp;|&nbsp; Ctrl+Backspace: Clear all</div>
+        <div class="std-inner">
+            <div class="std-top">
+                <span class="std-count">0 items</span>
+                <button class="std-clear" title="Clear selection (Esc)">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="std-amount">₹ 0.00</div>
+            <div class="std-hint">
+                <span><kbd>Esc</kbd> clear</span>
+                <span><kbd>⌫</kbd> remove last</span>
+                <span><kbd>Ctrl+⌫</kbd> clear all</span>
+            </div>
+        </div>
     `;
     document.body.appendChild(totalDisplay);
 
-    // ── Helpers ──
+    totalDisplay.querySelector('.std-clear').addEventListener('click', () => {
+        clearAmountSelection();
+    });
+
     function updateSelectedTotal() {
         let total = 0;
         selectedTds.forEach(td => {
-            const val = parseFloat(td.dataset.amount) || parseFloat(td.textContent.replace(/[₹,\s]/g, '')) || 0;
+            const val = parseFloat(td.dataset.amount)
+                     || parseFloat(td.textContent.replace(/[₹,\s]/g, ''))
+                     || 0;
             total += val;
         });
-        totalDisplay.querySelector('.count').textContent = `${selectedTds.length} item${selectedTds.length !== 1 ? 's' : ''} selected`;
-        totalDisplay.querySelector('.amount').textContent = `₹ ${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-        totalDisplay.style.display = selectedTds.length > 0 ? 'block' : 'none';
+        totalDisplay.querySelector('.std-count').textContent =
+            `${selectedTds.length} item${selectedTds.length !== 1 ? 's' : ''} selected`;
+        totalDisplay.querySelector('.std-amount').textContent =
+            `₹ ${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+        totalDisplay.style.display = selectedTds.length > 0 ? 'flex' : 'none';
     }
 
+    function clearAmountSelection() {
+        selectedTds.forEach(td => td.classList.remove('td-selected'));
+        selectedTds = [];
+        updateSelectedTotal();
+    }
+
+    /* ═══════════════════════════════════
+       MULTI-SELECT ROW GROUP (Ctrl+Click)
+    ═══════════════════════════════════ */
+
+    /* Group selection bar (fixed bottom) */
+    const groupBar = document.createElement('div');
+    groupBar.id = 'groupSelectBar';
+    groupBar.className = 'group-select-bar no-print';
+    groupBar.style.display = 'none';
+    groupBar.innerHTML = `
+        <div class="gsb-left">
+            <div class="gsb-icon"><i class="bi bi-collection-fill"></i></div>
+            <div>
+                <div class="gsb-count"><span id="gsbCount">0</span> rows selected</div>
+                <div class="gsb-hint">Drag any selected row to move the entire group</div>
+            </div>
+        </div>
+        <div class="gsb-actions">
+            <button class="gsb-btn gsb-copy" id="gsbCopyBtn" title="Copy group">
+                <i class="bi bi-files"></i> Copy Group
+            </button>
+            <button class="gsb-btn gsb-delete" id="gsbDeleteBtn" title="Delete group">
+                <i class="bi bi-trash3"></i> Delete
+            </button>
+            <button class="gsb-btn gsb-clear" id="gsbClearBtn" title="Clear selection">
+                <i class="bi bi-x-lg"></i> Clear
+            </button>
+        </div>
+    `;
+    document.body.appendChild(groupBar);
+
+    function updateGroupBar() {
+        const count = selectedRows.size;
+        if (count === 0) {
+            groupBar.style.display = 'none';
+            return;
+        }
+        groupBar.style.display = 'flex';
+        document.getElementById('gsbCount').textContent = count;
+    }
+
+    function clearGroupSelection() {
+        selectedRows.forEach(r => {
+            r.classList.remove('row-ctrl-selected');
+        });
+        selectedRows.clear();
+        updateGroupBar();
+    }
+
+    /* Group Bar Buttons */
+    document.getElementById('gsbClearBtn').addEventListener('click', clearGroupSelection);
+
+    document.getElementById('gsbDeleteBtn').addEventListener('click', () => {
+        if (selectedRows.size === 0) return;
+        Swal.fire({
+            title: `Delete ${selectedRows.size} row${selectedRows.size !== 1 ? 's' : ''}?`,
+            text: 'Selected rows will be permanently removed.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f43f5e',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: '<i class="bi bi-trash3 me-1"></i> Delete All',
+            cancelButtonText: 'Cancel',
+            customClass: { popup: 'rounded-4' }
+        }).then(result => {
+            if (result.isConfirmed) {
+                saveState();
+                selectedRows.forEach(r => {
+                    r.style.transition = 'opacity 0.2s, transform 0.2s';
+                    r.style.opacity = '0';
+                    r.style.transform = 'translateX(10px)';
+                    setTimeout(() => r.remove(), 220);
+                });
+                selectedRows.clear();
+                updateGroupBar();
+                Swal.fire({
+                    toast: true, position: 'top-end', icon: 'success',
+                    title: 'Rows deleted', showConfirmButton: false, timer: 1200
+                });
+            }
+        });
+    });
+
+    document.getElementById('gsbCopyBtn').addEventListener('click', () => {
+        if (selectedRows.size === 0) return;
+        /* Copy all selected rows as a group */
+        const orderedRows = Array.from(tableBody.querySelectorAll('tr'))
+            .filter(r => selectedRows.has(r));
+        window._copiedGroup = orderedRows.map(r => r.cloneNode(true));
+        window._pasteGroupMode = true;
+        document.body.classList.add('paste-group-mode');
+
+        clearGroupSelection();
+        showPasteGroupToolbar(orderedRows.length);
+    });
+
+    /* ═══════════════════════════════════
+       GROUP PASTE TOOLBAR
+    ═══════════════════════════════════ */
+    window._copiedGroup    = null;
+    window._pasteGroupMode = false;
+    window._groupToolbar   = null;
+
+    function showPasteGroupToolbar(count) {
+        if (window._groupToolbar) window._groupToolbar.remove();
+        const tb = document.createElement('div');
+        tb.className = 'paste-toolbar no-print paste-group-toolbar';
+        tb.innerHTML = `
+            <div class="paste-toolbar-label">
+                <i class="bi bi-files" style="font-size:1rem;color:#6366f1;"></i>
+                <span><strong>${count} rows</strong> copied as group</span>
+            </div>
+            <button class="btn-toolbar-paste">Click any row to paste group after it</button>
+            <button class="btn-toolbar-cancel" id="groupCancelBtn">
+                <i class="bi bi-x-lg"></i> Cancel
+            </button>
+        `;
+        document.body.appendChild(tb);
+        window._groupToolbar = tb;
+
+        document.getElementById('groupCancelBtn').addEventListener('click', () => {
+            clearGroupPaste();
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'info',
+                title: 'Group copy cancelled', showConfirmButton: false, timer: 1000
+            });
+        });
+    }
+
+    function clearGroupPaste() {
+        window._copiedGroup    = null;
+        window._pasteGroupMode = false;
+        document.body.classList.remove('paste-group-mode');
+        if (window._groupToolbar) {
+            window._groupToolbar.remove();
+            window._groupToolbar = null;
+        }
+    }
+
+    /* ═══════════════════════════════════
+       UNDO / REDO
+    ═══════════════════════════════════ */
     window.saveState = function () {
-        const rows = Array.from(tableBody.children);
-        undoStack.push(rows.map(r => r.cloneNode(true)));
+        undoStack.push(
+            Array.from(tableBody.children).map(r => r.cloneNode(true))
+        );
         if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
         redoStack = [];
     };
@@ -2012,26 +2535,34 @@ document.addEventListener("DOMContentLoaded", function () {
         if (from.length === 0) return;
         to.push(Array.from(tableBody.children).map(r => r.cloneNode(true)));
         const state = from.pop();
-        tableBody.innerHTML = "";
+        tableBody.innerHTML = '';
         state.forEach(row => tableBody.appendChild(row.cloneNode(true)));
+        attachDirectDrag();
         clearAll();
+        Swal.fire({
+            toast: true, position: 'top-end', icon: 'info',
+            title: to === undoStack ? 'Undone' : 'Redone',
+            showConfirmButton: false, timer: 900
+        });
     }
 
     function clearAll() {
-        document.querySelectorAll('.td-selected').forEach(td => td.classList.remove('td-selected'));
-        selectedTds = [];
-        updateSelectedTotal();
-        document.querySelectorAll('.selected, .row-selected-for-copy').forEach(r => r.classList.remove('selected', 'row-selected-for-copy'));
-        selectedRows = [];
+        clearAmountSelection();
+        clearGroupSelection();
+        if (window._pasteMode) { clearCopiedStateGlobal(); removeToolbarGlobal(); }
+        if (window._pasteGroupMode) { clearGroupPaste(); }
         if (window._insertionPoint) {
             window._insertionPoint.classList.remove('insert-point');
             window._insertionPoint = null;
         }
     }
 
-    // ── Global paste toolbar helpers ──
+    /* ═══════════════════════════════════
+       SINGLE-ROW COPY/PASTE HELPERS
+    ═══════════════════════════════════ */
     window.clearCopiedStateGlobal = function () {
-        document.querySelectorAll('.row-is-copied').forEach(r => r.classList.remove('row-is-copied'));
+        document.querySelectorAll('.row-is-copied')
+                .forEach(r => r.classList.remove('row-is-copied'));
         window._copiedRow = null;
         window._pasteMode = false;
         document.body.classList.remove('paste-mode');
@@ -2050,7 +2581,8 @@ document.addEventListener("DOMContentLoaded", function () {
         tb.className = 'paste-toolbar no-print';
         tb.innerHTML = `
             <div class="paste-toolbar-label">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5">
                     <rect x="9" y="9" width="13" height="13" rx="2"/>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                 </svg>
@@ -2058,154 +2590,505 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
             <button class="btn-toolbar-paste">Click any row to paste after it</button>
             <button class="btn-toolbar-cancel" id="tbCancelBtn">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
                 Cancel
             </button>
         `;
         document.body.appendChild(tb);
         window._pasteToolbar = tb;
-
         document.getElementById('tbCancelBtn').addEventListener('click', () => {
             clearCopiedStateGlobal();
             removeToolbarGlobal();
-            Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Copy cancelled', showConfirmButton: false, timer: 1000 });
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'info',
+                title: 'Copy cancelled', showConfirmButton: false, timer: 1000
+            });
         });
     };
 
-    // ── Paste click on table ──
-    function handlePasteClick(e) {
-        if (!window._pasteMode || !window._copiedRow) return;
-        if (e.target.closest('.btn-row-copy, .btn-toolbar-cancel, .btn-toolbar-paste, .btn-row-delete')) return;
+    /* ═══════════════════════════════════
+       TABLE CLICK DELEGATION
+    ═══════════════════════════════════ */
+    tableBody.addEventListener('click', function (e) {
+
+        /* ── Group paste mode ── */
+        if (window._pasteGroupMode) {
+            if (e.target.closest('#groupCancelBtn, .btn-toolbar-cancel')) return;
+            const targetRow = e.target.closest('tr');
+            if (!targetRow || !tableBody.contains(targetRow)) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            saveState();
+            const clones = window._copiedGroup.map(r => r.cloneNode(true));
+            let insertAfter = targetRow;
+            clones.forEach(clone => {
+                if (insertAfter.nextSibling) {
+                    tableBody.insertBefore(clone, insertAfter.nextSibling);
+                } else {
+                    tableBody.appendChild(clone);
+                }
+                flashRow(clone);
+                insertAfter = clone;
+            });
+            attachDirectDrag();
+            clearGroupPaste();
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'success',
+                title: `${clones.length} rows pasted!`,
+                showConfirmButton: false, timer: 1400
+            });
+            return;
+        }
+
+        /* ── Single paste mode ── */
+        if (window._pasteMode) {
+            handleSinglePaste(e);
+            return;
+        }
+
+        /* ── Ctrl + Click on amount TD ── */
+        const amountTd = e.target.closest('.selectable-amount');
+        if (amountTd && e.ctrlKey) {
+            e.preventDefault();
+            amountTd.classList.toggle('td-selected');
+            if (amountTd.classList.contains('td-selected')) {
+                selectedTds.push(amountTd);
+            } else {
+                selectedTds = selectedTds.filter(td => td !== amountTd);
+            }
+            updateSelectedTotal();
+            return;
+        }
+
+        /* ── Ctrl + Click on ROW (multi-select group) ── */
+        if (e.ctrlKey || e.metaKey) {
+            const row = e.target.closest('tr');
+            /* Don't select if clicking a button */
+            if (e.target.closest('button, a, input, select')) return;
+            if (!row || !tableBody.contains(row)) return;
+
+            e.preventDefault();
+
+            if (selectedRows.has(row)) {
+                selectedRows.delete(row);
+                row.classList.remove('row-ctrl-selected');
+            } else {
+                selectedRows.add(row);
+                row.classList.add('row-ctrl-selected');
+            }
+            updateGroupBar();
+            return;
+        }
+
+        /* ── Regular click clears group selection ── */
+        if (selectedRows.size > 0 && !e.target.closest('.group-select-bar')) {
+            const clickedBtn = e.target.closest('button, a');
+            if (!clickedBtn) clearGroupSelection();
+        }
+    });
+
+    /* ═══════════════════════════════════
+       SINGLE PASTE HANDLER
+    ═══════════════════════════════════ */
+    function handleSinglePaste(e) {
+        if (!window._copiedRow) return;
+        if (e.target.closest(
+            '.btn-row-copy, .btn-toolbar-cancel, .btn-toolbar-paste, .btn-row-delete'
+        )) return;
         const targetRow = e.target.closest('tr');
         if (!targetRow || !tableBody.contains(targetRow)) return;
         e.preventDefault();
         e.stopPropagation();
 
+        saveState();
         const newRow = window._copiedRow.cloneNode(true);
         if (targetRow.nextSibling) {
             tableBody.insertBefore(newRow, targetRow.nextSibling);
         } else {
             tableBody.appendChild(newRow);
         }
-
-        newRow.classList.remove('paste-flash');
-        void newRow.offsetWidth;
-        newRow.classList.add('paste-flash');
-        newRow.addEventListener('animationend', () => newRow.classList.remove('paste-flash'), { once: true });
-
+        flashRow(newRow);
+        attachDirectDrag();
         clearCopiedStateGlobal();
         removeToolbarGlobal();
-
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Row pasted!', showConfirmButton: false, timer: 1200 });
+        Swal.fire({
+            toast: true, position: 'top-end', icon: 'success',
+            title: 'Row pasted!', showConfirmButton: false, timer: 1200
+        });
     }
 
-    tableBody.addEventListener('click', function (e) {
-        // Handle paste mode
-        if (window._pasteMode) { handlePasteClick(e); return; }
+    /* ═══════════════════════════════════
+       DIRECT DRAG-AND-DROP
+       Supports single rows AND groups
+    ═══════════════════════════════════ */
+    let dropIndicator = null;
 
-        // CTRL + Click on amount TD
-        const amountTd = e.target.closest('.selectable-amount');
-        if (amountTd && e.ctrlKey) {
+    function createDropIndicator() {
+        const tr = document.createElement('tr');
+        tr.id = 'dropIndicatorRow';
+        tr.className = 'drop-indicator-row';
+        const td = document.createElement('td');
+        td.colSpan = 99;
+        td.className = 'drop-indicator-td';
+        tr.appendChild(td);
+        return tr;
+    }
+
+    function attachDirectDrag() {
+        /* Clean up old listeners by replacing rows */
+        tableBody.querySelectorAll('tr').forEach(row => {
+            const fresh = row.cloneNode(true);
+            row.parentNode?.replaceChild(fresh, row);
+        });
+
+        /* Now attach to fresh nodes */
+        tableBody.querySelectorAll('tr').forEach(row => {
+            row.draggable = true;
+            row.addEventListener('dragstart',  onDragStart,  { passive: false });
+            row.addEventListener('dragend',    onDragEnd);
+            row.addEventListener('dragover',   onDragOver,   { passive: false });
+            row.addEventListener('dragleave',  onDragLeave);
+            row.addEventListener('drop',       onDrop,       { passive: false });
+        });
+    }
+
+    function onDragStart(e) {
+        if (e.target.closest('button, a, input, select')) {
             e.preventDefault();
-            amountTd.classList.toggle('td-selected');
-            if (amountTd.classList.contains('td-selected')) selectedTds.push(amountTd);
-            else selectedTds = selectedTds.filter(td => td !== amountTd);
-            updateSelectedTotal();
             return;
         }
 
-        // Row selection
-        const row = e.target.closest('.selectable');
-        if (!row) return;
-        if (amountTd && !e.ctrlKey) return;
+        dragSrc  = this;
 
-        if (e.ctrlKey) {
-            e.preventDefault();
-            row.classList.toggle('row-selected-for-copy');
-            if (row.classList.contains('row-selected-for-copy')) selectedRows.push(row);
-            else selectedRows = selectedRows.filter(r => r !== row);
+        /* Is this row part of a ctrl-selected group? */
+        if (selectedRows.size > 1 && selectedRows.has(this)) {
+            isDragGroup  = true;
+            /* Get rows in DOM order */
+            groupDragRows = Array.from(tableBody.querySelectorAll('tr'))
+                                .filter(r => selectedRows.has(r));
+        } else {
+            isDragGroup   = false;
+            groupDragRows = [this];
         }
-    });
 
-    // ── SortableJS on table body ──
-    new Sortable(tableBody, {
-        animation: 150,
-        ghostClass: 'dragging',
-        draggable: '.draggable-row',
-        onStart(evt) {
-            saveState();
-            if (!evt.item.classList.contains('row-selected-for-copy')) {
-                selectedRows = [evt.item];
-                evt.item.classList.add('selected');
+        saveState();
+
+        /* Custom ghost */
+        const ghost = buildGhost(groupDragRows);
+        document.body.appendChild(ghost);
+        e.dataTransfer.setDragImage(ghost, 24, 24);
+        setTimeout(() => ghost.remove(), 0);
+
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', '');
+
+        /* Visual state */
+        groupDragRows.forEach(r => r.classList.add('direct-dragging'));
+        tableBody.querySelectorAll('tr:not(.direct-dragging)').forEach(r => {
+            r.style.opacity = '0.5';
+        });
+    }
+
+    function onDragEnd() {
+        groupDragRows.forEach(r => r.classList.remove('direct-dragging'));
+        tableBody.querySelectorAll('tr').forEach(r => {
+            r.style.opacity  = '';
+            r.classList.remove('drag-over-top', 'drag-over-bottom');
+        });
+        const ind = document.getElementById('dropIndicatorRow');
+        if (ind) ind.remove();
+
+        dragSrc       = null;
+        dragOver      = null;
+        isDragGroup   = false;
+        groupDragRows = [];
+    }
+
+    function onDragOver(e) {
+        if (!dragSrc) return;
+        /* Skip drop onto self or group members */
+        if (groupDragRows.includes(this)) return;
+        if (this.id === 'dropIndicatorRow') return;
+
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        /* Remove old indicator */
+        const old = document.getElementById('dropIndicatorRow');
+        if (old) old.remove();
+
+        tableBody.querySelectorAll('tr:not(.direct-dragging)').forEach(r => {
+            r.classList.remove('drag-over-top', 'drag-over-bottom');
+        });
+
+        const rect  = this.getBoundingClientRect();
+        dropAbove   = e.clientY < rect.top + rect.height / 2;
+        dragOver    = this;
+
+        dropIndicator = createDropIndicator();
+
+        if (dropAbove) {
+            this.classList.add('drag-over-top');
+            tableBody.insertBefore(dropIndicator, this);
+        } else {
+            this.classList.add('drag-over-bottom');
+            this.after(dropIndicator);
+        }
+    }
+
+    function onDragLeave(e) {
+        if (!e.relatedTarget || !this.contains(e.relatedTarget)) {
+            this.classList.remove('drag-over-top', 'drag-over-bottom');
+        }
+    }
+
+    function onDrop(e) {
+        if (!dragSrc) return;
+        if (groupDragRows.includes(this)) return;
+        if (this.id === 'dropIndicatorRow') return;
+
+        e.preventDefault();
+
+        const ind = document.getElementById('dropIndicatorRow');
+
+        const rect     = this.getBoundingClientRect();
+        const isBefore = e.clientY < rect.top + rect.height / 2;
+        const anchor   = isBefore ? this : (this.nextSibling || null);
+
+        if (ind) ind.remove();
+
+        /* Move all group rows (or single row) in DOM order */
+        groupDragRows.forEach(row => {
+            if (anchor) {
+                tableBody.insertBefore(row, anchor);
+            } else {
+                tableBody.appendChild(row);
             }
-        },
-        onEnd(evt) {
-            const newIndex = evt.newIndex;
-            selectedRows.forEach((row, i) => {
-                tableBody.insertBefore(row, tableBody.children[newIndex + i]);
-            });
-            selectedRows.forEach(r => r.classList.remove('selected'));
-            selectedRows = [];
-        }
-    });
+        });
 
-    // ── Keyboard shortcuts ──
+        /* Clear drag visual states */
+        this.classList.remove('drag-over-top', 'drag-over-bottom');
+        tableBody.querySelectorAll('tr').forEach(r => {
+            r.style.opacity = '';
+            r.classList.remove('direct-dragging', 'drag-over-top', 'drag-over-bottom');
+        });
+
+        /* Flash moved rows */
+        groupDragRows.forEach(r => flashRow(r));
+
+        /* Keep group selection after drop */
+        if (isDragGroup) {
+            updateGroupBar();
+        } else {
+            clearGroupSelection();
+        }
+
+        dragSrc       = null;
+        dragOver      = null;
+        isDragGroup   = false;
+        groupDragRows = [];
+    }
+
+    /* ═══════════════════════════════════
+       GHOST BUILDER
+    ═══════════════════════════════════ */
+    function buildGhost(rows) {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = `
+            position: fixed;
+            top: -400px;
+            left: -400px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(99,102,241,0.28);
+            border: 1.5px solid rgba(99,102,241,0.2);
+            padding: 6px 14px;
+            min-width: 220px;
+            max-width: 360px;
+            z-index: 99999;
+            pointer-events: none;
+            font-family: inherit;
+        `;
+
+        if (rows.length === 1) {
+            /* Single row ghost — show content */
+            const td = rows[0].querySelector('td');
+            const cl = td ? td.cloneNode(true) : document.createElement('div');
+            cl.querySelectorAll('.row-action-btns, button, span.no-print').forEach(el => el.remove());
+            const label = cl.textContent.trim().slice(0, 50) || 'Row';
+
+            wrap.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:28px;height:28px;border-radius:8px;
+                                background:rgba(99,102,241,0.1);color:#6366f1;
+                                display:flex;align-items:center;justify-content:center;
+                                font-size:0.85rem;flex-shrink:0;">
+                        <i class="bi bi-grip-horizontal"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:0.78rem;font-weight:700;color:#0f172a;">
+                            ${label}
+                        </div>
+                        <div style="font-size:0.62rem;color:#94a3b8;margin-top:2px;">
+                            Drag to reorder
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            /* Group ghost — show stacked cards */
+            wrap.style.padding = '10px 14px';
+            wrap.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                    <div style="width:30px;height:30px;border-radius:9px;
+                                background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                                color:#fff;display:flex;align-items:center;
+                                justify-content:center;font-size:0.85rem;flex-shrink:0;
+                                box-shadow:0 3px 8px rgba(99,102,241,0.3);">
+                        <i class="bi bi-collection-fill"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:0.8rem;font-weight:800;color:#0f172a;">
+                            Moving ${rows.length} rows
+                        </div>
+                        <div style="font-size:0.62rem;color:#94a3b8;margin-top:1px;">
+                            Selected group
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:3px;">
+                    ${rows.slice(0, 4).map((r, i) => {
+                        const td = r.querySelector('td');
+                        const cl = td ? td.cloneNode(true) : null;
+                        if (cl) cl.querySelectorAll('.row-action-btns, button, span.no-print').forEach(e => e.remove());
+                        const lbl = cl?.textContent.trim().slice(0, 35) || `Row ${i + 1}`;
+                        return `
+                            <div style="font-size:0.68rem;font-weight:600;color:#475569;
+                                        padding:4px 8px;background:#f8fafc;
+                                        border-radius:6px;border:1px solid #f1f5f9;
+                                        white-space:nowrap;overflow:hidden;
+                                        text-overflow:ellipsis;">
+                                ${lbl}
+                            </div>`;
+                    }).join('')}
+                    ${rows.length > 4 ? `
+                        <div style="font-size:0.62rem;color:#94a3b8;text-align:center;
+                                    padding:3px;font-weight:600;">
+                            +${rows.length - 4} more…
+                        </div>` : ''}
+                </div>
+            `;
+        }
+        return wrap;
+    }
+
+    /* ═══════════════════════════════════
+       FLASH HELPER
+    ═══════════════════════════════════ */
+    function flashRow(row) {
+        if (!row) return;
+        row.classList.remove('paste-flash');
+        void row.offsetWidth;
+        row.classList.add('paste-flash');
+        row.addEventListener('animationend',
+            () => row.classList.remove('paste-flash'), { once: true });
+    }
+
+    /* ═══════════════════════════════════
+       KEYBOARD SHORTCUTS
+    ═══════════════════════════════════ */
     document.addEventListener('keydown', function (e) {
         const active = document.activeElement;
         if (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') return;
 
-        // Escape
+        /* Escape — clear everything */
         if (e.key === 'Escape') {
-            if (window._pasteMode) { clearCopiedStateGlobal(); removeToolbarGlobal(); }
             clearAll();
             return;
         }
 
-        // Ctrl + Z (Undo)
-        if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); restoreState(undoStack, redoStack); return; }
-
-        // Ctrl + Y (Redo)
-        if (e.ctrlKey && e.key.toLowerCase() === 'y') { e.preventDefault(); restoreState(redoStack, undoStack); return; }
-
-        // Ctrl + Backspace (clear all TDs)
-        if (e.ctrlKey && e.key === 'Backspace') {
+        /* Ctrl + A — select ALL rows */
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
             e.preventDefault();
-            selectedTds.forEach(td => td.classList.remove('td-selected'));
-            selectedTds = [];
+            clearGroupSelection();
+            tableBody.querySelectorAll('tr').forEach(r => {
+                selectedRows.add(r);
+                r.classList.add('row-ctrl-selected');
+            });
+            updateGroupBar();
+            return;
+        }
+
+        /* Ctrl + Z — undo */
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+            e.preventDefault();
+            restoreState(undoStack, redoStack);
+            return;
+        }
+
+        /* Ctrl + Shift + Z / Ctrl + Y — redo */
+        if (
+            ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z') ||
+            ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y')
+        ) {
+            e.preventDefault();
+            restoreState(redoStack, undoStack);
+            return;
+        }
+
+        /* Delete / Backspace — delete selected group */
+        if ((e.key === 'Delete') && selectedRows.size > 0) {
+            e.preventDefault();
+            document.getElementById('gsbDeleteBtn').click();
+            return;
+        }
+
+        /* Ctrl + Backspace — clear amount TDs */
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Backspace') {
+            e.preventDefault();
+            clearAmountSelection();
+            return;
+        }
+
+        /* Backspace — remove last amount TD */
+        if (e.key === 'Backspace' && selectedTds.length > 0 && selectedRows.size === 0) {
+            e.preventDefault();
+            const last = selectedTds.pop();
+            last.classList.remove('td-selected');
             updateSelectedTotal();
             return;
         }
-
-        // Backspace (remove last)
-        if (e.key === 'Backspace') {
-            e.preventDefault();
-            if (selectedTds.length > 0) {
-                const last = selectedTds.pop();
-                last.classList.remove('td-selected');
-                updateSelectedTotal();
-            }
-            return;
-        }
     });
+
+    /* ═══════════════════════════════════
+       INIT
+    ═══════════════════════════════════ */
+    attachDirectDrag();
+
+    /* Expose for Quick Order system */
+    window.attachDirectDrag = attachDirectDrag;
 });
 </script>
 
 <!-- ── INVOICE CALCULATIONS ── -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const isPublic = {{ is_public|yesno:"true,false" }};
-    let totalSpent = parseFloat("{{ total_spent }}") || 0;
+    const isPublic  = {{ is_public|yesno:"true,false" }};
+    let totalSpent  = parseFloat("{{ total_spent }}") || 0;
 
-    const gstInput = document.getElementById('gstRate');
-    const discountInput = document.getElementById('discountInput');
+    const gstInput       = document.getElementById('gstRate');
+    const discountInput  = document.getElementById('discountInput');
     const discountRadios = document.getElementsByName('discountType');
-    const gstAmountEl = document.getElementById('gstAmount');
-    const subtotalEl = document.getElementById('subtotalAmount');
+    const gstAmountEl    = document.getElementById('gstAmount');
+    const subtotalEl     = document.getElementById('subtotalAmount');
     const discountAmountEl = document.getElementById('discountAmount');
-    const grandTotalEl = document.getElementById('grandTotal');
-    const paymentRows = document.querySelectorAll('#paymentRows tr');
+    const grandTotalEl   = document.getElementById('grandTotal');
+    const paymentRows    = document.querySelectorAll('#paymentRows tr');
 
     function getDiscountType() {
         for (let r of discountRadios) if (r.checked) return r.value;
@@ -2214,7 +3097,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updatePaymentSummary(grandTotal) {
         paymentRows.forEach(row => {
-            const paid = parseFloat(row.dataset.paid);
+            const paid    = parseFloat(row.dataset.paid) || 0;
             const balance = grandTotal - paid;
             const bc = row.querySelector('.balanceCell');
             const tc = row.querySelector('.grandTotal');
@@ -2222,50 +3105,63 @@ document.addEventListener('DOMContentLoaded', function () {
             if (bc) {
                 bc.innerHTML = '₹ ' + balance.toFixed(2);
                 bc.classList.remove('success', 'danger', 'primary');
-                bc.classList.add(balance === 0 ? 'success' : balance < 0 ? 'danger' : 'primary');
+                bc.classList.add(
+                    balance === 0 ? 'success' : balance < 0 ? 'danger' : 'primary'
+                );
             }
         });
     }
 
     function calculate() {
         if (isPublic) return;
-        const gstRate = parseFloat(gstInput?.value) || 0;
-        const discountValue = parseFloat(discountInput?.value) || 0;
-        const gstAmount = (totalSpent * gstRate) / 100;
-        const subtotal = totalSpent + gstAmount;
-        const discountType = getDiscountType();
-        const discountAmount = discountType === 'percent' ? (subtotal * discountValue) / 100 : discountValue;
-        const grandTotal = subtotal - discountAmount;
+        const gstRate      = parseFloat(gstInput?.value) || 0;
+        const discountVal  = parseFloat(discountInput?.value) || 0;
+        const gstAmount    = (totalSpent * gstRate) / 100;
+        const subtotal     = totalSpent + gstAmount;
+        const discType     = getDiscountType();
+        const discountAmt  = discType === 'percent'
+                           ? (subtotal * discountVal) / 100
+                           : discountVal;
+        const grandTotal   = subtotal - discountAmt;
 
-        if (gstAmountEl) gstAmountEl.innerHTML = '₹ ' + gstAmount.toFixed(2);
-        if (subtotalEl) subtotalEl.innerHTML = '₹ ' + subtotal.toFixed(2);
-        if (discountAmountEl) discountAmountEl.innerHTML = '₹ ' + discountAmount.toFixed(2);
-        if (grandTotalEl) grandTotalEl.innerHTML = '₹ ' + grandTotal.toFixed(2);
+        if (gstAmountEl)      gstAmountEl.innerHTML     = '₹ ' + gstAmount.toFixed(2);
+        if (subtotalEl)       subtotalEl.innerHTML       = '₹ ' + subtotal.toFixed(2);
+        if (discountAmountEl) discountAmountEl.innerHTML = '₹ ' + discountAmt.toFixed(2);
+        if (grandTotalEl)     grandTotalEl.innerHTML     = '₹ ' + grandTotal.toFixed(2);
         updatePaymentSummary(grandTotal);
     }
 
     if (!isPublic) {
         let saveTimer;
+
         function saveAdjustments() {
             clearTimeout(saveTimer);
             saveTimer = setTimeout(() => {
                 fetch("{% url 'save_invoice_adjustments' payment.id %}", {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
                     body: new URLSearchParams({
-                        gst_rate: gstInput?.value || 0,
-                        discount: discountInput?.value || 0,
+                        gst_rate:      gstInput?.value || 0,
+                        discount:      discountInput?.value || 0,
                         discount_type: getDiscountType()
                     })
-                }).then(r => r.json()).then(data => {
+                })
+                .then(r => r.json())
+                .then(data => {
                     if (data.status === 'success') {
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Invoice updated', showConfirmButton: false, timer: 1200 });
+                        Swal.fire({
+                            toast: true, position: 'top-end', icon: 'success',
+                            title: 'Invoice updated', showConfirmButton: false, timer: 1200
+                        });
                     }
                 });
             }, 600);
         }
 
-        gstInput?.addEventListener('input', () => { calculate(); saveAdjustments(); });
+        gstInput?.addEventListener('input',  () => { calculate(); saveAdjustments(); });
         discountInput?.addEventListener('input', () => { calculate(); saveAdjustments(); });
         discountRadios.forEach(r => r.addEventListener('change', () => { calculate(); saveAdjustments(); }));
         calculate();
@@ -2273,165 +3169,163 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<!-- ── QUICK ORDER SYSTEM ── -->
-<!-- ── QUICK ORDER SYSTEM (Full: Floors + Rooms + Rows) ── -->
+<!-- ── QUICK ORDER SYSTEM (Floors + Rooms + Rows) ── -->
 <script>
 (function () {
     'use strict';
 
-    /* ═══════════════════════════════════
+    /* ═══════════════════
        STATE
-    ═══════════════════════════════════ */
-    let floorGroups   = [];   // Array of { headerRow, rows[], floorName, rooms[] }
-    let originalOrder = [];
-    let activeTab     = 'floors';
+    ═══════════════════ */
+    let floorGroups    = [];
+    let originalSnap   = [];   /* deep snapshot at open time */
+    let activeTab      = 'floors';
     let activeFloorIdx = 0;
     let activeRoomIdx  = 0;
 
-    /* Sortable instances */
     const sortables = { floors: null, rooms: null, rows: null };
 
-    /* DOM refs */
-    const tbody         = document.getElementById('invoiceTbody');
-    const overlay       = document.getElementById('qoOverlay');
-    const qoFloorList   = document.getElementById('qoFloorList');
-    const qoRoomList    = document.getElementById('qoRoomList');
-    const qoRowList     = document.getElementById('qoRowList');
-    const qoFloorPills  = document.getElementById('qoFloorPills');
-    const qoRowFloorPills = document.getElementById('qoRowFloorPills');
-    const qoRowRoomPills  = document.getElementById('qoRowRoomPills');
-    const qoRowRoomSel    = document.getElementById('qoRowRoomSelector');
-    const footerInfo    = document.getElementById('qoFooterInfo');
+    /* DOM */
+    const tbody            = document.getElementById('invoiceTbody');
+    const overlay          = document.getElementById('qoOverlay');
+    const qoFloorList      = document.getElementById('qoFloorList');
+    const qoRoomList       = document.getElementById('qoRoomList');
+    const qoRowList        = document.getElementById('qoRowList');
+    const qoFloorPills     = document.getElementById('qoFloorPills');
+    const qoRowFloorPills  = document.getElementById('qoRowFloorPills');
+    const qoRowRoomPills   = document.getElementById('qoRowRoomPills');
+    const qoRowRoomSel     = document.getElementById('qoRowRoomSelector');
+    const footerInfo       = document.getElementById('qoFooterInfo');
 
-    /* ═══════════════════════════════════
-       PARSE TABLE INTO floorGroups
-    ═══════════════════════════════════ */
+    /* ═══════════════════
+       PARSE
+    ═══════════════════ */
     function parseFloorGroups() {
         floorGroups = [];
-        let currentFloor = null;
-        let currentRoom  = null;
+        let curFloor = null;
+        let curRoom  = null;
 
         Array.from(tbody.querySelectorAll('tr')).forEach(row => {
-
             if (row.classList.contains('floor-row')) {
-                /* Start a new floor */
-                currentRoom  = null;
-                currentFloor = {
+                curRoom  = null;
+                curFloor = {
                     headerRow: row,
                     rows: [row],
-                    floorName: getTextContent(row),
+                    floorName: getLabel(row),
                     rooms: []
                 };
-                floorGroups.push(currentFloor);
+                floorGroups.push(curFloor);
 
             } else if (row.classList.contains('room-row')) {
-                /* Start a new room inside current floor */
-                if (!currentFloor) return;
-                currentRoom = {
+                if (!curFloor) return;
+                curRoom = {
                     headerRow: row,
                     rows: [row],
-                    roomName: getTextContent(row)
+                    roomName: getLabel(row)
                 };
-                currentFloor.rooms.push(currentRoom);
-                currentFloor.rows.push(row);
+                curFloor.rooms.push(curRoom);
+                curFloor.rows.push(row);
 
             } else {
-                /* Data row */
-                if (currentRoom)  currentRoom.rows.push(row);
-                if (currentFloor) currentFloor.rows.push(row);
+                if (curRoom)  curRoom.rows.push(row);
+                if (curFloor) curFloor.rows.push(row);
             }
         });
-
-        /* Save original order (deep-clone names) */
-        originalOrder = floorGroups.map(f => ({
-            floorName: f.floorName,
-            rooms: f.rooms.map(r => ({ roomName: r.roomName }))
-        }));
     }
 
-    function getTextContent(row) {
+    function getLabel(row) {
         const td = row.querySelector('td');
         if (!td) return 'Unknown';
         const cl = td.cloneNode(true);
-        cl.querySelectorAll('.row-action-btns, button, span.no-print, span').forEach(el => el.remove());
+        cl.querySelectorAll('.row-action-btns, button, span.no-print, span').forEach(e => e.remove());
         return cl.textContent.trim() || 'Unnamed';
     }
 
-    /* ═══════════════════════════════════
-       APPLY TABLE ORDER FROM floorGroups
-    ═══════════════════════════════════ */
-    function applyToTable() {
-        if (typeof window.saveState === 'function') window.saveState();
+    /* Snapshot current tbody HTML for hard reset */
+    function snapshotDOM() {
+        originalSnap = Array.from(tbody.children).map(r => r.cloneNode(true));
+    }
 
-        /* Clear tbody */
+    /* ═══════════════════
+       APPLY TO TABLE
+    ═══════════════════ */
+    function applyToTable(skipSave) {
+        if (!skipSave && typeof window.saveState === 'function') window.saveState();
+
         while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
 
-        /* Re-append: floor header → rooms (room header → room rows) */
         floorGroups.forEach(floor => {
             tbody.appendChild(floor.headerRow);
             floor.rooms.forEach(room => {
                 room.rows.forEach(r => tbody.appendChild(r));
             });
-            /* Items not in any room (directly under floor) */
+            /* Orphan rows (not inside any room) */
             floor.rows.forEach(r => {
-                if (!r.classList.contains('floor-row') && !floor.rooms.some(rm => rm.rows.includes(r))) {
+                if (
+                    !r.classList.contains('floor-row') &&
+                    !floor.rooms.some(rm => rm.rows.includes(r))
+                ) {
                     tbody.appendChild(r);
                 }
             });
         });
 
-        /* Flash updated rows */
+        /* Flash headers */
         tbody.querySelectorAll('.floor-row, .room-row').forEach(row => {
             row.classList.remove('paste-flash');
             void row.offsetWidth;
             row.classList.add('paste-flash');
-            row.addEventListener('animationend', () => row.classList.remove('paste-flash'), { once: true });
+            row.addEventListener('animationend',
+                () => row.classList.remove('paste-flash'), { once: true });
         });
+
+        /* Re-attach direct drag */
+        if (typeof attachDirectDrag === 'function') attachDirectDrag();
     }
 
-    /* ═══════════════════════════════════
-       TAB SWITCHING
-    ═══════════════════════════════════ */
+    /* ═══════════════════
+       TAB SWITCH
+    ═══════════════════ */
     window.switchTab = function (tab) {
         activeTab = tab;
 
-        /* Update tab buttons */
         document.querySelectorAll('.qo-tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+        const id = 'tab' + tab.charAt(0).toUpperCase() + tab.slice(1);
+        document.getElementById(id)?.classList.add('active');
 
-        /* Show/hide panels */
         document.getElementById('panelFloors').style.display = tab === 'floors' ? 'flex' : 'none';
         document.getElementById('panelRooms').style.display  = tab === 'rooms'  ? 'flex' : 'none';
         document.getElementById('panelRows').style.display   = tab === 'rows'   ? 'flex' : 'none';
 
-        /* Update hint */
         const hints = {
             floors: 'Drag <strong>floors</strong> to reorder them in the invoice.',
             rooms:  'Select a floor, then drag <strong>rooms</strong> to reorder.',
-            rows:   'Select a floor and room, then drag <strong>rows</strong> to reorder.'
+            rows:   'Select a floor & room, then drag <strong>rows</strong> to reorder.'
         };
-        document.getElementById('qoHintText').innerHTML = hints[tab];
+        const hintEl = document.getElementById('qoHintText');
+        if (hintEl) hintEl.innerHTML = hints[tab] || '';
 
-        /* Render panel */
         if (tab === 'floors') renderFloors();
         if (tab === 'rooms')  renderRoomPanel();
         if (tab === 'rows')   renderRowPanel();
     };
 
-    /* ═══════════════════════════════════
-       FLOORS PANEL
-    ═══════════════════════════════════ */
+    /* ═══════════════════
+       FLOORS
+    ═══════════════════ */
     function renderFloors() {
         qoFloorList.innerHTML = '';
 
         if (floorGroups.length === 0) {
-            qoFloorList.innerHTML = '<div class="qo-empty"><i class="bi bi-building"></i>No floors found</div>';
+            qoFloorList.innerHTML =
+                '<div class="qo-empty"><i class="bi bi-building"></i>No floors found</div>';
             return;
         }
 
         floorGroups.forEach((floor, index) => {
             const itemCount = floor.rows.filter(r =>
-                !r.classList.contains('floor-row') && !r.classList.contains('room-row')
+                !r.classList.contains('floor-row') &&
+                !r.classList.contains('room-row')
             ).length;
 
             const el = document.createElement('div');
@@ -2460,11 +3354,9 @@ document.addEventListener('DOMContentLoaded', function () {
             qoFloorList.appendChild(el);
         });
 
-        /* Update tab count */
         document.getElementById('tabFloorCount').textContent = floorGroups.length;
         footerInfo.textContent = `${floorGroups.length} floor${floorGroups.length !== 1 ? 's' : ''}`;
 
-        /* Init sortable */
         destroySortable('floors');
         sortables.floors = new Sortable(qoFloorList, {
             animation: 250,
@@ -2473,47 +3365,36 @@ document.addEventListener('DOMContentLoaded', function () {
             dragClass: 'qo-drag',
             handle: '.qo-drag-handle',
             easing: 'cubic-bezier(0.4,0,0.2,1)',
-            onEnd: function () {
-                /* Re-map floorGroups from DOM order */
+            onEnd() {
                 const items = qoFloorList.querySelectorAll('.qo-floor-item');
-                const newFloors = Array.from(items).map(el =>
+                floorGroups = Array.from(items).map(el =>
                     floorGroups[parseInt(el.dataset.floorIndex)]
                 );
-                floorGroups = newFloors;
-
-                /* Re-index */
                 items.forEach((el, i) => {
                     el.dataset.floorIndex = i;
                     el.querySelector('.qo-floor-rank').textContent = i + 1;
                 });
-
                 applyToTable();
-                footerInfo.textContent = 'Floors reordered ✓';
-                setTimeout(() => { footerInfo.textContent = `${floorGroups.length} floors`; }, 2000);
+                setFooter('Floors reordered ✓', `${floorGroups.length} floors`);
             }
         });
     }
 
-    /* ═══════════════════════════════════
-       ROOMS PANEL
-    ═══════════════════════════════════ */
+    /* ═══════════════════
+       ROOMS
+    ═══════════════════ */
     function renderRoomPanel() {
-        /* Build floor pills */
         qoFloorPills.innerHTML = '';
         let totalRooms = 0;
 
         floorGroups.forEach((floor, i) => {
             totalRooms += floor.rooms.length;
-            const pill = document.createElement('button');
-            pill.className = 'qo-pill' + (i === activeFloorIdx ? ' active' : '');
-            pill.textContent = floor.floorName;
-            pill.onclick = () => {
+            const pill = makePill(floor.floorName, i === activeFloorIdx, () => {
                 activeFloorIdx = i;
-                qoFloorPills.querySelectorAll('.qo-pill').forEach((p, pi) => {
-                    p.classList.toggle('active', pi === i);
-                });
+                qoFloorPills.querySelectorAll('.qo-pill')
+                    .forEach((p, pi) => p.classList.toggle('active', pi === i));
                 renderRoomList(i);
-            };
+            });
             qoFloorPills.appendChild(pill);
         });
 
@@ -2527,7 +3408,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!floor) return;
 
         if (floor.rooms.length === 0) {
-            qoRoomList.innerHTML = '<div class="qo-empty"><i class="bi bi-door-open"></i>No rooms in this floor</div>';
+            qoRoomList.innerHTML =
+                '<div class="qo-empty"><i class="bi bi-door-open"></i>No rooms in this floor</div>';
             destroySortable('rooms');
             return;
         }
@@ -2556,7 +3438,8 @@ document.addEventListener('DOMContentLoaded', function () {
             qoRoomList.appendChild(el);
         });
 
-        footerInfo.textContent = `${floor.rooms.length} room${floor.rooms.length !== 1 ? 's' : ''} in ${floor.floorName}`;
+        footerInfo.textContent =
+            `${floor.rooms.length} room${floor.rooms.length !== 1 ? 's' : ''} in ${floor.floorName}`;
 
         destroySortable('rooms');
         sortables.rooms = new Sortable(qoRoomList, {
@@ -2566,52 +3449,44 @@ document.addEventListener('DOMContentLoaded', function () {
             dragClass: 'qo-drag',
             handle: '.qo-drag-handle',
             easing: 'cubic-bezier(0.4,0,0.2,1)',
-            onEnd: function () {
+            onEnd() {
                 const items = qoRoomList.querySelectorAll('.qo-room-item');
                 const floor = floorGroups[activeFloorIdx];
-                const newRooms = Array.from(items).map(el =>
+                floor.rooms = Array.from(items).map(el =>
                     floor.rooms[parseInt(el.dataset.roomIndex)]
                 );
-                floor.rooms = newRooms;
-
-                /* Re-index */
                 items.forEach((el, i) => {
                     el.dataset.roomIndex = i;
                     el.querySelector('.qo-room-rank').textContent = i + 1;
                 });
-
                 /* Rebuild floor.rows */
                 floor.rows = [floor.headerRow];
                 floor.rooms.forEach(r => r.rows.forEach(row => floor.rows.push(row)));
 
                 applyToTable();
-                footerInfo.textContent = 'Rooms reordered ✓';
-                setTimeout(() => { footerInfo.textContent = `${floor.rooms.length} rooms in ${floor.floorName}`; }, 2000);
+                setFooter(
+                    'Rooms reordered ✓',
+                    `${floor.rooms.length} rooms in ${floor.floorName}`
+                );
             }
         });
     }
 
-    /* ═══════════════════════════════════
-       ROWS PANEL
-    ═══════════════════════════════════ */
+    /* ═══════════════════
+       ROWS
+    ═══════════════════ */
     function renderRowPanel() {
-        /* Floor pills */
         qoRowFloorPills.innerHTML = '';
         floorGroups.forEach((floor, i) => {
-            const pill = document.createElement('button');
-            pill.className = 'qo-pill' + (i === activeFloorIdx ? ' active' : '');
-            pill.textContent = floor.floorName;
-            pill.onclick = () => {
+            const pill = makePill(floor.floorName, i === activeFloorIdx, () => {
                 activeFloorIdx = i;
                 activeRoomIdx  = 0;
-                qoRowFloorPills.querySelectorAll('.qo-pill').forEach((p, pi) => {
-                    p.classList.toggle('active', pi === i);
-                });
+                qoRowFloorPills.querySelectorAll('.qo-pill')
+                    .forEach((p, pi) => p.classList.toggle('active', pi === i));
                 renderRowRoomPills(i);
-            };
+            });
             qoRowFloorPills.appendChild(pill);
         });
-
         renderRowRoomPills(activeFloorIdx);
     }
 
@@ -2621,28 +3496,21 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!floor) return;
 
         if (floor.rooms.length === 0) {
-            /* No rooms — show floor-level rows directly */
             qoRowRoomSel.style.display = 'none';
             renderRowList(floorIdx, -1);
             return;
         }
 
         qoRowRoomSel.style.display = 'flex';
-
         floor.rooms.forEach((room, i) => {
-            const pill = document.createElement('button');
-            pill.className = 'qo-pill' + (i === activeRoomIdx ? ' active' : '');
-            pill.textContent = room.roomName;
-            pill.onclick = () => {
+            const pill = makePill(room.roomName, i === activeRoomIdx, () => {
                 activeRoomIdx = i;
-                qoRowRoomPills.querySelectorAll('.qo-pill').forEach((p, pi) => {
-                    p.classList.toggle('active', pi === i);
-                });
+                qoRowRoomPills.querySelectorAll('.qo-pill')
+                    .forEach((p, pi) => p.classList.toggle('active', pi === i));
                 renderRowList(floorIdx, i);
-            };
+            });
             qoRowRoomPills.appendChild(pill);
         });
-
         renderRowList(floorIdx, activeRoomIdx);
     }
 
@@ -2651,37 +3519,32 @@ document.addEventListener('DOMContentLoaded', function () {
         const floor = floorGroups[floorIdx];
         if (!floor) return;
 
-        /* Determine data rows */
-        let dataRows = [];
-        let sourceRows = null; // reference array to update
+        let dataRows;
 
         if (roomIdx === -1 || floor.rooms.length === 0) {
-            /* Floor-level rows (not in any room) */
             dataRows = floor.rows.filter(r =>
                 !r.classList.contains('floor-row') &&
                 !r.classList.contains('room-row')
             );
-            sourceRows = floor;
         } else {
             const room = floor.rooms[roomIdx];
             if (!room) return;
             dataRows = room.rows.filter(r => !r.classList.contains('room-row'));
-            sourceRows = room;
         }
 
-        const totalRowCount = dataRows.length;
-        document.getElementById('tabRowCount').textContent = totalRowCount;
+        document.getElementById('tabRowCount').textContent = dataRows.length;
 
         if (dataRows.length === 0) {
-            qoRowList.innerHTML = '<div class="qo-empty"><i class="bi bi-list-ul"></i>No items in this section</div>';
+            qoRowList.innerHTML =
+                '<div class="qo-empty"><i class="bi bi-list-ul"></i>No items in this section</div>';
             destroySortable('rows');
             return;
         }
 
         dataRows.forEach((row, i) => {
-            const cells = row.querySelectorAll('td');
+            const cells  = row.querySelectorAll('td');
             const entity = cells[1]?.textContent.trim() || '—';
-            const spec   = cells[2]?.textContent.trim().slice(0, 40) || '';
+            const spec   = cells[2]?.textContent.trim().slice(0, 42) || '';
             const amount = cells[6]?.dataset?.amount || cells[6]?.textContent.trim() || '';
 
             const el = document.createElement('div');
@@ -2711,19 +3574,19 @@ document.addEventListener('DOMContentLoaded', function () {
             dragClass: 'qo-drag',
             handle: '.qo-drag-handle',
             easing: 'cubic-bezier(0.4,0,0.2,1)',
-            onEnd: function () {
+            onEnd() {
                 const items = qoRowList.querySelectorAll('.qo-row-item');
                 const newDataRows = Array.from(items).map(el =>
                     dataRows[parseInt(el.dataset.rowIndex)]
                 );
 
-                /* Re-index labels */
                 items.forEach((el, i) => {
                     el.dataset.rowIndex = i;
                     el.querySelector('.qo-row-rank').textContent = i + 1;
                 });
 
-                /* Rebuild sourceRows.rows */
+                const floor = floorGroups[floorIdx];
+
                 if (roomIdx === -1 || floor.rooms.length === 0) {
                     floor.rows = [floor.headerRow];
                     floor.rooms.forEach(rm => rm.rows.forEach(r => floor.rows.push(r)));
@@ -2731,85 +3594,96 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     const room = floor.rooms[roomIdx];
                     room.rows = [room.headerRow, ...newDataRows];
-                    /* Rebuild floor.rows */
                     floor.rows = [floor.headerRow];
                     floor.rooms.forEach(rm => rm.rows.forEach(r => floor.rows.push(r)));
                 }
 
                 applyToTable();
-                footerInfo.textContent = 'Rows reordered ✓';
-                setTimeout(() => { footerInfo.textContent = `${dataRows.length} items`; }, 2000);
+                setFooter('Rows reordered ✓', `${dataRows.length} items`);
             }
         });
     }
 
-    /* ═══════════════════════════════════
+    /* ═══════════════════
        RESET
-    ═══════════════════════════════════ */
+    ═══════════════════ */
     window.resetCurrentTab = function () {
-        if (activeTab === 'floors') {
-            resetFloorOrder();
-        } else if (activeTab === 'rooms') {
-            resetRoomOrder();
-        } else {
-            resetRowOrder();
-        }
+        if (activeTab === 'floors') resetFloorOrder();
+        else if (activeTab === 'rooms') resetRoomOrder();
+        else resetRowOrder();
     };
 
     window.resetFloorOrder = function () {
-        parseFloorGroups(); /* re-parse from DOM */
-
-        const resetMap = {};
-        floorGroups.forEach(g => { resetMap[g.floorName] = g; });
-
-        const resetGroups = originalOrder
-            .map(o => resetMap[o.floorName])
-            .filter(Boolean);
-
-        if (resetGroups.length > 0) {
-            floorGroups = resetGroups;
-            applyToTable();
-            renderFloors();
-        }
-
-        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Floor order reset', showConfirmButton: false, timer: 1200 });
+        /* Hard reset — restore snapshot */
+        if (originalSnap.length === 0) return;
+        if (typeof window.saveState === 'function') window.saveState();
+        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+        originalSnap.forEach(r => tbody.appendChild(r.cloneNode(true)));
+        if (typeof attachDirectDrag === 'function') attachDirectDrag();
+        parseFloorGroups();
+        renderFloors();
+        Swal.fire({
+            toast: true, position: 'top-end', icon: 'info',
+            title: 'Floor order reset', showConfirmButton: false, timer: 1200
+        });
     };
 
     function resetRoomOrder() {
         parseFloorGroups();
+        applyToTable(true);
         renderRoomPanel();
-        applyToTable();
-        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Room order reset', showConfirmButton: false, timer: 1200 });
+        Swal.fire({
+            toast: true, position: 'top-end', icon: 'info',
+            title: 'Room order reset', showConfirmButton: false, timer: 1200
+        });
     }
 
     function resetRowOrder() {
         parseFloorGroups();
+        applyToTable(true);
         renderRowPanel();
-        applyToTable();
-        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Row order reset', showConfirmButton: false, timer: 1200 });
+        Swal.fire({
+            toast: true, position: 'top-end', icon: 'info',
+            title: 'Row order reset', showConfirmButton: false, timer: 1200
+        });
     }
 
-    /* ═══════════════════════════════════
-       SORTABLE HELPERS
-    ═══════════════════════════════════ */
+    /* ═══════════════════
+       HELPERS
+    ═══════════════════ */
     function destroySortable(key) {
-        if (sortables[key]) {
-            sortables[key].destroy();
-            sortables[key] = null;
-        }
+        if (sortables[key]) { sortables[key].destroy(); sortables[key] = null; }
     }
 
-    /* ═══════════════════════════════════
+    function makePill(text, isActive, onClick) {
+        const btn = document.createElement('button');
+        btn.className = 'qo-pill' + (isActive ? ' active' : '');
+        btn.textContent = text;
+        btn.onclick = onClick;
+        return btn;
+    }
+
+    function setFooter(msg, resetMsg) {
+        footerInfo.textContent = msg;
+        setTimeout(() => { footerInfo.textContent = resetMsg; }, 2200);
+    }
+
+    /* ═══════════════════
        OPEN / CLOSE
-    ═══════════════════════════════════ */
+    ═══════════════════ */
     window.openQuickOrder = function () {
         parseFloorGroups();
 
         if (floorGroups.length === 0) {
-            Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'No floors found in invoice', showConfirmButton: false, timer: 2000 });
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'warning',
+                title: 'No floors found in invoice',
+                showConfirmButton: false, timer: 2000
+            });
             return;
         }
 
+        snapshotDOM();
         switchTab('floors');
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -2823,12 +3697,10 @@ document.addEventListener('DOMContentLoaded', function () {
         destroySortable('rows');
     };
 
-    /* Click outside */
     overlay.addEventListener('click', e => {
         if (e.target === overlay) closeQuickOrder();
     });
 
-    /* Escape key */
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && overlay.classList.contains('active')) closeQuickOrder();
     });
