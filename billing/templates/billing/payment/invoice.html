@@ -546,333 +546,597 @@
 
     .clipboard-indicator.active { display: block; }
 
-    /* =============================================
-       QUICK ORDER FAB
-       ============================================= */
-    .qo-fab {
-        position: fixed;
-        bottom: 90px;
-        left: 24px;
-        z-index: 9998;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 20px;
-        background: linear-gradient(135deg, #4f46e5, #3730a3);
-        color: white;
-        border: none;
-        border-radius: 50px;
-        font-size: 0.82rem;
-        font-weight: 700;
-        cursor: pointer;
-        box-shadow: 0 6px 20px rgba(79,70,229,0.4);
-        transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
-        white-space: nowrap;
-        font-family: 'Segoe UI', sans-serif;
-    }
+    /* ══════════════════════════════════════
+   QUICK ORDER MODAL — FULL STYLES
+══════════════════════════════════════ */
 
-    .qo-fab:hover {
-        transform: translateY(-3px) scale(1.03);
-        box-shadow: 0 10px 30px rgba(79,70,229,0.5);
-    }
+/* ── FAB Button ── */
+.qo-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border: none;
+    border-radius: 100px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(99,102,241,0.35);
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    font-family: inherit;
+}
 
-    .qo-fab:active { transform: translateY(0) scale(0.98); }
+.qo-fab:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(99,102,241,0.45);
+}
 
-    /* =============================================
-       QUICK ORDER OVERLAY
-       ============================================= */
-    .qo-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(15,23,42,0.5);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        z-index: 99999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.3s ease, visibility 0.3s ease;
-    }
+.qo-fab:active { transform: translateY(0); }
 
-    .qo-overlay.active { opacity: 1; visibility: visible; }
+/* ── Overlay ── */
+.qo-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    padding: 16px;
+}
 
-    /* =============================================
-       QUICK ORDER MODAL
-       ============================================= */
+.qo-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ── Modal ── */
+.qo-modal {
+    width: 420px;
+    max-width: 100%;
+    max-height: 90vh;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateX(30px) scale(0.97);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.qo-overlay.active .qo-modal {
+    transform: translateX(0) scale(1);
+}
+
+/* ── Modal Header ── */
+.qo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px 14px;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.qo-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 80% 20%, rgba(99,102,241,.2), transparent 55%),
+        radial-gradient(circle at 20% 80%, rgba(139,92,246,.1), transparent 55%);
+    pointer-events: none;
+}
+
+.qo-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.qo-header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.qo-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.qo-subtitle {
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.4);
+    font-weight: 500;
+    display: block;
+    margin-top: 2px;
+}
+
+.qo-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
+    color: rgba(255,255,255,.6);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.qo-close-btn:hover {
+    background: rgba(244,63,94,.2);
+    color: #f43f5e;
+    border-color: rgba(244,63,94,.25);
+}
+
+/* ── Tab Bar ── */
+.qo-tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border-bottom: 1px solid #f1f5f9;
+    flex-shrink: 0;
+}
+
+.qo-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1.5px solid transparent;
+    background: transparent;
+    font-size: 0.73rem;
+    font-weight: 600;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.qo-tab:hover {
+    background: #fff;
+    color: #475569;
+    border-color: #e2e8f0;
+}
+
+.qo-tab.active {
+    background: #fff;
+    color: #6366f1;
+    border-color: rgba(99,102,241,0.2);
+    box-shadow: 0 2px 8px rgba(99,102,241,0.1);
+    font-weight: 700;
+}
+
+.qo-tab i { font-size: 0.8rem; }
+
+.qo-tab-count {
+    background: #f1f5f9;
+    color: #94a3b8;
+    font-size: 0.58rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 100px;
+    min-width: 18px;
+    text-align: center;
+}
+
+.qo-tab.active .qo-tab-count {
+    background: rgba(99,102,241,0.1);
+    color: #6366f1;
+}
+
+/* ── Body ── */
+.qo-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99,102,241,0.15) transparent;
+}
+
+.qo-body::-webkit-scrollbar { width: 4px; }
+.qo-body::-webkit-scrollbar-track { background: transparent; }
+.qo-body::-webkit-scrollbar-thumb {
+    background: rgba(99,102,241,0.15);
+    border-radius: 100px;
+}
+
+/* ── Hint Bar ── */
+.qo-hint-bar {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 13px;
+    background: rgba(99,102,241,0.05);
+    border: 1px solid rgba(99,102,241,0.1);
+    border-radius: 11px;
+    font-size: 0.7rem;
+    color: #64748b;
+    line-height: 1.5;
+    flex-shrink: 0;
+}
+
+.qo-hint-bar i { color: #6366f1; margin-top: 1px; }
+.qo-hint-bar strong { color: #6366f1; }
+
+/* ── Panel ── */
+.qo-panel { display: flex; flex-direction: column; gap: 8px; }
+
+/* ── Floor Selector (pills) ── */
+.qo-floor-selector {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 11px;
+    flex-shrink: 0;
+}
+
+.qo-selector-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+    margin-top: 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.qo-selector-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    flex: 1;
+}
+
+.qo-pill {
+    padding: 4px 12px;
+    border-radius: 100px;
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+}
+
+.qo-pill:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+}
+
+.qo-pill.active {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(99,102,241,0.25);
+}
+
+/* ── List ── */
+.qo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* ── Floor Item ── */
+.qo-floor-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 13px;
+    background: #fff;
+    border: 1.5px solid #f1f5f9;
+    border-radius: 13px;
+    transition: all 0.22s;
+    cursor: default;
+}
+
+.qo-floor-item:hover {
+    border-color: rgba(99,102,241,0.18);
+    box-shadow: 0 2px 10px rgba(99,102,241,0.08);
+}
+
+/* Room item */
+.qo-room-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 13px;
+    background: #fff;
+    border: 1.5px solid #f1f5f9;
+    border-radius: 11px;
+    transition: all 0.22s;
+    cursor: default;
+}
+
+.qo-room-item:hover {
+    border-color: rgba(16,185,129,0.2);
+    box-shadow: 0 2px 8px rgba(16,185,129,0.07);
+}
+
+/* Row item */
+.qo-row-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: #fff;
+    border: 1.5px solid #f1f5f9;
+    border-radius: 10px;
+    transition: all 0.22s;
+    cursor: default;
+}
+
+.qo-row-item:hover {
+    border-color: rgba(245,158,11,0.2);
+    box-shadow: 0 2px 8px rgba(245,158,11,0.06);
+}
+
+/* ── Drag Handle ── */
+.qo-drag-handle {
+    color: #cbd5e1;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    flex-shrink: 0;
+    transition: color 0.2s;
+    touch-action: none;
+}
+
+.qo-drag-handle:hover { color: #6366f1; }
+.qo-drag-handle:active { cursor: grabbing; }
+
+/* ── Rank Badge ── */
+.qo-floor-rank,
+.qo-room-rank,
+.qo-row-rank {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.qo-floor-rank { background: rgba(99,102,241,0.08); color: #6366f1; }
+.qo-room-rank  { background: rgba(16,185,129,0.08);  color: #10b981; }
+.qo-row-rank   { background: rgba(245,158,11,0.08);  color: #f59e0b; }
+
+/* ── Info Section ── */
+.qo-floor-info,
+.qo-room-info,
+.qo-row-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.qo-floor-name,
+.qo-room-name,
+.qo-row-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
+.qo-row-name { font-size: 0.72rem; }
+
+.qo-floor-meta,
+.qo-room-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.qo-meta-chip {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: #94a3b8;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    padding: 2px 7px;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+}
+
+/* ── Row description ── */
+.qo-row-desc {
+    font-size: 0.62rem;
+    color: #94a3b8;
+    font-weight: 500;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Badges ── */
+.qo-floor-badge,
+.qo-room-badge,
+.qo-row-amount {
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 100px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.qo-floor-badge { background: rgba(99,102,241,0.07); color: #6366f1; }
+.qo-room-badge  { background: rgba(16,185,129,0.07);  color: #10b981; }
+.qo-row-amount  { background: rgba(245,158,11,0.07);  color: #f59e0b; }
+
+/* ── Sortable states ── */
+.qo-ghost {
+    opacity: 0.4;
+    background: rgba(99,102,241,0.04) !important;
+    border: 1.5px dashed #6366f1 !important;
+    border-radius: 13px;
+}
+
+.qo-chosen {
+    box-shadow: 0 8px 24px rgba(99,102,241,0.18) !important;
+    border-color: rgba(99,102,241,0.25) !important;
+    transform: scale(1.02);
+    z-index: 10;
+}
+
+.qo-drag {
+    box-shadow: 0 12px 32px rgba(99,102,241,0.22) !important;
+    transform: rotate(1.5deg) scale(1.03);
+}
+
+/* ── Empty state ── */
+.qo-empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: #94a3b8;
+    font-size: 0.78rem;
+}
+
+.qo-empty i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 8px;
+    opacity: 0.4;
+}
+
+/* ── Footer ── */
+.qo-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px 16px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    flex-shrink: 0;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.qo-footer-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.68rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.qo-footer-info i { font-size: 0.72rem; color: #6366f1; }
+
+.qo-footer-actions {
+    display: flex;
+    gap: 7px;
+}
+
+.qo-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 15px;
+    border-radius: 9px;
+    border: none;
+    font-size: 0.73rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.qo-btn-reset {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1.5px solid #e2e8f0;
+}
+
+.qo-btn-reset:hover {
+    background: #fee2e2;
+    color: #f43f5e;
+    border-color: rgba(244,63,94,0.2);
+}
+
+.qo-btn-apply {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(99,102,241,0.25);
+}
+
+.qo-btn-apply:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(99,102,241,0.32);
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .qo-overlay { padding: 0; align-items: flex-end; }
     .qo-modal {
-        background: white;
-        border-radius: 20px;
-        width: 90%;
-        max-width: 540px;
+        width: 100%;
         max-height: 85vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        box-shadow: 0 25px 60px rgba(0,0,0,0.2);
-        transform: translateY(24px) scale(0.96);
-        transition: transform 0.35s cubic-bezier(0.23,1,0.32,1);
-        border: 1px solid #e2e8f0;
+        border-radius: 20px 20px 0 0;
     }
+    .qo-fab { bottom: 20px; right: 16px; padding: 11px 16px; }
+}
 
-    .qo-overlay.active .qo-modal { transform: translateY(0) scale(1); }
-
-    .qo-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 20px 24px;
-        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .qo-header-left { display: flex; align-items: center; gap: 14px; }
-
-    .qo-header-icon {
-        width: 44px;
-        height: 44px;
-        background: linear-gradient(135deg, #4f46e5, #3730a3);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.1rem;
-        box-shadow: 0 4px 12px rgba(79,70,229,0.3);
-        flex-shrink: 0;
-    }
-
-    .qo-title {
-        font-size: 1.05rem;
-        font-weight: 800;
-        color: #1e293b;
-        margin: 0;
-        letter-spacing: -0.02em;
-    }
-
-    .qo-subtitle {
-        font-size: 0.72rem;
-        color: #94a3b8;
-        font-weight: 500;
-        display: block;
-        margin-top: 2px;
-    }
-
-    .qo-close-btn {
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: white;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 10px;
-        color: #94a3b8;
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .qo-close-btn:hover {
-        background: #fef2f2;
-        color: #dc2626;
-        border-color: #fca5a5;
-    }
-
-    .qo-body {
-        flex: 1;
-        overflow-y: auto;
-        padding: 16px 24px;
-    }
-
-    .qo-body::-webkit-scrollbar { width: 5px; }
-    .qo-body::-webkit-scrollbar-track { background: #f1f5f9; }
-    .qo-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-    .qo-hint-bar {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 14px;
-        background: #f0f9ff;
-        border: 1px solid #bae6fd;
-        border-radius: 10px;
-        font-size: 0.78rem;
-        color: #0369a1;
-        font-weight: 500;
-        margin-bottom: 14px;
-    }
-
-    .qo-floor-list { display: flex; flex-direction: column; gap: 8px; }
-
-    .qo-floor-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 14px 16px;
-        background: white;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 12px;
-        transition: all 0.2s ease;
-        user-select: none;
-    }
-
-    .qo-floor-item:hover {
-        border-color: #c7d2fe;
-        background: #fafbff;
-        box-shadow: 0 2px 8px rgba(79,70,229,0.06);
-    }
-
-    .qo-drag-handle {
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #cbd5e1;
-        font-size: 1rem;
-        cursor: grab;
-        border-radius: 6px;
-        transition: all 0.15s ease;
-        flex-shrink: 0;
-    }
-
-    .qo-drag-handle:hover { background: #f1f5f9; color: #64748b; }
-    .qo-drag-handle:active { cursor: grabbing; }
-
-    .qo-floor-rank {
-        width: 30px;
-        height: 30px;
-        background: #4f46e5;
-        color: white;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.75rem;
-        font-weight: 800;
-        flex-shrink: 0;
-        transition: all 0.2s ease;
-    }
-
-    .qo-floor-info { flex: 1; min-width: 0; }
-
-    .qo-floor-name {
-        font-weight: 700;
-        font-size: 0.9rem;
-        color: #1e293b;
-        margin-bottom: 3px;
-    }
-
-    .qo-floor-meta {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.72rem;
-        color: #94a3b8;
-        font-weight: 500;
-    }
-
-    .qo-meta-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        padding: 2px 8px;
-        background: #f1f5f9;
-        border-radius: 6px;
-        font-size: 0.68rem;
-        color: #64748b;
-        font-weight: 600;
-    }
-
-    .qo-floor-badge {
-        padding: 4px 10px;
-        background: #eef2ff;
-        border-radius: 8px;
-        font-size: 0.68rem;
-        font-weight: 700;
-        color: #4f46e5;
-        white-space: nowrap;
-        border: 1px solid #c7d2fe;
-    }
-
-    /* Sortable visual states */
-    .qo-ghost {
-        opacity: 0.35;
-        background: #eef2ff !important;
-        border-color: #c7d2fe !important;
-        border-radius: 12px;
-    }
-
-    .qo-chosen {
-        box-shadow: 0 8px 24px rgba(79,70,229,0.2) !important;
-        border-color: #4f46e5 !important;
-        transform: scale(1.02);
-    }
-
-    .qo-chosen .qo-floor-rank { background: #3730a3; }
-
-    .qo-drag {
-        opacity: 0.95;
-        background: white !important;
-        box-shadow: 0 20px 50px rgba(79,70,229,0.25) !important;
-        border-color: #4f46e5 !important;
-        border-radius: 14px !important;
-        transform: rotate(1deg) scale(1.02);
-    }
-
-    .qo-footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 14px 24px;
-        border-top: 1px solid #e2e8f0;
-        background: #f8fafc;
-    }
-
-    .qo-footer-info {
-        font-size: 0.78rem;
-        color: #94a3b8;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .qo-footer-actions { display: flex; gap: 8px; }
-
-    .qo-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 9px 20px;
-        border-radius: 10px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        border: none;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .qo-btn-reset {
-        background: white;
-        color: #64748b;
-        border: 1.5px solid #e2e8f0;
-    }
-
-    .qo-btn-reset:hover { background: #f1f5f9; color: #334155; border-color: #cbd5e1; }
-
-    .qo-btn-apply {
-        background: linear-gradient(135deg, #4f46e5, #3730a3);
-        color: white;
-        box-shadow: 0 4px 12px rgba(79,70,229,0.25);
-    }
-
-    .qo-btn-apply:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(79,70,229,0.35);
-    }
 
     /* =============================================
        PRINT STYLES
@@ -1394,24 +1658,25 @@
 </div>
 
 <!-- ============================================
-     QUICK ORDER FAB + MODAL
+     QUICK ORDER FAB + MODAL (Updated)
      ============================================ -->
-<button class="qo-fab no-print" id="qoFabBtn" onclick="openQuickOrder()" title="Reorder Floors">
+<button class="qo-fab no-print" id="qoFabBtn" onclick="openQuickOrder()" title="Reorder Items">
     <i class="bi bi-arrow-down-up" style="font-size:1rem;"></i>
-    <span>Reorder Floors</span>
+    <span>Reorder</span>
 </button>
 
 <div class="qo-overlay no-print" id="qoOverlay">
     <div class="qo-modal" id="qoModal">
 
+        <!-- Header -->
         <div class="qo-header">
             <div class="qo-header-left">
                 <div class="qo-header-icon">
                     <i class="bi bi-layers"></i>
                 </div>
                 <div>
-                    <h5 class="qo-title">Floor Order</h5>
-                    <span class="qo-subtitle">Drag to reorder floors in the invoice</span>
+                    <h5 class="qo-title">Reorder Invoice</h5>
+                    <span class="qo-subtitle">Drag floors, rooms & rows to reorder</span>
                 </div>
             </div>
             <button class="qo-close-btn" onclick="closeQuickOrder()">
@@ -1419,23 +1684,70 @@
             </button>
         </div>
 
-        <div class="qo-body">
-            <div class="qo-hint-bar">
-                <i class="bi bi-grip-vertical" style="font-size:1rem; flex-shrink:0;"></i>
-                <span>Hold the <strong>grip handle</strong> and drag floors up or down. The invoice table updates instantly.</span>
-            </div>
-            <div class="qo-floor-list" id="qoFloorList">
-                <!-- Injected by JS -->
-            </div>
+        <!-- Tab Bar -->
+        <div class="qo-tabs">
+            <button class="qo-tab active" id="tabFloors" onclick="switchTab('floors')">
+                <i class="bi bi-building"></i> Floors
+                <span class="qo-tab-count" id="tabFloorCount">0</span>
+            </button>
+            <button class="qo-tab" id="tabRooms" onclick="switchTab('rooms')">
+                <i class="bi bi-door-open"></i> Rooms
+                <span class="qo-tab-count" id="tabRoomCount">0</span>
+            </button>
+            <button class="qo-tab" id="tabRows" onclick="switchTab('rows')">
+                <i class="bi bi-list-ul"></i> Rows
+                <span class="qo-tab-count" id="tabRowCount">0</span>
+            </button>
         </div>
 
+        <!-- Body -->
+        <div class="qo-body">
+
+            <!-- Hint Bar -->
+            <div class="qo-hint-bar">
+                <i class="bi bi-grip-vertical" style="font-size:1rem; flex-shrink:0;"></i>
+                <span id="qoHintText">Hold the <strong>grip handle</strong> and drag to reorder. Changes apply instantly.</span>
+            </div>
+
+            <!-- FLOORS PANEL -->
+            <div class="qo-panel" id="panelFloors">
+                <div class="qo-list" id="qoFloorList"></div>
+            </div>
+
+            <!-- ROOMS PANEL -->
+            <div class="qo-panel" id="panelRooms" style="display:none;">
+                <!-- Floor selector for rooms -->
+                <div class="qo-floor-selector" id="qoFloorSelector">
+                    <label class="qo-selector-label">Select Floor:</label>
+                    <div class="qo-selector-pills" id="qoFloorPills"></div>
+                </div>
+                <div class="qo-list" id="qoRoomList"></div>
+            </div>
+
+            <!-- ROWS PANEL -->
+            <div class="qo-panel" id="panelRows" style="display:none;">
+                <!-- Floor + Room selector for rows -->
+                <div class="qo-floor-selector" id="qoRowFloorSelector">
+                    <label class="qo-selector-label">Floor:</label>
+                    <div class="qo-selector-pills" id="qoRowFloorPills"></div>
+                </div>
+                <div class="qo-floor-selector" id="qoRowRoomSelector" style="margin-top:8px; display:none;">
+                    <label class="qo-selector-label">Room:</label>
+                    <div class="qo-selector-pills" id="qoRowRoomPills"></div>
+                </div>
+                <div class="qo-list" id="qoRowList"></div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
         <div class="qo-footer">
             <div class="qo-footer-info">
                 <i class="bi bi-info-circle"></i>
-                <span id="qoFloorCount">0 floors</span>
+                <span id="qoFooterInfo">Drag items to reorder</span>
             </div>
             <div class="qo-footer-actions">
-                <button class="qo-btn qo-btn-reset" onclick="resetFloorOrder()">
+                <button class="qo-btn qo-btn-reset" onclick="resetCurrentTab()">
                     <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </button>
                 <button class="qo-btn qo-btn-apply" onclick="closeQuickOrder()">
@@ -1962,105 +2274,114 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <!-- ── QUICK ORDER SYSTEM ── -->
+<!-- ── QUICK ORDER SYSTEM (Full: Floors + Rooms + Rows) ── -->
 <script>
 (function () {
     'use strict';
 
-    let floorGroups = [];
+    /* ═══════════════════════════════════
+       STATE
+    ═══════════════════════════════════ */
+    let floorGroups   = [];   // Array of { headerRow, rows[], floorName, rooms[] }
     let originalOrder = [];
-    let qoSortable = null;
+    let activeTab     = 'floors';
+    let activeFloorIdx = 0;
+    let activeRoomIdx  = 0;
 
-    const tbody = document.getElementById('invoiceTbody');
-    const floorList = document.getElementById('qoFloorList');
-    const overlay = document.getElementById('qoOverlay');
-    const floorCountEl = document.getElementById('qoFloorCount');
+    /* Sortable instances */
+    const sortables = { floors: null, rooms: null, rows: null };
 
-    // ── Parse floor groups ──
+    /* DOM refs */
+    const tbody         = document.getElementById('invoiceTbody');
+    const overlay       = document.getElementById('qoOverlay');
+    const qoFloorList   = document.getElementById('qoFloorList');
+    const qoRoomList    = document.getElementById('qoRoomList');
+    const qoRowList     = document.getElementById('qoRowList');
+    const qoFloorPills  = document.getElementById('qoFloorPills');
+    const qoRowFloorPills = document.getElementById('qoRowFloorPills');
+    const qoRowRoomPills  = document.getElementById('qoRowRoomPills');
+    const qoRowRoomSel    = document.getElementById('qoRowRoomSelector');
+    const footerInfo    = document.getElementById('qoFooterInfo');
+
+    /* ═══════════════════════════════════
+       PARSE TABLE INTO floorGroups
+    ═══════════════════════════════════ */
     function parseFloorGroups() {
-        if (!tbody) return;
         floorGroups = [];
-        let current = null;
+        let currentFloor = null;
+        let currentRoom  = null;
 
         Array.from(tbody.querySelectorAll('tr')).forEach(row => {
+
             if (row.classList.contains('floor-row')) {
-                current = { headerRow: row, rows: [row], floorName: getFloorName(row) };
-                floorGroups.push(current);
-            } else if (current) {
-                current.rows.push(row);
+                /* Start a new floor */
+                currentRoom  = null;
+                currentFloor = {
+                    headerRow: row,
+                    rows: [row],
+                    floorName: getTextContent(row),
+                    rooms: []
+                };
+                floorGroups.push(currentFloor);
+
+            } else if (row.classList.contains('room-row')) {
+                /* Start a new room inside current floor */
+                if (!currentFloor) return;
+                currentRoom = {
+                    headerRow: row,
+                    rows: [row],
+                    roomName: getTextContent(row)
+                };
+                currentFloor.rooms.push(currentRoom);
+                currentFloor.rows.push(row);
+
+            } else {
+                /* Data row */
+                if (currentRoom)  currentRoom.rows.push(row);
+                if (currentFloor) currentFloor.rows.push(row);
             }
         });
 
-        originalOrder = floorGroups.map((g, i) => ({ index: i, name: g.floorName }));
+        /* Save original order (deep-clone names) */
+        originalOrder = floorGroups.map(f => ({
+            floorName: f.floorName,
+            rooms: f.rooms.map(r => ({ roomName: r.roomName }))
+        }));
     }
 
-    function getFloorName(row) {
+    function getTextContent(row) {
         const td = row.querySelector('td');
         if (!td) return 'Unknown';
         const cl = td.cloneNode(true);
-        cl.querySelectorAll('.row-action-btns, button, span').forEach(el => el.remove());
-        return cl.textContent.trim() || 'Unnamed Floor';
+        cl.querySelectorAll('.row-action-btns, button, span.no-print, span').forEach(el => el.remove());
+        return cl.textContent.trim() || 'Unnamed';
     }
 
-    // ── Build modal floor list ──
-    function buildFloorList() {
-        floorList.innerHTML = '';
-
-        floorGroups.forEach((group, index) => {
-            const itemCount = group.rows.filter(r => !r.classList.contains('floor-row') && !r.classList.contains('room-row')).length;
-            const roomCount = group.rows.filter(r => r.classList.contains('room-row')).length;
-            const totalRows = group.rows.length;
-
-            const item = document.createElement('div');
-            item.className = 'qo-floor-item';
-            item.dataset.index = index;
-            item.innerHTML = `
-                <div class="qo-drag-handle" title="Drag to reorder">
-                    <i class="bi bi-grip-vertical" style="font-size:1.1rem;"></i>
-                </div>
-                <div class="qo-floor-rank">${index + 1}</div>
-                <div class="qo-floor-info">
-                    <div class="qo-floor-name">${group.floorName}</div>
-                    <div class="qo-floor-meta">
-                        <span class="qo-meta-chip"><i class="bi bi-door-open me-1"></i>${roomCount} Room${roomCount !== 1 ? 's' : ''}</span>
-                        <span class="qo-meta-chip"><i class="bi bi-box me-1"></i>${itemCount} Item${itemCount !== 1 ? 's' : ''}</span>
-                    </div>
-                </div>
-                <div class="qo-floor-badge">${totalRows} rows</div>
-            `;
-            floorList.appendChild(item);
-        });
-
-        floorCountEl.textContent = `${floorGroups.length} floor${floorGroups.length !== 1 ? 's' : ''}`;
-    }
-
-    // ── Apply new order to table ──
-    function applyFloorOrder() {
-        if (!tbody) return;
-
-        const items = floorList.querySelectorAll('.qo-floor-item');
-        const newOrder = Array.from(items).map(el => parseInt(el.dataset.index));
-        const reordered = newOrder.map(i => floorGroups[i]);
-
-        // Save undo state
+    /* ═══════════════════════════════════
+       APPLY TABLE ORDER FROM floorGroups
+    ═══════════════════════════════════ */
+    function applyToTable() {
         if (typeof window.saveState === 'function') window.saveState();
 
-        // Clear tbody
+        /* Clear tbody */
         while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
 
-        // Re-append in new order
-        reordered.forEach(group => group.rows.forEach(row => tbody.appendChild(row)));
-
-        // Update references
-        floorGroups = reordered;
-
-        // Update rank numbers
-        floorList.querySelectorAll('.qo-floor-item').forEach((item, i) => {
-            item.querySelector('.qo-floor-rank').textContent = i + 1;
-            item.dataset.index = i;
+        /* Re-append: floor header → rooms (room header → room rows) */
+        floorGroups.forEach(floor => {
+            tbody.appendChild(floor.headerRow);
+            floor.rooms.forEach(room => {
+                room.rows.forEach(r => tbody.appendChild(r));
+            });
+            /* Items not in any room (directly under floor) */
+            floor.rows.forEach(r => {
+                if (!r.classList.contains('floor-row') && !floor.rooms.some(rm => rm.rows.includes(r))) {
+                    tbody.appendChild(r);
+                }
+            });
         });
 
-        // Flash floor rows
-        tbody.querySelectorAll('.floor-row').forEach(row => {
+        /* Flash updated rows */
+        tbody.querySelectorAll('.floor-row, .room-row').forEach(row => {
             row.classList.remove('paste-flash');
             void row.offsetWidth;
             row.classList.add('paste-flash');
@@ -2068,66 +2389,428 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ── Reset to original order ──
-    window.resetFloorOrder = function () {
-        if (!tbody || originalOrder.length === 0) return;
+    /* ═══════════════════════════════════
+       TAB SWITCHING
+    ═══════════════════════════════════ */
+    window.switchTab = function (tab) {
+        activeTab = tab;
 
-        // Rebuild floorGroups from current DOM (might have changed)
-        parseFloorGroups();
+        /* Update tab buttons */
+        document.querySelectorAll('.qo-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
 
-        const resetMap = {};
-        floorGroups.forEach(g => { resetMap[g.floorName] = g; });
+        /* Show/hide panels */
+        document.getElementById('panelFloors').style.display = tab === 'floors' ? 'flex' : 'none';
+        document.getElementById('panelRooms').style.display  = tab === 'rooms'  ? 'flex' : 'none';
+        document.getElementById('panelRows').style.display   = tab === 'rows'   ? 'flex' : 'none';
 
-        const resetGroups = originalOrder
-            .map(o => resetMap[o.name])
-            .filter(Boolean);
+        /* Update hint */
+        const hints = {
+            floors: 'Drag <strong>floors</strong> to reorder them in the invoice.',
+            rooms:  'Select a floor, then drag <strong>rooms</strong> to reorder.',
+            rows:   'Select a floor and room, then drag <strong>rows</strong> to reorder.'
+        };
+        document.getElementById('qoHintText').innerHTML = hints[tab];
 
-        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-        resetGroups.forEach(g => g.rows.forEach(r => tbody.appendChild(r)));
-        floorGroups = resetGroups;
-
-        buildFloorList();
-        initSortable();
-
-        // Re-update ranks
-        floorList.querySelectorAll('.qo-floor-item').forEach((item, i) => {
-            item.querySelector('.qo-floor-rank').textContent = i + 1;
-            item.dataset.index = i;
-        });
-
-        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Floor order reset', showConfirmButton: false, timer: 1200 });
+        /* Render panel */
+        if (tab === 'floors') renderFloors();
+        if (tab === 'rooms')  renderRoomPanel();
+        if (tab === 'rows')   renderRowPanel();
     };
 
-    // ── Init SortableJS ──
-    function initSortable() {
-        if (qoSortable) qoSortable.destroy();
+    /* ═══════════════════════════════════
+       FLOORS PANEL
+    ═══════════════════════════════════ */
+    function renderFloors() {
+        qoFloorList.innerHTML = '';
 
-        qoSortable = new Sortable(floorList, {
+        if (floorGroups.length === 0) {
+            qoFloorList.innerHTML = '<div class="qo-empty"><i class="bi bi-building"></i>No floors found</div>';
+            return;
+        }
+
+        floorGroups.forEach((floor, index) => {
+            const itemCount = floor.rows.filter(r =>
+                !r.classList.contains('floor-row') && !r.classList.contains('room-row')
+            ).length;
+
+            const el = document.createElement('div');
+            el.className = 'qo-floor-item';
+            el.dataset.floorIndex = index;
+            el.innerHTML = `
+                <div class="qo-drag-handle" title="Drag to reorder">
+                    <i class="bi bi-grip-vertical" style="font-size:1.1rem;"></i>
+                </div>
+                <div class="qo-floor-rank">${index + 1}</div>
+                <div class="qo-floor-info">
+                    <div class="qo-floor-name">${floor.floorName}</div>
+                    <div class="qo-floor-meta">
+                        <span class="qo-meta-chip">
+                            <i class="bi bi-door-open me-1"></i>
+                            ${floor.rooms.length} Room${floor.rooms.length !== 1 ? 's' : ''}
+                        </span>
+                        <span class="qo-meta-chip">
+                            <i class="bi bi-box me-1"></i>
+                            ${itemCount} Item${itemCount !== 1 ? 's' : ''}
+                        </span>
+                    </div>
+                </div>
+                <div class="qo-floor-badge">${floor.rows.length} rows</div>
+            `;
+            qoFloorList.appendChild(el);
+        });
+
+        /* Update tab count */
+        document.getElementById('tabFloorCount').textContent = floorGroups.length;
+        footerInfo.textContent = `${floorGroups.length} floor${floorGroups.length !== 1 ? 's' : ''}`;
+
+        /* Init sortable */
+        destroySortable('floors');
+        sortables.floors = new Sortable(qoFloorList, {
             animation: 250,
             ghostClass: 'qo-ghost',
             chosenClass: 'qo-chosen',
             dragClass: 'qo-drag',
             handle: '.qo-drag-handle',
             easing: 'cubic-bezier(0.4,0,0.2,1)',
-            onEnd: function () { applyFloorOrder(); }
+            onEnd: function () {
+                /* Re-map floorGroups from DOM order */
+                const items = qoFloorList.querySelectorAll('.qo-floor-item');
+                const newFloors = Array.from(items).map(el =>
+                    floorGroups[parseInt(el.dataset.floorIndex)]
+                );
+                floorGroups = newFloors;
+
+                /* Re-index */
+                items.forEach((el, i) => {
+                    el.dataset.floorIndex = i;
+                    el.querySelector('.qo-floor-rank').textContent = i + 1;
+                });
+
+                applyToTable();
+                footerInfo.textContent = 'Floors reordered ✓';
+                setTimeout(() => { footerInfo.textContent = `${floorGroups.length} floors`; }, 2000);
+            }
         });
     }
 
-    // ── Open / Close ──
+    /* ═══════════════════════════════════
+       ROOMS PANEL
+    ═══════════════════════════════════ */
+    function renderRoomPanel() {
+        /* Build floor pills */
+        qoFloorPills.innerHTML = '';
+        let totalRooms = 0;
+
+        floorGroups.forEach((floor, i) => {
+            totalRooms += floor.rooms.length;
+            const pill = document.createElement('button');
+            pill.className = 'qo-pill' + (i === activeFloorIdx ? ' active' : '');
+            pill.textContent = floor.floorName;
+            pill.onclick = () => {
+                activeFloorIdx = i;
+                qoFloorPills.querySelectorAll('.qo-pill').forEach((p, pi) => {
+                    p.classList.toggle('active', pi === i);
+                });
+                renderRoomList(i);
+            };
+            qoFloorPills.appendChild(pill);
+        });
+
+        document.getElementById('tabRoomCount').textContent = totalRooms;
+        renderRoomList(activeFloorIdx);
+    }
+
+    function renderRoomList(floorIdx) {
+        qoRoomList.innerHTML = '';
+        const floor = floorGroups[floorIdx];
+        if (!floor) return;
+
+        if (floor.rooms.length === 0) {
+            qoRoomList.innerHTML = '<div class="qo-empty"><i class="bi bi-door-open"></i>No rooms in this floor</div>';
+            destroySortable('rooms');
+            return;
+        }
+
+        floor.rooms.forEach((room, i) => {
+            const dataRows = room.rows.filter(r => !r.classList.contains('room-row'));
+            const el = document.createElement('div');
+            el.className = 'qo-room-item';
+            el.dataset.roomIndex = i;
+            el.innerHTML = `
+                <div class="qo-drag-handle" title="Drag to reorder">
+                    <i class="bi bi-grip-vertical" style="font-size:1rem;"></i>
+                </div>
+                <div class="qo-room-rank">${i + 1}</div>
+                <div class="qo-room-info">
+                    <div class="qo-room-name">${room.roomName}</div>
+                    <div class="qo-floor-meta">
+                        <span class="qo-meta-chip">
+                            <i class="bi bi-list-ul me-1"></i>
+                            ${dataRows.length} Item${dataRows.length !== 1 ? 's' : ''}
+                        </span>
+                    </div>
+                </div>
+                <div class="qo-room-badge">${room.rows.length} rows</div>
+            `;
+            qoRoomList.appendChild(el);
+        });
+
+        footerInfo.textContent = `${floor.rooms.length} room${floor.rooms.length !== 1 ? 's' : ''} in ${floor.floorName}`;
+
+        destroySortable('rooms');
+        sortables.rooms = new Sortable(qoRoomList, {
+            animation: 220,
+            ghostClass: 'qo-ghost',
+            chosenClass: 'qo-chosen',
+            dragClass: 'qo-drag',
+            handle: '.qo-drag-handle',
+            easing: 'cubic-bezier(0.4,0,0.2,1)',
+            onEnd: function () {
+                const items = qoRoomList.querySelectorAll('.qo-room-item');
+                const floor = floorGroups[activeFloorIdx];
+                const newRooms = Array.from(items).map(el =>
+                    floor.rooms[parseInt(el.dataset.roomIndex)]
+                );
+                floor.rooms = newRooms;
+
+                /* Re-index */
+                items.forEach((el, i) => {
+                    el.dataset.roomIndex = i;
+                    el.querySelector('.qo-room-rank').textContent = i + 1;
+                });
+
+                /* Rebuild floor.rows */
+                floor.rows = [floor.headerRow];
+                floor.rooms.forEach(r => r.rows.forEach(row => floor.rows.push(row)));
+
+                applyToTable();
+                footerInfo.textContent = 'Rooms reordered ✓';
+                setTimeout(() => { footerInfo.textContent = `${floor.rooms.length} rooms in ${floor.floorName}`; }, 2000);
+            }
+        });
+    }
+
+    /* ═══════════════════════════════════
+       ROWS PANEL
+    ═══════════════════════════════════ */
+    function renderRowPanel() {
+        /* Floor pills */
+        qoRowFloorPills.innerHTML = '';
+        floorGroups.forEach((floor, i) => {
+            const pill = document.createElement('button');
+            pill.className = 'qo-pill' + (i === activeFloorIdx ? ' active' : '');
+            pill.textContent = floor.floorName;
+            pill.onclick = () => {
+                activeFloorIdx = i;
+                activeRoomIdx  = 0;
+                qoRowFloorPills.querySelectorAll('.qo-pill').forEach((p, pi) => {
+                    p.classList.toggle('active', pi === i);
+                });
+                renderRowRoomPills(i);
+            };
+            qoRowFloorPills.appendChild(pill);
+        });
+
+        renderRowRoomPills(activeFloorIdx);
+    }
+
+    function renderRowRoomPills(floorIdx) {
+        qoRowRoomPills.innerHTML = '';
+        const floor = floorGroups[floorIdx];
+        if (!floor) return;
+
+        if (floor.rooms.length === 0) {
+            /* No rooms — show floor-level rows directly */
+            qoRowRoomSel.style.display = 'none';
+            renderRowList(floorIdx, -1);
+            return;
+        }
+
+        qoRowRoomSel.style.display = 'flex';
+
+        floor.rooms.forEach((room, i) => {
+            const pill = document.createElement('button');
+            pill.className = 'qo-pill' + (i === activeRoomIdx ? ' active' : '');
+            pill.textContent = room.roomName;
+            pill.onclick = () => {
+                activeRoomIdx = i;
+                qoRowRoomPills.querySelectorAll('.qo-pill').forEach((p, pi) => {
+                    p.classList.toggle('active', pi === i);
+                });
+                renderRowList(floorIdx, i);
+            };
+            qoRowRoomPills.appendChild(pill);
+        });
+
+        renderRowList(floorIdx, activeRoomIdx);
+    }
+
+    function renderRowList(floorIdx, roomIdx) {
+        qoRowList.innerHTML = '';
+        const floor = floorGroups[floorIdx];
+        if (!floor) return;
+
+        /* Determine data rows */
+        let dataRows = [];
+        let sourceRows = null; // reference array to update
+
+        if (roomIdx === -1 || floor.rooms.length === 0) {
+            /* Floor-level rows (not in any room) */
+            dataRows = floor.rows.filter(r =>
+                !r.classList.contains('floor-row') &&
+                !r.classList.contains('room-row')
+            );
+            sourceRows = floor;
+        } else {
+            const room = floor.rooms[roomIdx];
+            if (!room) return;
+            dataRows = room.rows.filter(r => !r.classList.contains('room-row'));
+            sourceRows = room;
+        }
+
+        const totalRowCount = dataRows.length;
+        document.getElementById('tabRowCount').textContent = totalRowCount;
+
+        if (dataRows.length === 0) {
+            qoRowList.innerHTML = '<div class="qo-empty"><i class="bi bi-list-ul"></i>No items in this section</div>';
+            destroySortable('rows');
+            return;
+        }
+
+        dataRows.forEach((row, i) => {
+            const cells = row.querySelectorAll('td');
+            const entity = cells[1]?.textContent.trim() || '—';
+            const spec   = cells[2]?.textContent.trim().slice(0, 40) || '';
+            const amount = cells[6]?.dataset?.amount || cells[6]?.textContent.trim() || '';
+
+            const el = document.createElement('div');
+            el.className = 'qo-row-item';
+            el.dataset.rowIndex = i;
+            el.innerHTML = `
+                <div class="qo-drag-handle" title="Drag to reorder">
+                    <i class="bi bi-grip-vertical" style="font-size:0.95rem;"></i>
+                </div>
+                <div class="qo-row-rank">${i + 1}</div>
+                <div class="qo-row-info">
+                    <div class="qo-row-name">${entity}</div>
+                    ${spec ? `<div class="qo-row-desc">${spec}</div>` : ''}
+                </div>
+                ${amount ? `<div class="qo-row-amount">₹${amount}</div>` : ''}
+            `;
+            qoRowList.appendChild(el);
+        });
+
+        footerInfo.textContent = `${dataRows.length} item${dataRows.length !== 1 ? 's' : ''}`;
+
+        destroySortable('rows');
+        sortables.rows = new Sortable(qoRowList, {
+            animation: 200,
+            ghostClass: 'qo-ghost',
+            chosenClass: 'qo-chosen',
+            dragClass: 'qo-drag',
+            handle: '.qo-drag-handle',
+            easing: 'cubic-bezier(0.4,0,0.2,1)',
+            onEnd: function () {
+                const items = qoRowList.querySelectorAll('.qo-row-item');
+                const newDataRows = Array.from(items).map(el =>
+                    dataRows[parseInt(el.dataset.rowIndex)]
+                );
+
+                /* Re-index labels */
+                items.forEach((el, i) => {
+                    el.dataset.rowIndex = i;
+                    el.querySelector('.qo-row-rank').textContent = i + 1;
+                });
+
+                /* Rebuild sourceRows.rows */
+                if (roomIdx === -1 || floor.rooms.length === 0) {
+                    floor.rows = [floor.headerRow];
+                    floor.rooms.forEach(rm => rm.rows.forEach(r => floor.rows.push(r)));
+                    newDataRows.forEach(r => floor.rows.push(r));
+                } else {
+                    const room = floor.rooms[roomIdx];
+                    room.rows = [room.headerRow, ...newDataRows];
+                    /* Rebuild floor.rows */
+                    floor.rows = [floor.headerRow];
+                    floor.rooms.forEach(rm => rm.rows.forEach(r => floor.rows.push(r)));
+                }
+
+                applyToTable();
+                footerInfo.textContent = 'Rows reordered ✓';
+                setTimeout(() => { footerInfo.textContent = `${dataRows.length} items`; }, 2000);
+            }
+        });
+    }
+
+    /* ═══════════════════════════════════
+       RESET
+    ═══════════════════════════════════ */
+    window.resetCurrentTab = function () {
+        if (activeTab === 'floors') {
+            resetFloorOrder();
+        } else if (activeTab === 'rooms') {
+            resetRoomOrder();
+        } else {
+            resetRowOrder();
+        }
+    };
+
+    window.resetFloorOrder = function () {
+        parseFloorGroups(); /* re-parse from DOM */
+
+        const resetMap = {};
+        floorGroups.forEach(g => { resetMap[g.floorName] = g; });
+
+        const resetGroups = originalOrder
+            .map(o => resetMap[o.floorName])
+            .filter(Boolean);
+
+        if (resetGroups.length > 0) {
+            floorGroups = resetGroups;
+            applyToTable();
+            renderFloors();
+        }
+
+        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Floor order reset', showConfirmButton: false, timer: 1200 });
+    };
+
+    function resetRoomOrder() {
+        parseFloorGroups();
+        renderRoomPanel();
+        applyToTable();
+        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Room order reset', showConfirmButton: false, timer: 1200 });
+    }
+
+    function resetRowOrder() {
+        parseFloorGroups();
+        renderRowPanel();
+        applyToTable();
+        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Row order reset', showConfirmButton: false, timer: 1200 });
+    }
+
+    /* ═══════════════════════════════════
+       SORTABLE HELPERS
+    ═══════════════════════════════════ */
+    function destroySortable(key) {
+        if (sortables[key]) {
+            sortables[key].destroy();
+            sortables[key] = null;
+        }
+    }
+
+    /* ═══════════════════════════════════
+       OPEN / CLOSE
+    ═══════════════════════════════════ */
     window.openQuickOrder = function () {
         parseFloorGroups();
 
         if (floorGroups.length === 0) {
-            Swal.fire({
-                toast: true, position: 'top-end', icon: 'warning',
-                title: 'No floors found in table',
-                showConfirmButton: false, timer: 2000
-            });
+            Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'No floors found in invoice', showConfirmButton: false, timer: 2000 });
             return;
         }
 
-        buildFloorList();
-        initSortable();
+        switchTab('floors');
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
     };
@@ -2135,12 +2818,17 @@ document.addEventListener('DOMContentLoaded', function () {
     window.closeQuickOrder = function () {
         overlay.classList.remove('active');
         document.body.style.overflow = '';
+        destroySortable('floors');
+        destroySortable('rooms');
+        destroySortable('rows');
     };
 
-    // Close on overlay background click
-    overlay.addEventListener('click', e => { if (e.target === overlay) closeQuickOrder(); });
+    /* Click outside */
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) closeQuickOrder();
+    });
 
-    // Close on Escape
+    /* Escape key */
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && overlay.classList.contains('active')) closeQuickOrder();
     });
