@@ -1,11 +1,882 @@
-
-
-```html
+<!-- billing/client/create.html -->
 {% extends 'billing/layouts/base.html' %}
-{% block title %}Add Client | HomeDen{% endblock %}
+{% load static %}
+
+{% block title %}Add New Client | HomeDen{% endblock %}
+{% block breadcrumb %}Clients → Add New{% endblock %}
 {% block page_title %}Add New Client{% endblock %}
 
 {% block content %}
+<style>
+    /* ══════════════════════════════════
+       CLIENT CREATE - MASTER STYLES
+    ══════════════════════════════════ */
+    .master-page {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.75rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .back-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        color: var(--text-3);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .back-btn:hover {
+        background: var(--brand-soft);
+        color: var(--brand);
+        border-color: rgba(99,102,241,0.2);
+    }
+
+    .page-icon-wrap {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+    }
+
+    .pi-indigo {
+        background: var(--brand-soft);
+        color: var(--brand);
+    }
+
+    .page-title {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--text-1);
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    .page-subtitle {
+        font-size: 0.75rem;
+        color: var(--text-3);
+        margin: 2px 0 0;
+        font-weight: 500;
+    }
+
+    .header-status {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 6px 14px;
+        border-radius: 100px;
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+    }
+
+    .hs-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+    .hs-warning { background: var(--amber); }
+    .hs-success { background: var(--emerald); animation: pulse 1.5s ease infinite; }
+
+    .hs-text {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-2);
+    }
+
+    /* Form Cards */
+    .form-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        margin-bottom: 1.25rem;
+        overflow: hidden;
+    }
+
+    .fc-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border-light);
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .fc-header-left {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+    }
+
+    .fc-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .fc-indigo { background: var(--brand-soft); color: var(--brand); }
+    .fc-amber { background: rgba(245,158,11,0.1); color: var(--amber); }
+    .fc-emerald { background: rgba(16,185,129,0.1); color: var(--emerald); }
+    .fc-violet { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+    .fc-sky { background: rgba(14,165,233,0.1); color: var(--sky); }
+
+    .fc-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-1);
+        margin: 0;
+    }
+
+    .fc-subtitle {
+        font-size: 0.68rem;
+        color: var(--text-3);
+        margin: 1px 0 0;
+        font-weight: 500;
+    }
+
+    .required-tag {
+        font-size: 0.6rem;
+        font-weight: 700;
+        color: var(--rose);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .required-tag i { font-size: 0.4rem; }
+
+    .optional-badge {
+        font-size: 0.62rem;
+        font-weight: 600;
+        color: var(--text-3);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        background: var(--surface-2);
+        border-radius: 100px;
+    }
+
+    .fc-body {
+        padding: 1.25rem;
+    }
+
+    /* Form Grid */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .form-grid .full-width {
+        grid-column: 1 / -1;
+    }
+
+    @media (max-width: 640px) {
+        .form-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Form Groups */
+    .form-group { position: relative; }
+
+    .field-label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.76rem;
+        font-weight: 600;
+        color: var(--text-2);
+        margin-bottom: 6px;
+    }
+
+    .req { color: var(--rose); font-weight: 700; }
+
+    .optional-tag {
+        font-size: 0.58rem;
+        font-weight: 600;
+        color: var(--text-3);
+        padding: 1px 6px;
+        background: var(--surface-2);
+        border-radius: 100px;
+    }
+
+    /* Inputs */
+    .input-wrap {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-3);
+        font-size: 0.88rem;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .custom-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-xs);
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: var(--text-1);
+        background: var(--surface);
+        transition: var(--transition);
+        outline: none;
+        font-family: inherit;
+    }
+
+    .custom-input.has-icon { padding-left: 38px; }
+
+    .custom-input::placeholder {
+        color: var(--text-4);
+        font-weight: 400;
+    }
+
+    .custom-input:focus {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px var(--brand-soft);
+    }
+
+    .custom-input.is-valid {
+        border-color: var(--emerald);
+    }
+
+    .custom-input.is-invalid {
+        border-color: var(--rose);
+    }
+
+    .custom-textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-xs);
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: var(--text-1);
+        background: var(--surface);
+        transition: var(--transition);
+        outline: none;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 44px;
+    }
+
+    .custom-textarea:focus {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px var(--brand-soft);
+    }
+
+    /* Input Group */
+    .input-group-custom {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .input-prefix {
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        background: var(--surface-2);
+        border: 1.5px solid var(--border);
+        border-right: none;
+        border-radius: var(--radius-xs) 0 0 var(--radius-xs);
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-3);
+    }
+
+    .input-suffix {
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+        background: var(--surface-2);
+        border: 1.5px solid var(--border);
+        border-left: none;
+        border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text-2);
+    }
+
+    .input-group-custom .input-wrap { flex: 1; }
+
+    .input-group-custom .custom-input {
+        border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+    }
+
+    .input-group-custom .input-prefix + .input-wrap .custom-input {
+        border-radius: 0;
+    }
+
+    .input-group-custom:has(.input-suffix) .custom-input {
+        border-radius: var(--radius-xs) 0 0 var(--radius-xs);
+    }
+
+    /* Field Hints & Feedback */
+    .field-hint {
+        font-size: 0.68rem;
+        color: var(--text-3);
+        margin: 6px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .field-hint i { font-size: 0.72rem; }
+
+    .field-feedback {
+        font-size: 0.68rem;
+        color: var(--rose);
+        margin-top: 4px;
+        display: none;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .field-feedback i { font-size: 0.7rem; }
+
+    .form-group.has-error .field-feedback { display: flex; }
+    .form-group.has-error .custom-input,
+    .form-group.has-error .custom-textarea { border-color: var(--rose); }
+
+    /* Input Indicator */
+    .input-indicator {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.55rem;
+        font-weight: 700;
+    }
+
+    .textarea-indicator {
+        top: 12px;
+        transform: none;
+    }
+
+    /* Action Card */
+    .action-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        margin-bottom: 1.25rem;
+        overflow: hidden;
+    }
+
+    .ac-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 1.1rem 1.25rem 0.5rem;
+    }
+
+    .ac-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        background: linear-gradient(135deg, var(--brand), #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        color: #fff;
+    }
+
+    .ac-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-1);
+        margin: 0;
+    }
+
+    .ac-body {
+        padding: 0.75rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .btn-submit {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 11px 16px;
+        background: linear-gradient(135deg, var(--brand), #8b5cf6);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 0.84rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: var(--transition);
+        font-family: inherit;
+        box-shadow: 0 4px 12px rgba(99,102,241,0.25);
+    }
+
+    .btn-submit:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(99,102,241,0.3);
+    }
+
+    .btn-cancel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        width: 100%;
+        padding: 10px 16px;
+        background: var(--surface-2);
+        color: var(--text-3);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .btn-cancel:hover {
+        background: var(--surface);
+        color: var(--text-2);
+        border-color: var(--border);
+    }
+
+    .ac-footer {
+        padding: 0 1.25rem 1rem;
+    }
+
+    .ac-info {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 8px 10px;
+        background: rgba(16,185,129,0.06);
+        border: 1px solid rgba(16,185,129,0.12);
+        border-radius: var(--radius-xs);
+        font-size: 0.68rem;
+        color: var(--emerald);
+        font-weight: 600;
+    }
+
+    .ac-info i { font-size: 0.72rem; flex-shrink: 0; margin-top: 1px; }
+
+    /* Sidebar / Progress Card */
+    .sidebar-card {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        margin-bottom: 1.25rem;
+        overflow: hidden;
+        padding: 1.1rem 1.25rem;
+    }
+
+    .sc-header {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 1rem;
+    }
+
+    .sc-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+    }
+
+    .sc-rose { background: rgba(244,63,94,0.08); color: var(--rose); }
+
+    .sc-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text-1);
+        margin: 0;
+    }
+
+    /* Checklist */
+    .checklist { display: flex; flex-direction: column; gap: 6px; }
+
+    .cl-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 6px 8px;
+        border-radius: var(--radius-xs);
+        transition: var(--transition);
+    }
+
+    .cl-check {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        color: var(--text-4);
+        border: 1.5px solid var(--border);
+        flex-shrink: 0;
+        transition: var(--transition);
+    }
+
+    .cl-item span {
+        font-size: 0.76rem;
+        font-weight: 500;
+        color: var(--text-3);
+        transition: var(--transition);
+    }
+
+    .cl-item.done .cl-check {
+        background: var(--emerald);
+        border-color: var(--emerald);
+        color: #fff;
+    }
+
+    .cl-item.done .cl-check i::before { content: "\F26E"; }
+
+    .cl-item.done span {
+        color: var(--text-2);
+        font-weight: 600;
+    }
+
+    /* Progress */
+    .progress-section {
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .ps-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--text-3);
+        margin-bottom: 6px;
+    }
+
+    .progress-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .progress-bar {
+        flex: 1;
+        height: 6px;
+        background: var(--surface-3);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--brand), #8b5cf6);
+        border-radius: 100px;
+        transition: width 0.4s ease;
+    }
+
+    .progress-text {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--brand);
+        min-width: 32px;
+        text-align: right;
+    }
+
+    /* ══════════════════════════════════
+       PROJECT SECTION - TOGGLE CARD
+    ══════════════════════════════════ */
+    /* ══════════════════════════════════
+   PROJECT TOGGLE CARD
+══════════════════════════════════ */
+.project-toggle-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.project-toggle-card.is-active {
+    border-color: rgba(99,102,241,0.25);
+    box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+.ptc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+    transition: var(--transition);
+}
+
+.ptc-header:hover { background: var(--surface-2); }
+
+.ptc-header-left {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.ptc-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    background: rgba(139,92,246,0.1);
+    color: #8b5cf6;
+    transition: var(--transition);
+}
+
+.project-toggle-card.is-active .ptc-icon {
+    background: linear-gradient(135deg, var(--brand), #8b5cf6);
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(99,102,241,0.25);
+}
+
+.ptc-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-1);
+    margin: 0;
+}
+
+.ptc-subtitle {
+    font-size: 0.68rem;
+    color: var(--text-3);
+    margin: 1px 0 0;
+    font-weight: 500;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+.toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.toggle-slider::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: var(--transition);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, var(--brand), #8b5cf6);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+}
+
+/* Project Body */
+.ptc-body {
+    border-top: 1px solid var(--border-light);
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
+                padding 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+
+.ptc-body.is-open {
+    max-height: 600px;
+    padding: 1.25rem;
+}
+
+/* Last Project Info */
+.last-project-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    background: rgba(14,165,233,0.05);
+    border: 1px solid rgba(14,165,233,0.12);
+    border-radius: var(--radius-xs);
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.lpi-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: rgba(14,165,233,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: var(--sky);
+    flex-shrink: 0;
+}
+
+.lpi-text {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-2);
+}
+
+.lpi-text strong {
+    color: var(--sky);
+    font-weight: 700;
+}
+
+.lpi-arrow {
+    font-size: 0.72rem;
+    color: var(--text-3);
+    margin: 0 2px;
+}
+
+.lpi-next {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--brand);
+    padding: 2px 8px;
+    background: var(--brand-soft);
+    border-radius: 5px;
+}
+
+/* Status Options - Radio Cards */
+.status-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.status-option {
+    flex: 1;
+    min-width: 100px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.status-option input { display: none; }
+
+.so-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-xs);
+    transition: var(--transition);
+    text-align: center;
+}
+
+.so-card:hover {
+    border-color: var(--text-4);
+    background: var(--surface);
+}
+
+.status-option.is-selected .so-card {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.1);
+}
+
+.so-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.so-ongoing { background: var(--emerald); }
+.so-completed { background: var(--sky); }
+.so-hold { background: var(--amber); }
+
+.so-label {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-2);
+}
+
+.status-option.is-selected .so-label {
+    color: var(--brand);
+    font-weight: 700;
+}
+
+@media (max-width: 480px) {
+    .status-options { flex-direction: column; }
+    .status-option { min-width: unset; }
+    .last-project-info { flex-direction: column; align-items: flex-start; }
+}
+
+
+</style>
+
 <div class="container-fluid master-page">
 
     <!-- Page Header -->
@@ -33,10 +904,10 @@
 
         <div class="row g-4">
 
-            <!-- Left Side - Main Form -->
+            <!-- ═══════ LEFT SIDE ═══════ -->
             <div class="col-lg-8">
 
-                <!-- Personal & Contact Details Card -->
+                <!-- Personal & Contact Details -->
                 <div class="form-card fade-in fi-2">
                     <div class="fc-header">
                         <div class="fc-header-left">
@@ -61,16 +932,11 @@
                                     Full Name / Business Name <span class="req">*</span>
                                 </label>
                                 <div class="input-wrap">
-                                    <div class="input-icon">
-                                        <i class="bi bi-person"></i>
-                                    </div>
-                                    <input type="text"
-                                           name="name"
-                                           value="{{ form.name.value|default:'' }}"
+                                    <div class="input-icon"><i class="bi bi-person"></i></div>
+                                    <input type="text" name="name"
                                            class="custom-input has-icon required-input"
                                            placeholder="e.g. John Doe or Acme Corp"
                                            required>
-                                    <span class="input-indicator"></span>
                                 </div>
                                 <div class="field-feedback">
                                     <i class="bi bi-exclamation-circle"></i>
@@ -86,15 +952,10 @@
                                 <div class="input-group-custom">
                                     <span class="input-prefix">+91</span>
                                     <div class="input-wrap flex-1">
-                                        <input type="text"
-                                               name="mobile_1"
-                                               value="{{ form.mobile_1.value|default:'' }}"
+                                        <input type="text" name="mobile_1"
                                                class="custom-input required-input"
                                                placeholder="9876543210"
-                                               pattern="[0-9]{10}"
-                                               maxlength="10"
-                                               required>
-                                        <span class="input-indicator"></span>
+                                               pattern="[0-9]{10}" maxlength="10" required>
                                     </div>
                                 </div>
                                 <div class="field-feedback">
@@ -112,13 +973,10 @@
                                 <div class="input-group-custom">
                                     <span class="input-prefix">+91</span>
                                     <div class="input-wrap flex-1">
-                                        <input type="text"
-                                               name="mobile_2"
-                                               value="{{ form.mobile_2.value|default:'' }}"
+                                        <input type="text" name="mobile_2"
                                                class="custom-input"
                                                placeholder="9876543210"
-                                               pattern="[0-9]{10}"
-                                               maxlength="10">
+                                               pattern="[0-9]{10}" maxlength="10">
                                     </div>
                                 </div>
                             </div>
@@ -130,12 +988,8 @@
                                     <span class="optional-tag">Optional</span>
                                 </label>
                                 <div class="input-wrap">
-                                    <div class="input-icon">
-                                        <i class="bi bi-envelope"></i>
-                                    </div>
-                                    <input type="email"
-                                           name="email"
-                                           value="{{ form.email.value|default:'' }}"
+                                    <div class="input-icon"><i class="bi bi-envelope"></i></div>
+                                    <input type="email" name="email"
                                            class="custom-input has-icon"
                                            placeholder="client@example.com">
                                 </div>
@@ -151,8 +1005,7 @@
                                               class="custom-textarea required-input"
                                               rows="3"
                                               placeholder="Street, Area, City, State, PIN..."
-                                              required>{{ form.address.value|default:'' }}</textarea>
-                                    <span class="input-indicator textarea-indicator"></span>
+                                              required></textarea>
                                 </div>
                                 <div class="field-feedback">
                                     <i class="bi bi-exclamation-circle"></i>
@@ -164,8 +1017,114 @@
                     </div>
                 </div>
 
-                <!-- Internal Notes Card -->
-                <div class="form-card fade-in fi-3">
+                <!-- ═══════════════════════════════════
+                     PROJECT CREATION TOGGLE CARD
+                ═══════════════════════════════════ -->
+
+                <div class="project-toggle-card fade-in fi-3" id="projectCard">
+                    <div class="ptc-header" onclick="toggleProjectSection()">
+                        <div class="ptc-header-left">
+                            <div class="ptc-icon">
+                                <i class="bi bi-kanban-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="ptc-title">Create Project</h6>
+                                <p class="ptc-subtitle">Optionally assign a project right away</p>
+                            </div>
+                        </div>
+                        <label class="toggle-switch" onclick="event.stopPropagation()">
+                            <input type="checkbox" name="create_project" id="projectToggle"
+                                onchange="toggleProjectSection()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="ptc-body" id="projectBody">
+
+                        <!-- Last Project Info -->
+                        {% if last_project_name %}
+                        <div class="last-project-info">
+                            <div class="lpi-icon"><i class="bi bi-clock-history"></i></div>
+                            <span class="lpi-text">
+                                Last project: <strong>{{ last_project_name }}</strong>
+                            </span>
+                            <i class="bi bi-arrow-right lpi-arrow"></i>
+                            <span class="lpi-next">{{ next_project_name }}</span>
+                        </div>
+                        {% else %}
+                        <div class="last-project-info">
+                            <div class="lpi-icon"><i class="bi bi-info-circle"></i></div>
+                            <span class="lpi-text">No projects yet — this will be the first!</span>
+                            <span class="lpi-next">{{ next_project_name }}</span>
+                        </div>
+                        {% endif %}
+
+                        <div class="form-grid">
+
+                            <!-- Project Name -->
+                            <div class="form-group">
+                                <label class="field-label">
+                                    Project Name <span class="req">*</span>
+                                </label>
+                                <div class="input-wrap">
+                                    <div class="input-icon"><i class="bi bi-kanban"></i></div>
+                                    <input type="text" name="project_name" id="projectNameInput"
+                                        class="custom-input has-icon"
+                                        value="{{ next_project_name }}"
+                                        placeholder="e.g. PR-03">
+                                </div>
+                                <p class="field-hint">
+                                    <i class="bi bi-info-circle"></i>
+                                    Auto-suggested from last project name
+                                </p>
+                                <div class="field-feedback">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    Project name is required when toggle is on
+                                </div>
+                            </div>
+
+                            <!-- Project Budget -->
+                            <div class="form-group">
+                                <label class="field-label">
+                                    Budget
+                                    <span class="optional-tag">Optional</span>
+                                </label>
+                                <div class="input-group-custom">
+                                    <span class="input-prefix">₹</span>
+                                    <div class="input-wrap flex-1">
+                                        <input type="number" name="project_budget"
+                                            class="custom-input"
+                                            value="0" min="0" step="0.01"
+                                            placeholder="0.00">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Project Status — Matches Model STATUS_CHOICES -->
+                            <div class="form-group full-width">
+                                <label class="field-label">Status</label>
+                                <div class="status-options" id="statusOptions">
+                                    {% for value, label in status_choices %}
+                                    <label class="status-option {% if value == 'ongoing' %}is-selected{% endif %}">
+                                        <input type="radio" name="project_status" value="{{ value }}"
+                                            {% if value == 'ongoing' %}checked{% endif %}
+                                            onchange="selectStatus(this)">
+                                        <div class="so-card">
+                                            <div class="so-indicator so-{{ value }}"></div>
+                                            <span class="so-label">{{ label }}</span>
+                                        </div>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                
+
+                <!-- Internal Notes -->
+                <div class="form-card fade-in fi-4">
                     <div class="fc-header">
                         <div class="fc-header-left">
                             <div class="fc-icon fc-amber">
@@ -183,9 +1142,8 @@
                     <div class="fc-body">
                         <div class="input-wrap">
                             <textarea name="notes"
-                                      class="custom-textarea"
-                                      rows="4"
-                                      placeholder="Mention site conditions, preferences, special requirements...">{{ form.notes.value|default:'' }}</textarea>
+                                      class="custom-textarea" rows="4"
+                                      placeholder="Mention site conditions, preferences, special requirements..."></textarea>
                         </div>
                         <p class="field-hint">
                             <i class="bi bi-info-circle"></i>
@@ -196,10 +1154,10 @@
 
             </div>
 
-            <!-- Right Side - Billing & Actions -->
+            <!-- ═══════ RIGHT SIDE ═══════ -->
             <div class="col-lg-4">
 
-                <!-- Billing Setup Card -->
+                <!-- Billing Setup -->
                 <div class="form-card fade-in fi-3">
                     <div class="fc-header">
                         <div class="fc-header-left">
@@ -221,15 +1179,10 @@
                                 <span class="optional-tag">Optional</span>
                             </label>
                             <div class="input-wrap">
-                                <div class="input-icon">
-                                    <i class="bi bi-building"></i>
-                                </div>
-                                <input type="text"
-                                       name="gst_number"
-                                       value="{{ form.gst_number.value|default:'' }}"
+                                <div class="input-icon"><i class="bi bi-building"></i></div>
+                                <input type="text" name="gst_number"
                                        class="custom-input has-icon text-uppercase"
-                                       placeholder="22AAAAA0000A1Z5"
-                                       maxlength="15">
+                                       placeholder="22AAAAA0000A1Z5" maxlength="15">
                             </div>
                             <p class="field-hint">
                                 <i class="bi bi-info-circle"></i>
@@ -238,21 +1191,15 @@
                         </div>
 
                         <!-- Discount -->
-                        <div class="form-group">
+                        <div class="form-group" style="margin-top: 1rem;">
                             <label class="field-label">
                                 Standard Discount <span class="req">*</span>
                             </label>
                             <div class="input-group-custom">
                                 <div class="input-wrap flex-1">
-                                    <input type="number"
-                                           step="0.01"
-                                           name="discount"
-                                           value="{{ form.discount.value|default:'0' }}"
-                                           class="custom-input required-input"
-                                           min="0"
-                                           max="100"
-                                           required>
-                                    <span class="input-indicator"></span>
+                                    <input type="number" step="0.01" name="discount"
+                                           value="0" class="custom-input required-input"
+                                           min="0" max="100" required>
                                 </div>
                                 <span class="input-suffix">%</span>
                             </div>
@@ -277,21 +1224,18 @@
                         </div>
                         <h6 class="ac-title">Ready to Create?</h6>
                     </div>
-
                     <div class="ac-body">
                         <button type="submit" class="btn-submit" id="submitBtn">
                             <i class="bi bi-check-lg"></i>
-                            <span>Create Client</span>
+                            <span id="submitBtnText">Create Client</span>
                         </button>
-
                         <a href="{% url 'client_list' %}" class="btn-cancel">
                             <i class="bi bi-x-lg"></i>
                             <span>Cancel</span>
                         </a>
                     </div>
-
                     <div class="ac-footer">
-                        <div class="ac-info">
+                        <div class="ac-info" id="acInfoText">
                             <i class="bi bi-lightning-charge-fill"></i>
                             <span>Client will be available immediately for project creation</span>
                         </div>
@@ -299,7 +1243,7 @@
                 </div>
 
                 <!-- Progress Card -->
-                <div class="sidebar-card fade-in fi-4">
+                <div class="sidebar-card fade-in fi-5">
                     <div class="sc-header">
                         <div class="sc-icon sc-rose"><i class="bi bi-list-check"></i></div>
                         <h6 class="sc-title">Required Fields</h6>
@@ -321,6 +1265,10 @@
                             <div class="cl-check"><i class="bi bi-circle"></i></div>
                             <span>Discount set</span>
                         </div>
+                        <div class="cl-item" id="cl-project" style="display: none;">
+                            <div class="cl-check"><i class="bi bi-circle"></i></div>
+                            <span>Project name</span>
+                        </div>
                     </div>
                     <div class="progress-section">
                         <div class="ps-label">Completion</div>
@@ -334,373 +1282,320 @@
                 </div>
 
             </div>
-
         </div>
-
     </form>
 </div>
 
-<style>
-:root {
-    --primary: #6366f1;
-    --primary-soft: rgba(99,102,241,0.08);
-    --emerald: #10b981;
-    --emerald-soft: rgba(16,185,129,0.08);
-    --amber: #f59e0b;
-    --amber-soft: rgba(245,158,11,0.08);
-    --rose: #f43f5e;
-    --rose-soft: rgba(244,63,94,0.08);
-    --violet: #8b5cf6;
-    --violet-soft: rgba(139,92,246,0.08);
-    --sky: #0ea5e9;
-    --text-1: #0f172a;
-    --text-2: #475569;
-    --text-3: #94a3b8;
-    --surface: #fff;
-    --surface-2: #f8fafc;
-    --border: #e2e8f0;
-    --border-light: #f1f5f9;
-    --radius: 14px;
-    --radius-sm: 8px;
-}
-
-.master-page { padding: 1.5rem 2rem 3rem; max-width: 1300px; margin: 0 auto; }
-
-.fade-in { opacity: 0; transform: translateY(12px); animation: fadeIn 0.4s ease forwards; }
-.fi-1 { animation-delay: 0.02s; }
-.fi-2 { animation-delay: 0.05s; }
-.fi-3 { animation-delay: 0.08s; }
-.fi-4 { animation-delay: 0.11s; }
-@keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
-@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
-
-/* Page Header */
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
-.page-header-left { display: flex; align-items: center; gap: 12px; }
-.back-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border-light); background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text-3); text-decoration: none; transition: all .2s; }
-.back-btn:hover { background: var(--surface-2); color: var(--text-1); transform: translateX(-2px); }
-.page-icon-wrap { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-.pi-indigo { background: var(--primary-soft); color: var(--primary); }
-.page-title { font-size: 1.35rem; font-weight: 800; color: var(--text-1); margin: 0; letter-spacing: -.02em; }
-.page-subtitle { font-size: .75rem; color: var(--text-3); margin: 2px 0 0; }
-
-.header-status { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--surface); border: 1px solid var(--border-light); border-radius: 100px; }
-.header-status.complete { background: var(--emerald-soft); border-color: rgba(16,185,129,.2); }
-.hs-indicator { width: 8px; height: 8px; border-radius: 50%; animation: pulse 2s infinite; }
-.hs-warning { background: var(--amber); }
-.hs-success { background: var(--emerald); }
-.hs-text { font-size: .72rem; font-weight: 700; color: var(--text-3); }
-.header-status.complete .hs-text { color: var(--emerald); }
-
-/* Form Card */
-.form-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem; transition: all .3s; }
-.form-card.has-error { border-color: var(--rose); box-shadow: 0 0 0 3px var(--rose-soft); }
-.fc-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: var(--surface-2); border-bottom: 1px solid var(--border-light); flex-wrap: wrap; gap: 10px; }
-.fc-header-left { display: flex; align-items: center; gap: 10px; }
-.fc-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: .85rem; }
-.fc-indigo { background: var(--primary-soft); color: var(--primary); }
-.fc-amber { background: var(--amber-soft); color: var(--amber); }
-.fc-emerald { background: var(--emerald-soft); color: var(--emerald); }
-.fc-title { font-size: .82rem; font-weight: 800; color: var(--text-1); margin: 0; }
-.fc-subtitle { font-size: .65rem; color: var(--text-3); margin: 0; }
-.fc-body { padding: 20px; }
-
-.required-tag { display: flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--rose-soft); color: var(--rose); border-radius: 100px; font-size: .58rem; font-weight: 700; text-transform: uppercase; }
-.required-tag i { font-size: .45rem; }
-
-.optional-badge { display: flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--surface-2); color: var(--text-3); border-radius: 100px; font-size: .58rem; font-weight: 700; border: 1px solid var(--border-light); }
-
-.optional-tag { font-size: .58rem; font-weight: 600; color: var(--text-3); background: var(--surface-2); padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
-
-/* Form Grid */
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.form-group { display: flex; flex-direction: column; }
-.form-group.full-width { grid-column: span 2; }
-
-.field-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-3); margin-bottom: 6px; display: flex; align-items: center; }
-.req { color: var(--rose); font-weight: 900; margin-left: 2px; }
-
-/* Input Styles */
-.input-wrap { position: relative; }
-.input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: .85rem; z-index: 1; }
-.custom-input { width: 100%; height: 44px; padding: 0 36px 0 14px; border: 1.5px solid var(--border-light); border-radius: 10px; background: var(--surface-2); font-size: .85rem; font-weight: 600; color: var(--text-1); font-family: inherit; outline: none; transition: all .2s; }
-.custom-input.has-icon { padding-left: 40px; }
-.custom-input:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px var(--primary-soft); }
-.custom-input.invalid { border-color: var(--rose); box-shadow: 0 0 0 3px var(--rose-soft); animation: shake .4s; }
-.custom-input.valid { border-color: var(--emerald); }
-.custom-input::placeholder { color: var(--text-3); font-weight: 400; }
-
-.custom-textarea { width: 100%; padding: 12px 36px 12px 14px; border: 1.5px solid var(--border-light); border-radius: 10px; background: var(--surface-2); font-size: .85rem; font-weight: 500; color: var(--text-1); font-family: inherit; outline: none; resize: vertical; transition: all .2s; line-height: 1.5; }
-.custom-textarea:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px var(--primary-soft); }
-.custom-textarea.invalid { border-color: var(--rose); box-shadow: 0 0 0 3px var(--rose-soft); }
-.custom-textarea.valid { border-color: var(--emerald); }
-.custom-textarea::placeholder { color: var(--text-3); font-weight: 400; }
-
-.input-indicator { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; border-radius: 50%; font-size: .55rem; display: none; align-items: center; justify-content: center; font-weight: 700; }
-.input-indicator.valid { display: flex; background: var(--emerald); color: #fff; }
-.input-indicator.valid::after { content: "✓"; }
-.input-indicator.invalid { display: flex; background: var(--rose); color: #fff; }
-.input-indicator.invalid::after { content: "!"; }
-.textarea-indicator { top: 16px; transform: none; }
-
-.input-group-custom { display: flex; align-items: stretch; gap: 0; }
-.input-prefix { display: flex; align-items: center; padding: 0 12px; background: var(--surface-2); border: 1.5px solid var(--border-light); border-right: none; border-radius: 10px 0 0 10px; font-size: .78rem; font-weight: 700; color: var(--text-3); }
-.input-suffix { display: flex; align-items: center; padding: 0 12px; background: var(--surface-2); border: 1.5px solid var(--border-light); border-left: none; border-radius: 0 10px 10px 0; font-size: .78rem; font-weight: 700; color: var(--text-3); }
-.input-group-custom .input-wrap { flex: 1; }
-.input-group-custom .custom-input { border-radius: 0; }
-.input-group-custom .input-wrap:first-child .custom-input { border-radius: 10px 0 0 10px; }
-.input-group-custom .input-wrap:last-child .custom-input { border-radius: 0 10px 10px 0; }
-.input-group-custom .input-prefix + .input-wrap .custom-input { border-radius: 0 10px 10px 0; }
-.flex-1 { flex: 1; }
-
-.field-feedback { display: none; align-items: center; gap: 5px; margin-top: 5px; padding: 5px 10px; background: var(--rose-soft); border-radius: 6px; font-size: .65rem; font-weight: 600; color: var(--rose); }
-.field-feedback.show { display: flex; }
-
-.field-hint { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: .65rem; color: var(--text-3); }
-.field-hint i { font-size: .6rem; }
-
-/* Action Card */
-.action-card { background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: var(--radius); padding: 20px; margin-bottom: 1rem; position: relative; overflow: hidden; }
-.action-card::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle at 80% 20%, rgba(99,102,241,.15), transparent 50%), radial-gradient(circle at 20% 80%, rgba(16,185,129,.1), transparent 50%); }
-
-.ac-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; position: relative; }
-.ac-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #fff; }
-.ac-title { font-size: .85rem; font-weight: 800; color: #fff; margin: 0; }
-
-.ac-body { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; position: relative; }
-.btn-submit { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px 20px; border-radius: 10px; background: var(--emerald); border: none; color: #fff; font-size: .85rem; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; box-shadow: 0 4px 12px rgba(16,185,129,.3); }
-.btn-submit:hover { background: #059669; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(16,185,129,.35); }
-.btn-cancel { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 10px 16px; border-radius: 10px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.7); font-size: .78rem; font-weight: 600; text-decoration: none; transition: all .2s; }
-.btn-cancel:hover { background: rgba(255,255,255,.15); color: #fff; }
-
-.ac-footer { position: relative; }
-.ac-info { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; background: rgba(255,255,255,.05); border-radius: 8px; font-size: .68rem; color: rgba(255,255,255,.5); line-height: 1.4; }
-.ac-info i { color: var(--amber); font-size: .75rem; margin-top: 1px; }
-
-/* Sidebar Card */
-.sidebar-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 16px; margin-bottom: 1rem; }
-.sc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-.sc-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: .75rem; }
-.sc-rose { background: var(--rose-soft); color: var(--rose); }
-.sc-title { font-size: .78rem; font-weight: 800; color: var(--text-1); margin: 0; }
-
-.checklist { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-.cl-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 7px; border: 1px solid var(--border-light); transition: all .3s; }
-.cl-item.done { background: var(--emerald-soft); border-color: rgba(16,185,129,.15); }
-.cl-check { width: 18px; height: 18px; border-radius: 5px; background: var(--border-light); color: var(--text-3); display: flex; align-items: center; justify-content: center; font-size: .55rem; transition: all .3s; }
-.cl-item.done .cl-check { background: var(--emerald); color: #fff; }
-.cl-item.done .cl-check i::before { content: "\F26B"; }
-.cl-item span { font-size: .7rem; font-weight: 600; color: var(--text-3); }
-.cl-item.done span { color: var(--emerald); }
-
-.progress-section { padding-top: 12px; border-top: 1px solid var(--border-light); }
-.ps-label { font-size: .6rem; font-weight: 700; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
-.progress-wrap { display: flex; align-items: center; gap: 8px; }
-.progress-bar { flex: 1; height: 6px; background: var(--border-light); border-radius: 100px; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--emerald); border-radius: 100px; transition: width .5s; width: 0; }
-.progress-text { font-size: .65rem; font-weight: 800; color: var(--text-3); min-width: 30px; }
-
-/* Responsive */
-@media (max-width: 992px) {
-    .master-page { padding: 1rem; }
-    .form-grid { grid-template-columns: 1fr; }
-    .form-group.full-width { grid-column: span 1; }
-}
-@media (max-width: 768px) {
-    .page-header { flex-direction: column; align-items: flex-start; }
-    .header-status { display: none; }
-}
-</style>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('clientForm');
-    const nameInput = document.querySelector('[name="name"]');
-    const mobileInput = document.querySelector('[name="mobile_1"]');
-    const addressInput = document.querySelector('[name="address"]');
-    const discountInput = document.querySelector('[name="discount"]');
-    
-    // Validation Functions
-    function validateField(field, feedbackSelector) {
-        const value = field.value?.trim();
-        const isRequired = field.classList.contains('required-input');
-        const wrap = field.closest('.input-wrap');
-        const indicator = wrap?.querySelector('.input-indicator');
-        const feedback = field.closest('.form-group')?.querySelector('.field-feedback');
-        
-        let isValid = true;
-        
-        if (isRequired && !value) {
-            isValid = false;
-        }
-        
-        // Mobile validation
-        if (field.name === 'mobile_1' && value) {
-            if (!/^[0-9]{10}$/.test(value)) {
-                isValid = false;
-            }
-        }
-        
-        // Discount validation
-        if (field.name === 'discount') {
-            const num = parseFloat(value);
-            if (isNaN(num) || num < 0 || num > 100) {
-                isValid = false;
-            }
-        }
-        
-        if (!isValid) {
-            field.classList.add('invalid');
-            field.classList.remove('valid');
-            if (indicator) { indicator.classList.remove('valid'); indicator.classList.add('invalid'); }
-            if (feedback) feedback.classList.add('show');
-            return false;
-        } else if (value) {
-            field.classList.remove('invalid');
-            field.classList.add('valid');
-            if (indicator) { indicator.classList.remove('invalid'); indicator.classList.add('valid'); }
-            if (feedback) feedback.classList.remove('show');
-            return true;
+/* ══════════════════════════════════
+   CLIENT CREATE - FULL SCRIPT
+   Clean merged version - no duplicates
+══════════════════════════════════ */
+
+/* ══════════════════════════════════
+   1. PROGRESS TRACKER
+══════════════════════════════════ */
+function updateProgress() {
+    const name         = document.querySelector('input[name="name"]');
+    const mobile       = document.querySelector('input[name="mobile_1"]');
+    const address      = document.querySelector('textarea[name="address"]');
+    const discount     = document.querySelector('input[name="discount"]');
+    const projectToggle = document.getElementById('projectToggle');
+    const projectName  = document.getElementById('projectNameInput');
+
+    let total = 4;
+    let done  = 0;
+
+    /* — Name — */
+    const clName = document.getElementById('cl-name');
+    if (clName) {
+        if (name && name.value.trim()) {
+            clName.classList.add('done');
+            done++;
         } else {
-            field.classList.remove('invalid', 'valid');
-            if (indicator) indicator.classList.remove('invalid', 'valid');
-            if (feedback) feedback.classList.remove('show');
-            return !isRequired;
+            clName.classList.remove('done');
         }
     }
-    
-    function updateChecklist() {
-        toggleCheck('cl-name', !!nameInput?.value?.trim());
-        toggleCheck('cl-mobile', /^[0-9]{10}$/.test(mobileInput?.value?.trim() || ''));
-        toggleCheck('cl-address', !!addressInput?.value?.trim());
-        
-        const discount = parseFloat(discountInput?.value);
-        toggleCheck('cl-discount', !isNaN(discount) && discount >= 0 && discount <= 100);
-    }
-    
-    function toggleCheck(id, done) {
-        const el = document.getElementById(id);
-        if (el) el.classList.toggle('done', done);
-    }
-    
-    function updateProgress() {
-        const fields = [nameInput, mobileInput, addressInput, discountInput];
-        let filled = 0;
-        
-        if (nameInput?.value?.trim()) filled++;
-        if (/^[0-9]{10}$/.test(mobileInput?.value?.trim() || '')) filled++;
-        if (addressInput?.value?.trim()) filled++;
-        const discount = parseFloat(discountInput?.value);
-        if (!isNaN(discount) && discount >= 0 && discount <= 100) filled++;
-        
-        const pct = Math.round((filled / 4) * 100);
-        const fill = document.getElementById('progressFill');
-        const text = document.getElementById('progressText');
-        
-        if (fill) {
-            fill.style.width = pct + '%';
-            fill.style.background = pct === 100 ? 'var(--emerald)' : pct >= 50 ? 'var(--amber)' : 'var(--rose)';
+
+    /* — Mobile — */
+    const clMobile = document.getElementById('cl-mobile');
+    if (clMobile) {
+        if (mobile && mobile.value.trim().length === 10) {
+            clMobile.classList.add('done');
+            done++;
+        } else {
+            clMobile.classList.remove('done');
         }
-        if (text) text.textContent = pct + '%';
-        
-        // Update header status
-        const status = document.getElementById('headerStatus');
-        const indicator = status?.querySelector('.hs-indicator');
-        const statusText = status?.querySelector('.hs-text');
-        
+    }
+
+    /* — Address — */
+    const clAddress = document.getElementById('cl-address');
+    if (clAddress) {
+        if (address && address.value.trim()) {
+            clAddress.classList.add('done');
+            done++;
+        } else {
+            clAddress.classList.remove('done');
+        }
+    }
+
+    /* — Discount — */
+    const clDiscount = document.getElementById('cl-discount');
+    if (clDiscount && discount) {
+        const dv = parseFloat(discount.value);
+        if (!isNaN(dv) && dv >= 0 && dv <= 100) {
+            clDiscount.classList.add('done');
+            done++;
+        } else {
+            clDiscount.classList.remove('done');
+        }
+    }
+
+    /* — Project Name (conditional) — */
+    const clProject = document.getElementById('cl-project');
+    if (projectToggle && projectToggle.checked) {
+        total++;
+        if (clProject) {
+            if (projectName && projectName.value.trim()) {
+                clProject.classList.add('done');
+                done++;
+            } else {
+                clProject.classList.remove('done');
+            }
+        }
+    }
+
+    /* — Progress Bar — */
+    const pct  = total > 0 ? Math.round((done / total) * 100) : 0;
+    const fill = document.getElementById('progressFill');
+    const text = document.getElementById('progressText');
+    if (fill) fill.style.width = pct + '%';
+    if (text) text.textContent  = pct + '%';
+
+    /* — Header Status Badge — */
+    const statusBadge = document.getElementById('headerStatus');
+    if (statusBadge) {
         if (pct === 100) {
-            status?.classList.add('complete');
-            indicator?.classList.remove('hs-warning');
-            indicator?.classList.add('hs-success');
-            if (statusText) statusText.textContent = 'Ready';
+            statusBadge.innerHTML = `
+                <div class="hs-indicator hs-success"></div>
+                <span class="hs-text">Ready</span>`;
         } else {
-            status?.classList.remove('complete');
-            indicator?.classList.remove('hs-success');
-            indicator?.classList.add('hs-warning');
-            if (statusText) statusText.textContent = 'Incomplete';
+            statusBadge.innerHTML = `
+                <div class="hs-indicator hs-warning"></div>
+                <span class="hs-text">Incomplete</span>`;
         }
     }
-    
-    function validateAll() {
-        let valid = true;
-        
-        if (!validateField(nameInput)) valid = false;
-        if (!validateField(mobileInput)) valid = false;
-        if (!validateField(addressInput)) valid = false;
-        if (!validateField(discountInput)) valid = false;
-        
-        return valid;
+}
+
+/* ══════════════════════════════════
+   2. PROJECT TOGGLE SECTION
+══════════════════════════════════ */
+function toggleProjectSection(sourceEvent) {
+    const toggle    = document.getElementById('projectToggle');
+    const card      = document.getElementById('projectCard');
+    const body      = document.getElementById('projectBody');
+    const submitText = document.getElementById('submitBtnText');
+    const acInfo    = document.getElementById('acInfoText');
+    const clProject = document.getElementById('cl-project');
+
+    /*
+     * If triggered by clicking the card header (not the checkbox itself),
+     * manually flip the checkbox state.
+     */
+    const evt = sourceEvent || window.event;
+    if (evt && evt.currentTarget && evt.currentTarget.classList.contains('ptc-header')) {
+        toggle.checked = !toggle.checked;
     }
-    
-    // Event Listeners
-    document.querySelectorAll('.required-input, [name="mobile_1"], [name="discount"]').forEach(field => {
-        field.addEventListener('input', function() {
-            validateField(this);
-            updateChecklist();
-            updateProgress();
-        });
-        
-        field.addEventListener('blur', function() {
-            validateField(this);
-            updateChecklist();
-            updateProgress();
-        });
-    });
-    
-    // Mobile input - numbers only
-    mobileInput?.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
-    });
-    
-    // GST input - uppercase
-    document.querySelector('[name="gst_number"]')?.addEventListener('input', function() {
-        this.value = this.value.toUpperCase();
-    });
-    
-    // Form submission
-    form.addEventListener('submit', function(e) {
-        if (!validateAll()) {
-            e.preventDefault();
-            
-            // Find first invalid field and focus
-            const firstInvalid = form.querySelector('.invalid');
-            if (firstInvalid) {
-                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                firstInvalid.focus();
-            }
-            
-            // Show error toast
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Missing Required Fields',
-                    text: 'Please fill in all required fields to continue.',
-                    confirmButtonColor: '#f43f5e'
-                });
-            }
-            
-            return false;
+
+    if (toggle.checked) {
+        /* — Activate card — */
+        card.classList.add('is-active');
+        body.classList.add('is-open');
+
+        /* — Update submit button — */
+        if (submitText) submitText.textContent = 'Create Client & Project';
+
+        /* — Show project checklist item — */
+        if (clProject) clProject.style.display = 'flex';
+
+        /* — Update action info — */
+        if (acInfo) {
+            acInfo.innerHTML = `
+                <i class="bi bi-lightning-charge-fill"></i>
+                <span>Client + Project will be created together</span>`;
         }
-        
-        // Show loading state
-        const submitBtn = document.getElementById('submitBtn');
-        if (submitBtn) {
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Creating...';
-            submitBtn.disabled = true;
+    } else {
+        /* — Deactivate card — */
+        card.classList.remove('is-active');
+        body.classList.remove('is-open');
+
+        /* — Reset submit button — */
+        if (submitText) submitText.textContent = 'Create Client';
+
+        /* — Hide project checklist item — */
+        if (clProject) clProject.style.display = 'none';
+
+        /* — Reset action info — */
+        if (acInfo) {
+            acInfo.innerHTML = `
+                <i class="bi bi-lightning-charge-fill"></i>
+                <span>Client will be available immediately for project creation</span>`;
         }
-    });
-    
-    // Initial state
-    updateChecklist();
+    }
+
+    /* Re-calculate progress after toggle */
     updateProgress();
-    
-    // Mark existing valid values
-    document.querySelectorAll('.required-input').forEach(field => {
-        if (field.value?.trim()) {
-            validateField(field);
+}
+
+/* ══════════════════════════════════
+   3. STATUS RADIO CARD SELECT
+══════════════════════════════════ */
+function selectStatus(radio) {
+    document.querySelectorAll('.status-option').forEach(function(opt) {
+        opt.classList.remove('is-selected');
+    });
+    if (radio && radio.closest('.status-option')) {
+        radio.closest('.status-option').classList.add('is-selected');
+    }
+}
+
+/* ══════════════════════════════════
+   4. FORM VALIDATION
+══════════════════════════════════ */
+function validateForm(e) {
+    let valid = true;
+
+    /* Clear all previous error states */
+    document.querySelectorAll('.form-group').forEach(function(g) {
+        g.classList.remove('has-error');
+    });
+
+    const name     = document.querySelector('input[name="name"]');
+    const mobile   = document.querySelector('input[name="mobile_1"]');
+    const address  = document.querySelector('textarea[name="address"]');
+    const discount = document.querySelector('input[name="discount"]');
+    const toggle   = document.getElementById('projectToggle');
+    const projName = document.getElementById('projectNameInput');
+
+    /* — Name — */
+    if (!name || !name.value.trim()) {
+        if (name) name.closest('.form-group').classList.add('has-error');
+        valid = false;
+    }
+
+    /* — Primary Mobile (exactly 10 digits) — */
+    if (!mobile || mobile.value.trim().length !== 10 || !/^\d{10}$/.test(mobile.value.trim())) {
+        if (mobile) mobile.closest('.form-group').classList.add('has-error');
+        valid = false;
+    }
+
+    /* — Address — */
+    if (!address || !address.value.trim()) {
+        if (address) address.closest('.form-group').classList.add('has-error');
+        valid = false;
+    }
+
+    /* — Discount (0–100) — */
+    if (discount) {
+        const dv = parseFloat(discount.value);
+        if (isNaN(dv) || dv < 0 || dv > 100) {
+            discount.closest('.form-group').classList.add('has-error');
+            valid = false;
+        }
+    }
+
+    /* — Project Name (only when toggle is on) — */
+    if (toggle && toggle.checked) {
+        if (!projName || !projName.value.trim()) {
+            if (projName) projName.closest('.form-group').classList.add('has-error');
+            valid = false;
+        }
+    }
+
+    /* — Block submission and scroll to first error — */
+    if (!valid) {
+        e.preventDefault();
+        const firstErr = document.querySelector('.form-group.has-error');
+        if (firstErr) {
+            firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    return valid;
+}
+
+/* ══════════════════════════════════
+   5. REAL-TIME INPUT FEEDBACK
+══════════════════════════════════ */
+function attachInputFeedback() {
+    /* Fields to clear error on input */
+    const clearOnInput = [
+        'input[name="name"]',
+        'input[name="mobile_1"]',
+        'input[name="mobile_2"]',
+        'textarea[name="address"]',
+        'input[name="discount"]',
+        '#projectNameInput',
+    ];
+
+    clearOnInput.forEach(function(sel) {
+        const el = document.querySelector(sel);
+        if (!el) return;
+        el.addEventListener('input', function() {
+            const group = el.closest('.form-group');
+            if (group) group.classList.remove('has-error');
+            updateProgress();
+        });
+        el.addEventListener('change', updateProgress);
+    });
+
+    /* GST uppercase */
+    const gst = document.querySelector('input[name="gst_number"]');
+    if (gst) {
+        gst.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+
+    /* Mobile — digits only */
+    ['input[name="mobile_1"]', 'input[name="mobile_2"]'].forEach(function(sel) {
+        const el = document.querySelector(sel);
+        if (!el) return;
+        el.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+    });
+}
+
+/* ══════════════════════════════════
+   6. INIT ON DOM READY
+══════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function () {
+
+    /* Attach real-time input listeners */
+    attachInputFeedback();
+
+    /* Initial progress calculation */
+    updateProgress();
+
+    /* Form submit validation */
+    const form = document.getElementById('clientForm');
+    if (form) {
+        form.addEventListener('submit', validateForm);
+    }
+
+    /* Keyboard shortcut: Ctrl + Enter → submit */
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            if (form) form.requestSubmit();
         }
     });
+
+    /* Auto-focus first input */
+    const firstInput = document.querySelector('input[name="name"]');
+    if (firstInput) {
+        setTimeout(function() { firstInput.focus(); }, 300);
+    }
 });
 </script>
 

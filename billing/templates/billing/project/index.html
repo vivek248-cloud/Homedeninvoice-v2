@@ -167,22 +167,41 @@
     <!-- ═══════════════════════════════════ -->
     <!--  TABLE VIEW                        -->
     <!-- ═══════════════════════════════════ -->
-    <div class="table-card fade-in fi-7" id="tableView">
-        <div class="table-responsive">
+    <!-- ══════════════════════════════════
+     TABLE WITH HORIZONTAL SCROLLER
+══════════════════════════════════ -->
+<div class="table-card fade-in fi-7" id="tableView">
+
+    <!-- Scroll Wrapper -->
+    <div class="table-scroll-wrapper" id="tableScrollWrapper">
+
+        <!-- Scroll Buttons (Desktop) -->
+        <button class="scroll-nav-btn snb-left" id="scrollBtnLeft" title="Scroll left">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="scroll-nav-btn snb-right" id="scrollBtnRight" title="Scroll right">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+
+        <!-- Scrollable Container -->
+        <div class="table-scroll-container" id="tableScrollContainer">
             <table class="table saas-table align-middle mb-0">
                 <thead>
                     <tr>
-                        <th class="ps-4">
+                        <th class="ps-4 col-sticky">
                             <div class="th-inner">Project & Client</div>
                         </th>
-                        {% comment %} <th><div class="th-inner">Budget</div></th> {% endcomment %}
                         <th><div class="th-inner">Spent</div></th>
                         <th><div class="th-inner">Collected</div></th>
                         <th><div class="th-inner">Pending</div></th>
                         <th><div class="th-inner">Progress</div></th>
-                        <th class="text-center"><div class="th-inner justify-content-center">Status</div></th>
+                        <th class="text-center">
+                            <div class="th-inner justify-content-center">Status</div>
+                        </th>
                         <th><div class="th-inner">Timeline</div></th>
-                        <th class="text-end pe-4"><div class="th-inner justify-content-end">Actions</div></th>
+                        <th class="text-end pe-4">
+                            <div class="th-inner justify-content-end">Actions</div>
+                        </th>
                     </tr>
                 </thead>
                 <tbody id="projectTableBody">
@@ -196,8 +215,8 @@
                         data-paid="{{ project.total_paid }}"
                         data-balance="{{ project.yet_to_receive }}">
 
-                        <!-- PROJECT & CLIENT -->
-                        <td class="ps-4 py-3">
+                        <!-- PROJECT & CLIENT (STICKY) -->
+                        <td class="ps-4 py-3 col-sticky">
                             <a href="{% url 'project_detail' project.id %}" class="project-link">
                                 <div class="project-cell">
                                     <div class="project-avatar pa-{% cycle 'indigo' 'emerald' 'amber' 'rose' 'sky' %}">
@@ -214,14 +233,11 @@
                             </a>
                         </td>
 
-                        <!-- BUDGET -->
-                        {% comment %} <td>
-                            <span class="money-text">₹{{ project.budget }}</span>
-                        </td> {% endcomment %}
-
                         <!-- SPENT -->
                         <td>
-                            <span class="money-text mt-spent">₹{{ project.total_spent|indian_currency }}</span>
+                            <span class="money-text mt-spent">
+                                ₹{{ project.total_spent|indian_currency }}
+                            </span>
                         </td>
 
                         <!-- COLLECTED -->
@@ -276,12 +292,11 @@
                                 </span>
                             {% endif %}
                         </td>
+
                         <!-- TIMELINE -->
                         <td>
                             <div class="timeline-cell">
                                 <div class="timeline-main">
-
-                                    <!-- PROJECT CREATED — has-next draws connector to next icon -->
                                     <div class="timeline-date has-next">
                                         <div class="timeline-date-icon td-created">
                                             <i class="bi bi-calendar-plus-fill"></i>
@@ -300,7 +315,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- LATEST PAYMENT (NO has-next — this is the last item) -->
                                     {% if project.last_payment_date %}
                                     <div class="timeline-date">
                                         <div class="timeline-date-icon td-last-payment {% if project.last_activity_days > 30 %}td-danger{% elif project.last_activity_days > 15 %}td-warning{% endif %}">
@@ -328,7 +342,6 @@
                                     {% endif %}
 
                                     {% else %}
-
                                     <div class="timeline-date">
                                         <div class="timeline-date-icon td-no-payment">
                                             <i class="bi bi-clock-history"></i>
@@ -351,12 +364,11 @@
                                         No payment for {{ project.age_days }} days
                                     </div>
                                     {% endif %}
-
                                     {% endif %}
-
                                 </div>
                             </div>
                         </td>
+
                         <!-- ACTIONS -->
                         <td class="text-end pe-4">
                             <div class="action-group">
@@ -375,9 +387,6 @@
                             </div>
                         </td>
                     </tr>
-
-                    
-
                     {% empty %}
                     <tr>
                         <td colspan="8" class="text-center py-5">
@@ -386,7 +395,9 @@
                                     <i class="bi bi-kanban"></i>
                                 </div>
                                 <h5 class="empty-title">No projects yet</h5>
-                                <p class="empty-desc">Create your first project and start tracking budgets & payments.</p>
+                                <p class="empty-desc">
+                                    Create your first project and start tracking budgets & payments.
+                                </p>
                                 <a href="{% url 'project_create' %}" class="btn-add-first">
                                     <i class="bi bi-plus-lg me-2"></i> Create First Project
                                 </a>
@@ -397,7 +408,14 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Scroll Hint -->
+        <div class="scroll-hint-bar" id="scrollHintBar">
+            <i class="bi bi-arrow-left-right"></i>
+            <span>Scroll to see more columns</span>
+        </div>
     </div>
+</div>
 
     <!-- ═══════════════════════════════════ -->
     <!--  GRID VIEW                         -->
@@ -2273,6 +2291,535 @@
             box-shadow: none;
         }
     }
+
+
+    /* ══════════════════════════════════════
+   TABLE HORIZONTAL SCROLL SYSTEM
+══════════════════════════════════════ */
+
+/* Scroll Wrapper — contains everything */
+.table-scroll-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Scrollable container */
+.table-scroll-container {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+
+    /* Custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99,102,241,0.18) rgba(241,245,249,0.5);
+}
+
+.table-scroll-container::-webkit-scrollbar {
+    height: 7px;
+}
+
+.table-scroll-container::-webkit-scrollbar-track {
+    background: var(--surface-2);
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    border-radius: 100px;
+    border: 1px solid var(--surface-2);
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #4f46e5, #7c3aed);
+}
+
+/* ── Fade edge indicators ── */
+.table-scroll-wrapper::before,
+.table-scroll-wrapper::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 7px;
+    width: 50px;
+    z-index: 6;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+    opacity: 0;
+}
+
+.table-scroll-wrapper::before {
+    left: 0;
+    background: linear-gradient(90deg,
+        var(--surface) 0%,
+        rgba(255,255,255,0.8) 30%,
+        transparent 100%);
+}
+
+.table-scroll-wrapper::after {
+    right: 0;
+    background: linear-gradient(270deg,
+        var(--surface) 0%,
+        rgba(255,255,255,0.8) 30%,
+        transparent 100%);
+}
+
+.table-scroll-wrapper.can-scroll-left::before  { opacity: 1; }
+.table-scroll-wrapper.can-scroll-right::after   { opacity: 1; }
+
+/* ── Scroll Nav Buttons ── */
+.scroll-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 8;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.scroll-nav-btn:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 4px 14px rgba(99,102,241,0.3);
+    transform: translateY(-50%) scale(1.08);
+}
+
+.snb-left  { left: 8px; }
+.snb-right { right: 8px; }
+
+.table-scroll-wrapper.can-scroll-left  .snb-left,
+.table-scroll-wrapper.can-scroll-right .snb-right {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ── Scroll Hint Bar ── */
+.scroll-hint-bar {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, var(--surface-2), var(--surface-3));
+    border-top: 1px solid var(--border-light);
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.scroll-hint-bar.show { display: flex; }
+
+.scroll-hint-bar i {
+    font-size: 0.78rem;
+    color: var(--primary);
+    animation: hintBounce 1.8s ease infinite;
+}
+
+@keyframes hintBounce {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-3px); }
+    75%      { transform: translateX(3px); }
+}
+
+/* ══════════════════════════════════════
+   TABLE — CORE STYLES
+══════════════════════════════════════ */
+.saas-table {
+    width: 100%;
+    min-width: 1050px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* ── Sticky first column ── */
+.col-sticky {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    background: inherit;
+}
+
+thead .col-sticky { z-index: 5; }
+
+/* Shadow for sticky column when scrolled */
+.col-sticky::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: -10px;
+    bottom: 0;
+    width: 10px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.05), transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.table-scroll-wrapper.is-scrolled .col-sticky::after {
+    opacity: 1;
+}
+
+/* ── Table Head ── */
+.saas-table thead th {
+    background: var(--surface-2);
+    font-size: 0.66rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.3px;
+    color: var(--text-3);
+    padding: 13px 16px;
+    border: none;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+}
+
+.th-inner {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ── Table Body ── */
+.saas-table tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: all 0.2s ease;
+}
+
+.saas-table tbody tr:hover {
+    background: rgba(99,102,241,0.02);
+}
+
+.saas-table tbody tr:hover .col-sticky {
+    background: rgba(99,102,241,0.02);
+}
+
+.saas-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.saas-table tbody td {
+    padding: 12px 16px;
+    vertical-align: middle;
+    white-space: nowrap;
+    font-size: 0.82rem;
+    transition: background 0.2s;
+}
+
+/* ── Project Cell ── */
+.project-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.project-link:hover .project-name {
+    color: var(--primary);
+}
+
+.project-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.project-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    letter-spacing: -0.02em;
+    transition: transform 0.2s;
+}
+
+.project-link:hover .project-avatar {
+    transform: scale(1.05);
+}
+
+.pa-indigo  { background: rgba(99,102,241,0.08);  color: #6366f1; border: 1px solid rgba(99,102,241,0.12); }
+.pa-emerald { background: rgba(16,185,129,0.08);  color: #10b981; border: 1px solid rgba(16,185,129,0.12); }
+.pa-amber   { background: rgba(245,158,11,0.08);  color: #f59e0b; border: 1px solid rgba(245,158,11,0.12); }
+.pa-rose    { background: rgba(244,63,94,0.08);   color: #f43f5e; border: 1px solid rgba(244,63,94,0.12); }
+.pa-sky     { background: rgba(14,165,233,0.08);   color: #0ea5e9; border: 1px solid rgba(14,165,233,0.12); }
+
+.project-name {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--text-1);
+    line-height: 1.3;
+    transition: color 0.2s;
+}
+
+.project-client-name {
+    font-size: 0.68rem;
+    color: var(--text-3);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.project-client-name i { font-size: 0.58rem; }
+
+/* ── Money Text ── */
+.money-text {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-1);
+    font-variant-numeric: tabular-nums;
+}
+
+.mt-spent { color: var(--text-2); }
+
+/* ── Collected Chip ── */
+.collected-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 11px;
+    background: rgba(16,185,129,0.06);
+    border: 1px solid rgba(16,185,129,0.12);
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #10b981;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.collected-chip i { font-size: 0.65rem; }
+
+/* ── Pending Amount ── */
+.pending-amount {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-1);
+    font-variant-numeric: tabular-nums;
+}
+
+.pending-amount.has-pending {
+    color: #f43f5e;
+}
+
+/* ── Progress Mini ── */
+.progress-mini { min-width: 100px; }
+
+.progress-mini-top {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 4px;
+}
+
+.pm-pct {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--primary);
+    background: rgba(99,102,241,0.08);
+    padding: 1px 7px;
+    border-radius: 100px;
+}
+
+.progress-mini-track {
+    height: 5px;
+    background: var(--surface-3);
+    border-radius: 100px;
+    overflow: hidden;
+}
+
+.progress-mini-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+
+.pmf-indigo { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+.pmf-green  { background: linear-gradient(90deg, #10b981, #34d399); }
+.pmf-amber  { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+/* ── Status Pills ── */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 13px;
+    border-radius: 100px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.sp-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.sp-blue  { background: rgba(99,102,241,0.08);  color: #6366f1; border: 1px solid rgba(99,102,241,0.15); }
+.sp-blue  .sp-dot { background: #6366f1; }
+.sp-green { background: rgba(16,185,129,0.08);  color: #10b981; border: 1px solid rgba(16,185,129,0.15); }
+.sp-green .sp-dot { background: #10b981; }
+.sp-amber { background: rgba(245,158,11,0.08);  color: #f59e0b; border: 1px solid rgba(245,158,11,0.15); }
+.sp-amber .sp-dot { background: #f59e0b; }
+
+/* ── Action Buttons ── */
+.action-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border-light);
+    color: var(--text-3);
+    text-decoration: none;
+    transition: all 0.2s;
+    font-size: 0.82rem;
+}
+
+.ab-view:hover   { background: rgba(99,102,241,0.08); color: #6366f1; border-color: rgba(99,102,241,0.2); }
+.ab-edit:hover   { background: rgba(245,158,11,0.08); color: #f59e0b; border-color: rgba(245,158,11,0.2); }
+.ab-delete:hover { background: rgba(244,63,94,0.08);  color: #f43f5e; border-color: rgba(244,63,94,0.2); }
+
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* ── Empty State ── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 3rem 1rem;
+}
+
+.empty-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    border: 2px solid rgba(99,102,241,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--primary);
+}
+
+.empty-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-1);
+    margin: 0;
+}
+
+.empty-desc {
+    font-size: 0.78rem;
+    color: var(--text-3);
+    margin: 0;
+    max-width: 320px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.btn-add-first {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 20px;
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    color: #fff;
+    border-radius: 100px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.25);
+    margin-top: 4px;
+}
+
+.btn-add-first:hover {
+    color: #fff;
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(99,102,241,0.35);
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 1400px) {
+    .saas-table { min-width: 1020px; }
+}
+
+@media (max-width: 1200px) {
+    .saas-table { min-width: 960px; }
+    .scroll-hint-bar.show { display: flex; }
+}
+
+@media (max-width: 992px) {
+    .saas-table { min-width: 880px; }
+
+    .scroll-nav-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .saas-table { min-width: 780px; }
+
+    .saas-table thead th,
+    .saas-table tbody td {
+        padding: 10px 12px;
+    }
+
+    .project-avatar {
+        width: 34px;
+        height: 34px;
+        font-size: 0.65rem;
+        border-radius: 9px;
+    }
+
+    .scroll-nav-btn { display: none; }
+}
+
+@media (max-width: 480px) {
+    .saas-table { min-width: 700px; }
+}
 </style>
 
 <!-- ════════════════════════════════════════════ -->
@@ -2457,5 +3004,203 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem(key, status);
     });
 });
+
+
+/* ══════════════════════════════════════
+   TABLE HORIZONTAL SCROLL CONTROLLER
+══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function () {
+
+    const wrapper   = document.getElementById('tableScrollWrapper');
+    const container = document.getElementById('tableScrollContainer');
+    const hintBar   = document.getElementById('scrollHintBar');
+    const btnLeft   = document.getElementById('scrollBtnLeft');
+    const btnRight  = document.getElementById('scrollBtnRight');
+
+    if (!wrapper || !container) return;
+
+    /* ══════════════════════════════════
+       1. SCROLL STATE DETECTION
+    ══════════════════════════════════ */
+    function updateScrollState() {
+        const sl = container.scrollLeft;
+        const sw = container.scrollWidth;
+        const cw = container.clientWidth;
+        const maxScroll   = sw - cw;
+        const isScrollable = sw > cw + 2;
+
+        /* Fade edges */
+        wrapper.classList.toggle('can-scroll-left',  sl > 4);
+        wrapper.classList.toggle('can-scroll-right', sl < maxScroll - 4);
+
+        /* Sticky column shadow */
+        wrapper.classList.toggle('is-scrolled', sl > 2);
+
+        /* Hint bar visibility */
+        if (hintBar) {
+            hintBar.classList.toggle('show', isScrollable);
+        }
+
+        /* Hide hint after first scroll */
+        if (sl > 20 && hintBar) {
+            hintBar.classList.remove('show');
+        }
+    }
+
+    /* Debounced scroll listener */
+    let scrollRAF = null;
+    container.addEventListener('scroll', function () {
+        if (scrollRAF) cancelAnimationFrame(scrollRAF);
+        scrollRAF = requestAnimationFrame(updateScrollState);
+    }, { passive: true });
+
+    /* Resize observer */
+    if (typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(updateScrollState);
+        ro.observe(container);
+    } else {
+        window.addEventListener('resize', updateScrollState);
+    }
+
+    /* Initial */
+    updateScrollState();
+
+    /* ══════════════════════════════════
+       2. SCROLL NAV BUTTONS
+    ══════════════════════════════════ */
+    const SCROLL_AMOUNT = 300;
+
+    if (btnLeft) {
+        btnLeft.addEventListener('click', function (e) {
+            e.preventDefault();
+            container.scrollBy({ left: -SCROLL_AMOUNT, behavior: 'smooth' });
+        });
+    }
+
+    if (btnRight) {
+        btnRight.addEventListener('click', function (e) {
+            e.preventDefault();
+            container.scrollBy({ left: SCROLL_AMOUNT, behavior: 'smooth' });
+        });
+    }
+
+    /* ══════════════════════════════════
+       3. DRAG TO SCROLL (Desktop)
+    ══════════════════════════════════ */
+    let isDragging   = false;
+    let startX       = 0;
+    let scrollStart  = 0;
+    let hasMoved     = false;
+
+    container.addEventListener('mousedown', function (e) {
+        /* Don't drag on interactive elements */
+        if (e.target.closest('a, button, .action-btn, .status-pill, select, input')) return;
+
+        isDragging  = true;
+        hasMoved    = false;
+        startX      = e.pageX - container.offsetLeft;
+        scrollStart = container.scrollLeft;
+
+        container.style.cursor     = 'grabbing';
+        container.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', function (e) {
+        if (!isDragging) return;
+
+        const x    = e.pageX - container.offsetLeft;
+        const diff = x - startX;
+
+        if (Math.abs(diff) > 5) hasMoved = true;
+
+        const walk = diff * 1.5;
+        container.scrollLeft = scrollStart - walk;
+    });
+
+    document.addEventListener('mouseup', function () {
+        if (!isDragging) return;
+        isDragging = false;
+        container.style.cursor     = '';
+        container.style.userSelect = '';
+    });
+
+    /* Prevent click after drag */
+    container.addEventListener('click', function (e) {
+        if (hasMoved) {
+            e.preventDefault();
+            e.stopPropagation();
+            hasMoved = false;
+        }
+    }, true);
+
+    /* ══════════════════════════════════
+       4. KEYBOARD SCROLL
+    ══════════════════════════════════ */
+    container.setAttribute('tabindex', '0');
+    container.setAttribute('role', 'region');
+    container.setAttribute('aria-label', 'Projects table, scrollable');
+
+    container.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            container.scrollBy({ left: 200, behavior: 'smooth' });
+        }
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            container.scrollBy({ left: -200, behavior: 'smooth' });
+        }
+        /* Home / End */
+        if (e.key === 'Home') {
+            e.preventDefault();
+            container.scrollTo({ left: 0, behavior: 'smooth' });
+        }
+        if (e.key === 'End') {
+            e.preventDefault();
+            container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
+        }
+    });
+
+    /* ══════════════════════════════════
+       5. TOUCH VELOCITY (Smooth momentum)
+    ══════════════════════════════════ */
+    let touchStartX = 0;
+    let touchStartTime = 0;
+
+    container.addEventListener('touchstart', function (e) {
+        touchStartX = e.touches[0].pageX;
+        touchStartTime = Date.now();
+    }, { passive: true });
+
+    container.addEventListener('touchend', function (e) {
+        const touchEndX = e.changedTouches[0].pageX;
+        const elapsed = Date.now() - touchStartTime;
+        const distance = touchEndX - touchStartX;
+        const velocity = Math.abs(distance) / elapsed;
+
+        /* Quick swipe — add momentum */
+        if (velocity > 0.5 && elapsed < 300) {
+            const momentum = distance * 2;
+            container.scrollBy({
+                left: -momentum,
+                behavior: 'smooth'
+            });
+        }
+    }, { passive: true });
+
+    /* ══════════════════════════════════
+       6. AUTO-HIDE HINT AFTER DELAY
+    ══════════════════════════════════ */
+    setTimeout(function () {
+        if (hintBar && hintBar.classList.contains('show')) {
+            hintBar.style.transition = 'opacity 0.5s ease';
+            hintBar.style.opacity = '0.6';
+        }
+    }, 5000);
+});
+
 </script>
+
+
+
+
 {% endblock %}

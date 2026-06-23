@@ -8,7 +8,7 @@ from decimal import Decimal
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect
 from django.contrib import messages
-
+from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 
 
 
@@ -356,9 +356,35 @@ def client_dashboard(request):
         .order_by("-date")
     )
 
-    total_paid = payments.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
-    total_budget = projects.aggregate(total=Sum("budget"))["total"] or Decimal("0.00")
+    total_paid = (
+        payments.aggregate(
+            total=Sum("amount")
+        )["total"]
+        or Decimal("0.00")
+    )
+
+    total_budget = (
+        Spend.objects.filter(
+            project__client=client
+        ).aggregate(
+            total=Sum(
+                ExpressionWrapper(
+                    F("qty") * F("rate") * F("length") * F("width"),
+                    output_field=DecimalField(
+                        max_digits=18,
+                        decimal_places=2
+                    )
+                )
+            )
+        )["total"]
+        or Decimal("0.00")
+    )
+
     total_receivable = total_budget - total_paid
+
+    if total_receivable < 0:
+        total_receivable = Decimal("0.00")
+
 
     # ═══════════════════════════════════════════
     #  PROJECT MILESTONES & TIMELINE
@@ -609,9 +635,58 @@ def client_list(request):
 
 
 # 📌 Create
+# def client_create(request):
+#     if request.method == 'POST':
+#         Client.objects.create(
+#             name=request.POST.get('name'),
+#             mobile_1=request.POST.get('mobile_1'),
+#             mobile_2=request.POST.get('mobile_2'),
+#             address=request.POST.get('address'),
+#             email=request.POST.get('email'),
+#             notes=request.POST.get('notes'),
+#             gst_number=request.POST.get('gst_number'),
+#             discount=request.POST.get('discount') or 0,
+#         )
+#         return redirect('client_list')
+
+#     return render(request, 'billing/client/create.html')
+
+
+
+
+# views.py
+
+import re
+from django.shortcuts import render, redirect
+from .models import Client, Project
+
+
 def client_create(request):
+    """
+    Create client + optionally create a project in the same form.
+    Auto-suggests next project name based on last project in DB.
+    """
+
+    # --- Calculate next project name ---
+    last_project = Project.objects.order_by('-id').first()
+    if last_project and last_project.name:
+        match = re.match(r'^(.*?)(\d+)$', last_project.name.strip())
+        if match:
+            prefix = match.group(1)
+            number = int(match.group(2))
+            next_number = number + 1
+            pad_len = len(match.group(2))
+            next_project_name = f"{prefix}{str(next_number).zfill(pad_len)}"
+        else:
+            next_project_name = "PR-01"
+        last_project_name = last_project.name
+    else:
+        next_project_name = "PR-01"
+        last_project_name = None
+
     if request.method == 'POST':
-        Client.objects.create(
+        # Create Client
+        client = Client.objects.create(
             name=request.POST.get('name'),
             mobile_1=request.POST.get('mobile_1'),
             mobile_2=request.POST.get('mobile_2'),
@@ -621,9 +696,38 @@ def client_create(request):
             gst_number=request.POST.get('gst_number'),
             discount=request.POST.get('discount') or 0,
         )
+
+        # If project creation toggle is ON
+        create_project = request.POST.get('create_project')
+        if create_project == 'on':
+            project_name = request.POST.get('project_name', '').strip()
+            project_budget = request.POST.get('project_budget') or 0
+            project_status = request.POST.get('project_status', 'ongoing')
+
+            # Validate status against model choices
+            valid_statuses = [choice[0] for choice in Project.STATUS_CHOICES]
+            if project_status not in valid_statuses:
+                project_status = 'ongoing'
+
+            if project_name:
+                Project.objects.create(
+                    client=client,
+                    name=project_name,
+                    budget=project_budget,
+                    status=project_status,
+                )
+
         return redirect('client_list')
 
-    return render(request, 'billing/client/create.html')
+    context = {
+        'next_project_name': next_project_name,
+        'last_project_name': last_project_name,
+        'status_choices': Project.STATUS_CHOICES,
+    }
+    return render(request, 'billing/client/create.html', context)
+
+
+
 
 
 # 📌 Update
@@ -953,19 +1057,47 @@ def project_list(request):
 
 
 # 📌 Project Create
+# views.py
+import re
+from django.shortcuts import render, redirect
+from .models import Client, Project
+
 def project_create(request):
     clients = Client.objects.all()
+
+    # --- Auto-suggest next project name ---
+    last_project = Project.objects.order_by('-id').first()
+    if last_project and last_project.name:
+        match = re.match(r'^(.*?)(\d+)$', last_project.name.strip())
+        if match:
+            prefix   = match.group(1)
+            number   = int(match.group(2))
+            pad_len  = len(match.group(2))
+            next_project_name = f"{prefix}{str(number + 1).zfill(pad_len)}"
+        else:
+            next_project_name = "PR-01"
+        last_project_name = last_project.name
+    else:
+        next_project_name = "PR-01"
+        last_project_name = None
 
     if request.method == 'POST':
         Project.objects.create(
             client_id=request.POST.get('client'),
             name=request.POST.get('name'),
             budget=request.POST.get('budget') or 0,
-            status=request.POST.get('status'),
+            status=request.POST.get('status') or 'ongoing',
         )
         return redirect('project_list')
 
-    return render(request, 'billing/project/create.html', {'clients': clients})
+    context = {
+        'clients': clients,
+        'next_project_name': next_project_name,
+        'last_project_name': last_project_name,
+        'status_choices': Project.STATUS_CHOICES,
+    }
+    return render(request, 'billing/project/create.html', context)
+
 
 
 def should_clear_invoices(project):
@@ -1084,7 +1216,7 @@ def project_detail(request, pk):
     for payment in payments:
         previous_paid = running_total
         running_total += payment.amount
-        balance_after = project.budget - running_total
+        balance_after = total_spent - running_total
 
         # ✅ build public invoice link
         invoice_path = reverse('public_invoice', args=[payment.invoice_token])

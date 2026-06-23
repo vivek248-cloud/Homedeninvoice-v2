@@ -207,42 +207,31 @@
                     </div>
                 </div>
 
+                                <!-- Quick Links -->
+                <div class="quick-links fade-in fi-4">
+                    <div class="ql-header">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                        <span>Quick Actions</span>
+                    </div>
+                    <div class="ql-list">
+                        <a href="{% url 'project_detail' project.id %}" class="ql-item">
+                            <i class="bi bi-eye"></i>
+                            <span>View Project</span>
+                        </a>
+                        <a href="{% url 'project_list' %}" class="ql-item">
+                            <i class="bi bi-grid"></i>
+                            <span>All Projects</span>
+                        </a>
+                    </div>
+                </div>
             </div>
 
+            
             <!-- Right Side - Sidebar -->
             <div class="col-lg-4">
 
 
-                <!-- Financial Summary -->
-                <div class="sidebar-card mb-3 fade-in fi-3">
-                    <div class="sc-header">
-                        <div class="sc-icon sc-emerald"><i class="bi bi-graph-up-arrow"></i></div>
-                        <h6 class="sc-title">Financial Summary</h6>
-                    </div>
-                    <div class="finance-grid">
-                        <div class="fg-item">
-                            <div class="fg-icon fg-spent"><i class="bi bi-arrow-up-right"></i></div>
-                            <div class="fg-data">
-                                <span class="fg-value">₹{{ project.total_spent|floatformat:0|default:"0" }}</span>
-                                <span class="fg-label">Total Spent</span>
-                            </div>
-                        </div>
-                        <div class="fg-item">
-                            <div class="fg-icon fg-received"><i class="bi bi-arrow-down-left"></i></div>
-                            <div class="fg-data">
-                                <span class="fg-value">₹{{ project.total_paid|floatformat:0|default:"0" }}</span>
-                                <span class="fg-label">Total Received</span>
-                            </div>
-                        </div>
-                        <div class="fg-item fg-full">
-                            <div class="fg-icon fg-pending"><i class="bi bi-hourglass-split"></i></div>
-                            <div class="fg-data">
-                                <span class="fg-value fg-highlight">₹{{ project.yet_to_receive|floatformat:0|default:"0" }}</span>
-                                <span class="fg-label">Yet to Receive</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
 
                 <!-- Action Card -->
                 <div class="action-card fade-in fi-3">
@@ -298,38 +287,6 @@
                             </div>
                             <span class="progress-text" id="progressText">0%</span>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Quick Links -->
-                <div class="quick-links fade-in fi-4">
-                    <div class="ql-header">
-                        <i class="bi bi-lightning-charge-fill"></i>
-                        <span>Quick Actions</span>
-                    </div>
-                    <div class="ql-list">
-                        <a href="{% url 'project_detail' project.id %}" class="ql-item">
-                            <i class="bi bi-eye"></i>
-                            <span>View Project</span>
-                        </a>
-                        <a href="{% url 'project_list' %}" class="ql-item">
-                            <i class="bi bi-grid"></i>
-                            <span>All Projects</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Pro Tip -->
-                <div class="pro-tip fade-in fi-4">
-                    <div class="pt-inner">
-                        <div class="pt-header">
-                            <span class="pt-emoji">✏️</span>
-                            <span class="pt-label">Edit Mode</span>
-                        </div>
-                        <p class="pt-text">
-                            You're editing <strong>{{ project.name }}</strong>. 
-                            All changes are tracked and will apply to <strong>reports & invoices</strong> immediately.
-                        </p>
                     </div>
                 </div>
 
