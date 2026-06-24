@@ -1350,7 +1350,7 @@
         </div>
         <h3>HomeDen Interior Firm</h3>
         <div class="loader-text-wrap">
-            <p id="loaderText" class="loader-dynamic-text">Crafting your perfect space...</p>
+            <p id="loaderText" class="loader-dynamic-text">Preparing your workspace...</p>
         </div>
         <div class="loader-progress">
             <div class="loader-progress-bar"></div>
@@ -1723,7 +1723,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+{% comment %} <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script> {% endcomment %}
 
 <script>
 /* ══════════════════════════════════
@@ -1738,82 +1738,59 @@ document.addEventListener('DOMContentLoaded', function () {
 /* ══════════════════════════════════
    PAGE LOADER
 ══════════════════════════════════ */
-// ══════════════════════════════════
-// PAGE LOADER
-// ══════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    const loader = document.getElementById('pageLoader');
+    const loader     = document.getElementById('pageLoader');
     const loaderText = document.getElementById('loaderText');
-
     if (!loader || !loaderText) return;
 
-    const loaderMessages = [
+    const messages = [
+        "Preparing your workspace...",
         "Crafting your perfect space...",
         "Loading beautiful designs...",
-        "Preparing your workspace...",
-        "Curating dream interiors...",
         "Setting up your experience...",
         "Almost there...",
-        "Bringing ideas to life...",
-        "Styling your world...",
         "Building something beautiful...",
-        "Just a moment..."
     ];
 
-    let messageIndex = 0;
+    let msgIdx = 0;
 
     const textInterval = setInterval(() => {
 
-        loaderText.classList.add('fade-out');
+        /* Step 1: Fade OUT */
+        loaderText.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+        loaderText.style.opacity = '0';
+        loaderText.style.transform = 'translateY(-5px)';
 
+        /* Step 2: After fade out, change text and fade IN */
         setTimeout(() => {
+            msgIdx = (msgIdx + 1) % messages.length;
+            loaderText.textContent = messages[msgIdx];
 
-            messageIndex =
-                (messageIndex + 1) %
-                loaderMessages.length;
+            loaderText.style.transform = 'translateY(5px)';
 
-            loaderText.textContent =
-                loaderMessages[messageIndex];
+            /* Force reflow so the new position takes effect */
+            void loaderText.offsetWidth;
 
-            loaderText.classList.remove('fade-out');
-            loaderText.classList.add('fade-in');
-
-        }, 250);
+            loaderText.style.opacity = '1';
+            loaderText.style.transform = 'translateY(0)';
+        }, 280);
 
     }, 2000);
 
     function hideLoader() {
-
         clearInterval(textInterval);
-
         loader.classList.add('hide');
-
         document.body.classList.remove('loading');
-
         setTimeout(() => {
-
             loader.remove();
-
-            // Bootstrap dropdown fix
             document.querySelectorAll('[data-bs-toggle="dropdown"]')
-                .forEach(function (el) {
-                    new bootstrap.Dropdown(el);
-                });
-
+                .forEach(el => new bootstrap.Dropdown(el));
         }, 400);
     }
 
-    // Hide when page fully loaded
-    window.addEventListener('load', function () {
-
-        setTimeout(() => {
-            hideLoader();
-        }, 300);
-
-    });
-
+    window.addEventListener('load', () => setTimeout(hideLoader, 300));
 });
 
 
