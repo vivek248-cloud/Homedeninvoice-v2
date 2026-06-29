@@ -1599,7 +1599,6 @@ from decimal import Decimal, ROUND_HALF_UP
 
 def spend_list(request):
     client_id = request.GET.get('client')
-
     spends = Spend.objects.none()
     total_spent = Decimal("0")
 
@@ -1808,81 +1807,84 @@ from .models import (
 )
 
 
+
+from collections import OrderedDict
+from itertools import groupby
+
+
+def group_by_prefix(queryset, name_attr="name"):
+    """
+    Generic dynamic grouping by first word of the name.
+    Works for FloorType, RoomType, or any model with a name field.
+
+    Example:
+        "Ground Floor", "Ground Mezzanine"        → "Ground" group
+        "First Floor", "First Floor Annex"        → "First" group
+        "Basement 1", "Basement 2"                → "Basements" group
+    """
+
+    items = list(queryset)
+    sorted_items = sorted(items, key=lambda o: getattr(o, name_attr).lower())
+
+    grouped = OrderedDict()
+
+    def key_func(obj):
+        name = getattr(obj, name_attr).strip()
+        return name.split()[0].capitalize() if name else "Other"
+
+    for prefix, group_items in groupby(sorted_items, key=key_func):
+        group_list = list(group_items)
+        # Pluralize label if more than one item and not already plural
+        label = (
+            f"{prefix}s"
+            if len(group_list) > 1 and not prefix.lower().endswith("s")
+            else prefix
+        )
+        grouped[label] = group_list
+
+    return grouped
+
+
 def spend_create(request):
 
-    projects = Project.objects.select_related(
-        "client"
-    ).all()
-
-    floors = FloorType.objects.all()
-    rooms = RoomType.objects.all()
+    projects = Project.objects.select_related("client").all()
     fullsemis = FullSemi.objects.all()
+
+    # ── Dynamic grouping for both ──
+    floor_groups = group_by_prefix(FloorType.objects.all())
+    room_groups = group_by_prefix(RoomType.objects.all())
 
     if request.method == "POST":
 
         project_id = request.POST.get("project")
 
         if not project_id:
-            messages.error(
-                request,
-                "Please select a project."
-            )
+            messages.error(request, "Please select a project.")
             return redirect("spend_create")
 
         floors_list = request.POST.getlist("floor[]")
         rooms_list = request.POST.getlist("room[]")
         fullsemis_list = request.POST.getlist("fullsemi[]")
-
         elements_list = request.POST.getlist("elements[]")
         descriptions_list = request.POST.getlist("description[]")
-
         lengths = request.POST.getlist("length[]")
         widths = request.POST.getlist("width[]")
         areas = request.POST.getlist("area[]")
-
         units = request.POST.getlist("unit[]")
         rates = request.POST.getlist("rate[]")
         qtys = request.POST.getlist("qty[]")
 
         rows = []
-
         for i in range(len(elements_list)):
-
             if not elements_list[i]:
                 continue
 
             try:
-
-                length = (
-                    Decimal(lengths[i])
-                    if lengths[i]
-                    else None
-                )
-
-                width = (
-                    Decimal(widths[i])
-                    if widths[i]
-                    else None
-                )
-
-                area = (
-                    Decimal(areas[i])
-                    if areas[i]
-                    else None
-                )
-
-                rate = (
-                    Decimal(rates[i])
-                    if rates[i]
-                    else None
-                )
-
-                qty = (
-                    Decimal(qtys[i])
-                    if qtys[i]
-                    else Decimal("1")
-                )
-
+                length = Decimal(lengths[i]) if lengths[i] else None
+                width = Decimal(widths[i]) if widths[i] else None
+                area = Decimal(areas[i]) if areas[i] else None
+                rate = Decimal(rates[i]) if rates[i] else None
+                qty = Decimal(qtys[i]) if qtys[i] else Decimal("1")
             except InvalidOperation:
                 continue
 
@@ -1906,28 +1908,142 @@ def spend_create(request):
         if rows:
             Spend.objects.bulk_create(rows)
 
-        messages.success(
-            request,
-            "Spend entries created successfully."
-        )
-
-        return redirect(
-            "spend_list"
-        )
+        messages.success(request, "Spend entries created successfully.")
+        return redirect("spend_list")
 
     return render(
         request,
         "billing/spend/create.html",
         {
             "projects": projects,
-            "floors": floors,
-            "rooms": rooms,
+            "floor_groups": floor_groups,   # ← grouped floors
+            "room_groups": room_groups,     # ← grouped rooms
             "fullsemis": fullsemis,
-        }
+        },
     )
 
 
 
+
+
+
+# def spend_create(request):
+
+#     projects = Project.objects.select_related(
+#         "client"
+#     ).all()
+
+#     floors = FloorType.objects.all()
+#     rooms = RoomType.objects.all()
+#     fullsemis = FullSemi.objects.all()
+
+#     if request.method == "POST":
+
+#         project_id = request.POST.get("project")
+
+#         if not project_id:
+#             messages.error(
+#                 request,
+#                 "Please select a project."
+#             )
+#             return redirect("spend_create")
+
+#         floors_list = request.POST.getlist("floor[]")
+#         rooms_list = request.POST.getlist("room[]")
+#         fullsemis_list = request.POST.getlist("fullsemi[]")
+
+#         elements_list = request.POST.getlist("elements[]")
+#         descriptions_list = request.POST.getlist("description[]")
+
+#         lengths = request.POST.getlist("length[]")
+#         widths = request.POST.getlist("width[]")
+#         areas = request.POST.getlist("area[]")
+
+#         units = request.POST.getlist("unit[]")
+#         rates = request.POST.getlist("rate[]")
+#         qtys = request.POST.getlist("qty[]")
+
+#         rows = []
+
+#         for i in range(len(elements_list)):
+
+#             if not elements_list[i]:
+#                 continue
+
+#             try:
+
+#                 length = (
+#                     Decimal(lengths[i])
+#                     if lengths[i]
+#                     else None
+#                 )
+
+#                 width = (
+#                     Decimal(widths[i])
+#                     if widths[i]
+#                     else None
+#                 )
+
+#                 area = (
+#                     Decimal(areas[i])
+#                     if areas[i]
+#                     else None
+#                 )
+
+#                 rate = (
+#                     Decimal(rates[i])
+#                     if rates[i]
+#                     else None
+#                 )
+
+#                 qty = (
+#                     Decimal(qtys[i])
+#                     if qtys[i]
+#                     else Decimal("1")
+#                 )
+
+#             except InvalidOperation:
+#                 continue
+
+#             rows.append(
+#                 Spend(
+#                     project_id=project_id,
+#                     floor_id=floors_list[i] or None,
+#                     room_id=rooms_list[i] or None,
+#                     fullsemi_id=fullsemis_list[i] or None,
+#                     elements=elements_list[i],
+#                     description=descriptions_list[i],
+#                     length=length,
+#                     width=width,
+#                     area=area,
+#                     unit=units[i] if units else "sqft",
+#                     rate=rate,
+#                     qty=qty,
+#                 )
+#             )
+
+#         if rows:
+#             Spend.objects.bulk_create(rows)
+
+#         messages.success(
+#             request,
+#             "Spend entries created successfully."
+#         )
+
+#         return redirect(
+#             "spend_list"
+#         )
+
+#     return render(
+#         request,
+#         "billing/spend/create.html",
+#         {
+#             "projects": projects,
+#             "floors": floors,
+#             "rooms": rooms,
+#             "fullsemis": fullsemis,
+#         }
+#     )
 
 
 
@@ -1941,31 +2057,25 @@ from decimal import Decimal, InvalidOperation
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 
+
 def spend_update(request, pk):
 
-    spend = get_object_or_404(
-        Spend,
-        pk=pk
-    )
+    spend = get_object_or_404(Spend, pk=pk)
 
     projects = Project.objects.select_related("client").all()
-    floors = FloorType.objects.all()
-    rooms = RoomType.objects.all()
     fullsemis = FullSemi.objects.all()
+
+    # ── Dynamic grouping (same helper used in spend_create) ──
+    floor_groups = group_by_prefix(FloorType.objects.all())
+    room_groups = group_by_prefix(RoomType.objects.all())
 
     if request.method == "POST":
 
         project_id = request.POST.get("project")
 
         if not project_id:
-            messages.error(
-                request,
-                "Project is required."
-            )
-            return redirect(
-                "spend_update",
-                pk=pk
-            )
+            messages.error(request, "Project is required.")
+            return redirect("spend_update", pk=pk)
 
         floors_list = request.POST.getlist("floor[]")
         rooms_list = request.POST.getlist("room[]")
@@ -1980,7 +2090,6 @@ def spend_update(request, pk):
 
         rate_list = request.POST.getlist("rate[]")
         qty_list = request.POST.getlist("qty[]")
-
         unit_list = request.POST.getlist("unit[]")
 
         rows = []
@@ -1991,35 +2100,11 @@ def spend_update(request, pk):
                 continue
 
             try:
-                length = (
-                    Decimal(length_list[i])
-                    if length_list[i]
-                    else None
-                )
-
-                width = (
-                    Decimal(width_list[i])
-                    if width_list[i]
-                    else None
-                )
-
-                area = (
-                    Decimal(area_list[i])
-                    if area_list[i]
-                    else None
-                )
-
-                rate = (
-                    Decimal(rate_list[i])
-                    if rate_list[i]
-                    else None
-                )
-
-                qty = (
-                    Decimal(qty_list[i])
-                    if qty_list[i]
-                    else Decimal("1")
-                )
+                length = Decimal(length_list[i]) if length_list[i] else None
+                width = Decimal(width_list[i]) if width_list[i] else None
+                area = Decimal(area_list[i]) if area_list[i] else None
+                rate = Decimal(rate_list[i]) if rate_list[i] else None
+                qty = Decimal(qty_list[i]) if qty_list[i] else Decimal("1")
 
             except (InvalidOperation, IndexError):
                 continue
@@ -2041,17 +2126,14 @@ def spend_update(request, pk):
                 )
             )
 
-        # Delete original spend
+        # Delete the original entry
         spend.delete()
 
-        # Create updated rows
+        # Bulk create updated rows
         if rows:
             Spend.objects.bulk_create(rows)
 
-        messages.success(
-            request,
-            "Spend entries updated successfully."
-        )
+        messages.success(request, "Spend entries updated successfully.")
 
         return redirect("spend_list")
 
@@ -2061,11 +2143,143 @@ def spend_update(request, pk):
         {
             "spend": spend,
             "projects": projects,
-            "floors": floors,
-            "rooms": rooms,
+            "floor_groups": floor_groups,   # ← grouped floors
+            "room_groups": room_groups,     # ← grouped rooms
             "fullsemis": fullsemis,
         },
     )
+
+
+# 📌 Spend Update
+# from decimal import Decimal, InvalidOperation
+# from django.shortcuts import get_object_or_404, redirect, render
+# from django.contrib import messages
+
+# def spend_update(request, pk):
+
+#     spend = get_object_or_404(
+#         Spend,
+#         pk=pk
+#     )
+
+#     projects = Project.objects.select_related("client").all()
+#     floors = FloorType.objects.all()
+#     rooms = RoomType.objects.all()
+#     fullsemis = FullSemi.objects.all()
+
+#     if request.method == "POST":
+
+#         project_id = request.POST.get("project")
+
+#         if not project_id:
+#             messages.error(
+#                 request,
+#                 "Project is required."
+#             )
+#             return redirect(
+#                 "spend_update",
+#                 pk=pk
+#             )
+
+#         floors_list = request.POST.getlist("floor[]")
+#         rooms_list = request.POST.getlist("room[]")
+#         fullsemi_list = request.POST.getlist("fullsemi[]")
+
+#         elements_list = request.POST.getlist("elements[]")
+#         description_list = request.POST.getlist("description[]")
+
+#         length_list = request.POST.getlist("length[]")
+#         width_list = request.POST.getlist("width[]")
+#         area_list = request.POST.getlist("area[]")
+
+#         rate_list = request.POST.getlist("rate[]")
+#         qty_list = request.POST.getlist("qty[]")
+
+#         unit_list = request.POST.getlist("unit[]")
+
+#         rows = []
+
+#         for i in range(len(elements_list)):
+
+#             if not elements_list[i]:
+#                 continue
+
+#             try:
+#                 length = (
+#                     Decimal(length_list[i])
+#                     if length_list[i]
+#                     else None
+#                 )
+
+#                 width = (
+#                     Decimal(width_list[i])
+#                     if width_list[i]
+#                     else None
+#                 )
+
+#                 area = (
+#                     Decimal(area_list[i])
+#                     if area_list[i]
+#                     else None
+#                 )
+
+#                 rate = (
+#                     Decimal(rate_list[i])
+#                     if rate_list[i]
+#                     else None
+#                 )
+
+#                 qty = (
+#                     Decimal(qty_list[i])
+#                     if qty_list[i]
+#                     else Decimal("1")
+#                 )
+
+#             except (InvalidOperation, IndexError):
+#                 continue
+
+#             rows.append(
+#                 Spend(
+#                     project_id=project_id,
+#                     floor_id=floors_list[i] or None,
+#                     room_id=rooms_list[i] or None,
+#                     fullsemi_id=fullsemi_list[i] or None,
+#                     elements=elements_list[i],
+#                     description=description_list[i],
+#                     length=length,
+#                     width=width,
+#                     area=area,
+#                     rate=rate,
+#                     qty=qty,
+#                     unit=unit_list[i] if unit_list else "sqft",
+#                 )
+#             )
+
+#         # Delete original spend
+#         spend.delete()
+
+#         # Create updated rows
+#         if rows:
+#             Spend.objects.bulk_create(rows)
+
+#         messages.success(
+#             request,
+#             "Spend entries updated successfully."
+#         )
+
+#         return redirect("spend_list")
+
+#     return render(
+#         request,
+#         "billing/spend/update.html",
+#         {
+#             "spend": spend,
+#             "projects": projects,
+#             "floors": floors,
+#             "rooms": rooms,
+#             "fullsemis": fullsemis,
+#         },
+#     )
 
 
 
@@ -2270,7 +2484,7 @@ def invoice_dashboard(request):
     client_id = request.GET.get("client")
     project_id = request.GET.get("project")
 
-    clients = Client.objects.all().order_by("name")
+    clients = Client.objects.prefetch_related("projects").order_by("name")
 
     projects = Payment.objects.none()
     invoices = Payment.objects.none()
@@ -3607,156 +3821,6 @@ def quotation_create(request):
 
 
 
-from decimal import Decimal
-from django.db import transaction
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from .models import QtnClient, QuotationItem, Image, FullSemi
-
-
-# from decimal import Decimal, InvalidOperation
-# from django.db import transaction
-# from django.contrib.auth.decorators import login_required
-# from django.shortcuts import render, redirect
-# from .models import QtnClient, QuotationItem, Image, FullSemi
-
-
-# @login_required
-# def quotation_update(request, id):
-
-#     rows = QuotationItem.objects.filter(client_id=id)
-
-#     if not rows.exists():
-#         return redirect("quotation_index")
-
-#     client_id = id
-
-#     if request.method == "POST":
-
-#         start_date = request.POST.get("estimate_start_date")
-#         end_date = request.POST.get("estimate_end_date")
-
-#         # ✅ update client dates
-#         QtnClient.objects.filter(id=client_id).update(
-#             estimate_start_date=start_date,
-#             estimate_end_date=end_date,
-#         )
-
-#         # 🔥 GET ALL LISTS
-#         floors = request.POST.getlist("floor[]")
-#         locations = request.POST.getlist("location[]")
-#         elements = request.POST.getlist("element[]")
-
-#         images = request.POST.getlist("image[]")
-#         fullsemis = request.POST.getlist("full_semi[]")
-
-#         core_materials = request.POST.getlist("core_material[]")
-#         finish_materials = request.POST.getlist("finish_material[]")
-#         brands = request.POST.getlist("brand[]")
-#         specifications = request.POST.getlist("specification[]")
-
-#         units = request.POST.getlist("unit[]")
-#         lengths = request.POST.getlist("length[]")
-#         widths = request.POST.getlist("width[]")
-#         qtys = request.POST.getlist("qty[]")
-
-#         # 🔥 IMPORTANT (manual rate)
-#         rate_inputs = request.POST.getlist("rate[]")
-
-#         # 🔥 preload rates
-#         fullsemi_rates = {f.id: f.rate for f in FullSemi.objects.all()}
-
-#         quotation_rows = []
-
-#         for i in range(len(elements)):
-
-#             if not elements[i]:
-#                 continue
-
-#             # ✅ SAFE PARSE
-#             try:
-#                 length = Decimal(lengths[i] or 0)
-#                 width = Decimal(widths[i] or 0)
-#                 qty = Decimal(qtys[i] or 1)
-#             except InvalidOperation:
-#                 continue
-
-#             area = length * width
-
-#             # 🔥 RATE FIX (CRITICAL 🔥)
-#             try:
-#                 price = Decimal(rate_inputs[i] or 0)
-#             except (InvalidOperation, IndexError):
-#                 price = Decimal("0.00")
-
-#             fullsemi_id = fullsemis[i] if i < len(fullsemis) else None
-
-#             # fallback to preset
-#             if price <= 0 and fullsemi_id:
-#                 price = fullsemi_rates.get(int(fullsemi_id), Decimal("0.00"))
-
-#             # optional skip invalid
-#             if price <= 0:
-#                 continue
-
-#             # checkbox
-#             end_floor = request.POST.get(f"floor_end_{i}") == "1"
-
-#             total = area * price * qty
-
-#             quotation_rows.append(
-#                 QuotationItem(
-#                     client_id=client_id,
-
-#                     floor=floors[i].strip() if i < len(floors) else "",
-#                     location=locations[i].strip() if i < len(locations) else "",
-#                     element=elements[i].strip(),
-
-#                     image_id=int(images[i]) if i < len(images) and images[i] else None,
-#                     full_semi_id=fullsemi_id,
-
-#                     core_material=core_materials[i] if i < len(core_materials) else "",
-#                     finish_material=finish_materials[i] if i < len(finish_materials) else "",
-#                     brand=brands[i] if i < len(brands) else "",
-#                     specification=specifications[i] if i < len(specifications) else "",
-
-#                     unit=units[i] if i < len(units) else "sqft",
-
-#                     length=length,
-#                     width=width,
-#                     area=area,
-
-#                     price=price,  # ✅ FIXED
-#                     qty=qty,
-#                     total=total,
-
-#                     end=end_floor,
-#                 )
-#             )
-
-#         # 🔥 REPLACE OLD DATA SAFELY
-#         with transaction.atomic():
-#             rows.delete()
-#             if quotation_rows:
-#                 QuotationItem.objects.bulk_create(quotation_rows, batch_size=500)
-
-#         return redirect("quotation_index")
-
-#     return render(request, "billing/quotation/update.html", {
-#         "quotation_rows": rows,
-#         "clients": QtnClient.objects.all(),
-#         "images": Image.objects.all(),
-#         "fullsemis": FullSemi.objects.all(),
-#         "previous_specs": list(
-#             QuotationItem.objects
-#             .exclude(specification="")
-#             .values_list("specification", flat=True)
-#             .distinct()[:200]
-#         )
-#     })
-
-
-
 
 
 from decimal import Decimal, InvalidOperation
@@ -4025,76 +4089,7 @@ def quotation_detail(request, client_id):
 
 
 
-# @login_required
-# def quotation_preview(request, client_id):
 
-#     client = get_object_or_404(QtnClient, id=client_id)
-
-#     rows = QuotationItem.objects.filter(
-#         client_id=client_id
-#     ).order_by("id")
-
-#     subtotal = sum(r.total for r in rows)
-
-#     gst_rate = Decimal(client.gst or 0)
-#     gst_amount = (subtotal * gst_rate) / Decimal("100")
-
-#     total_with_gst = subtotal + gst_amount
-
-#     discount = client.discount_amount or Decimal("0.00")
-
-#     grand_total = total_with_gst - discount
-
-#     return render(
-#         request,
-#         "billing/quotation/pdf.html",
-#         {
-#             "client": client,
-#             "rows": rows,
-#             "subtotal": subtotal,
-#             "gst_rate": gst_rate,
-#             "gst_amount": gst_amount,
-#             "grand_total": grand_total,
-#             "preview": True
-#         }
-#     )
-
-
-
-# import json
-# from django.http import JsonResponse
-# from django.views.decorators.http import require_POST
-# from django.contrib.auth.decorators import login_required
-
-# @require_POST
-# @login_required
-# def save_quotation_order(request, client_id):
-
-#     try:
-#         data = json.loads(request.body.decode("utf-8"))
-
-#         order = data.get("order", [])
-
-#         for index, item_id in enumerate(order):
-
-#             QuotationItem.objects.filter(
-#                 id=int(item_id),
-#                 client_id=client_id
-#             ).update(sort_order=index)
-
-#         return JsonResponse({
-#             "status": "success",
-#             "message": "Order saved"
-#         })
-
-#     except Exception as e:
-
-#         print("ORDER SAVE ERROR:", e)   # ← IMPORTANT DEBUG
-
-#         return JsonResponse({
-#             "status": "error",
-#             "message": str(e)
-#         }, status=400)
 
 
 

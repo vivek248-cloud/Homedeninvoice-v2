@@ -53,12 +53,20 @@
                     <i class="bi bi-person-fill cs-icon"></i>
                     <select name="client" class="client-select" onchange="this.form.submit()">
                         <option value="">Select Client</option>
-                        {% for client in clients %}
-                        <option value="{{ client.id }}"
-                            {% if client.id|stringformat:"s" == selected_client %}selected{% endif %}>
-                            {{ client.name }} ({{ client.address|truncatewords:4 }})
-                        </option>
-                        {% endfor %}
+                            {% for client in clients %}
+                                <option value="{{ client.id }}"
+                                    {% if client.id|stringformat:"s" == selected_client %}selected{% endif %}>
+
+                                    {% with project=client.projects.first %}
+                                        {% if project %}
+                                           { {{ project.name }} } - {{ client.name }} ({{client.address}})
+                                        {% else %}
+                                            {{ client.name }}
+                                        {% endif %}
+                                    {% endwith %}
+
+                                </option>
+                            {% endfor %}
                     </select>
                     <i class="bi bi-chevron-down cs-chevron"></i>
                 </div>

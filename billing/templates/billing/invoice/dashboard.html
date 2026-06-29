@@ -584,8 +584,18 @@
                 <select class="inv-filter-select" name="client" id="client-select" onchange="this.form.submit()">
                     <option value="">— All Clients —</option>
                     {% for client in clients %}
-                    <option value="{{ client.id }}" {% if selected_client == client.id|stringformat:"s" %}selected{% endif %}>
-                        {{ client.name }} ({{client.address}}) <b>({{ client.projects.count }} projects)</b>
+                    <option value="{{ client.id }}"
+                        {% if selected_client == client.id|stringformat:"s" %}selected{% endif %}>
+
+                        {% with project=client.projects.last %}
+                            {% if project %}
+                                { {{ project.name }} } - {{ client.name }}
+                            {% else %}
+                                {{ client.name }}
+                            {% endif %}
+                        {% endwith %}
+                        ({{ client.address }}) - {{ client.projects.count }} Projects
+
                     </option>
                     {% endfor %}
                 </select>

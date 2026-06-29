@@ -51,7 +51,7 @@
                     {% for project in projects %}
                     <option value="{{ project.id }}"
                         {% if selected_project == project.id|stringformat:"s" %}selected{% endif %}>
-                        {{ project.name }}
+                         { {{ project.name }} } - {{project.client.name}}
                     </option>
                     {% endfor %}
                 </select>

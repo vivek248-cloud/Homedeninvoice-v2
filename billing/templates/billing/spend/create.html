@@ -290,7 +290,7 @@
                                         <select name="project" id="projectSelect" class="custom-select required-input" required>
                                             <option value="">Select Project...</option>
                                             {% for project in projects %}
-                                            <option value="{{ project.id }}">{{ project.name }} {{ project.client.name }} ({{project.client.address}})</option>
+                                            <option value="{{ project.id }}">{ {{ project.name }} } - {{ project.client.name }} ({{project.client.address}})</option>
                                             {% endfor %}
                                         </select>
                                         <i class="bi bi-chevron-down select-icon"></i>
@@ -373,22 +373,37 @@
                                         <!-- Floor / Room -->
                                         <td class="ps-4">
                                             <div class="cell-stack">
+
+                                                <!-- Floor — dynamically grouped -->
                                                 <div class="input-wrap">
                                                     <select name="floor[]" class="mini-select required-input" required>
-                                                        <option value="">Floor *</option>
+                                                    <option value="">Floor *</option>
+
+                                                    {% for group_label, floors in floor_groups.items %}
+                                                        <optgroup label="{{ group_label }}">
                                                         {% for floor in floors %}
-                                                        <option value="{{ floor.id }}">{{ floor.name }}</option>
+                                                            <option value="{{ floor.id }}">{{ floor.name }}</option>
                                                         {% endfor %}
+                                                        </optgroup>
+                                                    {% endfor %}
                                                     </select>
                                                     <span class="input-indicator"></span>
                                                 </div>
-                                                <select name="room[]" class="mini-select mini-select-light">
+
+                                                <!-- Room — dynamically grouped -->
+                                                <select name="room[]" class="mini-select room-select">
                                                     <option value="">Room (optional)</option>
-                                                    {% for room in rooms %}
-                                                    <option value="{{ room.id }}">{{ room.name }}</option>
+
+                                                    {% for group_label, rooms in room_groups.items %}
+                                                    <optgroup label="{{ group_label }}">
+                                                        {% for room in rooms %}
+                                                        <option value="{{ room.id }}">{{ room.name }}</option>
+                                                        {% endfor %}
+                                                    </optgroup>
                                                     {% endfor %}
                                                 </select>
-                                            </div>
+
+                                                </div>
                                         </td>
 
                                         <!-- Element -->
@@ -1437,6 +1452,69 @@
         width: 95%;
     }
 }
+
+
+/* ════════════════════════════════════════
+   Native <select> with grouped headings
+   ════════════════════════════════════════ */
+
+/* The group label itself */
+.room-select optgroup,
+.mini-select optgroup {
+  font-weight: 800;
+  font-style: normal;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  color: var(--primary, #4f46e5);
+  background: linear-gradient(
+    to right,
+    var(--primary-soft, #eef2ff),
+    transparent
+  );
+
+  padding: 8px 10px 6px 10px;
+  border-top: 1px solid var(--border-light, #e5e7eb);
+
+  /* Forces the label color on most browsers */
+  -webkit-text-fill-color: var(--primary, #4f46e5);
+}
+
+/* First group shouldn't have a divider on top */
+.room-select optgroup:first-of-type,
+.mini-select optgroup:first-of-type {
+  border-top: none;
+}
+
+/* Options inside groups */
+.room-select option,
+.mini-select option {
+  font-weight: 500;
+  font-size: 0.74rem;
+  color: var(--text-1, #1f2937);
+  background: var(--surface, #ffffff);
+  padding: 6px 10px 6px 22px;   /* indent under header */
+  border: none;
+}
+
+/* Hover & selected state */
+.room-select option:hover,
+.room-select option:checked,
+.mini-select option:hover,
+.mini-select option:checked {
+  background: var(--primary, #4f46e5);
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  font-weight: 600;
+}
+
+/* Make the dropdown itself a bit roomier */
+.room-select,
+.mini-select {
+  font-size: 0.74rem;
+}
+
 
 </style>
 
