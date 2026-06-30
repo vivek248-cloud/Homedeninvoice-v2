@@ -3146,6 +3146,7 @@ def build_invoice_context(request, payment):
         'gst_rate':      gst_rate,
         'gst_amount':    gst_amount,
         'discount':      discount,
+        "discount_value": payment.discount_value,
         'grand_total':   grand_total,
 
         'payment_rows':      payment_rows,

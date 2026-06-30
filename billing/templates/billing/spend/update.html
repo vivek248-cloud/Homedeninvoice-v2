@@ -367,10 +367,10 @@
                                     <tr>
                                         <th class="ps-4">Floor / Room <span class="th-req">*</span></th>
                                         <th>Element <span class="th-req">*</span></th>
-                                        <th>Series / Rate <span class="th-req">*</span></th>
                                         <th class="text-center">Spec</th>
-                                        <th>Dimensions <span class="th-req">*</span></th>
                                         <th class="text-center">Qty <span class="th-req">*</span></th>
+                                        <th>Dimensions <span class="th-req">*</span></th>
+                                        <th>Series / Rate <span class="th-req">*</span></th>
                                         <th class="text-center">Total</th>
                                         <th class="text-center pe-4">Actions</th>
                                     </tr>
@@ -436,33 +436,20 @@
                                             </div>
                                         </td>
 
-                                        <!-- Series / Rate -->
-                                        <td>
-                                            <div class="cell-stack">
-                                                <div class="input-wrap">
-                                                    <select name="fullsemi[]" class="mini-select fullsemi " >
-                                                        <option value="">Series *</option>
-                                                        {% for fs in fullsemis %}
-                                                        <option value="{{ fs.id }}" data-rate="{{ fs.rate }}" {% if spend.fullsemi and spend.fullsemi.id == fs.id %}selected{% endif %}>
-                                                            {{ fs.name }} (₹{{ fs.rate }})
-                                                        </option>
-                                                        {% endfor %}
-                                                    </select>
-                                                    <span class="input-indicator"></span>
-                                                </div>
-                                                <div class="input-wrap">
-                                                    <input name="rate[]" class="mini-input rate required-input" placeholder="Rate *" value="{{ spend.rate }}" required>
-                                                    <span class="input-indicator"></span>
-                                                </div>
-                                            </div>
-                                        </td>
-
                                         <!-- Spec -->
                                         <td class="text-center">
                                             <button type="button" class="spec-btn {% if spend.description %}has-spec{% endif %}" onclick="openSpecModal(this)">
                                                 <i class="bi bi-file-text"></i>
                                             </button>
                                             <textarea name="description[]" class="d-none spec-text">{{ spend.description }}</textarea>
+                                        </td>
+
+                                        <!-- Qty -->
+                                        <td class="text-center">
+                                            <div class="input-wrap qty-wrap">
+                                                <input name="qty[]" value="{{ spend.qty }}" class="qty-input qty required-input" min="1" required>
+                                                <span class="input-indicator"></span>
+                                            </div>
                                         </td>
 
                                         <!-- Dimensions -->
@@ -487,13 +474,27 @@
                                             </div>
                                         </td>
 
-                                        <!-- Qty -->
-                                        <td class="text-center">
-                                            <div class="input-wrap qty-wrap">
-                                                <input name="qty[]" value="{{ spend.qty }}" class="qty-input qty required-input" min="1" required>
-                                                <span class="input-indicator"></span>
+                                        <!-- Series / Rate -->
+                                        <td>
+                                            <div class="cell-stack">
+                                                <div class="input-wrap">
+                                                    <select name="fullsemi[]" class="mini-select fullsemi " >
+                                                        <option value="">Series *</option>
+                                                        {% for fs in fullsemis %}
+                                                        <option value="{{ fs.id }}" data-rate="{{ fs.rate }}" {% if spend.fullsemi and spend.fullsemi.id == fs.id %}selected{% endif %}>
+                                                            {{ fs.name }} (₹{{ fs.rate }})
+                                                        </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <span class="input-indicator"></span>
+                                                </div>
+                                                <div class="input-wrap">
+                                                    <input name="rate[]" class="mini-input rate required-input" placeholder="Rate *" value="{{ spend.rate }}" required>
+                                                    <span class="input-indicator"></span>
+                                                </div>
                                             </div>
                                         </td>
+
 
                                         <!-- Total -->
                                         <td class="text-center">
