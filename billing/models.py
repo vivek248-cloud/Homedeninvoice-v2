@@ -171,9 +171,37 @@ class Project(models.Model):
     @property
     def yet_to_receive(self):
 
-        balance = self.total_spent - self.total_paid
+        spend_total = self.total_spent
+
+        latest_payment = (
+            self.payments
+            .order_by("-id")
+            .first()
+        )
+
+        discount = Decimal("0.00")
+        gst_rate = Decimal("0.00")
+
+        if latest_payment:
+            discount = latest_payment.discount_value or Decimal("0.00")
+            gst_rate = latest_payment.gst_rate or Decimal("0.00")
+
+        # Prevent discount exceeding spend
+        if discount > spend_total:
+            discount = spend_total
+
+        subtotal = spend_total - discount
+
+        gst_amount = (
+            subtotal * gst_rate / Decimal("100")
+        ).quantize(Decimal("0.01"))
+
+        invoice_total = subtotal + gst_amount
+
+        balance = invoice_total - self.total_paid
 
         return balance if balance > 0 else Decimal("0.00")
+
 
     @property
     def profit(self):

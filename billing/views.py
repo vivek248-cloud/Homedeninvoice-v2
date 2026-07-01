@@ -356,35 +356,65 @@ def client_dashboard(request):
         .order_by("-date")
     )
 
-    total_paid = (
-        payments.aggregate(
-            total=Sum("amount")
-        )["total"]
-        or Decimal("0.00")
-    )
+    # ==========================================================
+    # CLIENT TOTALS (Includes latest Discount + GST)
+    # ==========================================================
 
-    total_budget = (
-        Spend.objects.filter(
-            project__client=client
-        ).aggregate(
-            total=Sum(
-                ExpressionWrapper(
-                    F("qty") * F("rate") * F("length") * F("width"),
-                    output_field=DecimalField(
-                        max_digits=18,
-                        decimal_places=2
-                    )
-                )
-            )
-        )["total"]
-        or Decimal("0.00")
-    )
+    total_budget = Decimal("0.00")
+    total_paid = Decimal("0.00")
+    total_receivable = Decimal("0.00")
 
-    total_receivable = total_budget - total_paid
+    for project in projects:
 
-    if total_receivable < 0:
-        total_receivable = Decimal("0.00")
+        # Actual spend
+        spend_total = project.total_spent
+        total_budget += spend_total
 
+        # Total paid
+        paid = (
+            Payment.objects.filter(project=project)
+            .aggregate(total=Sum("amount"))["total"]
+            or Decimal("0.00")
+        )
+
+        total_paid += paid
+
+        # Latest invoice settings
+        latest_payment = (
+            Payment.objects
+            .filter(project=project)
+            .order_by("-id")
+            .first()
+        )
+
+        discount = Decimal("0.00")
+        gst_rate = Decimal("0.00")
+
+        if latest_payment:
+            discount = latest_payment.discount_value or Decimal("0.00")
+            gst_rate = latest_payment.gst_rate or Decimal("0.00")
+
+        # Prevent negative subtotal
+        if discount > spend_total:
+            discount = spend_total
+
+        subtotal = spend_total - discount
+
+        gst_amount = (
+            subtotal * gst_rate / Decimal("100")
+        ).quantize(Decimal("0.01"))
+
+        invoice_total = subtotal + gst_amount
+
+        balance = invoice_total - paid
+
+        if balance > 0:
+            total_receivable += balance
+
+    # Round totals
+    total_budget = total_budget.quantize(Decimal("0.01"))
+    total_paid = total_paid.quantize(Decimal("0.01"))
+    total_receivable = total_receivable.quantize(Decimal("0.01"))
 
     # ═══════════════════════════════════════════
     #  PROJECT MILESTONES & TIMELINE
@@ -1015,9 +1045,56 @@ def project_list(request):
         #  PENDING AMOUNT & PAYMENT STATUS
         # ═══════════════════════════════════
         paid = project.annotated_total_paid or Decimal("0.00")
-        raw_pending = project.budget - paid
-        project.pending_amount = raw_pending if raw_pending > 0 else Decimal("0.00")
 
+        # ------------------------------------
+        # Actual spend
+        # ------------------------------------
+        spend_total = project.total_spent
+
+        # ------------------------------------
+        # Latest invoice settings
+        # ------------------------------------
+        latest_payment = (
+            Payment.objects
+            .filter(project=project)
+            .order_by("-id")
+            .first()
+        )
+
+        discount = Decimal("0.00")
+        gst_rate = Decimal("0.00")
+
+        if latest_payment:
+            discount = latest_payment.discount_value or Decimal("0.00")
+            gst_rate = latest_payment.gst_rate or Decimal("0.00")
+
+        # Prevent negative subtotal
+        if discount > spend_total:
+            discount = spend_total
+
+        subtotal = spend_total - discount
+
+        gst_amount = (
+            subtotal * gst_rate / Decimal("100")
+        ).quantize(Decimal("0.01"))
+
+        invoice_total = subtotal + gst_amount
+
+        # Save values for template
+        project.discount_amount = discount
+        project.gst_amount = gst_amount
+        project.invoice_total = invoice_total
+
+        raw_pending = invoice_total - paid
+
+        project.pending_amount = (
+            raw_pending
+            if raw_pending > 0
+            else Decimal("0.00")
+        )
+
+
+        
         if project.pending_amount <= 0:
             project.payment_status = "paid"
         elif project.last_activity_days is not None and project.last_activity_days <= 15:

@@ -113,8 +113,8 @@
                 <div class="sc-icon-wrap"><i class="bi bi-hourglass-split"></i></div>
                 <div class="sc-content">
                     <span class="sc-label">Outstanding Balance</span>
-                    <span class="sc-value {% if balance > 0 %}sc-negative{% else %}sc-positive{% endif %}">
-                        ₹{{ balance|floatformat:0 }}
+                    <span class="sc-value {% if project.yet_to_receive > 0 %}sc-negative{% else %}sc-positive{% endif %}">
+                        ₹{{ project.yet_to_receive|floatformat:0 }}
                     </span>
                 </div>
                 <div class="sc-accent sc-accent-right"></div>

@@ -2053,10 +2053,10 @@ kbd.kbd-action {
                 <td style="text-align:left;">{{ spend.description }}</td>
                 <td>{{ spend.area|floatformat:2 }}</td>
                 <td>{{ spend.unit|upper }}</td>
-                <td>₹{{ spend.rate|floatformat:2 }}</td>
+                <td>{{ spend.rate|indian_currency_symbol }}</td>
                 <td class="right selectable-amount"
                     data-amount="{{ spend.total_amount }}">
-                    ₹{{ spend.total_amount }}
+                    {{ spend.total_amount|indian_currency_symbol }}
 
                     <span class="no-print row-action-btns">
 
@@ -2116,7 +2116,7 @@ kbd.kbd-action {
         <table class="total-table">
             <tr>
                 <td class="left">Total Spent</td>
-                <td class="right" id="totalSpent">₹ {{ total_spent|floatformat:2 }}</td>
+                <td class="right" id="totalSpent"> {{ total_spent|indian_currency_symbol }}</td>
             </tr>
 
             {% if not is_public %}
@@ -2128,13 +2128,13 @@ kbd.kbd-action {
                            style="width:80px; padding:4px; margin-left:8px;
                                   border:1px solid #ccc; border-radius:4px;">
                 </td>
-                <td class="right" id="gstAmount">₹ {{ gst_amount|floatformat:2 }}</td>
+                <td class="right" id="gstAmount">{{ gst_amount|indian_currency_symbol }}</td>
             </tr>
 
             <tr class="highlight">
                 <td class="left"><strong>Subtotal (incl. GST)</strong></td>
                 <td class="right" id="subtotalAmount">
-                    <strong>₹ {{ subtotal|floatformat:2 }}</strong>
+                    <strong>{{ subtotal|indian_currency_symbol }}</strong>
                 </td>
             </tr>
 
@@ -2157,29 +2157,29 @@ kbd.kbd-action {
                 </td>
 
                 <td class="right" id="discountAmount">
-                    - ₹ {{ discount_value|default:0|floatformat:2 }}
+                    - {{ discount_value|indian_currency_symbol }}
                 </td>
             </tr>
 
             {% else %}
             <tr>
                 <td class="left">GST ({{ gst_rate }}%)</td>
-                <td class="right">₹ {{ gst_amount|floatformat:2 }}</td>
+                <td class="right">{{ gst_amount|indian_currency_symbol }}</td>
             </tr>
             <tr class="highlight">
                 <td class="left"><strong>Subtotal</strong></td>
-                <td class="right"><strong>₹ {{ subtotal|floatformat:2 }}</strong></td>
+                <td class="right"><strong>{{ subtotal|indian_currency_symbol }}</strong></td>
             </tr>
             <tr>
                 <td class="left">Discount</td>
-                <td class="right">- ₹ {{ discount|floatformat:2 }}</td>
+                <td class="right">- {{ discount|indian_currency_symbol }}</td>
             </tr>
             {% endif %}
 
             <tr class="highlight">
                 <td class="left"><strong>GRAND TOTAL</strong></td>
                 <td class="right" id="grandTotal">
-                    <strong>₹ {{ grand_total|floatformat:2 }}</strong>
+                    <strong>₹ {{ grand_total|indian_currency_symbol }}</strong>
                 </td>
             </tr>
         </table>
@@ -2202,14 +2202,14 @@ kbd.kbd-action {
             </thead>
             <tbody id="paymentRows">
                 {% for row in payment_rows %}
-                <tr data-paid="{{ row.total_paid|floatformat:2 }}">
+                <tr data-paid="{{ row.total_paid|indian_currency_symbol }}">
                     <td>{{ row.date|date:"d M Y" }}</td>
-                    <td>₹ {{ row.previous_paid|floatformat:2 }}</td>
-                    <td class="success">₹ {{ row.now_paid|floatformat:2 }}</td>
-                    <td><strong>₹ {{ row.total_paid|floatformat:2 }}</strong></td>
-                    <td class="grandTotal">₹ {{ grand_total|floatformat:2 }}</td>
+                    <td>{{ row.previous_paid|indian_currency_symbol }}</td>
+                    <td class="success">{{ row.now_paid|indian_currency_symbol }}</td>
+                    <td><strong> {{ row.total_paid|indian_currency_symbol }}</strong></td>
+                    <td class="grandTotal">{{ grand_total|indian_currency_symbol }}</td>
                     <td class="balanceCell {% if row.balance_after == 0 %}success{% elif row.balance_after < 0 %}danger{% else %}primary{% endif %}">
-                        ₹ {{ row.balance_after|floatformat:2 }}
+                        {{ row.balance_after|indian_currency_symbol }}
                     </td>
                 </tr>
                 {% endfor %}
