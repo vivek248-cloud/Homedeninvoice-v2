@@ -1,4 +1,5 @@
 {% load humanize %}
+{% load extra_filters %}
 {% load static %}
 
 <!DOCTYPE html>
@@ -1241,6 +1242,604 @@
 .gsb-mode-badge i { font-size: 0.62rem; }
 
 
+/* ══════════════════════════════════════
+   SCOPE SELECTOR IN GROUP BAR
+══════════════════════════════════════ */
+.gsb-scope-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.gsb-scope-label {
+    font-size: 0.56rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(255,255,255,0.3);
+    white-space: nowrap;
+}
+
+.gsb-scope-select {
+    background: rgba(99,102,241,0.15);
+    border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 7px;
+    color: #a5b4fc;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    cursor: pointer;
+    outline: none;
+    font-family: inherit;
+    transition: all 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23a5b4fc' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 26px;
+}
+
+.gsb-scope-select:hover {
+    background-color: rgba(99,102,241,0.22);
+    border-color: rgba(99,102,241,0.4);
+}
+
+.gsb-scope-select option {
+    background: #1e293b;
+    color: #fff;
+    font-weight: 600;
+}
+
+/* ══════════════════════════════════════
+   ROW NUMBER CELL
+══════════════════════════════════════ */
+#invoiceTbody tr td:first-child {
+    transition: color 0.2s, font-weight 0.2s;
+}
+
+/* Flash on renumber */
+@keyframes numFlash {
+    0%   { color: #6366f1; font-weight: 800; }
+    100% { color: inherit; font-weight: inherit; }
+}
+
+.num-updated {
+    animation: numFlash 0.6s ease forwards;
+}
+
+
+
+/* ══════════════════════════════════════
+   KEYBOARD SHORTCUTS HELP PANEL
+══════════════════════════════════════ */
+
+/* ── FAB Button ── */
+.kbd-help-fab {
+    position: fixed;
+    bottom: 90px;
+    right: 28px;
+    z-index: 1100;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: #0f172a;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.55);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+
+.kbd-help-fab:hover {
+    background: #1e293b;
+    color: #a5b4fc;
+    border-color: rgba(99,102,241,0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+}
+
+.kbd-help-fab:active { transform: translateY(0); }
+
+/* ── Overlay ── */
+.kbd-help-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 2100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    padding: 20px;
+}
+
+.kbd-help-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ── Panel ── */
+.kbd-help-panel {
+    width: 540px;
+    max-width: 100%;
+    max-height: 85vh;
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.22);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.95) translateY(10px);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.kbd-help-overlay.active .kbd-help-panel {
+    transform: scale(1) translateY(0);
+}
+
+/* ── Header ── */
+.kbd-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px 14px;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.kbd-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 80% 30%, rgba(99,102,241,.2), transparent 55%),
+        radial-gradient(circle at 20% 70%, rgba(139,92,246,.1), transparent 55%);
+    pointer-events: none;
+}
+
+.kbd-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.kbd-header-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.kbd-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.kbd-subtitle {
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.4);
+    font-weight: 500;
+    display: block;
+    margin-top: 2px;
+}
+
+.kbd-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
+    color: rgba(255,255,255,.5);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.kbd-close:hover {
+    background: rgba(244,63,94,.2);
+    color: #f43f5e;
+    border-color: rgba(244,63,94,.25);
+}
+
+/* ── Search ── */
+.kbd-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    background: #f8fafc;
+    border-bottom: 1px solid #f1f5f9;
+    flex-shrink: 0;
+}
+
+.kbd-search-wrap i {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.kbd-search {
+    flex: 1;
+    border: none;
+    background: none;
+    outline: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #0f172a;
+    font-family: inherit;
+}
+
+.kbd-search::placeholder {
+    color: #cbd5e1;
+    font-weight: 400;
+}
+
+/* ── Body ── */
+.kbd-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99,102,241,0.12) transparent;
+}
+
+.kbd-body::-webkit-scrollbar { width: 4px; }
+.kbd-body::-webkit-scrollbar-track { background: transparent; }
+.kbd-body::-webkit-scrollbar-thumb {
+    background: rgba(99,102,241,0.12);
+    border-radius: 100px;
+}
+
+/* ── Section ── */
+.kbd-section { /* no extra style needed */ }
+
+.kbd-section.hidden { display: none; }
+
+.kbd-section-header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 10px;
+}
+
+.kbd-section-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.ksi-indigo  { background: rgba(99,102,241,0.1);  color: #6366f1; }
+.ksi-emerald { background: rgba(16,185,129,0.1);  color: #10b981; }
+.ksi-violet  { background: rgba(139,92,246,0.1);  color: #8b5cf6; }
+.ksi-amber   { background: rgba(245,158,11,0.1);  color: #f59e0b; }
+.ksi-sky     { background: rgba(14,165,233,0.1);  color: #0ea5e9; }
+.ksi-rose    { background: rgba(244,63,94,0.1);   color: #f43f5e; }
+
+.kbd-section-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+}
+
+.kbd-section-badge {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: #94a3b8;
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 100px;
+    margin-left: auto;
+}
+
+/* ── Shortcut Grid ── */
+.kbd-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.kbd-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.kbd-item:hover {
+    background: #fff;
+    border-color: #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.kbd-item.hidden { display: none; }
+
+.kbd-keys {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+.kbd-plus {
+    font-size: 0.6rem;
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    border-bottom-width: 2.5px;
+    border-radius: 6px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #475569;
+    font-family: inherit;
+    white-space: nowrap;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+}
+
+kbd.kbd-action {
+    background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.06));
+    border-color: rgba(99,102,241,0.2);
+    color: #6366f1;
+    font-size: 0.58rem;
+}
+
+.kbd-desc {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64748b;
+    text-align: right;
+    line-height: 1.3;
+}
+
+/* ── Mode Cards ── */
+.kbd-mode-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.kbd-mode-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border: 1.5px solid #f1f5f9;
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+.kbd-mode-card:hover {
+    background: #fff;
+    border-color: #e2e8f0;
+}
+
+.kmc-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.kmc-step .kmc-icon  { background: rgba(16,185,129,0.1);  color: #10b981; }
+.kmc-room .kmc-icon  { background: rgba(14,165,233,0.1);  color: #0ea5e9; }
+.kmc-floor .kmc-icon { background: rgba(139,92,246,0.1);  color: #8b5cf6; }
+
+.kmc-info { flex: 1; min-width: 0; }
+
+.kmc-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.kmc-desc {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    font-weight: 500;
+    margin-top: 1px;
+}
+
+.kmc-shortcut {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    font-size: 0.6rem;
+    color: #94a3b8;
+}
+
+.kmc-shortcut kbd {
+    font-size: 0.58rem;
+    min-width: 18px;
+    height: 20px;
+    padding: 0 4px;
+}
+
+/* ── Tips ── */
+.kbd-tips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.kbd-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #fffbeb;
+    border: 1px solid rgba(245,158,11,0.15);
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.kbd-tip kbd {
+    font-size: 0.58rem;
+    vertical-align: middle;
+}
+
+.kbd-tip-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: rgba(245,158,11,0.12);
+    color: #f59e0b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.62rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+/* ── Footer ── */
+.kbd-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.kbd-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.68rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.kbd-footer-left i {
+    font-size: 0.75rem;
+    color: #6366f1;
+}
+
+.kbd-footer-left kbd {
+    font-size: 0.6rem;
+    margin: 0 2px;
+}
+
+.kbd-footer-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 16px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    box-shadow: 0 3px 10px rgba(99,102,241,0.25);
+}
+
+.kbd-footer-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(99,102,241,0.3);
+}
+
+/* ── No Results ── */
+.kbd-no-results {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.kbd-no-results i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 8px;
+    opacity: 0.3;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+    .kbd-help-overlay { padding: 0; align-items: flex-end; }
+    .kbd-help-panel {
+        width: 100%;
+        max-height: 90vh;
+        border-radius: 22px 22px 0 0;
+    }
+    .kbd-grid { grid-template-columns: 1fr; }
+    .kbd-help-fab { bottom: 76px; right: 16px; }
+}
+
+@media print {
+    .kbd-help-fab,
+    .kbd-help-overlay { display: none !important; }
+}
+
 
 
     /* =============================================
@@ -1688,6 +2287,316 @@
 
 </div><!-- /.invoice-container -->
 
+
+
+{% if not is_public %}
+
+<!-- ════════════════════════
+     KEYBOARD SHORTCUTS HELP
+════════════════════════ -->
+<button class="kbd-help-fab no-print" id="kbdHelpFab" onclick="toggleKbdHelp()" title="Keyboard Shortcuts (?)">
+    <i class="bi bi-keyboard"></i>
+</button>
+
+<div class="kbd-help-overlay no-print" id="kbdHelpOverlay">
+    <div class="kbd-help-panel" id="kbdHelpPanel">
+
+        <!-- Header -->
+        <div class="kbd-header">
+            <div class="kbd-header-left">
+                <div class="kbd-header-icon">
+                    <i class="bi bi-keyboard-fill"></i>
+                </div>
+                <div>
+                    <h5 class="kbd-title">Keyboard Shortcuts</h5>
+                    <span class="kbd-subtitle">Master the invoice editor</span>
+                </div>
+            </div>
+            <button class="kbd-close" onclick="toggleKbdHelp()" title="Close (Esc)">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Search -->
+        <div class="kbd-search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" class="kbd-search" id="kbdSearch"
+                   placeholder="Search shortcuts..." autocomplete="off">
+        </div>
+
+        <!-- Body -->
+        <div class="kbd-body" id="kbdBody">
+
+            <!-- ── SELECTION ── -->
+            <div class="kbd-section" data-section="selection">
+                <div class="kbd-section-header">
+                    <div class="kbd-section-icon ksi-indigo">
+                        <i class="bi bi-cursor-fill"></i>
+                    </div>
+                    <span class="kbd-section-title">Selection</span>
+                </div>
+                <div class="kbd-grid">
+                    <div class="kbd-item" data-keywords="select row ctrl click">
+                        <div class="kbd-keys">
+                            <kbd>Ctrl</kbd><span class="kbd-plus">+</span><kbd>Click</kbd>
+                        </div>
+                        <div class="kbd-desc">Toggle row selection</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="select all rows ctrl a">
+                        <div class="kbd-keys">
+                            <kbd>Ctrl</kbd><span class="kbd-plus">+</span><kbd>A</kbd>
+                        </div>
+                        <div class="kbd-desc">Select all rows</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="select amount total ctrl click">
+                        <div class="kbd-keys">
+                            <kbd>Ctrl</kbd><span class="kbd-plus">+</span><kbd>Click ₹</kbd>
+                        </div>
+                        <div class="kbd-desc">Select amount cell (sum total)</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="clear deselect escape">
+                        <div class="kbd-keys">
+                            <kbd>Esc</kbd>
+                        </div>
+                        <div class="kbd-desc">Clear all selections</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="remove last backspace amount">
+                        <div class="kbd-keys">
+                            <kbd>⌫</kbd>
+                        </div>
+                        <div class="kbd-desc">Remove last selected amount</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="clear all amounts backspace ctrl">
+                        <div class="kbd-keys">
+                            <kbd>Ctrl</kbd><span class="kbd-plus">+</span><kbd>⌫</kbd>
+                        </div>
+                        <div class="kbd-desc">Clear all selected amounts</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── MOVEMENT ── -->
+            <div class="kbd-section" data-section="movement">
+                <div class="kbd-section-header">
+                    <div class="kbd-section-icon ksi-emerald">
+                        <i class="bi bi-arrows-move"></i>
+                    </div>
+                    <span class="kbd-section-title">Movement</span>
+                    <span class="kbd-section-badge">Requires selection</span>
+                </div>
+                <div class="kbd-grid">
+                    <div class="kbd-item" data-keywords="move up down step alt arrow">
+                        <div class="kbd-keys">
+                            <kbd>Alt</kbd><span class="kbd-plus">+</span><kbd>↑</kbd> <kbd>↓</kbd>
+                        </div>
+                        <div class="kbd-desc">Move selected rows (current mode)</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="move room jump ctrl alt arrow">
+                        <div class="kbd-keys">
+                            <kbd>Ctrl</kbd><span class="kbd-plus">+</span><kbd>Alt</kbd><span class="kbd-plus">+</span><kbd>↑</kbd> <kbd>↓</kbd>
+                        </div>
+                        <div class="kbd-desc">Jump by room</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="move floor jump shift alt arrow">
+                        <div class="kbd-keys">
+                            <kbd>Shift</kbd><span class="kbd-plus">+</span><kbd>Alt</kbd><span class="kbd-plus">+</span><kbd>↑</kbd> <kbd>↓</kbd>
+                        </div>
+                        <div class="kbd-desc">Jump by floor</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="move top beginning ctrl home">
+                        <div class="kbd-keys">
+                            <kbd>Ctrl</kbd><span class="kbd-plus">+</span><kbd>Home</kbd>
+                        </div>
+                        <div class="kbd-desc">Move to top</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="move bottom end ctrl">
+                        <div class="kbd-keys">
+                            <kbd>Ctrl</kbd><span class="kbd-plus">+</span><kbd>End</kbd>
+                        </div>
+                        <div class="kbd-desc">Move to bottom</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── GROUPING ── -->
+            <div class="kbd-section" data-section="grouping">
+                <div class="kbd-section-header">
+                    <div class="kbd-section-icon ksi-violet">
+                        <i class="bi bi-collection-fill"></i>
+                    </div>
+                    <span class="kbd-section-title">Grouping</span>
+                </div>
+                <div class="kbd-grid">
+                    <div class="kbd-item" data-keywords="create group ctrl g link">
+                        <div class="kbd-keys">
+                            <kbd>Ctrl</kbd><span class="kbd-plus">+</span><kbd>G</kbd>
+                        </div>
+                        <div class="kbd-desc">Group selected rows (min 2)</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="drag group move">
+                        <div class="kbd-keys">
+                            <kbd class="kbd-action">Drag</kbd>
+                        </div>
+                        <div class="kbd-desc">Drag grouped row → moves entire group</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── EDITING ── -->
+            <div class="kbd-section" data-section="editing">
+                <div class="kbd-section-header">
+                    <div class="kbd-section-icon ksi-amber">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <span class="kbd-section-title">Editing</span>
+                </div>
+                <div class="kbd-grid">
+                    <div class="kbd-item" data-keywords="delete remove row">
+                        <div class="kbd-keys">
+                            <kbd>Delete</kbd>
+                        </div>
+                        <div class="kbd-desc">Delete selected rows</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="copy row button">
+                        <div class="kbd-keys">
+                            <kbd class="kbd-action">Copy btn</kbd>
+                        </div>
+                        <div class="kbd-desc">Copy row → click to paste after</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="copy group multiple">
+                        <div class="kbd-keys">
+                            <kbd class="kbd-action">📋 btn</kbd>
+                        </div>
+                        <div class="kbd-desc">Copy selected group → click to paste</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="drag drop reorder">
+                        <div class="kbd-keys">
+                            <kbd class="kbd-action">Drag row</kbd>
+                        </div>
+                        <div class="kbd-desc">Drag any row to reorder</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── HISTORY ── -->
+            <div class="kbd-section" data-section="history">
+                <div class="kbd-section-header">
+                    <div class="kbd-section-icon ksi-sky">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <span class="kbd-section-title">History</span>
+                </div>
+                <div class="kbd-grid">
+                    <div class="kbd-item" data-keywords="undo ctrl z">
+                        <div class="kbd-keys">
+                            <kbd>Ctrl</kbd><span class="kbd-plus">+</span><kbd>Z</kbd>
+                        </div>
+                        <div class="kbd-desc">Undo last action</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="redo ctrl shift z y">
+                        <div class="kbd-keys">
+                            <kbd>Ctrl</kbd><span class="kbd-plus">+</span><kbd>Shift</kbd><span class="kbd-plus">+</span><kbd>Z</kbd>
+                        </div>
+                        <div class="kbd-desc">Redo last undone action</div>
+                    </div>
+                    <div class="kbd-item" data-keywords="redo ctrl y">
+                        <div class="kbd-keys">
+                            <kbd>Ctrl</kbd><span class="kbd-plus">+</span><kbd>Y</kbd>
+                        </div>
+                        <div class="kbd-desc">Redo (alternate)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── MOVE MODES ── -->
+            <div class="kbd-section" data-section="modes">
+                <div class="kbd-section-header">
+                    <div class="kbd-section-icon ksi-rose">
+                        <i class="bi bi-sliders2"></i>
+                    </div>
+                    <span class="kbd-section-title">Move Modes</span>
+                    <span class="kbd-section-badge">Use pills in toolbar</span>
+                </div>
+                <div class="kbd-mode-cards">
+                    <div class="kbd-mode-card kmc-step">
+                        <div class="kmc-icon"><i class="bi bi-arrow-bar-up"></i></div>
+                        <div class="kmc-info">
+                            <div class="kmc-name">Step</div>
+                            <div class="kmc-desc">Move one row at a time</div>
+                        </div>
+                        <div class="kmc-shortcut"><kbd>Alt</kbd>+<kbd>↑↓</kbd></div>
+                    </div>
+                    <div class="kbd-mode-card kmc-room">
+                        <div class="kmc-icon"><i class="bi bi-door-open"></i></div>
+                        <div class="kmc-info">
+                            <div class="kmc-name">Room</div>
+                            <div class="kmc-desc">Skip across room boundaries</div>
+                        </div>
+                        <div class="kmc-shortcut"><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>↑↓</kbd></div>
+                    </div>
+                    <div class="kbd-mode-card kmc-floor">
+                        <div class="kmc-icon"><i class="bi bi-building"></i></div>
+                        <div class="kmc-info">
+                            <div class="kmc-name">Floor</div>
+                            <div class="kmc-desc">Skip across floor boundaries</div>
+                        </div>
+                        <div class="kmc-shortcut"><kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>↑↓</kbd></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── QUICK TIPS ── -->
+            <div class="kbd-section" data-section="tips">
+                <div class="kbd-section-header">
+                    <div class="kbd-section-icon ksi-amber">
+                        <i class="bi bi-lightbulb-fill"></i>
+                    </div>
+                    <span class="kbd-section-title">Quick Tips</span>
+                </div>
+                <div class="kbd-tips-list">
+                    <div class="kbd-tip">
+                        <span class="kbd-tip-num">1</span>
+                        <span>Select 2+ rows with <kbd>Ctrl</kbd>+Click, then press <kbd>Ctrl</kbd>+<kbd>G</kbd> to group them for batch operations.</span>
+                    </div>
+                    <div class="kbd-tip">
+                        <span class="kbd-tip-num">2</span>
+                        <span>Grouped rows drag together. Drag any row in the group to move all.</span>
+                    </div>
+                    <div class="kbd-tip">
+                        <span class="kbd-tip-num">3</span>
+                        <span><kbd>Ctrl</kbd>+Click on amount cells (₹) to see a running total in the bottom-left panel.</span>
+                    </div>
+                    <div class="kbd-tip">
+                        <span class="kbd-tip-num">4</span>
+                        <span>Use the <strong>Reorder</strong> FAB button to open the visual floor/room/row sorter.</span>
+                    </div>
+                    <div class="kbd-tip">
+                        <span class="kbd-tip-num">5</span>
+                        <span>All actions support <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo up to 40 steps.</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="kbd-footer">
+            <div class="kbd-footer-left">
+                <i class="bi bi-info-circle"></i>
+                <span>Press <kbd>?</kbd> anytime to toggle this panel</span>
+            </div>
+            <button class="kbd-footer-btn" onclick="toggleKbdHelp()">
+                <i class="bi bi-check-lg"></i> Got it
+            </button>
+        </div>
+
+    </div>
+</div>
+
+{% endif %}
+
+
+
 <!-- ════════════════════════
      QUICK ORDER FAB BUTTON
 ════════════════════════ -->
@@ -1697,6 +2606,10 @@
     <span>Quick Order</span>
 </button>
 {% endif %}
+
+
+
+
 
 <!-- ════════════════════════
      QUICK ORDER MODAL
@@ -1813,37 +2726,39 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
 <!-- ════════════════════════
      GLOBAL STATE & HELPERS
 ════════════════════════ -->
 <script>
 const APP = {
-    isFreezing: false,
-    copiedRow: null,
-    copiedGroup: null,
-    pasteMode: false,
-    pasteGroupMode: false,
-    pasteToolbar: null,
-    groupToolbar: null,
-    selectedTds: [],
-    selectedRows: new Set(),
-    undoStack: [],
-    redoStack: [],
-    historyLimit: 40,
-    dragSrc: null,
-    isDragGroup: false,
+    isFreezing:    false,
+    copiedRow:     null,
+    copiedGroup:   null,
+    pasteMode:     false,
+    pasteGroupMode:false,
+    pasteToolbar:  null,
+    groupToolbar:  null,
+    selectedTds:   [],
+    selectedRows:  new Set(),
+    undoStack:     [],
+    redoStack:     [],
+    historyLimit:  40,
+    dragSrc:       null,
+    isDragGroup:   false,
     groupDragRows: [],
-    dragOver: null,
-    dropAbove: true,
+    dragOver:      null,
+    dropAbove:     true,
+    dragLocked:    false,   /* prevents stuck-drag bug */
 };
 
 const UTIL = {
 
     toast(opts) {
         return Swal.fire({
-            toast: true, position: 'top-end',
-            showConfirmButton: false, timer: 1400,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 1400,
             timerProgressBar: true,
             customClass: { popup: 'rounded-3' },
             ...opts
@@ -1854,18 +2769,12 @@ const UTIL = {
         if (!row) return;
         row.classList.remove('paste-flash', 'floor-flash', 'room-flash');
         void row.offsetWidth;
-
-        if (row.classList.contains('floor-row')) {
-            row.classList.add('floor-flash');
-        } else if (row.classList.contains('room-row')) {
-            row.classList.add('room-flash');
-        } else {
-            row.classList.add('paste-flash');
-        }
-
-        row.addEventListener('animationend', () => {
-            row.classList.remove('paste-flash', 'floor-flash', 'room-flash');
-        }, { once: true });
+        if      (row.classList.contains('floor-row')) row.classList.add('floor-flash');
+        else if (row.classList.contains('room-row'))  row.classList.add('room-flash');
+        else                                           row.classList.add('paste-flash');
+        row.addEventListener('animationend', () =>
+            row.classList.remove('paste-flash', 'floor-flash', 'room-flash'),
+        { once: true });
     },
 
     getLabel(row, maxLen = 40) {
@@ -1875,7 +2784,7 @@ const UTIL = {
         const cl = td.cloneNode(true);
         cl.querySelectorAll('.row-action-btns, button, span.no-print, span')
           .forEach(e => e.remove());
-        return (cl.textContent.trim().slice(0, maxLen) || 'Row');
+        return cl.textContent.trim().slice(0, maxLen) || 'Row';
     },
 
     scrollIntoView(row) {
@@ -1896,20 +2805,39 @@ const UTIL = {
     reapplyRowStyles() {
         const tbody = document.getElementById('invoiceTbody');
         if (!tbody) return;
-
         tbody.querySelectorAll('tr').forEach(row => {
             if (row.classList.contains('floor-row')) {
-                row.style.background = '#e1ffe8';
-                row.style.fontWeight = 'bold';
-                row.style.textAlign = 'center';
+                row.style.background  = '#e1ffe8';
+                row.style.fontWeight  = 'bold';
+                row.style.textAlign   = 'center';
             }
             if (row.classList.contains('room-row')) {
-                row.style.background = '#f2fff6';
-                row.style.fontWeight = 'bold';
-                row.style.textAlign = 'center';
+                row.style.background  = '#f2fff6';
+                row.style.fontWeight  = 'bold';
+                row.style.textAlign   = 'center';
             }
-            if (row.dataset.groupId) {
-                row.classList.add('is-grouped');
+        });
+    },
+
+    /* ── Renumber the # column for data rows ── */
+    renumberRows() {
+        const tbody = document.getElementById('invoiceTbody');
+        if (!tbody) return;
+        let counter = 1;
+        tbody.querySelectorAll('tr').forEach(row => {
+            if (
+                row.classList.contains('floor-row') ||
+                row.classList.contains('room-row')  ||
+                row.id === 'dropIndicatorRow'
+            ) return;
+            const firstTd = row.querySelector('td:first-child');
+            if (firstTd) {
+                /* Only update if it looks like a number cell */
+                const txt = firstTd.textContent.trim();
+                if (!isNaN(txt) && txt !== '') {
+                    firstTd.textContent = counter;
+                }
+                counter++;
             }
         });
     },
@@ -1917,7 +2845,6 @@ const UTIL = {
 
 window.saveState = UTIL.saveState;
 </script>
-
 
 <!-- ════════════════════════
      FREEZE INVOICE
@@ -1937,14 +2864,12 @@ function freezeInvoice() {
     btn.innerHTML = `
         <div class="freeze-spinner">
             <svg class="freeze-spin-svg" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" fill="none"
-                        stroke="currentColor" stroke-width="3"
-                        stroke-linecap="round" stroke-dasharray="50 14"/>
+                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor"
+                        stroke-width="3" stroke-linecap="round" stroke-dasharray="50 14"/>
             </svg>
         </div>
         <span class="freeze-loading-text">Freezing Invoice</span>
-        <span class="freeze-loading-dots"><span>.</span><span>.</span><span>.</span></span>
-    `;
+        <span class="freeze-loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
 
     let finalHtml = document.documentElement.outerHTML;
     finalHtml = finalHtml.replaceAll('/static/', window.location.origin + '/static/');
@@ -1965,8 +2890,12 @@ function freezeInvoice() {
                           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
                 <span>Invoice Frozen!</span>`;
-            Swal.fire({ icon:'success', title:'Invoice Frozen', text:'PDF saved successfully',
-                        timer:2500, showConfirmButton:false, customClass:{popup:'rounded-4'} });
+            Swal.fire({
+                icon: 'success', title: 'Invoice Frozen',
+                text: 'PDF saved successfully',
+                timer: 2500, showConfirmButton: false,
+                customClass: { popup: 'rounded-4' }
+            });
             setTimeout(() => resetFreezeBtn(btn, originalHTML), 3000);
         } else {
             showFreezeError(btn, originalHTML, data.error || 'Freeze failed');
@@ -1982,19 +2911,18 @@ function showFreezeError(btn, orig, msg) {
     btn.classList.remove('freeze-loading');
     btn.classList.add('freeze-error');
     btn.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i><span>Failed</span>`;
-    Swal.fire({ icon:'error', title:'Freeze Failed', text:msg, customClass:{popup:'rounded-4'} });
+    Swal.fire({ icon: 'error', title: 'Freeze Failed', text: msg, customClass: { popup: 'rounded-4' } });
     setTimeout(() => resetFreezeBtn(btn, orig), 2500);
 }
 
 function resetFreezeBtn(btn, orig) {
     btn.innerHTML = orig;
-    btn.disabled = false;
+    btn.disabled  = false;
     btn.style.minWidth = '';
-    btn.classList.remove('freeze-loading','freeze-success','freeze-error');
+    btn.classList.remove('freeze-loading', 'freeze-success', 'freeze-error');
     APP.isFreezing = false;
 }
 </script>
-
 
 <!-- ════════════════════════
      DOWNLOAD
@@ -2006,80 +2934,85 @@ function downloadInvoice() {
 }
 </script>
 
-
 <!-- ════════════════════════
      ROW ACTIONS
 ════════════════════════ -->
 <script>
 window.moveRow = function(btn, direction) {
-    const row = btn.closest('tr');
+    const row   = btn.closest('tr');
     const tbody = row?.parentNode;
     if (!row || !tbody) return;
 
-    let target = direction === 'up' ? row.previousElementSibling : row.nextElementSibling;
+    let target = direction === 'up'
+        ? row.previousElementSibling
+        : row.nextElementSibling;
+
     while (target && target.id === 'dropIndicatorRow') {
-        target = direction === 'up' ? target.previousElementSibling : target.nextElementSibling;
+        target = direction === 'up'
+            ? target.previousElementSibling
+            : target.nextElementSibling;
     }
 
     if (!target) {
-        UTIL.toast({ icon:'info', title: direction==='up' ? 'Already at top' : 'Already at bottom', timer:900 });
+        UTIL.toast({ icon: 'info', title: direction === 'up' ? 'Already at top' : 'Already at bottom', timer: 900 });
         return;
     }
 
     UTIL.saveState();
 
     if (direction === 'up') tbody.insertBefore(row, target);
-    else tbody.insertBefore(row, target.nextSibling);
+    else                    tbody.insertBefore(row, target.nextSibling);
 
-    row.classList.remove('row-moved-up','row-moved-down');
+    row.classList.remove('row-moved-up', 'row-moved-down');
     void row.offsetWidth;
     row.classList.add(direction === 'up' ? 'row-moved-up' : 'row-moved-down');
 
     UTIL.scrollIntoView(row);
+    UTIL.renumberRows();
     if (typeof attachDirectDrag === 'function') attachDirectDrag();
-    UTIL.toast({ icon:'success', title:`Moved ${direction}`, timer:700 });
+    UTIL.toast({ icon: 'success', title: `Moved ${direction}`, timer: 700 });
 };
 
 window.copyRow = function(btn) {
     const row = btn.closest('tr');
     if (!row) return;
-
     clearCopiedStateGlobal();
     removeToolbarGlobal();
-
-    APP.copiedRow = row.cloneNode(true);
-    APP.pasteMode = true;
+    APP.copiedRow  = row.cloneNode(true);
+    APP.pasteMode  = true;
     document.body.classList.add('paste-mode');
     row.classList.add('row-is-copied');
-
     showPasteToolbarGlobal(UTIL.getLabel(row));
-    UTIL.toast({ icon:'info', title:'Row copied!', text:'Click any row to paste after it', timer:2000 });
+    UTIL.toast({ icon: 'info', title: 'Row copied!', text: 'Click any row to paste after it', timer: 2000 });
 };
 
 window.deleteRow = function(btn) {
     const row = btn.closest('tr');
     if (!row) return;
-
     Swal.fire({
-        title:'Delete Row?', text:'This row will be removed.',
-        icon:'warning', showCancelButton:true,
-        confirmButtonColor:'#f43f5e', cancelButtonColor:'#94a3b8',
-        confirmButtonText:'<i class="bi bi-trash3 me-1"></i> Delete',
-        cancelButtonText:'Cancel', customClass:{popup:'rounded-4'}
+        title: 'Delete Row?', text: 'This row will be removed.',
+        icon: 'warning', showCancelButton: true,
+        confirmButtonColor: '#f43f5e', cancelButtonColor: '#94a3b8',
+        confirmButtonText: '<i class="bi bi-trash3 me-1"></i> Delete',
+        cancelButtonText: 'Cancel', customClass: { popup: 'rounded-4' }
     }).then(result => {
         if (!result.isConfirmed) return;
         UTIL.saveState();
         row.style.transition = 'opacity .25s, transform .25s';
-        row.style.opacity = '0';
-        row.style.transform = 'translateX(12px)';
-        setTimeout(() => { row.remove(); UTIL.toast({icon:'success',title:'Row deleted',timer:1200}); }, 250);
+        row.style.opacity    = '0';
+        row.style.transform  = 'translateX(12px)';
+        setTimeout(() => {
+            row.remove();
+            UTIL.renumberRows();
+            UTIL.toast({ icon: 'success', title: 'Row deleted', timer: 1200 });
+        }, 250);
     });
 };
 
 window.clearCopiedStateGlobal = function() {
     document.querySelectorAll('.row-is-copied').forEach(r => r.classList.remove('row-is-copied'));
-    APP.copiedRow = null;
-    APP.pasteMode = false;
+    APP.copiedRow  = null;
+    APP.pasteMode  = false;
     document.body.classList.remove('paste-mode');
 };
 
@@ -2097,16 +3030,18 @@ window.showPasteToolbarGlobal = function(label) {
             <span>Copied: <strong>"${label}"</strong></span>
         </div>
         <button class="btn-toolbar-paste">Click any row to paste after it</button>
-        <button class="btn-toolbar-cancel" id="tbCancelBtn"><i class="bi bi-x-lg"></i> Cancel</button>`;
+        <button class="btn-toolbar-cancel" id="tbCancelBtn">
+            <i class="bi bi-x-lg"></i> Cancel
+        </button>`;
     document.body.appendChild(tb);
     APP.pasteToolbar = tb;
     document.getElementById('tbCancelBtn').addEventListener('click', () => {
-        clearCopiedStateGlobal(); removeToolbarGlobal();
-        UTIL.toast({icon:'info',title:'Copy cancelled',timer:1000});
+        clearCopiedStateGlobal();
+        removeToolbarGlobal();
+        UTIL.toast({ icon: 'info', title: 'Copy cancelled', timer: 1000 });
     });
 };
 </script>
-
 
 <!-- ════════════════════════
      MAIN INTERACTIONS
@@ -2117,11 +3052,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableBody = document.getElementById('invoiceTbody');
     if (!tableBody) return;
 
-    /* ═══════════════════════════
-       FLOATING TOTAL
-    ═══════════════════════════ */
+    /* ═══════════════════════════════════════════
+       FLOATING AMOUNT TOTAL
+    ═══════════════════════════════════════════ */
     const totalDisplay = document.createElement('div');
-    totalDisplay.id = 'selectedTotalDisplay';
+    totalDisplay.id        = 'selectedTotalDisplay';
     totalDisplay.className = 'selected-total-display';
     totalDisplay.style.display = 'none';
     totalDisplay.innerHTML = `
@@ -2133,7 +3068,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="std-amount">₹ 0.00</div>
             <div class="std-hint">
                 <span><kbd>Esc</kbd> clear</span>
-                <span><kbd>⌫</kbd> undo</span>
+                <span><kbd>⌫</kbd> undo last</span>
                 <span><kbd>Ctrl+⌫</kbd> clear all</span>
             </div>
         </div>`;
@@ -2143,10 +3078,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateSelectedTotal() {
         let total = 0;
         APP.selectedTds.forEach(td => {
-            total += parseFloat(td.dataset.amount) || parseFloat(td.textContent.replace(/[₹,\s]/g,'')) || 0;
+            total += parseFloat(td.dataset.amount)
+                  || parseFloat(td.textContent.replace(/[₹,\s]/g, ''))
+                  || 0;
         });
-        totalDisplay.querySelector('.std-count').textContent = `${APP.selectedTds.length} item${APP.selectedTds.length!==1?'s':''} selected`;
-        totalDisplay.querySelector('.std-amount').textContent = `₹ ${total.toLocaleString('en-IN',{minimumFractionDigits:2})}`;
+        totalDisplay.querySelector('.std-count').textContent =
+            `${APP.selectedTds.length} item${APP.selectedTds.length !== 1 ? 's' : ''} selected`;
+        totalDisplay.querySelector('.std-amount').textContent =
+            `₹ ${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
         totalDisplay.style.display = APP.selectedTds.length > 0 ? 'flex' : 'none';
     }
 
@@ -2156,13 +3095,15 @@ document.addEventListener('DOMContentLoaded', function() {
         updateSelectedTotal();
     }
 
-    /* ═══════════════════════════
+    /* ═══════════════════════════════════════════
        GROUP SELECT BAR
-    ═══════════════════════════ */
+    ═══════════════════════════════════════════ */
     const groupBar = document.createElement('div');
-    groupBar.id = 'groupSelectBar';
+    groupBar.id        = 'groupSelectBar';
     groupBar.className = 'group-select-bar no-print';
     groupBar.style.display = 'none';
+
+    /* Move-scope selector */
     groupBar.innerHTML = `
         <div class="gsb-left">
             <div class="gsb-icon"><i class="bi bi-collection-fill"></i></div>
@@ -2174,25 +3115,41 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span id="gsbModeText">Step</span>
                     </span>
                 </div>
-                <div class="gsb-hint" id="gsbHint">Choose move mode below</div>
+                <div class="gsb-hint" id="gsbHint">Hold Ctrl+Click to select rows</div>
             </div>
         </div>
         <div class="gsb-actions">
-            <div class="group-move-mode">
-                <span class="gmm-label">MOVE BY</span>
-                <button class="gmm-pill active" id="gmmStep" title="Move one row"><i class="bi bi-arrow-bar-up"></i> Step</button>
-                <button class="gmm-pill" id="gmmRoom" title="Skip rooms"><i class="bi bi-door-open"></i> Room</button>
-                <button class="gmm-pill" id="gmmFloor" title="Skip floors"><i class="bi bi-building"></i> Floor</button>
+
+            <!-- ── SCOPE SELECTOR ── -->
+            <div class="gsb-scope-wrap">
+                <span class="gsb-scope-label">MOVE AS</span>
+                <select class="gsb-scope-select" id="gsbScopeSelect" title="Select move scope">
+                    <option value="row"   selected>📋 Row</option>
+                    <option value="room"  >🚪 Room</option>
+                    <option value="floor" >🏢 Floor</option>
+                </select>
             </div>
-            <button class="gsb-btn gsb-move gsb-edge" id="gsbMoveTopBtn" title="Top (Ctrl+Home)"><i class="bi bi-chevron-double-up"></i></button>
-            <button class="gsb-btn gsb-move" id="gsbMoveUpBtn" title="Up (Alt+↑)"><i class="bi bi-arrow-up"></i></button>
-            <button class="gsb-btn gsb-move" id="gsbMoveDownBtn" title="Down (Alt+↓)"><i class="bi bi-arrow-down"></i></button>
+
+            <!-- ── MOVE MODE PILLS ── -->
+            <div class="group-move-mode">
+                <span class="gmm-label">STEP</span>
+                <button class="gmm-pill active" id="gmmStep"  title="One step"><i class="bi bi-arrow-bar-up"></i> Step</button>
+                <button class="gmm-pill"        id="gmmRoom"  title="By room"><i class="bi bi-door-open"></i> Room</button>
+                <button class="gmm-pill"        id="gmmFloor" title="By floor"><i class="bi bi-building"></i> Floor</button>
+            </div>
+
+            <!-- ── MOVE BUTTONS ── -->
+            <button class="gsb-btn gsb-move gsb-edge" id="gsbMoveTopBtn"    title="Top (Ctrl+Home)"><i class="bi bi-chevron-double-up"></i></button>
+            <button class="gsb-btn gsb-move"          id="gsbMoveUpBtn"     title="Up (Alt+↑)"><i class="bi bi-arrow-up"></i></button>
+            <button class="gsb-btn gsb-move"          id="gsbMoveDownBtn"   title="Down (Alt+↓)"><i class="bi bi-arrow-down"></i></button>
             <button class="gsb-btn gsb-move gsb-edge" id="gsbMoveBottomBtn" title="Bottom (Ctrl+End)"><i class="bi bi-chevron-double-down"></i></button>
+
             <div class="gsb-divider"></div>
-            <button class="gsb-btn gsb-group" id="gsbGroupBtn" title="Group (Ctrl+G)"><i class="bi bi-link-45deg"></i> Group</button>
-            <button class="gsb-btn gsb-copy" id="gsbCopyBtn"><i class="bi bi-files"></i></button>
-            <button class="gsb-btn gsb-delete" id="gsbDeleteBtn"><i class="bi bi-trash3"></i></button>
-            <button class="gsb-btn gsb-clear" id="gsbClearBtn" title="Clear (Esc)"><i class="bi bi-x-lg"></i></button>
+
+            <button class="gsb-btn gsb-group"  id="gsbGroupBtn"  title="Group (Ctrl+G)"><i class="bi bi-link-45deg"></i> Group</button>
+            <button class="gsb-btn gsb-copy"   id="gsbCopyBtn"   title="Copy group"><i class="bi bi-files"></i></button>
+            <button class="gsb-btn gsb-delete" id="gsbDeleteBtn" title="Delete (Del)"><i class="bi bi-trash3"></i></button>
+            <button class="gsb-btn gsb-clear"  id="gsbClearBtn"  title="Clear (Esc)"><i class="bi bi-x-lg"></i></button>
         </div>`;
     document.body.appendChild(groupBar);
 
@@ -2208,40 +3165,58 @@ document.addEventListener('DOMContentLoaded', function() {
         updateGroupBar();
     }
 
-    /* ═══════════════════════════
+    /* ── Scope select change ── */
+    const scopeSelect = document.getElementById('gsbScopeSelect');
+    scopeSelect.addEventListener('change', () => {
+        const scope = scopeSelect.value;
+        const hints = {
+            row:   'Moves selected rows one step / by room / by floor',
+            room:  'Selects entire room block and moves it',
+            floor: 'Selects entire floor block and moves it',
+        };
+        document.getElementById('gsbHint').textContent = hints[scope];
+        UTIL.toast({ icon: 'info', title: `Scope: ${scope.charAt(0).toUpperCase() + scope.slice(1)}`, timer: 800 });
+    });
+
+    /* ═══════════════════════════════════════════
        GROUP MANAGEMENT
-    ═══════════════════════════ */
+    ═══════════════════════════════════════════ */
     const GROUPS = {
-        list: [],
+        list:    [],
         counter: 0,
-        colors: ['#8b5cf6','#06b6d4','#10b981','#f59e0b','#ec4899','#3b82f6','#84cc16','#f43f5e']
+        colors:  ['#8b5cf6','#06b6d4','#10b981','#f59e0b','#ec4899','#3b82f6','#84cc16','#f43f5e']
     };
 
     const groupPanel = document.createElement('div');
-    groupPanel.id = 'groupManagerPanel';
+    groupPanel.id        = 'groupManagerPanel';
     groupPanel.className = 'group-manager-panel no-print';
     groupPanel.innerHTML = `
         <div class="gmp-header">
-            <div class="gmp-title"><i class="bi bi-collection-fill"></i> Active Groups
-                <span style="font-size:0.6rem;background:rgba(139,92,246,0.2);color:#a5b4fc;padding:1px 7px;border-radius:100px;font-weight:800;" id="gmpTotal">0</span>
+            <div class="gmp-title">
+                <i class="bi bi-collection-fill"></i> Active Groups
+                <span id="gmpTotal" style="font-size:.6rem;background:rgba(139,92,246,.2);color:#a5b4fc;padding:1px 7px;border-radius:100px;font-weight:800;">0</span>
             </div>
             <button class="gmp-close" id="gmpCloseBtn" title="Close"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="gmp-body" id="gmpBody">
-            <div class="gmp-empty"><i class="bi bi-collection"></i><div>No active groups</div>
-            <small style="margin-top:6px;display:block;opacity:0.6;">Select rows and click "Group"</small></div>
+            <div class="gmp-empty">
+                <i class="bi bi-collection"></i>
+                <div>No active groups</div>
+                <small style="margin-top:6px;display:block;opacity:.6;">Select rows → click "Group"</small>
+            </div>
         </div>`;
     document.body.appendChild(groupPanel);
     document.getElementById('gmpCloseBtn').onclick = () => groupPanel.classList.remove('show');
 
     function renderGroupPanel() {
-        const body = document.getElementById('gmpBody');
+        const body  = document.getElementById('gmpBody');
         const total = document.getElementById('gmpTotal');
         total.textContent = GROUPS.list.length;
 
         if (GROUPS.list.length === 0) {
-            body.innerHTML = `<div class="gmp-empty"><i class="bi bi-collection"></i><div>No active groups</div>
-                <small style="margin-top:6px;display:block;opacity:0.6;">Select rows and click "Group"</small></div>`;
+            body.innerHTML = `<div class="gmp-empty"><i class="bi bi-collection"></i>
+                <div>No active groups</div>
+                <small style="margin-top:6px;display:block;opacity:.6;">Select rows → click "Group"</small></div>`;
             groupPanel.classList.remove('show');
             return;
         }
@@ -2250,19 +3225,18 @@ document.addEventListener('DOMContentLoaded', function() {
         GROUPS.list.forEach(group => {
             const validRows = group.rows.filter(r => r.isConnected);
             if (validRows.length === 0) return;
-            const firstLabel = UTIL.getLabel(validRows[0], 24);
             const item = document.createElement('div');
             item.className = 'gmp-item';
             item.innerHTML = `
                 <div class="gmp-item-color" style="background:${group.color};"></div>
                 <div class="gmp-item-info">
-                    <span class="gmp-item-name">${firstLabel}</span>
+                    <span class="gmp-item-name">${UTIL.getLabel(validRows[0], 24)}</span>
                     <span class="gmp-item-count">${validRows.length} rows</span>
                 </div>
                 <div class="gmp-item-actions">
-                    <button class="gmp-action-btn" onclick="moveGroup('${group.id}','up')" title="Up"><i class="bi bi-arrow-up"></i></button>
-                    <button class="gmp-action-btn" onclick="moveGroup('${group.id}','down')" title="Down"><i class="bi bi-arrow-down"></i></button>
-                    <button class="gmp-action-btn del" onclick="ungroupById('${group.id}')" title="Ungroup"><i class="bi bi-x-lg"></i></button>
+                    <button class="gmp-action-btn" onclick="moveGroup('${group.id}','up')"    title="Up">  <i class="bi bi-arrow-up"></i></button>
+                    <button class="gmp-action-btn" onclick="moveGroup('${group.id}','down')"  title="Down"><i class="bi bi-arrow-down"></i></button>
+                    <button class="gmp-action-btn del" onclick="ungroupById('${group.id}')"  title="Ungroup"><i class="bi bi-x-lg"></i></button>
                 </div>`;
             body.appendChild(item);
         });
@@ -2271,45 +3245,46 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.createGroup = function() {
         if (APP.selectedRows.size < 2) {
-            UTIL.toast({icon:'warning',title:'Select at least 2 rows',timer:1500});
+            UTIL.toast({ icon: 'warning', title: 'Select at least 2 rows', timer: 1500 });
             return;
         }
         UTIL.saveState();
-        const orderedRows = Array.from(tableBody.querySelectorAll('tr')).filter(r => APP.selectedRows.has(r));
+        const ordered = Array.from(tableBody.querySelectorAll('tr'))
+                             .filter(r => APP.selectedRows.has(r));
         const groupId = 'grp-' + Date.now();
-        const color = GROUPS.colors[GROUPS.counter % GROUPS.colors.length];
+        const color   = GROUPS.colors[GROUPS.counter % GROUPS.colors.length];
         GROUPS.counter++;
 
-        orderedRows.forEach(row => {
+        ordered.forEach(row => {
             if (row.dataset.groupId) removeRowFromGroup(row, row.dataset.groupId);
         });
 
-        orderedRows.forEach((row, idx) => {
+        ordered.forEach((row, idx) => {
             row.classList.add('is-grouped');
             row.style.setProperty('--group-color', color);
             row.dataset.groupId = groupId;
             if (idx === 0) { row.classList.add('group-first'); row.dataset.groupLabel = `Group ${GROUPS.counter}`; }
         });
 
-        GROUPS.list.push({ id:groupId, color:color, label:`Group ${GROUPS.counter}`, rows:orderedRows });
+        GROUPS.list.push({ id: groupId, color, label: `Group ${GROUPS.counter}`, rows: ordered });
         clearGroupSelection();
         renderGroupPanel();
-        UTIL.toast({icon:'success',title:`Group created (${orderedRows.length} rows)`,timer:1500});
+        UTIL.toast({ icon: 'success', title: `Group created (${ordered.length} rows)`, timer: 1500 });
     };
 
     function removeRowFromGroup(row, groupId) {
         const group = GROUPS.list.find(g => g.id === groupId);
         if (!group) return;
         group.rows = group.rows.filter(r => r !== row);
-        row.classList.remove('is-grouped','group-first');
+        row.classList.remove('is-grouped', 'group-first');
         row.style.removeProperty('--group-color');
         delete row.dataset.groupId;
         delete row.dataset.groupLabel;
         if (group.rows.length < 2) ungroupById(group.id);
         else {
-            group.rows.forEach((r,i) => {
-                r.classList.toggle('group-first', i===0);
-                if (i===0) r.dataset.groupLabel = group.label;
+            group.rows.forEach((r, i) => {
+                r.classList.toggle('group-first', i === 0);
+                if (i === 0) r.dataset.groupLabel = group.label;
             });
         }
     }
@@ -2318,21 +3293,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const group = GROUPS.list.find(g => g.id === groupId);
         if (!group) return;
         group.rows.forEach(row => {
-            row.classList.remove('is-grouped','group-first');
+            row.classList.remove('is-grouped', 'group-first');
             row.style.removeProperty('--group-color');
             delete row.dataset.groupId;
             delete row.dataset.groupLabel;
         });
         GROUPS.list = GROUPS.list.filter(g => g.id !== groupId);
         renderGroupPanel();
-        UTIL.toast({icon:'info',title:'Group dissolved',timer:1000});
+        UTIL.toast({ icon: 'info', title: 'Group dissolved', timer: 1000 });
     };
 
     window.moveGroup = function(groupId, direction) {
         const group = GROUPS.list.find(g => g.id === groupId);
         if (!group) return;
         const rows = group.rows.filter(r => r.isConnected);
-        if (rows.length === 0) return;
+        if (!rows.length) return;
         UTIL.saveState();
 
         if (direction === 'up') {
@@ -2353,34 +3328,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
         rows.forEach(r => UTIL.flashRow(r));
         UTIL.scrollIntoView(rows[0]);
-
-        /* ✅ Only re-apply styles, don't clone */
         UTIL.reapplyRowStyles();
-
+        UTIL.renumberRows();
         UTIL.toast({ icon: 'success', title: `Group moved ${direction}`, timer: 800 });
     };
 
-    /* Mutation observer */
-    const observer = new MutationObserver(() => {
+    /* MutationObserver to keep groups clean */
+    const groupObserver = new MutationObserver(() => {
         GROUPS.list = GROUPS.list.filter(g => {
             const valid = g.rows.filter(r => r.isConnected);
             if (valid.length < 2) {
-                g.rows.forEach(r => { if(r.isConnected) { r.classList.remove('is-grouped','group-first'); r.style.removeProperty('--group-color'); delete r.dataset.groupId; delete r.dataset.groupLabel; }});
+                g.rows.forEach(r => {
+                    if (r.isConnected) {
+                        r.classList.remove('is-grouped', 'group-first');
+                        r.style.removeProperty('--group-color');
+                        delete r.dataset.groupId;
+                        delete r.dataset.groupLabel;
+                    }
+                });
                 return false;
             }
             g.rows = valid;
             return true;
         });
     });
-    observer.observe(tableBody, { childList:true, subtree:false });
+    groupObserver.observe(tableBody, { childList: true, subtree: false });
 
-    /* ═══════════════════════════
-       ENHANCED MOVE SYSTEM
-    ═══════════════════════════ */
+    /* ═══════════════════════════════════════════
+       MOVE SYSTEM
+    ═══════════════════════════════════════════ */
     let moveMode = 'step';
 
-    ['Step','Room','Floor'].forEach(mode => {
-        const btn = document.getElementById('gmm'+mode);
+    ['Step', 'Room', 'Floor'].forEach(mode => {
+        const btn = document.getElementById('gmm' + mode);
         if (!btn) return;
         btn.addEventListener('click', () => {
             moveMode = mode.toLowerCase();
@@ -2389,161 +3369,240 @@ document.addEventListener('DOMContentLoaded', function() {
             const badge = document.getElementById('gsbModeText');
             if (badge) badge.textContent = mode;
             const hint = document.getElementById('gsbHint');
-            if (hint) hint.textContent = {step:'Move one row at a time',room:'Skip across rooms',floor:'Skip across floors'}[moveMode];
-            UTIL.toast({icon:'info',title:`Mode: ${mode}`,timer:800});
+            if (hint) hint.textContent = {
+                step:  'Move one row at a time',
+                room:  'Skip across rooms',
+                floor: 'Skip across floors'
+            }[moveMode];
+            UTIL.toast({ icon: 'info', title: `Mode: ${mode}`, timer: 800 });
         });
     });
 
     function getSelectedOrdered() {
-        return Array.from(tableBody.querySelectorAll('tr')).filter(r => APP.selectedRows.has(r));
+        return Array.from(tableBody.querySelectorAll('tr'))
+                    .filter(r => APP.selectedRows.has(r));
+    }
+
+    /* ── Expand selection to full room or floor block ── */
+    function expandSelectionByScope(scope) {
+        if (scope === 'row') return; /* nothing to expand */
+
+        const selected = getSelectedOrdered();
+        if (!selected.length) return;
+
+        const toAdd = new Set();
+
+        if (scope === 'room') {
+            /* Find each room block that contains any selected row */
+            let curRoom = null;
+            let curRoomRows = [];
+
+            Array.from(tableBody.querySelectorAll('tr')).forEach(row => {
+                if (row.classList.contains('room-row')) {
+                    curRoom     = row;
+                    curRoomRows = [row];
+                } else if (row.classList.contains('floor-row')) {
+                    curRoom     = null;
+                    curRoomRows = [];
+                } else {
+                    if (curRoom) curRoomRows.push(row);
+                }
+
+                /* If this row is selected, add entire room block */
+                if (APP.selectedRows.has(row) && curRoom) {
+                    curRoomRows.forEach(r => toAdd.add(r));
+                }
+            });
+        }
+
+        if (scope === 'floor') {
+            let curFloor     = null;
+            let curFloorRows = [];
+
+            Array.from(tableBody.querySelectorAll('tr')).forEach(row => {
+                if (row.classList.contains('floor-row')) {
+                    curFloor     = row;
+                    curFloorRows = [row];
+                } else {
+                    if (curFloor) curFloorRows.push(row);
+                }
+
+                if (APP.selectedRows.has(row) && curFloor) {
+                    curFloorRows.forEach(r => toAdd.add(r));
+                }
+            });
+        }
+
+        toAdd.forEach(r => {
+            APP.selectedRows.add(r);
+            r.classList.add('row-ctrl-selected');
+        });
+        updateGroupBar();
     }
 
     function findBoundary(fromRow, direction, type) {
-        const cls = type==='floor' ? 'floor-row' : 'room-row';
-        let cur = direction==='up' ? fromRow.previousElementSibling : fromRow.nextElementSibling;
+        const cls = type === 'floor' ? 'floor-row' : 'room-row';
+        let cur = direction === 'up'
+            ? fromRow.previousElementSibling
+            : fromRow.nextElementSibling;
+
         while (cur) {
-            if (cur.id==='dropIndicatorRow' || APP.selectedRows.has(cur)) {
-                cur = direction==='up' ? cur.previousElementSibling : cur.nextElementSibling;
+            if (cur.id === 'dropIndicatorRow' || APP.selectedRows.has(cur)) {
+                cur = direction === 'up' ? cur.previousElementSibling : cur.nextElementSibling;
                 continue;
             }
             if (cur.classList.contains(cls)) return cur;
-            cur = direction==='up' ? cur.previousElementSibling : cur.nextElementSibling;
+            cur = direction === 'up' ? cur.previousElementSibling : cur.nextElementSibling;
         }
         return null;
     }
 
+    /* ── Core move function ── */
     function moveSelected(direction, mode) {
-    const selected = getSelectedOrdered();
-    if (selected.length === 0) return;
-    UTIL.saveState();
+        /* Apply scope expansion before moving */
+        const scope = scopeSelect?.value || 'row';
+        if (scope !== 'row') expandSelectionByScope(scope);
 
-    const first = selected[0];
-    const last = selected[selected.length - 1];
-    let anchor = null;
+        const selected = getSelectedOrdered();
+        if (!selected.length) return;
+        UTIL.saveState();
 
-    if (mode === 'step') {
-        const ref = direction === 'up' ? first : last;
-        let target = direction === 'up' ? ref.previousElementSibling : ref.nextElementSibling;
-        while (target && (target.id === 'dropIndicatorRow' || APP.selectedRows.has(target))) {
-            target = direction === 'up' ? target.previousElementSibling : target.nextElementSibling;
+        const first = selected[0];
+        const last  = selected[selected.length - 1];
+        let anchor  = null;
+
+        if (mode === 'step') {
+            const ref = direction === 'up' ? first : last;
+            let target = direction === 'up'
+                ? ref.previousElementSibling
+                : ref.nextElementSibling;
+
+            while (target && (target.id === 'dropIndicatorRow' || APP.selectedRows.has(target))) {
+                target = direction === 'up'
+                    ? target.previousElementSibling
+                    : target.nextElementSibling;
+            }
+
+            if (!target) {
+                UTIL.toast({ icon: 'info', title: direction === 'up' ? 'Already at top' : 'Already at bottom', timer: 800 });
+                return;
+            }
+            anchor = direction === 'up' ? target : target.nextSibling;
         }
-        if (!target) {
-            UTIL.toast({ icon: 'info', title: direction === 'up' ? 'Already at top' : 'Already at bottom', timer: 800 });
-            return;
+        else if (mode === 'room') {
+            const ref = direction === 'up' ? first : last;
+            const targetRoom = findBoundary(ref, direction, 'room');
+            if (!targetRoom) {
+                UTIL.toast({ icon: 'info', title: `No more rooms ${direction === 'up' ? 'above' : 'below'}`, timer: 1000 });
+                return;
+            }
+            if (direction === 'up') {
+                anchor = targetRoom;
+            } else {
+                let cur = targetRoom.nextElementSibling;
+                while (cur && !cur.classList.contains('room-row') && !cur.classList.contains('floor-row'))
+                    cur = cur.nextElementSibling;
+                anchor = cur;
+            }
         }
-        anchor = direction === 'up' ? target : target.nextSibling;
+        else if (mode === 'floor') {
+            const ref = direction === 'up' ? first : last;
+            const targetFloor = findBoundary(ref, direction, 'floor');
+            if (!targetFloor) {
+                UTIL.toast({ icon: 'info', title: `No more floors ${direction === 'up' ? 'above' : 'below'}`, timer: 1000 });
+                return;
+            }
+            if (direction === 'up') {
+                anchor = targetFloor;
+            } else {
+                let cur = targetFloor.nextElementSibling;
+                while (cur && !cur.classList.contains('floor-row'))
+                    cur = cur.nextElementSibling;
+                anchor = cur;
+            }
+        }
+
+        /* Move rows in DOM */
+        selected.forEach(row => {
+            anchor ? tableBody.insertBefore(row, anchor) : tableBody.appendChild(row);
+        });
+
+        selected.forEach(r => UTIL.flashRow(r));
+        UTIL.scrollIntoView(selected[0]);
+        UTIL.reapplyRowStyles();
+        UTIL.renumberRows();
+        UTIL.toast({ icon: 'success', title: `Moved ${direction} (${mode})`, timer: 800 });
     }
-    else if (mode === 'room') {
-        const ref = direction === 'up' ? first : last;
-        const targetRoom = findBoundary(ref, direction, 'room');
-        if (!targetRoom) {
-            UTIL.toast({ icon: 'info', title: `No more rooms ${direction === 'up' ? 'above' : 'below'}`, timer: 1000 });
-            return;
+
+    function moveSelectedTo(position) {
+        const scope = scopeSelect?.value || 'row';
+        if (scope !== 'row') expandSelectionByScope(scope);
+
+        const selected = getSelectedOrdered();
+        if (!selected.length) return;
+        UTIL.saveState();
+
+        if (position === 'top') {
+            const fc = tableBody.firstChild;
+            selected.forEach(row => tableBody.insertBefore(row, fc));
+        } else {
+            selected.forEach(row => tableBody.appendChild(row));
         }
-        if (direction === 'up') { anchor = targetRoom; }
-        else {
-            let cur = targetRoom.nextElementSibling;
-            while (cur && !cur.classList.contains('room-row') && !cur.classList.contains('floor-row'))
-                cur = cur.nextElementSibling;
-            anchor = cur;
-        }
-    }
-    else if (mode === 'floor') {
-        const ref = direction === 'up' ? first : last;
-        const targetFloor = findBoundary(ref, direction, 'floor');
-        if (!targetFloor) {
-            UTIL.toast({ icon: 'info', title: `No more floors ${direction === 'up' ? 'above' : 'below'}`, timer: 1000 });
-            return;
-        }
-        if (direction === 'up') { anchor = targetFloor; }
-        else {
-            let cur = targetFloor.nextElementSibling;
-            while (cur && !cur.classList.contains('floor-row')) cur = cur.nextElementSibling;
-            anchor = cur;
-        }
+
+        selected.forEach(r => UTIL.flashRow(r));
+        UTIL.scrollIntoView(selected[0]);
+        UTIL.reapplyRowStyles();
+        UTIL.renumberRows();
+        UTIL.toast({ icon: 'success', title: `Moved to ${position}`, timer: 900 });
     }
 
-    /* Move rows — DOM only, no clone */
-    selected.forEach(row => {
-        anchor ? tableBody.insertBefore(row, anchor) : tableBody.appendChild(row);
-    });
-
-    selected.forEach(r => UTIL.flashRow(r));
-    UTIL.scrollIntoView(selected[0]);
-
-    /* ✅ Only re-apply styles, don't clone rows */
-    UTIL.reapplyRowStyles();
-
-    UTIL.toast({ icon: 'success', title: `Moved ${direction} (${mode})`, timer: 800 });
-}
-
-function moveSelectedTo(position) {
-    const selected = getSelectedOrdered();
-    if (selected.length === 0) return;
-    UTIL.saveState();
-
-    if (position === 'top') {
-        const fc = tableBody.firstChild;
-        selected.forEach(row => tableBody.insertBefore(row, fc));
-    } else {
-        selected.forEach(row => tableBody.appendChild(row));
-    }
-
-    selected.forEach(r => UTIL.flashRow(r));
-    UTIL.scrollIntoView(selected[0]);
-
-    /* ✅ Only re-apply styles */
-    UTIL.reapplyRowStyles();
-
-    UTIL.toast({ icon: 'success', title: `Moved to ${position}`, timer: 900 });
-}
-
-    /* ═══════════════════════════
-       WIRE UP BUTTONS
-    ═══════════════════════════ */
-    document.getElementById('gsbClearBtn').onclick = clearGroupSelection;
-    document.getElementById('gsbGroupBtn').onclick = createGroup;
-    document.getElementById('gsbMoveUpBtn').onclick = () => moveSelected('up', moveMode);
-    document.getElementById('gsbMoveDownBtn').onclick = () => moveSelected('down', moveMode);
-    document.getElementById('gsbMoveTopBtn').onclick = () => moveSelectedTo('top');
+    /* ── Wire up buttons ── */
+    document.getElementById('gsbClearBtn').onclick  = clearGroupSelection;
+    document.getElementById('gsbGroupBtn').onclick  = createGroup;
+    document.getElementById('gsbMoveUpBtn').onclick     = () => moveSelected('up',   moveMode);
+    document.getElementById('gsbMoveDownBtn').onclick   = () => moveSelected('down', moveMode);
+    document.getElementById('gsbMoveTopBtn').onclick    = () => moveSelectedTo('top');
     document.getElementById('gsbMoveBottomBtn').onclick = () => moveSelectedTo('bottom');
 
     document.getElementById('gsbDeleteBtn').onclick = () => {
-        if (APP.selectedRows.size === 0) return;
+        if (!APP.selectedRows.size) return;
         Swal.fire({
-            title:`Delete ${APP.selectedRows.size} row${APP.selectedRows.size!==1?'s':''}?`,
-            text:'Selected rows will be permanently removed.',
-            icon:'warning', showCancelButton:true,
-            confirmButtonColor:'#f43f5e', cancelButtonColor:'#94a3b8',
-            confirmButtonText:'<i class="bi bi-trash3 me-1"></i> Delete All',
-            customClass:{popup:'rounded-4'}
+            title: `Delete ${APP.selectedRows.size} row${APP.selectedRows.size !== 1 ? 's' : ''}?`,
+            text: 'Selected rows will be permanently removed.',
+            icon: 'warning', showCancelButton: true,
+            confirmButtonColor: '#f43f5e', cancelButtonColor: '#94a3b8',
+            confirmButtonText: '<i class="bi bi-trash3 me-1"></i> Delete All',
+            customClass: { popup: 'rounded-4' }
         }).then(result => {
             if (!result.isConfirmed) return;
             UTIL.saveState();
             APP.selectedRows.forEach(r => {
-                r.style.transition='opacity .2s,transform .2s';
-                r.style.opacity='0'; r.style.transform='translateX(10px)';
-                setTimeout(()=>r.remove(),220);
+                r.style.transition = 'opacity .2s, transform .2s';
+                r.style.opacity    = '0';
+                r.style.transform  = 'translateX(10px)';
+                setTimeout(() => r.remove(), 220);
             });
             APP.selectedRows.clear();
             updateGroupBar();
-            UTIL.toast({icon:'success',title:'Rows deleted',timer:1200});
+            setTimeout(() => UTIL.renumberRows(), 300);
+            UTIL.toast({ icon: 'success', title: 'Rows deleted', timer: 1200 });
         });
     };
 
     document.getElementById('gsbCopyBtn').onclick = () => {
-        if (APP.selectedRows.size === 0) return;
-        const ordered = Array.from(tableBody.querySelectorAll('tr')).filter(r => APP.selectedRows.has(r));
-        APP.copiedGroup = ordered.map(r => r.cloneNode(true));
+        if (!APP.selectedRows.size) return;
+        const ordered = Array.from(tableBody.querySelectorAll('tr'))
+                             .filter(r => APP.selectedRows.has(r));
+        APP.copiedGroup    = ordered.map(r => r.cloneNode(true));
         APP.pasteGroupMode = true;
         document.body.classList.add('paste-group-mode');
         clearGroupSelection();
         showPasteGroupToolbar(ordered.length);
     };
 
-    /* ═══════════════════════════
+    /* ═══════════════════════════════════════════
        GROUP PASTE TOOLBAR
-    ═══════════════════════════ */
+    ═══════════════════════════════════════════ */
     function showPasteGroupToolbar(count) {
         if (APP.groupToolbar) APP.groupToolbar.remove();
         const tb = document.createElement('div');
@@ -2554,65 +3613,69 @@ function moveSelectedTo(position) {
                 <span><strong>${count} rows</strong> copied as group</span>
             </div>
             <button class="btn-toolbar-paste">Click any row to paste</button>
-            <button class="btn-toolbar-cancel" id="groupCancelBtn"><i class="bi bi-x-lg"></i> Cancel</button>`;
+            <button class="btn-toolbar-cancel" id="groupCancelBtn">
+                <i class="bi bi-x-lg"></i> Cancel
+            </button>`;
         document.body.appendChild(tb);
         APP.groupToolbar = tb;
         document.getElementById('groupCancelBtn').addEventListener('click', () => {
             clearGroupPaste();
-            UTIL.toast({icon:'info',title:'Cancelled',timer:1000});
+            UTIL.toast({ icon: 'info', title: 'Cancelled', timer: 1000 });
         });
     }
 
     function clearGroupPaste() {
-        APP.copiedGroup = null;
+        APP.copiedGroup    = null;
         APP.pasteGroupMode = false;
         document.body.classList.remove('paste-group-mode');
         if (APP.groupToolbar) { APP.groupToolbar.remove(); APP.groupToolbar = null; }
     }
 
-    /* ═══════════════════════════
+    /* ═══════════════════════════════════════════
        UNDO / REDO
-    ═══════════════════════════ */
+    ═══════════════════════════════════════════ */
     function restoreState(from, to) {
-        if (from.length === 0) return;
+        if (!from.length) return;
         to.push(Array.from(tableBody.children).map(r => r.cloneNode(true)));
         const state = from.pop();
         tableBody.innerHTML = '';
         state.forEach(row => tableBody.appendChild(row.cloneNode(true)));
         attachDirectDrag();
         clearAll();
-        UTIL.toast({icon:'info',title: to===APP.undoStack ? 'Undone':'Redone',timer:900});
+        UTIL.reapplyRowStyles();
+        UTIL.renumberRows();
+        UTIL.toast({ icon: 'info', title: to === APP.undoStack ? 'Undone' : 'Redone', timer: 900 });
     }
 
     function clearAll() {
         clearAmountSelection();
         clearGroupSelection();
-        if (APP.pasteMode) { clearCopiedStateGlobal(); removeToolbarGlobal(); }
+        if (APP.pasteMode)      { clearCopiedStateGlobal(); removeToolbarGlobal(); }
         if (APP.pasteGroupMode) clearGroupPaste();
     }
 
-    /* ═══════════════════════════
+    /* ═══════════════════════════════════════════
        TABLE CLICK DELEGATION
-    ═══════════════════════════ */
+    ═══════════════════════════════════════════ */
     tableBody.addEventListener('click', function(e) {
 
         /* Group paste */
         if (APP.pasteGroupMode) {
-            if (e.target.closest('#groupCancelBtn,.btn-toolbar-cancel')) return;
+            if (e.target.closest('#groupCancelBtn, .btn-toolbar-cancel')) return;
             const tr = e.target.closest('tr');
             if (!tr || !tableBody.contains(tr)) return;
             e.preventDefault(); e.stopPropagation();
             UTIL.saveState();
-            const clones = APP.copiedGroup.map(r => r.cloneNode(true));
             let after = tr;
-            clones.forEach(clone => {
+            APP.copiedGroup.map(r => r.cloneNode(true)).forEach(clone => {
                 after.nextSibling ? tableBody.insertBefore(clone, after.nextSibling) : tableBody.appendChild(clone);
                 UTIL.flashRow(clone);
                 after = clone;
             });
             attachDirectDrag();
+            UTIL.renumberRows();
             clearGroupPaste();
-            UTIL.toast({icon:'success',title:`${clones.length} rows pasted!`,timer:1400});
+            UTIL.toast({ icon: 'success', title: `${APP.copiedGroup.length} rows pasted!`, timer: 1400 });
             return;
         }
 
@@ -2628,13 +3691,14 @@ function moveSelectedTo(position) {
             tr.nextSibling ? tableBody.insertBefore(newRow, tr.nextSibling) : tableBody.appendChild(newRow);
             UTIL.flashRow(newRow);
             attachDirectDrag();
+            UTIL.renumberRows();
             clearCopiedStateGlobal();
             removeToolbarGlobal();
-            UTIL.toast({icon:'success',title:'Row pasted!',timer:1200});
+            UTIL.toast({ icon: 'success', title: 'Row pasted!', timer: 1200 });
             return;
         }
 
-        /* Ctrl + Click amount */
+        /* Ctrl+Click amount TD */
         const amtTd = e.target.closest('.selectable-amount');
         if (amtTd && e.ctrlKey) {
             e.preventDefault();
@@ -2645,496 +3709,987 @@ function moveSelectedTo(position) {
             return;
         }
 
-        /* Ctrl + Click row */
+        /* Ctrl+Click row */
         if (e.ctrlKey || e.metaKey) {
             const row = e.target.closest('tr');
-            if (e.target.closest('button,a,input,select')) return;
+            if (e.target.closest('button, a, input, select')) return;
             if (!row || !tableBody.contains(row)) return;
             e.preventDefault();
-            if (APP.selectedRows.has(row)) { APP.selectedRows.delete(row); row.classList.remove('row-ctrl-selected'); }
-            else { APP.selectedRows.add(row); row.classList.add('row-ctrl-selected'); }
+
+            /* Auto-expand by scope */
+            const scope = scopeSelect?.value || 'row';
+
+            if (scope === 'room' && !row.classList.contains('room-row') && !row.classList.contains('floor-row')) {
+                /* Select entire room block */
+                let curRoom = null;
+                let curRoomRows = [];
+                Array.from(tableBody.querySelectorAll('tr')).forEach(r => {
+                    if (r.classList.contains('room-row')) { curRoom = r; curRoomRows = [r]; }
+                    else if (r.classList.contains('floor-row')) { curRoom = null; curRoomRows = []; }
+                    else if (curRoom) curRoomRows.push(r);
+                    if (r === row && curRoom) {
+                        curRoomRows.forEach(x => { APP.selectedRows.add(x); x.classList.add('row-ctrl-selected'); });
+                    }
+                });
+                updateGroupBar();
+                return;
+            }
+
+            if (scope === 'floor') {
+                /* Select entire floor block */
+                let curFloor = null;
+                let curFloorRows = [];
+                Array.from(tableBody.querySelectorAll('tr')).forEach(r => {
+                    if (r.classList.contains('floor-row')) { curFloor = r; curFloorRows = [r]; }
+                    else if (curFloor) curFloorRows.push(r);
+                    if (r === row && curFloor) {
+                        curFloorRows.forEach(x => { APP.selectedRows.add(x); x.classList.add('row-ctrl-selected'); });
+                    }
+                });
+                updateGroupBar();
+                return;
+            }
+
+            /* Default: toggle single row */
+            if (APP.selectedRows.has(row)) {
+                APP.selectedRows.delete(row);
+                row.classList.remove('row-ctrl-selected');
+            } else {
+                APP.selectedRows.add(row);
+                row.classList.add('row-ctrl-selected');
+            }
             updateGroupBar();
             return;
         }
 
-        /* Regular click clears */
+        /* Regular click clears selection */
         if (APP.selectedRows.size > 0 && !e.target.closest('.group-select-bar')) {
-            if (!e.target.closest('button,a')) clearGroupSelection();
+            if (!e.target.closest('button, a')) clearGroupSelection();
         }
     });
 
-    /* ═══════════════════════════
-       DRAG & DROP
-    ═══════════════════════════ */
+    /* ═══════════════════════════════════════════
+       DRAG & DROP (with stuck-drag fix)
+    ═══════════════════════════════════════════ */
     function createDropIndicator() {
         const tr = document.createElement('tr');
-        tr.id = 'dropIndicatorRow';
+        tr.id        = 'dropIndicatorRow';
         tr.className = 'drop-indicator-row';
         const td = document.createElement('td');
-        td.colSpan = 99;
+        td.colSpan   = 99;
         td.className = 'drop-indicator-td';
         tr.appendChild(td);
         return tr;
     }
 
+    function resetDragState() {
+        APP.dragLocked = false;
+        APP.dragSrc    = null;
+        APP.dragOver   = null;
+        APP.isDragGroup   = false;
+        APP.groupDragRows = [];
+        tableBody.querySelectorAll('tr').forEach(r => {
+            r.style.opacity = '';
+            r.classList.remove('direct-dragging', 'drag-over-top', 'drag-over-bottom');
+        });
+        document.getElementById('dropIndicatorRow')?.remove();
+    }
+
     window.attachDirectDrag = function() {
-        /* Clone to clear old handlers */
-        tableBody.querySelectorAll('tr').forEach(row => {
+        /* Clone rows to clear all old event listeners */
+        Array.from(tableBody.querySelectorAll('tr')).forEach(row => {
             const fresh = row.cloneNode(true);
             row.parentNode?.replaceChild(fresh, row);
         });
 
-        /* Re-collect group rows */
+        /* Re-collect group rows after clone */
         GROUPS.list.forEach(group => {
-            group.rows = Array.from(tableBody.querySelectorAll(`tr[data-group-id="${group.id}"]`));
+            group.rows = Array.from(
+                tableBody.querySelectorAll(`tr[data-group-id="${group.id}"]`)
+            );
         });
 
-        /* Attach handlers */
+        /* Re-collect ctrl-selected rows after clone */
+        const newSelected = new Set();
+        tableBody.querySelectorAll('tr.row-ctrl-selected').forEach(r => newSelected.add(r));
+        APP.selectedRows = newSelected;
+
+        /* Attach fresh handlers */
         tableBody.querySelectorAll('tr').forEach(row => {
             row.draggable = true;
-            row.addEventListener('dragstart', onDragStart, {passive:false});
-            row.addEventListener('dragend',   onDragEnd);
-            row.addEventListener('dragover',  onDragOver, {passive:false});
-            row.addEventListener('dragleave', onDragLeave);
-            row.addEventListener('drop',      onDrop, {passive:false});
+            row.addEventListener('dragstart',  onDragStart,  { passive: false });
+            row.addEventListener('dragend',    onDragEnd);
+            row.addEventListener('dragover',   onDragOver,   { passive: false });
+            row.addEventListener('dragleave',  onDragLeave);
+            row.addEventListener('drop',       onDrop,       { passive: false });
         });
 
-        /* ✅ Re-apply floor/room/group colors after cloning */
         UTIL.reapplyRowStyles();
+        UTIL.renumberRows();
     };
 
-    function onDragStart(e) {
-        if (e.target.closest('button,a,input,select')) { e.preventDefault(); return; }
-        APP.dragSrc = this;
+    /* ── Safety: release stuck drag on window blur / mouseup ── */
+    window.addEventListener('blur',     resetDragState);
+    window.addEventListener('mouseup',  () => { if (APP.dragLocked) resetDragState(); });
+    window.addEventListener('touchend', () => { if (APP.dragLocked) resetDragState(); });
 
+    document.addEventListener('dragend', () => { if (APP.dragLocked) resetDragState(); });
+
+    function onDragStart(e) {
+        /* Ignore if clicking interactive elements */
+        if (e.target.closest('button, a, input, select')) { e.preventDefault(); return; }
+        if (APP.dragLocked) return;
+
+        APP.dragLocked = true;
+        APP.dragSrc    = this;
+
+        /* Determine group */
         const gid = this.dataset.groupId;
         if (gid) {
             const g = GROUPS.list.find(x => x.id === gid);
-            if (g && g.rows.length > 1) { APP.isDragGroup = true; APP.groupDragRows = g.rows.filter(r=>r.isConnected); }
-            else { APP.isDragGroup = false; APP.groupDragRows = [this]; }
+            if (g && g.rows.length > 1) {
+                APP.isDragGroup   = true;
+                APP.groupDragRows = g.rows.filter(r => r.isConnected);
+            } else {
+                APP.isDragGroup   = false;
+                APP.groupDragRows = [this];
+            }
         } else if (APP.selectedRows.size > 1 && APP.selectedRows.has(this)) {
-            APP.isDragGroup = true;
-            APP.groupDragRows = Array.from(tableBody.querySelectorAll('tr')).filter(r=>APP.selectedRows.has(r));
+            APP.isDragGroup   = true;
+            APP.groupDragRows = Array.from(tableBody.querySelectorAll('tr'))
+                                     .filter(r => APP.selectedRows.has(r));
         } else {
-            APP.isDragGroup = false;
+            APP.isDragGroup   = false;
             APP.groupDragRows = [this];
         }
 
         UTIL.saveState();
+
+        /* Custom ghost */
         const ghost = buildGhost(APP.groupDragRows);
         document.body.appendChild(ghost);
-        e.dataTransfer.setDragImage(ghost,24,24);
-        setTimeout(()=>ghost.remove(),0);
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain','');
+        try { e.dataTransfer.setDragImage(ghost, 24, 24); } catch (_) {}
+        setTimeout(() => ghost.remove(), 0);
 
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', ''); } catch (_) {}
+
+        /* Dim non-dragged rows */
         APP.groupDragRows.forEach(r => r.classList.add('direct-dragging'));
-        tableBody.querySelectorAll('tr:not(.direct-dragging)').forEach(r => { r.style.opacity='0.5'; });
+        tableBody.querySelectorAll('tr:not(.direct-dragging)').forEach(r => {
+            r.style.opacity = '0.45';
+        });
     }
 
     function onDragEnd() {
         APP.groupDragRows.forEach(r => r.classList.remove('direct-dragging'));
         tableBody.querySelectorAll('tr').forEach(r => {
             r.style.opacity = '';
-            r.classList.remove('drag-over-top','drag-over-bottom');
+            r.classList.remove('drag-over-top', 'drag-over-bottom');
         });
         document.getElementById('dropIndicatorRow')?.remove();
-        APP.dragSrc=null; APP.dragOver=null; APP.isDragGroup=false; APP.groupDragRows=[];
-
-        /* ✅ Re-apply colors after drag cleanup */
         UTIL.reapplyRowStyles();
+        UTIL.renumberRows();
+
+        APP.dragLocked    = false;
+        APP.dragSrc       = null;
+        APP.dragOver      = null;
+        APP.isDragGroup   = false;
+        APP.groupDragRows = [];
     }
 
     function onDragOver(e) {
-        if (!APP.dragSrc) return;
-        if (APP.groupDragRows.includes(this)) return;
-        if (this.id==='dropIndicatorRow') return;
+        if (!APP.dragSrc || !APP.dragLocked)           return;
+        if (APP.groupDragRows.includes(this))          return;
+        if (this.id === 'dropIndicatorRow')            return;
+
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        document.getElementById('dropIndicatorRow')?.remove();
-        tableBody.querySelectorAll('tr:not(.direct-dragging)').forEach(r => r.classList.remove('drag-over-top','drag-over-bottom'));
 
-        const rect = this.getBoundingClientRect();
-        APP.dropAbove = e.clientY < rect.top + rect.height/2;
-        APP.dragOver = this;
+        /* Remove old indicator */
+        document.getElementById('dropIndicatorRow')?.remove();
+        tableBody.querySelectorAll('tr:not(.direct-dragging)')
+                 .forEach(r => r.classList.remove('drag-over-top', 'drag-over-bottom'));
+
+        const rect     = this.getBoundingClientRect();
+        APP.dropAbove  = e.clientY < rect.top + rect.height / 2;
+        APP.dragOver   = this;
+
         const ind = createDropIndicator();
-        if (APP.dropAbove) { this.classList.add('drag-over-top'); tableBody.insertBefore(ind, this); }
-        else { this.classList.add('drag-over-bottom'); this.after(ind); }
+        if (APP.dropAbove) {
+            this.classList.add('drag-over-top');
+            tableBody.insertBefore(ind, this);
+        } else {
+            this.classList.add('drag-over-bottom');
+            this.after(ind);
+        }
     }
 
     function onDragLeave(e) {
         if (!e.relatedTarget || !this.contains(e.relatedTarget))
-            this.classList.remove('drag-over-top','drag-over-bottom');
+            this.classList.remove('drag-over-top', 'drag-over-bottom');
     }
 
     function onDrop(e) {
-        if (!APP.dragSrc) return;
+        if (!APP.dragSrc || !APP.dragLocked)  return;
         if (APP.groupDragRows.includes(this)) return;
-        if (this.id==='dropIndicatorRow') return;
+        if (this.id === 'dropIndicatorRow')   return;
+
         e.preventDefault();
 
-        const ind = document.getElementById('dropIndicatorRow');
-        const rect = this.getBoundingClientRect();
-        const isBefore = e.clientY < rect.top + rect.height/2;
-        const anchor = isBefore ? this : (this.nextSibling||null);
-        if (ind) ind.remove();
+        const rect     = this.getBoundingClientRect();
+        const isBefore = e.clientY < rect.top + rect.height / 2;
+        const anchor   = isBefore ? this : (this.nextSibling || null);
 
-        APP.groupDragRows.forEach(row => { anchor ? tableBody.insertBefore(row, anchor) : tableBody.appendChild(row); });
+        document.getElementById('dropIndicatorRow')?.remove();
 
-        this.classList.remove('drag-over-top','drag-over-bottom');
+        /* Move rows */
+        APP.groupDragRows.forEach(row => {
+            anchor ? tableBody.insertBefore(row, anchor) : tableBody.appendChild(row);
+        });
+
+        /* Clear visual states */
+        this.classList.remove('drag-over-top', 'drag-over-bottom');
         tableBody.querySelectorAll('tr').forEach(r => {
-            r.style.opacity='';
-            r.classList.remove('direct-dragging','drag-over-top','drag-over-bottom');
+            r.style.opacity = '';
+            r.classList.remove('direct-dragging', 'drag-over-top', 'drag-over-bottom');
         });
 
         APP.groupDragRows.forEach(r => UTIL.flashRow(r));
 
         if (APP.isDragGroup) updateGroupBar();
-        else clearGroupSelection();
+        else                 clearGroupSelection();
 
-        APP.dragSrc=null; APP.dragOver=null; APP.isDragGroup=false; APP.groupDragRows=[];
-
-        /* ✅ Re-apply colors after drop */
         UTIL.reapplyRowStyles();
+        UTIL.renumberRows();
+
+        /* Release drag lock */
+        APP.dragLocked    = false;
+        APP.dragSrc       = null;
+        APP.dragOver      = null;
+        APP.isDragGroup   = false;
+        APP.groupDragRows = [];
     }
 
+    /* ── Ghost builder ── */
     function buildGhost(rows) {
         const w = document.createElement('div');
-        w.style.cssText = 'position:fixed;top:-400px;left:-400px;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(99,102,241,.28);border:1.5px solid rgba(99,102,241,.2);padding:6px 14px;min-width:220px;max-width:360px;z-index:99999;pointer-events:none;font-family:inherit;';
+        w.style.cssText = [
+            'position:fixed', 'top:-400px', 'left:-400px',
+            'background:#fff', 'border-radius:12px',
+            'box-shadow:0 12px 40px rgba(99,102,241,.28)',
+            'border:1.5px solid rgba(99,102,241,.2)',
+            'padding:6px 14px', 'min-width:220px', 'max-width:360px',
+            'z-index:99999', 'pointer-events:none', 'font-family:inherit'
+        ].join(';');
 
-        if (rows.length===1) {
-            w.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:28px;height:28px;border-radius:8px;background:rgba(99,102,241,.1);color:#6366f1;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;"><i class="bi bi-grip-horizontal"></i></div>
-                <div><div style="font-size:.78rem;font-weight:700;color:#0f172a;">${UTIL.getLabel(rows[0],50)}</div>
-                <div style="font-size:.62rem;color:#94a3b8;margin-top:2px;">Drag to reorder</div></div></div>`;
+        if (rows.length === 1) {
+            w.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:28px;height:28px;border-radius:8px;background:rgba(99,102,241,.1);color:#6366f1;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;">
+                        <i class="bi bi-grip-horizontal"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:.78rem;font-weight:700;color:#0f172a;">${UTIL.getLabel(rows[0], 50)}</div>
+                        <div style="font-size:.62rem;color:#94a3b8;margin-top:2px;">Drag to reorder</div>
+                    </div>
+                </div>`;
         } else {
-            w.style.padding='10px 14px';
-            w.innerHTML = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-                <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;box-shadow:0 3px 8px rgba(99,102,241,.3);"><i class="bi bi-collection-fill"></i></div>
-                <div><div style="font-size:.8rem;font-weight:800;color:#0f172a;">Moving ${rows.length} rows</div>
-                <div style="font-size:.62rem;color:#94a3b8;">Selected group</div></div></div>
+            w.style.padding = '10px 14px';
+            w.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                    <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;box-shadow:0 3px 8px rgba(99,102,241,.3);">
+                        <i class="bi bi-collection-fill"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:.8rem;font-weight:800;color:#0f172a;">Moving ${rows.length} rows</div>
+                        <div style="font-size:.62rem;color:#94a3b8;">Selected group</div>
+                    </div>
+                </div>
                 <div style="display:flex;flex-direction:column;gap:3px;">
-                ${rows.slice(0,4).map(r=>`<div style="font-size:.68rem;font-weight:600;color:#475569;padding:4px 8px;background:#f8fafc;border-radius:6px;border:1px solid #f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${UTIL.getLabel(r,35)}</div>`).join('')}
-                ${rows.length>4?`<div style="font-size:.62rem;color:#94a3b8;text-align:center;padding:3px;font-weight:600;">+${rows.length-4} more…</div>`:''}</div>`;
+                    ${rows.slice(0, 4).map(r => `
+                        <div style="font-size:.68rem;font-weight:600;color:#475569;padding:4px 8px;background:#f8fafc;border-radius:6px;border:1px solid #f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            ${UTIL.getLabel(r, 35)}
+                        </div>`).join('')}
+                    ${rows.length > 4
+                        ? `<div style="font-size:.62rem;color:#94a3b8;text-align:center;padding:3px;font-weight:600;">+${rows.length - 4} more…</div>`
+                        : ''}
+                </div>`;
         }
         return w;
     }
 
-    /* ═══════════════════════════
+    /* ═══════════════════════════════════════════
        KEYBOARD SHORTCUTS
-    ═══════════════════════════ */
+    ═══════════════════════════════════════════ */
     document.addEventListener('keydown', function(e) {
         const tag = document.activeElement.tagName;
-        if (tag==='INPUT'||tag==='TEXTAREA') return;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
         /* ESC */
-        if (e.key==='Escape') {
+        if (e.key === 'Escape') {
             e.preventDefault();
             let cleared = false;
-            if (APP.selectedTds.length>0) { clearAmountSelection(); cleared=true; }
-            if (APP.selectedRows.size>0) { clearGroupSelection(); cleared=true; }
-            if (APP.pasteMode) { clearCopiedStateGlobal(); removeToolbarGlobal(); cleared=true; }
-            if (APP.pasteGroupMode) { clearGroupPaste(); cleared=true; }
-            const qo=document.getElementById('qoOverlay');
-            if (qo?.classList.contains('active')) { window.closeQuickOrder?.(); cleared=true; }
-            const gmp=document.getElementById('groupManagerPanel');
-            if (gmp?.classList.contains('show')) { gmp.classList.remove('show'); cleared=true; }
-            if (cleared) UTIL.toast({icon:'info',title:'Cleared',timer:600});
+            if (APP.selectedTds.length)   { clearAmountSelection();                                         cleared = true; }
+            if (APP.selectedRows.size)     { clearGroupSelection();                                          cleared = true; }
+            if (APP.pasteMode)             { clearCopiedStateGlobal(); removeToolbarGlobal();                cleared = true; }
+            if (APP.pasteGroupMode)        { clearGroupPaste();                                              cleared = true; }
+            if (APP.dragLocked)            { resetDragState();                                               cleared = true; }
+            const qo  = document.getElementById('qoOverlay');
+            const gmp = document.getElementById('groupManagerPanel');
+            if (qo?.classList.contains('active'))   { window.closeQuickOrder?.();          cleared = true; }
+            if (gmp?.classList.contains('show'))    { gmp.classList.remove('show');         cleared = true; }
+            if (cleared) UTIL.toast({ icon: 'info', title: 'Cleared', timer: 600 });
             return;
         }
 
-        if ((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='a') { e.preventDefault(); clearGroupSelection(); tableBody.querySelectorAll('tr').forEach(r=>{APP.selectedRows.add(r);r.classList.add('row-ctrl-selected');}); updateGroupBar(); return; }
-        if ((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='g') { e.preventDefault(); if(APP.selectedRows.size>=2) createGroup(); return; }
-        if ((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z') { e.preventDefault(); restoreState(APP.undoStack,APP.redoStack); return; }
-        if (((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key.toLowerCase()==='z')||((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y')) { e.preventDefault(); restoreState(APP.redoStack,APP.undoStack); return; }
-        if (e.key==='Delete'&&APP.selectedRows.size>0) { e.preventDefault(); document.getElementById('gsbDeleteBtn').click(); return; }
-        if ((e.ctrlKey||e.metaKey)&&e.key==='Backspace') { e.preventDefault(); clearAmountSelection(); return; }
-        if (e.key==='Backspace'&&APP.selectedTds.length>0&&APP.selectedRows.size===0) { e.preventDefault(); const last=APP.selectedTds.pop(); last.classList.remove('td-selected'); updateSelectedTotal(); return; }
-
-        /* Move shortcuts */
-        if ((e.ctrlKey||e.metaKey)&&e.key==='Home'&&APP.selectedRows.size>0) { e.preventDefault(); moveSelectedTo('top'); return; }
-        if ((e.ctrlKey||e.metaKey)&&e.key==='End'&&APP.selectedRows.size>0) { e.preventDefault(); moveSelectedTo('bottom'); return; }
-        if (e.shiftKey&&e.altKey&&(e.key==='ArrowUp'||e.key==='ArrowDown')) { e.preventDefault(); if(APP.selectedRows.size>0) moveSelected(e.key==='ArrowUp'?'up':'down','floor'); return; }
-        if (e.ctrlKey&&e.altKey&&(e.key==='ArrowUp'||e.key==='ArrowDown')) { e.preventDefault(); if(APP.selectedRows.size>0) moveSelected(e.key==='ArrowUp'?'up':'down','room'); return; }
-        if (e.altKey&&(e.key==='ArrowUp'||e.key==='ArrowDown')) {
+        /* Ctrl + A — select all */
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
             e.preventDefault();
-            if (APP.selectedRows.size>0) { moveSelected(e.key==='ArrowUp'?'up':'down',moveMode); return; }
-            const focused = document.querySelector('tr:focus,tr:hover');
-            const btn = focused?.querySelector('.btn-row-arrow');
-            if (btn) moveRow(btn, e.key==='ArrowUp'?'up':'down');
+            clearGroupSelection();
+            tableBody.querySelectorAll('tr').forEach(r => {
+                APP.selectedRows.add(r);
+                r.classList.add('row-ctrl-selected');
+            });
+            updateGroupBar();
+            return;
+        }
+
+        /* Ctrl + G — group */
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'g') {
+            e.preventDefault();
+            if (APP.selectedRows.size >= 2) createGroup();
+            return;
+        }
+
+        /* Ctrl + Z — undo */
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+            e.preventDefault();
+            restoreState(APP.undoStack, APP.redoStack);
+            return;
+        }
+
+        /* Ctrl + Shift + Z / Ctrl + Y — redo */
+        if (
+            ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z') ||
+            ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y')
+        ) {
+            e.preventDefault();
+            restoreState(APP.redoStack, APP.undoStack);
+            return;
+        }
+
+        /* Delete — delete selected rows */
+        if (e.key === 'Delete' && APP.selectedRows.size > 0) {
+            e.preventDefault();
+            document.getElementById('gsbDeleteBtn')?.click();
+            return;
+        }
+
+        /* Ctrl + Backspace — clear amount TDs */
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Backspace') {
+            e.preventDefault();
+            clearAmountSelection();
+            return;
+        }
+
+        /* Backspace — remove last amount TD */
+        if (e.key === 'Backspace' && APP.selectedTds.length > 0 && !APP.selectedRows.size) {
+            e.preventDefault();
+            const last = APP.selectedTds.pop();
+            last.classList.remove('td-selected');
+            updateSelectedTotal();
+            return;
+        }
+
+        /* Ctrl + Home / End — move to top/bottom */
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Home' && APP.selectedRows.size) {
+            e.preventDefault(); moveSelectedTo('top');    return;
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'End' && APP.selectedRows.size) {
+            e.preventDefault(); moveSelectedTo('bottom'); return;
+        }
+
+        /* Alt + Arrow — move step */
+        if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+            e.preventDefault();
+            const dir = e.key === 'ArrowUp' ? 'up' : 'down';
+
+            if (APP.selectedRows.size > 0) {
+                /* Shift+Alt = floor, Ctrl+Alt = room, Alt alone = current mode */
+                const mode = e.shiftKey ? 'floor' : e.ctrlKey ? 'room' : moveMode;
+                moveSelected(dir, mode);
+            } else {
+                /* Single focused row via keyboard */
+                const focused = document.querySelector('tr:focus');
+                if (focused) moveRow({ closest: () => focused }, dir);
+            }
+            return;
+        }
+
+        /* Shift + Alt + Arrow — force floor jump */
+        if (e.shiftKey && e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+            e.preventDefault();
+            if (APP.selectedRows.size > 0)
+                moveSelected(e.key === 'ArrowUp' ? 'up' : 'down', 'floor');
+            return;
+        }
+
+        /* Ctrl + Alt + Arrow — force room jump */
+        if (e.ctrlKey && e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+            e.preventDefault();
+            if (APP.selectedRows.size > 0)
+                moveSelected(e.key === 'ArrowUp' ? 'up' : 'down', 'room');
             return;
         }
     });
 
-    /* ═══════════════════════════
+    /* ═══════════════════════════════════════════
        INIT
-    ═══════════════════════════ */
+    ═══════════════════════════════════════════ */
     attachDirectDrag();
-
-    /* Apply initial styles */
     UTIL.reapplyRowStyles();
+    UTIL.renumberRows();
 });
 </script>
-
 
 <!-- ════════════════════════
      INVOICE CALCULATIONS
 ════════════════════════ -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const isPublic = {{ is_public|yesno:"true,false" }};
+    const isPublic   = {{ is_public|yesno:"true,false" }};
     const totalSpent = parseFloat("{{ total_spent }}") || 0;
 
-    const gstInput = document.getElementById('gstRate');
-    const discountInput = document.getElementById('discountInput');
-    const discountRadios = document.getElementsByName('discountType');
-    const gstAmountEl = document.getElementById('gstAmount');
-    const subtotalEl = document.getElementById('subtotalAmount');
+    const gstInput         = document.getElementById('gstRate');
+    const discountInput    = document.getElementById('discountInput');
+    const discountRadios   = document.getElementsByName('discountType');
+    const gstAmountEl      = document.getElementById('gstAmount');
+    const subtotalEl       = document.getElementById('subtotalAmount');
     const discountAmountEl = document.getElementById('discountAmount');
-    const grandTotalEl = document.getElementById('grandTotal');
-    const paymentRows = document.querySelectorAll('#paymentRows tr');
+    const grandTotalEl     = document.getElementById('grandTotal');
+    const paymentRows      = document.querySelectorAll('#paymentRows tr');
 
-    function getDiscountType() { for(const r of discountRadios) if(r.checked) return r.value; return 'rupee'; }
+    function getDiscountType() {
+        for (const r of discountRadios) if (r.checked) return r.value;
+        return 'rupee';
+    }
 
     function updatePaymentSummary(gt) {
         paymentRows.forEach(row => {
-            const paid = parseFloat(row.dataset.paid)||0;
-            const bal = gt-paid;
-            const bc = row.querySelector('.balanceCell');
-            const tc = row.querySelector('.grandTotal');
-            if(tc) tc.innerHTML='₹ '+gt.toFixed(2);
-            if(bc) { bc.innerHTML='₹ '+bal.toFixed(2); bc.classList.remove('success','danger','primary'); bc.classList.add(bal===0?'success':bal<0?'danger':'primary'); }
+            const paid = parseFloat(row.dataset.paid) || 0;
+            const bal  = gt - paid;
+            const bc   = row.querySelector('.balanceCell');
+            const tc   = row.querySelector('.grandTotal');
+            if (tc) tc.innerHTML = '₹ ' + gt.toFixed(2);
+            if (bc) {
+                bc.innerHTML = '₹ ' + bal.toFixed(2);
+                bc.classList.remove('success', 'danger', 'primary');
+                bc.classList.add(bal === 0 ? 'success' : bal < 0 ? 'danger' : 'primary');
+            }
         });
     }
 
     function calculate() {
-        if(isPublic) return;
-        const gstRate = parseFloat(gstInput?.value)||0;
-        const dVal = parseFloat(discountInput?.value)||0;
-        const gstAmt = (totalSpent*gstRate)/100;
-        const sub = totalSpent+gstAmt;
-        const dType = getDiscountType();
-        const dAmt = dType==='percent'?(sub*dVal)/100:dVal;
-        const gt = sub-dAmt;
+        if (isPublic) return;
+        const gstRate = parseFloat(gstInput?.value)     || 0;
+        const dVal    = parseFloat(discountInput?.value) || 0;
+        const gstAmt  = (totalSpent * gstRate) / 100;
+        const sub     = totalSpent + gstAmt;
+        const dType   = getDiscountType();
+        const dAmt    = dType === 'percent' ? (sub * dVal) / 100 : dVal;
+        const gt      = sub - dAmt;
 
-        if(gstAmountEl) gstAmountEl.innerHTML='₹ '+gstAmt.toFixed(2);
-        if(subtotalEl) subtotalEl.innerHTML='₹ '+sub.toFixed(2);
-        if(discountAmountEl) discountAmountEl.innerHTML='- ₹ '+dAmt.toFixed(2);
-        if(grandTotalEl) grandTotalEl.innerHTML='<strong>₹ '+gt.toFixed(2)+'</strong>';
+        if (gstAmountEl)      gstAmountEl.innerHTML      = '₹ ' + gstAmt.toFixed(2);
+        if (subtotalEl)       subtotalEl.innerHTML        = '₹ ' + sub.toFixed(2);
+        if (discountAmountEl) discountAmountEl.innerHTML  = '- ₹ ' + dAmt.toFixed(2);
+        if (grandTotalEl)     grandTotalEl.innerHTML      = '<strong>₹ ' + gt.toFixed(2) + '</strong>';
         updatePaymentSummary(gt);
     }
 
-    if(!isPublic) {
+    if (!isPublic) {
         let saveTimer;
         function saveAdj() {
             clearTimeout(saveTimer);
-            saveTimer = setTimeout(()=>{
+            saveTimer = setTimeout(() => {
                 fetch("{% url 'save_invoice_adjustments' payment.id %}", {
-                    method:'POST',
-                    headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':'{{ csrf_token }}'},
-                    body: new URLSearchParams({gst_rate:gstInput?.value||0,discount:discountInput?.value||0,discount_type:getDiscountType()})
-                }).then(r=>r.json()).then(data=>{
-                    if(data.status==='success') UTIL.toast({icon:'success',title:'Invoice updated',timer:1200});
+                    method:  'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken':  '{{ csrf_token }}'
+                    },
+                    body: new URLSearchParams({
+                        gst_rate:      gstInput?.value || 0,
+                        discount:      discountInput?.value || 0,
+                        discount_type: getDiscountType()
+                    })
+                }).then(r => r.json()).then(data => {
+                    if (data.status === 'success')
+                        UTIL.toast({ icon: 'success', title: 'Invoice updated', timer: 1200 });
                 });
-            },600);
+            }, 600);
         }
-        gstInput?.addEventListener('input',()=>{calculate();saveAdj();});
-        discountInput?.addEventListener('input',()=>{calculate();saveAdj();});
-        discountRadios.forEach(r=>r.addEventListener('change',()=>{calculate();saveAdj();}));
+        gstInput?.addEventListener('input',  () => { calculate(); saveAdj(); });
+        discountInput?.addEventListener('input', () => { calculate(); saveAdj(); });
+        discountRadios.forEach(r => r.addEventListener('change', () => { calculate(); saveAdj(); }));
         calculate();
     }
 });
 </script>
 
-
 <!-- ════════════════════════
      QUICK ORDER MANAGER
 ════════════════════════ -->
 <script>
-(function(){
+(function () {
     'use strict';
-    let floorGroups=[], originalSnap=[], activeTab='floors', activeFloorIdx=0, activeRoomIdx=0;
-    const sortables = {floors:null,rooms:null,rows:null};
 
-    const tbody = document.getElementById('invoiceTbody');
-    const overlay = document.getElementById('qoOverlay');
-    const qoFloorList = document.getElementById('qoFloorList');
-    const qoRoomList = document.getElementById('qoRoomList');
-    const qoRowList = document.getElementById('qoRowList');
-    const qoFloorPills = document.getElementById('qoFloorPills');
+    let floorGroups = [], originalSnap = [],
+        activeTab = 'floors', activeFloorIdx = 0, activeRoomIdx = 0;
+    const sortables = { floors: null, rooms: null, rows: null };
+
+    const tbody          = document.getElementById('invoiceTbody');
+    const overlay        = document.getElementById('qoOverlay');
+    const qoFloorList    = document.getElementById('qoFloorList');
+    const qoRoomList     = document.getElementById('qoRoomList');
+    const qoRowList      = document.getElementById('qoRowList');
+    const qoFloorPills   = document.getElementById('qoFloorPills');
     const qoRowFloorPills = document.getElementById('qoRowFloorPills');
-    const qoRowRoomPills = document.getElementById('qoRowRoomPills');
-    const qoRowRoomSel = document.getElementById('qoRowRoomSelector');
-    const footerInfo = document.getElementById('qoFooterInfo');
+    const qoRowRoomPills  = document.getElementById('qoRowRoomPills');
+    const qoRowRoomSel    = document.getElementById('qoRowRoomSelector');
+    const footerInfo      = document.getElementById('qoFooterInfo');
 
-    if(!tbody||!overlay) return;
+    if (!tbody || !overlay) return;
 
     function parseFloorGroups() {
-        floorGroups=[];
-        let curFloor=null, curRoom=null;
+        floorGroups = [];
+        let curFloor = null, curRoom = null;
         Array.from(tbody.querySelectorAll('tr')).forEach(row => {
-            if(row.classList.contains('floor-row')) {
-                curRoom=null;
-                curFloor={headerRow:row,rows:[row],floorName:UTIL.getLabel(row),rooms:[]};
+            if (row.classList.contains('floor-row')) {
+                curRoom  = null;
+                curFloor = { headerRow: row, rows: [row], floorName: UTIL.getLabel(row), rooms: [] };
                 floorGroups.push(curFloor);
-            } else if(row.classList.contains('room-row')) {
-                if(!curFloor) return;
-                curRoom={headerRow:row,rows:[row],roomName:UTIL.getLabel(row)};
+            } else if (row.classList.contains('room-row')) {
+                if (!curFloor) return;
+                curRoom = { headerRow: row, rows: [row], roomName: UTIL.getLabel(row) };
                 curFloor.rooms.push(curRoom);
                 curFloor.rows.push(row);
             } else {
-                if(curRoom) curRoom.rows.push(row);
-                if(curFloor) curFloor.rows.push(row);
+                if (curRoom)  curRoom.rows.push(row);
+                if (curFloor) curFloor.rows.push(row);
             }
         });
     }
 
-    function snapshotDOM() { originalSnap=Array.from(tbody.children).map(r=>r.cloneNode(true)); }
+    function snapshotDOM() {
+        originalSnap = Array.from(tbody.children).map(r => r.cloneNode(true));
+    }
 
     function applyToTable(skipSave) {
-        if(!skipSave) UTIL.saveState();
-        while(tbody.firstChild) tbody.removeChild(tbody.firstChild);
+        if (!skipSave) UTIL.saveState();
+        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
         floorGroups.forEach(floor => {
             tbody.appendChild(floor.headerRow);
-            floor.rooms.forEach(room => room.rows.forEach(r=>tbody.appendChild(r)));
+            floor.rooms.forEach(room => room.rows.forEach(r => tbody.appendChild(r)));
             floor.rows.forEach(r => {
-                if(!r.classList.contains('floor-row')&&!floor.rooms.some(rm=>rm.rows.includes(r)))
+                if (!r.classList.contains('floor-row') && !floor.rooms.some(rm => rm.rows.includes(r)))
                     tbody.appendChild(r);
             });
         });
-        tbody.querySelectorAll('.floor-row,.room-row').forEach(row=>UTIL.flashRow(row));
-        if(typeof attachDirectDrag==='function') attachDirectDrag();
+        tbody.querySelectorAll('.floor-row, .room-row').forEach(row => UTIL.flashRow(row));
+        if (typeof attachDirectDrag === 'function') attachDirectDrag();
+        UTIL.renumberRows();
     }
 
-    function destroySortable(key) { if(sortables[key]){sortables[key].destroy();sortables[key]=null;} }
-    function makePill(text,isActive,onClick) { const b=document.createElement('button'); b.className='qo-pill'+(isActive?' active':''); b.textContent=text; b.onclick=onClick; return b; }
-    function setFooter(msg,reset) { footerInfo.textContent=msg; setTimeout(()=>{footerInfo.textContent=reset;},2200); }
+    function destroySortable(key) {
+        if (sortables[key]) { sortables[key].destroy(); sortables[key] = null; }
+    }
+
+    function makePill(text, isActive, onClick) {
+        const b = document.createElement('button');
+        b.className = 'qo-pill' + (isActive ? ' active' : '');
+        b.textContent = text;
+        b.onclick = onClick;
+        return b;
+    }
+
+    function setFooter(msg, reset) {
+        footerInfo.textContent = msg;
+        setTimeout(() => { footerInfo.textContent = reset; }, 2200);
+    }
 
     window.switchTab = function(tab) {
-        activeTab=tab;
-        document.querySelectorAll('.qo-tab').forEach(t=>t.classList.remove('active'));
-        document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1))?.classList.add('active');
-        document.getElementById('panelFloors').style.display = tab==='floors'?'flex':'none';
-        document.getElementById('panelRooms').style.display = tab==='rooms'?'flex':'none';
-        document.getElementById('panelRows').style.display = tab==='rows'?'flex':'none';
-        const hints={floors:'Drag <strong>floors</strong> to reorder.',rooms:'Select floor, drag <strong>rooms</strong>.',rows:'Select floor & room, drag <strong>rows</strong>.'};
-        document.getElementById('qoHintText').innerHTML=hints[tab]||'';
-        if(tab==='floors') renderFloors();
-        if(tab==='rooms') renderRoomPanel();
-        if(tab==='rows') renderRowPanel();
+        activeTab = tab;
+        document.querySelectorAll('.qo-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1))?.classList.add('active');
+        document.getElementById('panelFloors').style.display = tab === 'floors' ? 'flex' : 'none';
+        document.getElementById('panelRooms').style.display  = tab === 'rooms'  ? 'flex' : 'none';
+        document.getElementById('panelRows').style.display   = tab === 'rows'   ? 'flex' : 'none';
+        const hints = {
+            floors: 'Drag <strong>floors</strong> to reorder.',
+            rooms:  'Select floor, drag <strong>rooms</strong>.',
+            rows:   'Select floor & room, drag <strong>rows</strong>.'
+        };
+        const hintEl = document.getElementById('qoHintText');
+        if (hintEl) hintEl.innerHTML = hints[tab] || '';
+        if (tab === 'floors') renderFloors();
+        if (tab === 'rooms')  renderRoomPanel();
+        if (tab === 'rows')   renderRowPanel();
     };
 
     function renderFloors() {
-        qoFloorList.innerHTML='';
-        if(floorGroups.length===0){qoFloorList.innerHTML='<div class="qo-empty"><i class="bi bi-building"></i>No floors</div>';return;}
-        floorGroups.forEach((floor,i) => {
-            const items=floor.rows.filter(r=>!r.classList.contains('floor-row')&&!r.classList.contains('room-row')).length;
-            const el=document.createElement('div'); el.className='qo-floor-item'; el.dataset.floorIndex=i;
-            el.innerHTML=`<div class="qo-drag-handle"><i class="bi bi-grip-vertical" style="font-size:1.1rem;"></i></div>
-                <div class="qo-floor-rank">${i+1}</div>
-                <div class="qo-floor-info"><div class="qo-floor-name">${floor.floorName}</div>
-                <div class="qo-floor-meta"><span class="qo-meta-chip"><i class="bi bi-door-open me-1"></i>${floor.rooms.length} Room${floor.rooms.length!==1?'s':''}</span>
-                <span class="qo-meta-chip"><i class="bi bi-box me-1"></i>${items} Item${items!==1?'s':''}</span></div></div>
+        qoFloorList.innerHTML = '';
+        if (!floorGroups.length) {
+            qoFloorList.innerHTML = '<div class="qo-empty"><i class="bi bi-building"></i>No floors</div>';
+            return;
+        }
+        floorGroups.forEach((floor, i) => {
+            const items = floor.rows.filter(r =>
+                !r.classList.contains('floor-row') && !r.classList.contains('room-row')
+            ).length;
+            const el = document.createElement('div');
+            el.className = 'qo-floor-item';
+            el.dataset.floorIndex = i;
+            el.innerHTML = `
+                <div class="qo-drag-handle"><i class="bi bi-grip-vertical" style="font-size:1.1rem;"></i></div>
+                <div class="qo-floor-rank">${i + 1}</div>
+                <div class="qo-floor-info">
+                    <div class="qo-floor-name">${floor.floorName}</div>
+                    <div class="qo-floor-meta">
+                        <span class="qo-meta-chip"><i class="bi bi-door-open me-1"></i>${floor.rooms.length} Room${floor.rooms.length !== 1 ? 's' : ''}</span>
+                        <span class="qo-meta-chip"><i class="bi bi-box me-1"></i>${items} Item${items !== 1 ? 's' : ''}</span>
+                    </div>
+                </div>
                 <div class="qo-floor-badge">${floor.rows.length} rows</div>`;
             qoFloorList.appendChild(el);
         });
-        document.getElementById('tabFloorCount').textContent=floorGroups.length;
-        footerInfo.textContent=`${floorGroups.length} floor${floorGroups.length!==1?'s':''}`;
+        document.getElementById('tabFloorCount').textContent = floorGroups.length;
+        footerInfo.textContent = `${floorGroups.length} floor${floorGroups.length !== 1 ? 's' : ''}`;
         destroySortable('floors');
-        sortables.floors=new Sortable(qoFloorList,{animation:250,ghostClass:'qo-ghost',chosenClass:'qo-chosen',dragClass:'qo-drag',handle:'.qo-drag-handle',easing:'cubic-bezier(0.4,0,0.2,1)',
-            onEnd(){const items=qoFloorList.querySelectorAll('.qo-floor-item');floorGroups=Array.from(items).map(el=>floorGroups[parseInt(el.dataset.floorIndex)]);items.forEach((el,i)=>{el.dataset.floorIndex=i;el.querySelector('.qo-floor-rank').textContent=i+1;});applyToTable();setFooter('Floors reordered ✓',`${floorGroups.length} floors`);}});
+        sortables.floors = new Sortable(qoFloorList, {
+            animation: 250, ghostClass: 'qo-ghost', chosenClass: 'qo-chosen', dragClass: 'qo-drag',
+            handle: '.qo-drag-handle', easing: 'cubic-bezier(0.4,0,0.2,1)',
+            onEnd() {
+                const items = qoFloorList.querySelectorAll('.qo-floor-item');
+                floorGroups = Array.from(items).map(el => floorGroups[parseInt(el.dataset.floorIndex)]);
+                items.forEach((el, i) => { el.dataset.floorIndex = i; el.querySelector('.qo-floor-rank').textContent = i + 1; });
+                applyToTable();
+                setFooter('Floors reordered ✓', `${floorGroups.length} floors`);
+            }
+        });
     }
 
     function renderRoomPanel() {
-        qoFloorPills.innerHTML=''; let total=0;
-        floorGroups.forEach((floor,i)=>{total+=floor.rooms.length;qoFloorPills.appendChild(makePill(floor.floorName,i===activeFloorIdx,()=>{activeFloorIdx=i;qoFloorPills.querySelectorAll('.qo-pill').forEach((p,pi)=>p.classList.toggle('active',pi===i));renderRoomList(i);}));});
-        document.getElementById('tabRoomCount').textContent=total;
+        qoFloorPills.innerHTML = '';
+        let total = 0;
+        floorGroups.forEach((floor, i) => {
+            total += floor.rooms.length;
+            qoFloorPills.appendChild(makePill(floor.floorName, i === activeFloorIdx, () => {
+                activeFloorIdx = i;
+                qoFloorPills.querySelectorAll('.qo-pill').forEach((p, pi) => p.classList.toggle('active', pi === i));
+                renderRoomList(i);
+            }));
+        });
+        document.getElementById('tabRoomCount').textContent = total;
         renderRoomList(activeFloorIdx);
     }
 
     function renderRoomList(fi) {
-        qoRoomList.innerHTML='';const floor=floorGroups[fi]; if(!floor) return;
-        if(floor.rooms.length===0){qoRoomList.innerHTML='<div class="qo-empty"><i class="bi bi-door-open"></i>No rooms</div>';destroySortable('rooms');return;}
-        floor.rooms.forEach((room,i)=>{const dr=room.rows.filter(r=>!r.classList.contains('room-row'));const el=document.createElement('div');el.className='qo-room-item';el.dataset.roomIndex=i;
-            el.innerHTML=`<div class="qo-drag-handle"><i class="bi bi-grip-vertical" style="font-size:1rem;"></i></div><div class="qo-room-rank">${i+1}</div>
-                <div class="qo-room-info"><div class="qo-room-name">${room.roomName}</div><div class="qo-floor-meta"><span class="qo-meta-chip"><i class="bi bi-list-ul me-1"></i>${dr.length} Item${dr.length!==1?'s':''}</span></div></div>
-                <div class="qo-room-badge">${room.rows.length} rows</div>`;qoRoomList.appendChild(el);});
-        footerInfo.textContent=`${floor.rooms.length} room${floor.rooms.length!==1?'s':''} in ${floor.floorName}`;
+        qoRoomList.innerHTML = '';
+        const floor = floorGroups[fi];
+        if (!floor) return;
+        if (!floor.rooms.length) {
+            qoRoomList.innerHTML = '<div class="qo-empty"><i class="bi bi-door-open"></i>No rooms</div>';
+            destroySortable('rooms');
+            return;
+        }
+        floor.rooms.forEach((room, i) => {
+            const dr = room.rows.filter(r => !r.classList.contains('room-row'));
+            const el = document.createElement('div');
+            el.className = 'qo-room-item';
+            el.dataset.roomIndex = i;
+            el.innerHTML = `
+                <div class="qo-drag-handle"><i class="bi bi-grip-vertical" style="font-size:1rem;"></i></div>
+                <div class="qo-room-rank">${i + 1}</div>
+                <div class="qo-room-info">
+                    <div class="qo-room-name">${room.roomName}</div>
+                    <div class="qo-floor-meta"><span class="qo-meta-chip"><i class="bi bi-list-ul me-1"></i>${dr.length} Item${dr.length !== 1 ? 's' : ''}</span></div>
+                </div>
+                <div class="qo-room-badge">${room.rows.length} rows</div>`;
+            qoRoomList.appendChild(el);
+        });
+        footerInfo.textContent = `${floor.rooms.length} room${floor.rooms.length !== 1 ? 's' : ''} in ${floor.floorName}`;
         destroySortable('rooms');
-        sortables.rooms=new Sortable(qoRoomList,{animation:220,ghostClass:'qo-ghost',chosenClass:'qo-chosen',dragClass:'qo-drag',handle:'.qo-drag-handle',easing:'cubic-bezier(0.4,0,0.2,1)',
-            onEnd(){const items=qoRoomList.querySelectorAll('.qo-room-item');const fl=floorGroups[activeFloorIdx];fl.rooms=Array.from(items).map(el=>fl.rooms[parseInt(el.dataset.roomIndex)]);items.forEach((el,i)=>{el.dataset.roomIndex=i;el.querySelector('.qo-room-rank').textContent=i+1;});fl.rows=[fl.headerRow];fl.rooms.forEach(r=>r.rows.forEach(row=>fl.rows.push(row)));applyToTable();setFooter('Rooms reordered ✓',`${fl.rooms.length} rooms`);}});
+        sortables.rooms = new Sortable(qoRoomList, {
+            animation: 220, ghostClass: 'qo-ghost', chosenClass: 'qo-chosen', dragClass: 'qo-drag',
+            handle: '.qo-drag-handle', easing: 'cubic-bezier(0.4,0,0.2,1)',
+            onEnd() {
+                const items = qoRoomList.querySelectorAll('.qo-room-item');
+                const fl = floorGroups[activeFloorIdx];
+                fl.rooms = Array.from(items).map(el => fl.rooms[parseInt(el.dataset.roomIndex)]);
+                items.forEach((el, i) => { el.dataset.roomIndex = i; el.querySelector('.qo-room-rank').textContent = i + 1; });
+                fl.rows = [fl.headerRow];
+                fl.rooms.forEach(r => r.rows.forEach(row => fl.rows.push(row)));
+                applyToTable();
+                setFooter('Rooms reordered ✓', `${fl.rooms.length} rooms`);
+            }
+        });
     }
 
     function renderRowPanel() {
-        qoRowFloorPills.innerHTML='';
-        floorGroups.forEach((floor,i)=>{qoRowFloorPills.appendChild(makePill(floor.floorName,i===activeFloorIdx,()=>{activeFloorIdx=i;activeRoomIdx=0;qoRowFloorPills.querySelectorAll('.qo-pill').forEach((p,pi)=>p.classList.toggle('active',pi===i));renderRowRoomPills(i);}));});
+        qoRowFloorPills.innerHTML = '';
+        floorGroups.forEach((floor, i) => {
+            qoRowFloorPills.appendChild(makePill(floor.floorName, i === activeFloorIdx, () => {
+                activeFloorIdx = i; activeRoomIdx = 0;
+                qoRowFloorPills.querySelectorAll('.qo-pill').forEach((p, pi) => p.classList.toggle('active', pi === i));
+                renderRowRoomPills(i);
+            }));
+        });
         renderRowRoomPills(activeFloorIdx);
     }
 
     function renderRowRoomPills(fi) {
-        qoRowRoomPills.innerHTML='';const floor=floorGroups[fi]; if(!floor) return;
-        if(floor.rooms.length===0){qoRowRoomSel.style.display='none';renderRowList(fi,-1);return;}
-        qoRowRoomSel.style.display='flex';
-        floor.rooms.forEach((room,i)=>{qoRowRoomPills.appendChild(makePill(room.roomName,i===activeRoomIdx,()=>{activeRoomIdx=i;qoRowRoomPills.querySelectorAll('.qo-pill').forEach((p,pi)=>p.classList.toggle('active',pi===i));renderRowList(fi,i);}));});
-        renderRowList(fi,activeRoomIdx);
+        qoRowRoomPills.innerHTML = '';
+        const floor = floorGroups[fi];
+        if (!floor) return;
+        if (!floor.rooms.length) { qoRowRoomSel.style.display = 'none'; renderRowList(fi, -1); return; }
+        qoRowRoomSel.style.display = 'flex';
+        floor.rooms.forEach((room, i) => {
+            qoRowRoomPills.appendChild(makePill(room.roomName, i === activeRoomIdx, () => {
+                activeRoomIdx = i;
+                qoRowRoomPills.querySelectorAll('.qo-pill').forEach((p, pi) => p.classList.toggle('active', pi === i));
+                renderRowList(fi, i);
+            }));
+        });
+        renderRowList(fi, activeRoomIdx);
     }
 
-    function renderRowList(fi,ri) {
-        qoRowList.innerHTML='';const floor=floorGroups[fi]; if(!floor) return;
-        let dr;
-        if(ri===-1||floor.rooms.length===0) dr=floor.rows.filter(r=>!r.classList.contains('floor-row')&&!r.classList.contains('room-row'));
-        else { const room=floor.rooms[ri]; if(!room) return; dr=room.rows.filter(r=>!r.classList.contains('room-row')); }
-        document.getElementById('tabRowCount').textContent=dr.length;
-        if(dr.length===0){qoRowList.innerHTML='<div class="qo-empty"><i class="bi bi-list-ul"></i>No items</div>';destroySortable('rows');return;}
-        dr.forEach((row,i)=>{const cells=row.querySelectorAll('td');const entity=cells[1]?.textContent.trim()||'—';const spec=cells[2]?.textContent.trim().slice(0,42)||'';const amount=cells[6]?.dataset?.amount||cells[6]?.textContent.trim()||'';
-            const el=document.createElement('div');el.className='qo-row-item';el.dataset.rowIndex=i;
-            el.innerHTML=`<div class="qo-drag-handle"><i class="bi bi-grip-vertical" style="font-size:.95rem;"></i></div><div class="qo-row-rank">${i+1}</div>
-                <div class="qo-row-info"><div class="qo-row-name">${entity}</div>${spec?`<div class="qo-row-desc">${spec}</div>`:''}</div>
-                ${amount?`<div class="qo-row-amount">₹${amount}</div>`:''}`;qoRowList.appendChild(el);});
-        footerInfo.textContent=`${dr.length} item${dr.length!==1?'s':''}`;
+    function renderRowList(fi, ri) {
+        qoRowList.innerHTML = '';
+        const floor = floorGroups[fi];
+        if (!floor) return;
+        const dr = ri === -1 || !floor.rooms.length
+            ? floor.rows.filter(r => !r.classList.contains('floor-row') && !r.classList.contains('room-row'))
+            : (() => { const room = floor.rooms[ri]; return room ? room.rows.filter(r => !r.classList.contains('room-row')) : []; })();
+
+        document.getElementById('tabRowCount').textContent = dr.length;
+        if (!dr.length) { qoRowList.innerHTML = '<div class="qo-empty"><i class="bi bi-list-ul"></i>No items</div>'; destroySortable('rows'); return; }
+
+        dr.forEach((row, i) => {
+            const cells  = row.querySelectorAll('td');
+            const entity = cells[1]?.textContent.trim() || '—';
+            const spec   = cells[2]?.textContent.trim().slice(0, 42) || '';
+            const amount = cells[6]?.dataset?.amount || cells[6]?.textContent.trim() || '';
+            const el = document.createElement('div');
+            el.className = 'qo-row-item';
+            el.dataset.rowIndex = i;
+            el.innerHTML = `
+                <div class="qo-drag-handle"><i class="bi bi-grip-vertical" style="font-size:.95rem;"></i></div>
+                <div class="qo-row-rank">${i + 1}</div>
+                <div class="qo-row-info">
+                    <div class="qo-row-name">${entity}</div>
+                    ${spec ? `<div class="qo-row-desc">${spec}</div>` : ''}
+                </div>
+                ${amount ? `<div class="qo-row-amount">₹${amount}</div>` : ''}`;
+            qoRowList.appendChild(el);
+        });
+
+        footerInfo.textContent = `${dr.length} item${dr.length !== 1 ? 's' : ''}`;
         destroySortable('rows');
-        sortables.rows=new Sortable(qoRowList,{animation:200,ghostClass:'qo-ghost',chosenClass:'qo-chosen',dragClass:'qo-drag',handle:'.qo-drag-handle',easing:'cubic-bezier(0.4,0,0.2,1)',
-            onEnd(){const items=qoRowList.querySelectorAll('.qo-row-item');const newDR=Array.from(items).map(el=>dr[parseInt(el.dataset.rowIndex)]);items.forEach((el,i)=>{el.dataset.rowIndex=i;el.querySelector('.qo-row-rank').textContent=i+1;});
-                const fl=floorGroups[fi];
-                if(ri===-1||fl.rooms.length===0){fl.rows=[fl.headerRow];fl.rooms.forEach(rm=>rm.rows.forEach(r=>fl.rows.push(r)));newDR.forEach(r=>fl.rows.push(r));}
-                else{const room=fl.rooms[ri];room.rows=[room.headerRow,...newDR];fl.rows=[fl.headerRow];fl.rooms.forEach(rm=>rm.rows.forEach(r=>fl.rows.push(r)));}
-                applyToTable();setFooter('Rows reordered ✓',`${dr.length} items`);}});
+        sortables.rows = new Sortable(qoRowList, {
+            animation: 200, ghostClass: 'qo-ghost', chosenClass: 'qo-chosen', dragClass: 'qo-drag',
+            handle: '.qo-drag-handle', easing: 'cubic-bezier(0.4,0,0.2,1)',
+            onEnd() {
+                const items  = qoRowList.querySelectorAll('.qo-row-item');
+                const newDR  = Array.from(items).map(el => dr[parseInt(el.dataset.rowIndex)]);
+                items.forEach((el, i) => { el.dataset.rowIndex = i; el.querySelector('.qo-row-rank').textContent = i + 1; });
+                const fl = floorGroups[fi];
+                if (ri === -1 || !fl.rooms.length) {
+                    fl.rows = [fl.headerRow];
+                    fl.rooms.forEach(rm => rm.rows.forEach(r => fl.rows.push(r)));
+                    newDR.forEach(r => fl.rows.push(r));
+                } else {
+                    const room = fl.rooms[ri];
+                    room.rows  = [room.headerRow, ...newDR];
+                    fl.rows    = [fl.headerRow];
+                    fl.rooms.forEach(rm => rm.rows.forEach(r => fl.rows.push(r)));
+                }
+                applyToTable();
+                setFooter('Rows reordered ✓', `${dr.length} items`);
+            }
+        });
     }
 
-    window.resetCurrentTab = function(){
-        if(originalSnap.length===0) return;
+    window.resetCurrentTab = function() {
+        if (!originalSnap.length) return;
         UTIL.saveState();
-        while(tbody.firstChild) tbody.removeChild(tbody.firstChild);
-        originalSnap.forEach(r=>tbody.appendChild(r.cloneNode(true)));
-        if(typeof attachDirectDrag==='function') attachDirectDrag();
+        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+        originalSnap.forEach(r => tbody.appendChild(r.cloneNode(true)));
+        if (typeof attachDirectDrag === 'function') attachDirectDrag();
         parseFloorGroups();
-        if(activeTab==='floors') renderFloors();
-        else if(activeTab==='rooms') renderRoomPanel();
-        else renderRowPanel();
-        UTIL.toast({icon:'info',title:'Order reset',timer:1200});
+        if (activeTab === 'floors')      renderFloors();
+        else if (activeTab === 'rooms')  renderRoomPanel();
+        else                             renderRowPanel();
+        UTIL.toast({ icon: 'info', title: 'Order reset', timer: 1200 });
     };
 
-    window.openQuickOrder = function(){
+    window.openQuickOrder = function() {
         parseFloorGroups();
-        if(floorGroups.length===0){UTIL.toast({icon:'warning',title:'No floors found',timer:2000});return;}
+        if (!floorGroups.length) {
+            UTIL.toast({ icon: 'warning', title: 'No floors found', timer: 2000 });
+            return;
+        }
         snapshotDOM();
         switchTab('floors');
         overlay.classList.add('active');
-        document.body.style.overflow='hidden';
+        document.body.style.overflow = 'hidden';
     };
 
-    window.closeQuickOrder = function(){
+    window.closeQuickOrder = function() {
         overlay.classList.remove('active');
-        document.body.style.overflow='';
+        document.body.style.overflow = '';
         destroySortable('floors');
         destroySortable('rooms');
         destroySortable('rows');
     };
 
-    overlay.addEventListener('click',e=>{if(e.target===overlay)closeQuickOrder();});
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('active'))closeQuickOrder();});
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeQuickOrder(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && overlay.classList.contains('active')) closeQuickOrder();
+    });
+})();
+
+
+
+
+
+</script>
+
+
+<!-- ════════════════════════
+     KEYBOARD HELP PANEL
+════════════════════════ -->
+<script>
+(function() {
+    'use strict';
+
+    var overlay = document.getElementById('kbdHelpOverlay');
+    var search  = document.getElementById('kbdSearch');
+    if (!overlay) return;
+
+    /* ── Toggle ── */
+    window.toggleKbdHelp = function() {
+        var isActive = overlay.classList.contains('active');
+        if (isActive) {
+            overlay.classList.remove('active');
+            if (search) { search.value = ''; filterShortcuts(''); }
+        } else {
+            overlay.classList.add('active');
+            setTimeout(function() { if (search) search.focus(); }, 300);
+        }
+    };
+
+    /* ── Close on overlay background click ── */
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) toggleKbdHelp();
+    });
+
+    /* ── "?" key to toggle ── */
+    document.addEventListener('keydown', function(e) {
+        var tag = document.activeElement.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+            /* Allow Escape to close even from search */
+            if (e.key === 'Escape' && overlay.classList.contains('active')) {
+                e.preventDefault();
+                toggleKbdHelp();
+            }
+            return;
+        }
+
+        /* "?" key (Shift + /) */
+        if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+            e.preventDefault();
+            toggleKbdHelp();
+            return;
+        }
+
+        /* Escape closes */
+        if (e.key === 'Escape' && overlay.classList.contains('active')) {
+            e.preventDefault();
+            toggleKbdHelp();
+        }
+    });
+
+    /* ── Search / Filter ── */
+    if (search) {
+        search.addEventListener('input', function() {
+            filterShortcuts(this.value.toLowerCase().trim());
+        });
+    }
+
+    function filterShortcuts(query) {
+        var body     = document.getElementById('kbdBody');
+        var sections = body.querySelectorAll('.kbd-section');
+        var hasAny   = false;
+
+        /* Remove old no-results */
+        var oldMsg = body.querySelector('.kbd-no-results');
+        if (oldMsg) oldMsg.remove();
+
+        sections.forEach(function(section) {
+            var items       = section.querySelectorAll('.kbd-item');
+            var tips        = section.querySelectorAll('.kbd-tip');
+            var modeCards   = section.querySelectorAll('.kbd-mode-card');
+            var hasVisible  = false;
+
+            if (!query) {
+                /* Show everything */
+                section.classList.remove('hidden');
+                items.forEach(function(item) { item.classList.remove('hidden'); });
+                hasAny = true;
+                return;
+            }
+
+            /* Filter items */
+            items.forEach(function(item) {
+                var keywords = (item.dataset.keywords || '').toLowerCase();
+                var desc     = item.querySelector('.kbd-desc');
+                var descText = desc ? desc.textContent.toLowerCase() : '';
+
+                if (keywords.indexOf(query) !== -1 || descText.indexOf(query) !== -1) {
+                    item.classList.remove('hidden');
+                    hasVisible = true;
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+
+            /* Mode cards & tips — show if section title matches or no query */
+            var sectionTitle = section.querySelector('.kbd-section-title');
+            var titleText    = sectionTitle ? sectionTitle.textContent.toLowerCase() : '';
+
+            if (titleText.indexOf(query) !== -1) {
+                hasVisible = true;
+                items.forEach(function(item) { item.classList.remove('hidden'); });
+            }
+
+            section.classList.toggle('hidden', !hasVisible);
+            if (hasVisible) hasAny = true;
+        });
+
+        /* Show no-results message */
+        if (!hasAny && query) {
+            var msg = document.createElement('div');
+            msg.className = 'kbd-no-results';
+            msg.innerHTML = '<i class="bi bi-search"></i><div>No shortcuts found for "<strong>' + query + '</strong>"</div>';
+            body.appendChild(msg);
+        }
+    }
+
 })();
 </script>
+
+
 
 </body>
 </html>
