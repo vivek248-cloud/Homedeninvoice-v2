@@ -1121,6 +1121,99 @@
         .tb-action-btn span { display: none; }
     }
 
+
+    .topbar-status-widget {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 18px;
+    background: var(--surface-2);
+    border-radius: 100px;
+    flex: 1;
+    max-width: 480px;
+}
+
+.tsw-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tsw-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--emerald);
+    border-radius: 50%;
+    animation: pulse 2s ease infinite;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+}
+
+.tsw-item i {
+    font-size: 1rem;
+    color: var(--brand);
+}
+
+.tsw-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.tsw-label {
+    font-size: 0.56rem;
+    font-weight: 700;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.tsw-value {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-1);
+}
+
+/* Time-specific — monospace for stable width */
+.tsw-time {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    letter-spacing: -0.01em;
+    min-width: 68px;
+    display: inline-block;
+}
+
+/* Blinking colon effect */
+.tsw-time .tsw-colon {
+    animation: colonBlink 1s ease infinite;
+    color: var(--brand);
+}
+
+@keyframes colonBlink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.3; }
+}
+
+.tsw-divider {
+    width: 1px;
+    height: 22px;
+    background: var(--border);
+}
+
+.tsw-ampm {
+    font-size: 0.55rem;
+    font-weight: 800;
+    color: var(--text-4);
+    letter-spacing: 0.5px;
+    margin-left: 3px;
+    padding: 1px 5px;
+    background: var(--surface-3);
+    border-radius: 4px;
+    vertical-align: middle;
+    text-transform: uppercase;
+}
+
+
+
     /* ═══════════════════════════════════
        PAGE LOADER
     ═══════════════════════════════════ */
@@ -1493,10 +1586,37 @@
             </div>
 
             <!-- Search -->
-            <div class="topbar-search d-none d-md-block">
+            {% comment %} <div class="topbar-search d-none d-md-block">
                 <i class="bi bi-search"></i>
                 <input type="text" placeholder="Search anything here...">
+            </div> {% endcomment %}
+
+            <div class="topbar-status-widget d-none d-md-flex">
+                <div class="tsw-item">
+                    <div class="tsw-dot"></div>
+                    <div class="tsw-info">
+                        <span class="tsw-label">Hi there</span>
+                        <span class="tsw-value" id="tswGreeting">Good Morning ☀️</span>
+                    </div>
+                </div>
+                <div class="tsw-divider"></div>
+                <div class="tsw-item">
+                    <i class="bi bi-calendar3"></i>
+                    <div class="tsw-info">
+                        <span class="tsw-label">Today</span>
+                        <span class="tsw-value" id="tswDate">Loading...</span>
+                    </div>
+                </div>
+                <div class="tsw-divider"></div>
+                <div class="tsw-item">
+                    <i class="bi bi-clock"></i>
+                    <div class="tsw-info">
+                        <span class="tsw-label">Time</span>
+                        <span class="tsw-value tsw-time" id="tswTime">--:--:--</span>
+                    </div>
+                </div>
             </div>
+
 
             <!-- Right Actions -->
             <div class="topbar-right">
@@ -1734,6 +1854,95 @@ document.querySelectorAll('.s-nav-link:not(.sub-trigger)').forEach(link => {
 
     stayBtn.addEventListener('click', stayLoggedIn);
     resetTimers();
+})();
+</script>
+
+
+<script>
+(function() {
+
+    /* ══════════════════════════════════
+       DOM ELEMENTS
+    ══════════════════════════════════ */
+    const dateEl     = document.getElementById('tswDate');
+    const timeEl     = document.getElementById('tswTime');
+    const greetingEl = document.getElementById('tswGreeting');
+
+    /* ══════════════════════════════════
+       HELPERS
+    ══════════════════════════════════ */
+    function pad(n) {
+        return n < 10 ? '0' + n : n;
+    }
+
+    /* ══════════════════════════════════
+       DATE UPDATE
+    ══════════════════════════════════ */
+    function updateDate() {
+        if (!dateEl) return;
+        const now = new Date();
+        dateEl.textContent = now.toLocaleDateString('en-IN', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short'
+        });
+    }
+
+    /* ══════════════════════════════════
+       TIME UPDATE — 12-HOUR FORMAT
+    ══════════════════════════════════ */
+    function updateTime() {
+        if (!timeEl) return;
+
+        const now  = new Date();
+        let   h    = now.getHours();
+        const m    = pad(now.getMinutes());
+        const s    = pad(now.getSeconds());
+        const ampm = h >= 12 ? 'PM' : 'AM';
+
+        /* Convert 24-hour to 12-hour */
+        h = h % 12 || 12;
+        const hh = pad(h);
+
+        /* Render with blinking colons + AM/PM */
+        timeEl.innerHTML = `
+            ${hh}<span class="tsw-colon">:</span>${m}<span class="tsw-colon">:</span>${s}
+            <small class="tsw-ampm">${ampm}</small>
+        `;
+    }
+
+    /* ══════════════════════════════════
+       GREETING (Time-based)
+    ══════════════════════════════════ */
+    function updateGreeting() {
+        if (!greetingEl) return;
+        const hr = new Date().getHours();
+        let msg;
+
+        if      (hr < 12) msg = 'Good Morning ☀️';
+        else if (hr < 17) msg = 'Good Afternoon 🌤️';
+        else if (hr < 21) msg = 'Good Evening 🌆';
+        else              msg = 'Working Late 🌙';
+
+        greetingEl.textContent = msg;
+    }
+
+    /* ══════════════════════════════════
+       INIT
+    ══════════════════════════════════ */
+    updateDate();
+    updateTime();
+    updateGreeting();
+
+    /* Update time every second */
+    setInterval(updateTime, 1000);
+
+    /* Update date + greeting every minute */
+    setInterval(function() {
+        updateDate();
+        updateGreeting();
+    }, 60000);
+
 })();
 </script>
 
