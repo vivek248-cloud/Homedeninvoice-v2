@@ -478,17 +478,6 @@
                                         <td>
                                             <div class="cell-stack">
                                                 <div class="input-wrap">
-                                                    <select name="fullsemi[]" class="mini-select fullsemi " >
-                                                        <option value="">Series *</option>
-                                                        {% for fs in fullsemis %}
-                                                        <option value="{{ fs.id }}" data-rate="{{ fs.rate }}" {% if spend.fullsemi and spend.fullsemi.id == fs.id %}selected{% endif %}>
-                                                            {{ fs.name }} (₹{{ fs.rate }})
-                                                        </option>
-                                                        {% endfor %}
-                                                    </select>
-                                                    <span class="input-indicator"></span>
-                                                </div>
-                                                <div class="input-wrap">
                                                     <input name="rate[]" class="mini-input rate required-input" placeholder="Rate *" value="{{ spend.rate }}" required>
                                                     <span class="input-indicator"></span>
                                                 </div>

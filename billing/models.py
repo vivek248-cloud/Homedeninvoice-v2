@@ -344,15 +344,9 @@ class Spend(models.Model):
         else:
             self.area = None
 
-        if self.fullsemi:
-            self.rate = self.fullsemi.rate
-
         super().save(*args, **kwargs)
 
-        # Check invoice cleanup after save
-        check_project_invoice_cleanup(
-            self.project
-        )
+        check_project_invoice_cleanup(self.project)
 
     @property
     def total_amount(self):
